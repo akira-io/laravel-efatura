@@ -78,6 +78,19 @@ This package does not communicate directly with the tax authority. All submissio
 
 PDF and QR generation are optional and contract-based. The package provides compliant Data and identifiers but does not render or impose any layout, styling, or visual output.
 
+## Recommended PDF & QR Implementations
+
+`PDF` and `QR Code` generation are optional features and are handled via contracts. If no implementation is provided, the core functionality remains fully operational. The package does not depend on any specific PDF or QR engine, and using the recommended packages is a convenience, not a requirement.
+
+The following packages are officially recommended and work out of the box when installed together with akira/efatura:
+
+- `akira/laravel-pdf-invoice`
+- `akira/laravel-qrcode`
+
+When these packages are installed, they are automatically discovered and bound by akira/efatura, and no additional configuration is required for basic usage.
+
+Developers are free to use the recommended packages, use any third-party library, or implement their own PDF or QR generation logic. Visual layout, branding, and rendering decisions are outside the scope of the akira/efatura core.
+
 ## Contracts overview
 
 Contracts describe integration points for optional capabilities such as middleware transport, signing and packaging, and PDF or QR rendering. Implementations are left to the host application or external packages to preserve flexibility and compliance requirements.

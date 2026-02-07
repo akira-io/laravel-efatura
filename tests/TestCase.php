@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akira\Efatura\Tests;
 
 use Akira\Debugger\DebuggerServiceProvider;
+use Akira\Efatura\EfaturaServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Akira\Efatura\EfaturaServiceProvider;
 
-class TestCase extends Orchestra
+abstract class TestCase extends Orchestra
 {
     protected function setUp(): void
     {
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Akira\\Efatura\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName): string => 'Akira\Efatura\Database\Factories\\' . class_basename($modelName) . 'Factory',
         );
     }
 
@@ -22,11 +24,11 @@ class TestCase extends Orchestra
     {
         return [
             EfaturaServiceProvider::class,
-            DebuggerServiceProvider::class
+            DebuggerServiceProvider::class,
         ];
     }
 
-    public function getEnvironmentSetUp($app): void
+    protected function getEnvironmentSetUp($app): void
     {
         config()->set('database.default', 'testing');
 

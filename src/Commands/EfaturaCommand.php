@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akira\Efatura\Commands;
 
 use Illuminate\Console\Command;
 
-class EfaturaCommand extends Command
+final class EfaturaCommand extends Command
 {
     public $signature = 'efatura';
 

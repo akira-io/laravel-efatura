@@ -36,7 +36,8 @@
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
         "rector/rector": "^2.3",
-        "roave/security-advisories": "dev-latest"
+        "roave/security-advisories": "dev-latest",
+        "peckphp/peck": "^0.2.0"
     },
     "autoload": {
         "psr-4": {
@@ -48,6 +49,41 @@
             "Akira\\Efatura\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
+    },
+    "scripts": {
+        "post-autoload-dump": "@composer run prepare",
+        "clear": "@php vendor/bin/testbench package:purge-laravel-sisp --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": [
+            "@composer run prepare",
+            "@php vendor/bin/testbench workbench:build --ansi"
+        ],
+        "start": [
+            "Composer\\Config::disableProcessTimeout",
+            "@composer run build",
+            "@php vendor/bin/testbench serve"
+        ],
+        "lint": [
+            "rector",
+            "pint"
+        ],
+        "refactor": "rector",
+        "test:lint": "pint --test",
+        "test:refactor": "rector --dry-run",
+        "test:arch": "pest --filter=arch",
+        "test:types": "phpstan",
+        "test:type-coverage": "pest --type-coverage --min=100 --compact",
+        "test:coverage": "pest --parallel --coverage --compact --exactly=100",
+        "test:typos": "peck",
+        "test": [
+            "@test:lint",
+            "@test:refactor",
+            "@test:typos",
+            "@test:arch",
+            "@test:types",
+            "@test:coverage",
+            "@test:type-coverage"
+        ]
     },
     "config": {
         "allow-plugins": {

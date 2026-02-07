@@ -1,0 +1,11 @@
+{
+    "preset": "laravel",
+    "ignore": {
+        "words": [
+            "php",
+            "efatura",
+            "pnpm"
+        ],
+        "paths": []
+    }
+}

@@ -19,14 +19,10 @@ use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
     ->withPaths([
-        __DIR__.'/app',
-        __DIR__.'/bootstrap',
-        __DIR__.'/config',
-        __DIR__.'/database',
-        __DIR__.'/public',
-        __DIR__.'/resources',
-        __DIR__.'/routes',
-        __DIR__.'/tests',
+        __DIR__ . '/src',
+        __DIR__ . '/config',
+        __DIR__ . '/database',
+        __DIR__ . '/tests',
     ])
     ->withSkip([
         EncapsedStringsToSprintfRector::class,
@@ -35,7 +31,7 @@ return RectorConfig::configure()
         RemoveUnusedPrivateMethodParameterRector::class,
         RemoveUnusedPrivatePropertyRector::class,
         StaticClosureRector::class => [
-            __DIR__.'/tests',
+            __DIR__ . '/tests',
         ],
     ])
     ->withSets([

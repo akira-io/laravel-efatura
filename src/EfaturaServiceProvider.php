@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akira\Efatura;
 
+use Akira\Efatura\Commands\EfaturaCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Akira\Efatura\Commands\EfaturaCommand;
 
-class EfaturaServiceProvider extends PackageServiceProvider
+final class EfaturaServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
