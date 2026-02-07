@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Akira\Efatura\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class EfaturaCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'efatura';
 
     public $description = 'My command';
 

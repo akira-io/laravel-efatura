@@ -1,0 +1,57 @@
+{
+  "git": {
+    "commitMessage": "chore(release): ${version}",
+    "requireCleanWorkingDir": false,
+    "requireBranch": "1.x",
+    "requireUpstream": true,
+    "requireCommits": false,
+    "addUntrackedFiles": false,
+    "commit": true,
+    "tag": true,
+    "push": true,
+    "tagName": "v${version}",
+    "tagAnnotation": "Release v${version}",
+    "tagMatch": "[0-9]*\\.[0-9]*\\.[0-9]*",
+    "pushRepo": "origin"
+  },
+  "github": {
+    "release": true,
+    "releaseName": "Release ${version}",
+    "releaseNotes": null,
+    "preRelease": false,
+    "draft": false,
+    "tokenRef": "GITHUB_TOKEN",
+    "assets": null,
+    "host": null,
+    "timeout": 0,
+    "proxy": null,
+    "skipChecks": false,
+    "web": false
+  },
+  "npm": {
+    "publish": false,
+    "publishPath": ".",
+    "tag": "latest",
+    "otp": null,
+    "ignoreVersion": false,
+    "allowSameVersion": false,
+    "versionArgs": [],
+    "skipChecks": false,
+    "timeout": 10
+  },
+  "hooks": {
+    "before:bump": [
+      "composer test"
+    ]
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": "angular",
+      "infile": "CHANGELOG.md",
+      "header": "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n",
+      "gitRawCommitsOpts": {
+        "path": "."
+      }
+    }
+  }
+}
