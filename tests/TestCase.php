@@ -2,6 +2,7 @@
 
 namespace Akira\Efatura\Tests;
 
+use Akira\Debugger\DebuggerServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Akira\Efatura\EfaturaServiceProvider;
@@ -17,14 +18,15 @@ class TestCase extends Orchestra
         );
     }
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
         return [
             EfaturaServiceProvider::class,
+            DebuggerServiceProvider::class
         ];
     }
 
-    public function getEnvironmentSetUp($app)
+    public function getEnvironmentSetUp($app): void
     {
         config()->set('database.default', 'testing');
 
