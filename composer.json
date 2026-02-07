@@ -50,6 +50,13 @@
             "Workbench\\App\\": "workbench/app/"
         }
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Akira\\Efatura\\EfaturaServiceProvider"
+            ]
+        }
+    },
     "scripts": {
         "post-autoload-dump": "@composer run prepare",
         "clear": "@php vendor/bin/testbench package:purge-laravel-sisp --ansi",

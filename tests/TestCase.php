@@ -7,10 +7,17 @@ namespace Akira\Efatura\Tests;
 use Akira\Debugger\DebuggerServiceProvider;
 use Akira\Efatura\EfaturaServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Filesystem\Filesystem;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
 {
+    protected Filesystem $files;
+
+    protected string $basePath;
+
+    protected string $originalBasePath;
+
     protected function setUp(): void
     {
         parent::setUp();
