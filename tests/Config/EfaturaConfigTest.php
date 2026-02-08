@@ -70,6 +70,52 @@ it('accepts environment by numeric code', function (): void {
         ->and($config->repositoryCode())->toBe(2);
 });
 
+it('returns configured values and asArray', function (): void {
+    $config = makeConfig([
+        'middleware' => [
+            'environment' => Environment::HOMOLOGATION,
+        ],
+    ]);
+
+    expect($config->transmitterNif())->toBe('100200300')
+        ->and($config->transmitterLedCode())->toBe('LED123')
+        ->and($config->softwareCode())->toBe('SW-001')
+        ->and($config->softwareName())->toBe('Efatura Suite')
+        ->and($config->softwareVersion())->toBe('1.0.0')
+        ->and($config->middlewareBaseUrl())->toBe('https://middleware.example')
+        ->and($config->environment())->toBe(Environment::HOMOLOGATION)
+        ->and($config->repositoryCode())->toBe(2);
+
+    $array = $config->asArray();
+
+    expect($array['transmitter']['nif'])->toBe('100200300')
+        ->and($array['software']['code'])->toBe('SW-001')
+        ->and($array['middleware']['repository_code'])->toBe(2);
+});
+
+it('fails on invalid numeric environment', function (): void {
+    $config = makeConfig([
+        'middleware' => [
+            'environment' => 99,
+        ],
+    ]);
+
+    expect(fn (): Environment => $config->environment())
+        ->toThrow(EfaturaValidationException::class, trans('efatura.config.environment_invalid'));
+});
+
+it('covers getString reflection branches', function (): void {
+    $config = makeConfig();
+
+    $reflection = new ReflectionMethod(EfaturaConfig::class, 'getString');
+
+    expect($reflection->invoke($config, 'efatura.transmitter.nif'))->toBe('100200300');
+
+    config(['efatura.transmitter.led' => ['invalid']]);
+
+    expect($reflection->invoke($config, 'efatura.transmitter.led'))->toBe('');
+});
+
 it('rejects invalid environment values', function (): void {
     $config = makeConfig([
         'middleware' => [
@@ -112,6 +158,28 @@ it('requires middleware base url', function (): void {
 
     expect(fn (): string => $config->middlewareBaseUrl())
         ->toThrow(EfaturaValidationException::class, trans('efatura.config.middleware_base_url_required'));
+});
+
+it('covers getString int and empty branches', function (): void {
+    $config = makeConfig([
+        'transmitter' => [
+            'nif' => 123,
+            'led' => null,
+        ],
+    ]);
+
+    expect($config->transmitterNif())->toBe('123');
+
+    expect(fn (): string => $config->transmitterLedCode())
+        ->toThrow(EfaturaValidationException::class, trans('efatura.config.transmitter_led_required'));
+});
+
+it('covers getString reflection branch', function (): void {
+    $config = makeConfig();
+
+    $reflection = new ReflectionMethod(EfaturaConfig::class, 'getString');
+
+    expect($reflection->invoke($config, 'efatura.transmitter.nif'))->toBe('100200300');
 });
 
 it('resolves document type policy from the container', function (): void {
