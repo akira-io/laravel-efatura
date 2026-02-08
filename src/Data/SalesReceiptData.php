@@ -9,13 +9,11 @@ use Akira\Efatura\Enums\DocumentType;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
 
-use function is_array;
-
 final class SalesReceiptData extends Data
 {
     use ValidatesInvoiceType;
 
-    public const DocumentType TYPE = DocumentType::SALES_RECEIPT;
+    public const DocumentType TYPE = DocumentType::ELECTRONIC_SALES_TICKET;
 
     public function __construct(
         public readonly InvoiceData $invoice,
@@ -31,7 +29,7 @@ final class SalesReceiptData extends Data
             $data = $validator->getData();
             $type = data_get($data, 'invoice.type');
 
-            self::ensureInvoiceType($validator, DocumentType::SALES_RECEIPT, $type, 'invoice.type');
+            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_SALES_TICKET, $type, 'invoice.type');
 
             if ($validator->errors()->isNotEmpty()) {
                 return;
@@ -46,7 +44,7 @@ final class SalesReceiptData extends Data
                 return;
             }
 
-            if (is_numeric($total) && (float) $total >= 20000.0 && ! is_array($receiver)) {
+            if (is_numeric($total) && (float) $total >= 20000.0 && ! \is_array($receiver)) {
                 $validator->errors()->add('invoice.receiver', __('efatura.validation.receiver_required'));
             }
         });

@@ -8,7 +8,6 @@ use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
-use function dirname;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\note;
@@ -50,9 +49,9 @@ final class InstallCommand extends Command
             return;
         }
 
-        $sourcePath = dirname(__DIR__, 2) . '/config/efatura.php';
+        $sourcePath = \dirname(__DIR__, 2) . '/config/efatura.php';
 
-        $filesystem->ensureDirectoryExists(dirname($configPath));
+        $filesystem->ensureDirectoryExists(\dirname($configPath));
         $filesystem->copy($sourcePath, $configPath);
 
         info(__('efatura.install.config_published'));

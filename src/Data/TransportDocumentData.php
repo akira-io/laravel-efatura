@@ -13,7 +13,7 @@ final class TransportDocumentData extends Data
 {
     use ValidatesInvoiceType;
 
-    public const DocumentType TYPE = DocumentType::TRANSPORT_DOCUMENT;
+    public const DocumentType TYPE = DocumentType::ELECTRONIC_TRANSPORT_DOCUMENT;
 
     public function __construct(
         public readonly InvoiceData $invoice,
@@ -28,7 +28,7 @@ final class TransportDocumentData extends Data
 
             $type = data_get($validator->getData(), 'invoice.type');
 
-            self::ensureInvoiceType($validator, DocumentType::TRANSPORT_DOCUMENT, $type, 'invoice.type');
+            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_TRANSPORT_DOCUMENT, $type, 'invoice.type');
         });
     }
 

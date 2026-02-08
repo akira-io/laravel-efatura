@@ -15,10 +15,6 @@ return [
         'emitter_required'          => 'Emitter is required.',
         'totals_required'           => 'Totals are required.',
         'invoice_required'          => 'Invoice is required.',
-        'receiver_required'         => 'Receiver is required.',
-        'emitter_required'          => 'Emitter is required.',
-        'totals_required'           => 'Totals are required.',
-        'invoice_required'          => 'Invoice is required.',
         'lines_required'            => 'At least one line item is required.',
         'totals_negative'           => 'Totals cannot be negative.',
         'na_tax_exemption_required' => 'NA tax requires an exemption reason.',
@@ -28,6 +24,7 @@ return [
         'receiver_required_for_type'  => 'Receiver is required for this document type.',
         'original_iud_required'       => 'Original IUD is required for credit notes.',
         'credit_note_reason_required' => 'Credit note reason is required.',
+        'document_type_not_supported' => 'Document type :type is recognized but not supported for emission.',
     ],
     'config' => [
         'transmitter_nif_required'     => 'Transmitter NIF is required.',

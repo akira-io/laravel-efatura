@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Akira\Efatura\Concerns;
 
 use Akira\Efatura\Enums\DocumentType;
-
-use function is_string;
+use Illuminate\Contracts\Validation\Validator;
 
 trait ValidatesInvoiceType
 {
-    private static function ensureInvoiceType(\Illuminate\Contracts\Validation\Validator $validator, DocumentType $expected, mixed $value, string $path): void
+    private static function ensureInvoiceType(Validator $validator, DocumentType $expected, mixed $value, string $path): void
     {
         $documentType = self::normalizeDocumentType($value);
 
@@ -25,7 +24,7 @@ trait ValidatesInvoiceType
             return $value;
         }
 
-        if (is_string($value)) {
+        if (\is_string($value)) {
             return DocumentType::tryFrom($value);
         }
 

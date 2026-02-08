@@ -8,9 +8,6 @@ use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Illuminate\Config\Repository;
 
-use function is_int;
-use function is_string;
-
 final readonly class EfaturaConfig
 {
     public function __construct(
@@ -91,7 +88,7 @@ final readonly class EfaturaConfig
             return $value;
         }
 
-        if (is_int($value)) {
+        if (\is_int($value)) {
             $environment = $this->parseEnvironmentFromInt($value);
 
             if ($environment instanceof Environment) {
@@ -99,7 +96,7 @@ final readonly class EfaturaConfig
             }
         }
 
-        if (is_string($value)) {
+        if (\is_string($value)) {
             $environment = $this->parseEnvironmentFromString($value);
 
             if ($environment instanceof Environment) {
@@ -142,11 +139,11 @@ final readonly class EfaturaConfig
     {
         $value = $this->config->get($key);
 
-        if (is_string($value)) {
+        if (\is_string($value)) {
             return trim($value);
         }
 
-        if (is_int($value)) {
+        if (\is_int($value)) {
             return (string) $value;
         }
 

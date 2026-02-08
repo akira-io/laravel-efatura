@@ -13,7 +13,7 @@ final class CreditNoteData extends Data
 {
     use ValidatesInvoiceType;
 
-    public const DocumentType TYPE = DocumentType::CREDIT_NOTE;
+    public const DocumentType TYPE = DocumentType::ELECTRONIC_CREDIT_NOTE;
 
     public function __construct(
         public readonly InvoiceData $invoice,
@@ -53,7 +53,7 @@ final class CreditNoteData extends Data
 
             $type = data_get($validator->getData(), 'invoice.type');
 
-            self::ensureInvoiceType($validator, DocumentType::CREDIT_NOTE, $type, 'invoice.type');
+            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_CREDIT_NOTE, $type, 'invoice.type');
         });
     }
 

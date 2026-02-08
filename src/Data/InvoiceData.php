@@ -8,9 +8,6 @@ use Akira\Efatura\Enums\DocumentType;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
 
-use function is_array;
-use function is_string;
-
 final class InvoiceData extends Data
 {
     /**
@@ -72,7 +69,7 @@ final class InvoiceData extends Data
 
             if ($type instanceof DocumentType) {
                 $documentType = $type;
-            } elseif (is_string($type)) {
+            } elseif (\is_string($type)) {
                 $documentType = DocumentType::tryFrom($type);
             } else {
                 return;
@@ -82,11 +79,11 @@ final class InvoiceData extends Data
                 return;
             }
 
-            if ($documentType === DocumentType::SALES_RECEIPT) {
+            if ($documentType === DocumentType::ELECTRONIC_SALES_TICKET) {
                 return;
             }
 
-            if (! is_array($lines) || $lines === []) {
+            if (! \is_array($lines) || $lines === []) {
                 $validator->errors()->add('lines', __('efatura.validation.lines_required'));
 
                 return;
@@ -98,7 +95,7 @@ final class InvoiceData extends Data
                 return;
             }
 
-            if (! is_array($receiver)) {
+            if (! \is_array($receiver)) {
                 $validator->errors()->add('receiver', __('efatura.validation.receiver_required'));
             }
         });

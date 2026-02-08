@@ -92,9 +92,18 @@ it('requires receiver for non sales receipt types', function (): void {
     );
 });
 
+it('accepts supported document types', function (): void {
+    foreach (DocumentType::cases() as $type) {
+        $payload = baseInvoicePayload(['type' => $type]);
+
+        expect(fn (): array => InvoiceData::validate($payload))
+            ->not->toThrow(ValidationException::class);
+    }
+});
+
 it('allows sales receipt without receiver below threshold', function (): void {
     $payload = baseInvoicePayload([
-        'type'     => DocumentType::SALES_RECEIPT,
+        'type'     => DocumentType::ELECTRONIC_SALES_TICKET,
         'receiver' => null,
         'totals'   => [
             'subtotal'   => 1000.0,
@@ -109,7 +118,7 @@ it('allows sales receipt without receiver below threshold', function (): void {
 
 it('requires receiver for sales receipt at threshold', function (): void {
     $payload = baseInvoicePayload([
-        'type'     => DocumentType::SALES_RECEIPT,
+        'type'     => DocumentType::ELECTRONIC_SALES_TICKET,
         'receiver' => null,
         'totals'   => [
             'subtotal'   => 18000.0,
@@ -127,7 +136,7 @@ it('requires receiver for sales receipt at threshold', function (): void {
 
 it('requires credit note references', function (): void {
     $payload = baseInvoicePayload([
-        'type'             => DocumentType::CREDIT_NOTE,
+        'type'             => DocumentType::ELECTRONIC_CREDIT_NOTE,
         'originalIud'      => '',
         'creditNoteReason' => '',
     ]);
@@ -182,7 +191,7 @@ it('requires party fields', function (): void {
 });
 
 it('rejects invoice type mismatch in wrappers', function (): void {
-    $payload = baseInvoicePayload(['type' => DocumentType::RECEIPT_INVOICE]);
+    $payload = baseInvoicePayload(['type' => DocumentType::ELECTRONIC_INVOICE_RECEIPT]);
 
     assertValidationMessage(
         fn (): array => ElectronicInvoiceData::validate(['invoice' => $payload]),
