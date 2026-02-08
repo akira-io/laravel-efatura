@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Contracts\DocumentTypePolicy;
 use Akira\Efatura\Enums\DocumentType;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
@@ -76,6 +77,16 @@ final class InvoiceData extends Data
             }
 
             if ($documentType === null) {
+                return;
+            }
+
+            $policy = resolve(DocumentTypePolicy::class);
+
+            if (! $policy->supportsEmission($documentType)) {
+                $validator->errors()->add('type', __('efatura.invoice.document_type_not_supported', [
+                    'type' => $documentType->value,
+                ]));
+
                 return;
             }
 

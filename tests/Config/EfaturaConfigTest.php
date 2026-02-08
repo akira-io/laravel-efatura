@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Config\EfaturaConfig;
+use Akira\Efatura\Contracts\DocumentTypePolicy;
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
+use Akira\Efatura\Support\DefaultDocumentTypePolicy;
 
 function makeConfig(array $overrides = []): EfaturaConfig
 {
@@ -36,14 +38,14 @@ it('defaults repository environment to TEST when empty', function (): void {
         ],
     ]);
 
-    expect($config->environment())->toBe(Environment::TEST);
-    expect($config->repositoryCode())->toBe(3);
+    expect($config->environment())->toBe(Environment::TEST)
+        ->and($config->repositoryCode())->toBe(3);
 });
 
 it('maps repository environment codes', function (): void {
-    expect(Environment::PRODUCTION->code())->toBe(1);
-    expect(Environment::HOMOLOGATION->code())->toBe(2);
-    expect(Environment::TEST->code())->toBe(3);
+    expect(Environment::PRODUCTION->code())->toBe(1)
+        ->and(Environment::HOMOLOGATION->code())->toBe(2)
+        ->and(Environment::TEST->code())->toBe(3);
 });
 
 it('accepts environment by name', function (): void {
@@ -53,8 +55,8 @@ it('accepts environment by name', function (): void {
         ],
     ]);
 
-    expect($config->environment())->toBe(Environment::PRODUCTION);
-    expect($config->repositoryCode())->toBe(1);
+    expect($config->environment())->toBe(Environment::PRODUCTION)
+        ->and($config->repositoryCode())->toBe(1);
 });
 
 it('accepts environment by numeric code', function (): void {
@@ -64,8 +66,8 @@ it('accepts environment by numeric code', function (): void {
         ],
     ]);
 
-    expect($config->environment())->toBe(Environment::HOMOLOGATION);
-    expect($config->repositoryCode())->toBe(2);
+    expect($config->environment())->toBe(Environment::HOMOLOGATION)
+        ->and($config->repositoryCode())->toBe(2);
 });
 
 it('rejects invalid environment values', function (): void {
@@ -110,6 +112,12 @@ it('requires middleware base url', function (): void {
 
     expect(fn (): string => $config->middlewareBaseUrl())
         ->toThrow(EfaturaValidationException::class, trans('efatura.config.middleware_base_url_required'));
+});
+
+it('resolves document type policy from the container', function (): void {
+    $policy = app(DocumentTypePolicy::class);
+
+    expect($policy)->toBeInstanceOf(DefaultDocumentTypePolicy::class);
 });
 
 it('requires software code', function (): void {

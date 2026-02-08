@@ -15,17 +15,4 @@ enum DocumentType: string
     case ELECTRONIC_TRANSPORT_DOCUMENT = 'DTE';
     case ELECTRONIC_RETURN_NOTE        = 'DVE';
     case ELECTRONIC_ENTRY_NOTE         = 'NLE';
-
-    /**
-     * @return array<int, self>
-     */
-    public static function supported(): array
-    {
-        return self::cases();
-    }
-
-    public function isSupported(): bool
-    {
-        return true;
-    }
 }

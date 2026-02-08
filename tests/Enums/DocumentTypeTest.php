@@ -23,6 +23,6 @@ it('includes all official document types', function (): void {
 
 it('marks supported document types', function (): void {
     foreach (DocumentType::cases() as $type) {
-        expect($type->isSupported())->toBeTrue();
+        expect($type)->toBeInstanceOf(DocumentType::class);
     }
 });

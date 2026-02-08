@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Contracts\DocumentTypePolicy;
 use Akira\Efatura\Data\CreditNoteData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\InvoiceData;
@@ -93,11 +94,36 @@ it('requires receiver for non sales receipt types', function (): void {
 });
 
 it('accepts supported document types', function (): void {
+    $policy = app(DocumentTypePolicy::class);
+
     foreach (DocumentType::cases() as $type) {
+        if (! $policy->supportsEmission($type)) {
+            continue;
+        }
+
         $payload = baseInvoicePayload(['type' => $type]);
 
         expect(fn (): array => InvoiceData::validate($payload))
             ->not->toThrow(ValidationException::class);
+    }
+});
+
+it('rejects unsupported document types', function (): void {
+    $unsupported = [
+        DocumentType::ELECTRONIC_RECEIPT,
+        DocumentType::ELECTRONIC_DEBIT_NOTE,
+        DocumentType::ELECTRONIC_RETURN_NOTE,
+        DocumentType::ELECTRONIC_ENTRY_NOTE,
+    ];
+
+    foreach ($unsupported as $type) {
+        $payload = baseInvoicePayload(['type' => $type]);
+
+        assertValidationMessage(
+            fn (): array => InvoiceData::validate($payload),
+            'type',
+            trans('efatura.invoice.document_type_not_supported', ['type' => $type->value]),
+        );
     }
 });
 
