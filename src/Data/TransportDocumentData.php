@@ -6,7 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Enums\DocumentType;
-use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
 
 final class TransportDocumentData extends Data

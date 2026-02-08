@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Enums\DocumentType;
+use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
 
 final class ElectronicInvoiceData extends Data
@@ -18,9 +19,9 @@ final class ElectronicInvoiceData extends Data
         public readonly InvoiceData $invoice,
     ) {}
 
-    public static function withValidator(\Illuminate\Contracts\Validation\Validator $validator): void
+    public static function withValidator(Validator $validator): void
     {
-        $validator->after(static function (\Illuminate\Contracts\Validation\Validator $validator): void {
+        $validator->after(static function (Validator $validator): void {
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }
