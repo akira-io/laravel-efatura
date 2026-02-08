@@ -16,6 +16,7 @@ use Akira\Efatura\Data\TotalsData;
 use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Support\DefaultDocumentTypePolicy;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
 function assertValidationMessage(callable $callable, string $field, string $message): void
@@ -104,6 +105,15 @@ it('covers tax rules and messages', function (): void {
     expect(TaxData::rules())->toHaveKey('exemptionReason')
         ->and(TaxData::messages())->toHaveKey('exemptionReason.required_if')
         ->and(TaxData::stopOnFirstFailure())->toBeTrue();
+});
+
+it('covers tax data constructor', function (): void {
+    $tax = new TaxData('IVA', 15.0, 150.0, null);
+
+    expect($tax->type)->toBe('IVA')
+        ->and($tax->rate)->toBe(15.0)
+        ->and($tax->amount)->toBe(150.0)
+        ->and($tax->exemptionReason)->toBeNull();
 });
 
 it('covers totals rules and messages', function (): void {
@@ -360,7 +370,7 @@ it('covers invoice type trait with invalid value', function (): void {
     {
         use ValidatesInvoiceType;
 
-        public static function run(Illuminate\Contracts\Validation\Validator $validator, DocumentType $expected, mixed $value, string $path): void
+        public static function run(Validator $validator, DocumentType $expected, mixed $value, string $path): void
         {
             self::ensureInvoiceType($validator, $expected, $value, $path);
         }

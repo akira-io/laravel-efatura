@@ -70,6 +70,28 @@ it('accepts environment by numeric code', function (): void {
         ->and($config->repositoryCode())->toBe(2);
 });
 
+it('accepts environment by integer code', function (): void {
+    $config = makeConfig([
+        'middleware' => [
+            'environment' => 2,
+        ],
+    ]);
+
+    expect($config->environment())->toBe(Environment::HOMOLOGATION)
+        ->and($config->repositoryCode())->toBe(2);
+});
+
+it('normalizes environment strings with whitespace', function (): void {
+    $config = makeConfig([
+        'middleware' => [
+            'environment' => '  production  ',
+        ],
+    ]);
+
+    expect($config->environment())->toBe(Environment::PRODUCTION)
+        ->and($config->repositoryCode())->toBe(1);
+});
+
 it('returns configured values and asArray', function (): void {
     $config = makeConfig([
         'middleware' => [
