@@ -94,7 +94,7 @@ final readonly class EfaturaConfig
         if (is_int($value)) {
             $environment = $this->parseEnvironmentFromInt($value);
 
-            if ($environment !== null) {
+            if ($environment instanceof Environment) {
                 return $environment;
             }
         }
@@ -102,7 +102,7 @@ final readonly class EfaturaConfig
         if (is_string($value)) {
             $environment = $this->parseEnvironmentFromString($value);
 
-            if ($environment !== null) {
+            if ($environment instanceof Environment) {
                 return $environment;
             }
         }
@@ -115,6 +115,9 @@ final readonly class EfaturaConfig
         return $this->environment()->code();
     }
 
+    /**
+     * @return array<string, array<string, string|int>>
+     */
     public function asArray(): array
     {
         return [
@@ -165,7 +168,7 @@ final readonly class EfaturaConfig
 
         $environment = Environment::fromName(strtoupper($normalized));
 
-        if ($environment !== null) {
+        if ($environment instanceof Environment) {
             return $environment;
         }
 

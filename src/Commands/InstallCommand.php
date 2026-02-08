@@ -20,7 +20,14 @@ final class InstallCommand extends Command
 {
     public $signature = 'efatura:install';
 
-    public $description = 'Install akira/efatura configuration';
+    public $description = '';
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->description = __('efatura.install.command_description');
+    }
 
     public function handle(Filesystem $filesystem): int
     {
@@ -28,7 +35,7 @@ final class InstallCommand extends Command
         $this->updateEnvironmentFile($filesystem);
         $this->notifyOptionalPackages($filesystem);
 
-        note('akira/efatura installation complete.');
+        note(__('efatura.install.completed'));
 
         return self::SUCCESS;
     }
@@ -38,7 +45,7 @@ final class InstallCommand extends Command
         $configPath = config_path('efatura.php');
 
         if ($filesystem->exists($configPath)) {
-            note('Config file already exists. Skipped publishing.');
+            note(__('efatura.install.config_exists'));
 
             return;
         }
@@ -48,7 +55,7 @@ final class InstallCommand extends Command
         $filesystem->ensureDirectoryExists(dirname($configPath));
         $filesystem->copy($sourcePath, $configPath);
 
-        info('Config file published.');
+        info(__('efatura.install.config_published'));
     }
 
     private function updateEnvironmentFile(Filesystem $filesystem): void
@@ -56,7 +63,7 @@ final class InstallCommand extends Command
         $envPath = base_path('.env');
 
         if (! $filesystem->exists($envPath)) {
-            warning('.env file not found. Skipped environment updates.');
+            warning(__('efatura.install.env_missing'));
 
             return;
         }
@@ -79,10 +86,10 @@ final class InstallCommand extends Command
                 continue;
             }
 
-            $confirmed = confirm("Add {$key} to .env?");
+            $confirmed = confirm(__('efatura.install.env_add_confirm', ['key' => $key]));
 
             if (! $confirmed) {
-                note("Skipped {$key}.");
+                note(__('efatura.install.env_skipped', ['key' => $key]));
 
                 continue;
             }
@@ -93,7 +100,7 @@ final class InstallCommand extends Command
 
             $appendLines[] = $key . '=' . $value;
 
-            info("Added {$key} to .env.");
+            info(__('efatura.install.env_added', ['key' => $key]));
         }
 
         if ($appendLines !== []) {
@@ -120,7 +127,7 @@ final class InstallCommand extends Command
 
         $packages = implode(', ', $missing);
 
-        info("Optional PDF/QR packages not detected: {$packages}. PDF and QR generation are optional. The recommended packages work out of the box when installed with akira/efatura.");
+        info(__('efatura.install.optional_packages_notice', ['packages' => $packages]));
     }
 
     private function environmentVariableExists(string $contents, string $key): bool

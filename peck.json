@@ -5,7 +5,9 @@
             "php",
             "efatura",
             "pnpm",
-            "filesystem"
+            "filesystem",
+            "nif",
+            "homologation"
         ],
         "paths": []
     }

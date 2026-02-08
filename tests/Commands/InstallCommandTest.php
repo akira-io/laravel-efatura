@@ -69,11 +69,13 @@ it('runs without interaction when all variables exist', function (): void {
     testFiles()->ensureDirectoryExists(base_path('vendor/akira/laravel-pdf-invoice'));
     testFiles()->ensureDirectoryExists(base_path('vendor/akira/laravel-qrcode'));
 
+    artisan('efatura:install')->assertExitCode(0);
+
     artisan('efatura:install')
-        ->expectsOutputToContain('Config file already exists. Skipped publishing.')
-        ->expectsOutputToContain('akira/efatura installation complete.')
-        ->doesntExpectOutputToContain('Add EFATURA')
-        ->doesntExpectOutputToContain('Optional PDF/QR packages not detected')
+        ->expectsOutputToContain(trans('efatura.install.config_exists'))
+        ->expectsOutputToContain(trans('efatura.install.completed'))
+        ->doesntExpectOutputToContain(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']))
+        ->doesntExpectOutputToContain(trans('efatura.install.optional_packages_notice', ['packages' => 'akira/laravel-pdf-invoice, akira/laravel-qrcode']))
         ->assertExitCode(0);
 
     expect(testFiles()->get($envPath))->toBe(envContent(efaturaEnvDefaults()));
@@ -86,7 +88,7 @@ it('publishes config when missing', function (): void {
     testFiles()->put($envPath, envContent(efaturaEnvDefaults()));
 
     artisan('efatura:install')
-        ->expectsOutputToContain('Config file published.')
+        ->expectsOutputToContain(trans('efatura.install.config_published'))
         ->assertExitCode(0);
 
     expect(testFiles()->exists($configPath))->toBeTrue();
@@ -100,26 +102,21 @@ it('appends missing env variables when confirmed', function (): void {
     testFiles()->put($configPath, '');
 
     artisan('efatura:install')
-        ->expectsConfirmation('Add EFATURA_TRANSMITTER_NIF to .env?', 'yes')
-        ->expectsConfirmation('Add EFATURA_LED_CODE to .env?', 'yes')
-        ->expectsConfirmation('Add EFATURA_TRANSMITTER_KEY to .env?', 'yes')
-        ->expectsConfirmation('Add EFATURA_MIDDLEWARE_BASE_URL to .env?', 'yes')
-        ->expectsConfirmation('Add EFATURA_ENVIRONMENT to .env?', 'yes')
-        ->expectsOutputToContain('Added EFATURA_TRANSMITTER_NIF to .env.')
-        ->expectsOutputToContain('Added EFATURA_LED_CODE to .env.')
-        ->expectsOutputToContain('Added EFATURA_TRANSMITTER_KEY to .env.')
-        ->expectsOutputToContain('Added EFATURA_MIDDLEWARE_BASE_URL to .env.')
-        ->expectsOutputToContain('Added EFATURA_ENVIRONMENT to .env.')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_LED_CODE']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_MIDDLEWARE_BASE_URL']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_ENVIRONMENT']), 'yes')
         ->assertExitCode(0);
 
     $contents = testFiles()->get($envPath);
 
-    expect($contents)->toContain('# akira/efatura');
-    expect($contents)->toContain('EFATURA_TRANSMITTER_NIF=');
-    expect($contents)->toContain('EFATURA_LED_CODE=');
-    expect($contents)->toContain('EFATURA_TRANSMITTER_KEY=');
-    expect($contents)->toContain('EFATURA_MIDDLEWARE_BASE_URL=https://localhost:3443');
-    expect($contents)->toContain('EFATURA_ENVIRONMENT=test');
+    expect($contents)->toContain('# akira/efatura')
+        ->and($contents)->toContain('EFATURA_TRANSMITTER_NIF=')
+        ->and($contents)->toContain('EFATURA_LED_CODE=')
+        ->and($contents)->toContain('EFATURA_TRANSMITTER_KEY=')
+        ->and($contents)->toContain('EFATURA_MIDDLEWARE_BASE_URL=https://localhost:3443')
+        ->and($contents)->toContain('EFATURA_ENVIRONMENT=test');
 });
 
 it('skips env variable insertion when declined', function (): void {
@@ -133,9 +130,9 @@ it('skips env variable insertion when declined', function (): void {
     testFiles()->put($configPath, '');
 
     artisan('efatura:install')
-        ->expectsConfirmation('Add EFATURA_TRANSMITTER_KEY to .env?', 'no')
-        ->expectsOutputToContain('Skipped EFATURA_TRANSMITTER_KEY.')
-        ->doesntExpectOutputToContain('Added EFATURA_TRANSMITTER_KEY to .env.')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'no')
+        ->expectsOutputToContain(trans('efatura.install.env_skipped', ['key' => 'EFATURA_TRANSMITTER_KEY']))
+        ->doesntExpectOutputToContain(trans('efatura.install.env_added', ['key' => 'EFATURA_TRANSMITTER_KEY']))
         ->assertExitCode(0);
 
     $contents = testFiles()->get($envPath);
@@ -151,17 +148,17 @@ it('is idempotent when run twice', function (): void {
     testFiles()->put($configPath, '');
 
     artisan('efatura:install')
-        ->expectsConfirmation('Add EFATURA_TRANSMITTER_NIF to .env?', 'yes')
-        ->expectsConfirmation('Add EFATURA_LED_CODE to .env?', 'yes')
-        ->expectsConfirmation('Add EFATURA_TRANSMITTER_KEY to .env?', 'yes')
-        ->expectsConfirmation('Add EFATURA_MIDDLEWARE_BASE_URL to .env?', 'yes')
-        ->expectsConfirmation('Add EFATURA_ENVIRONMENT to .env?', 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_LED_CODE']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_MIDDLEWARE_BASE_URL']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_ENVIRONMENT']), 'yes')
         ->assertExitCode(0);
 
     $first = testFiles()->get($envPath);
 
     artisan('efatura:install')
-        ->doesntExpectOutputToContain('Add EFATURA')
+        ->doesntExpectOutputToContain(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']))
         ->assertExitCode(0);
 
     $second = testFiles()->get($envPath);
@@ -175,7 +172,7 @@ it('handles missing env file', function (): void {
     testFiles()->put($configPath, '');
 
     artisan('efatura:install')
-        ->expectsOutputToContain('.env file not found. Skipped environment updates.')
+        ->expectsOutputToContain(trans('efatura.install.env_missing'))
         ->assertExitCode(0);
 });
 
@@ -187,7 +184,7 @@ it('notifies when optional packages are missing', function (): void {
     testFiles()->put($configPath, '');
 
     artisan('efatura:install')
-        ->expectsOutputToContain('Optional PDF/QR packages not detected')
+        ->expectsOutputToContain(trans('efatura.install.optional_packages_notice', ['packages' => 'akira/laravel-pdf-invoice, akira/laravel-qrcode']))
         ->assertExitCode(0);
 });
 
@@ -201,6 +198,6 @@ it('does not notify when optional packages are present', function (): void {
     testFiles()->ensureDirectoryExists(base_path('vendor/akira/laravel-qrcode'));
 
     artisan('efatura:install')
-        ->doesntExpectOutputToContain('Optional PDF/QR packages not detected')
+        ->doesntExpectOutputToContain(trans('efatura.install.optional_packages_notice', ['packages' => 'akira/laravel-pdf-invoice, akira/laravel-qrcode']))
         ->assertExitCode(0);
 });

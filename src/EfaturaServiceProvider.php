@@ -15,6 +15,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $package
             ->name('efatura')
             ->hasConfigFile()
+            ->hasTranslations()
             ->hasViews()
             ->hasCommand(InstallCommand::class);
     }
