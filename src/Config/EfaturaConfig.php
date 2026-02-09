@@ -6,6 +6,7 @@ namespace Akira\Efatura\Config;
 
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
+use Akira\Efatura\Support\Trans;
 use Illuminate\Config\Repository;
 
 final readonly class EfaturaConfig
@@ -19,7 +20,7 @@ final readonly class EfaturaConfig
         $value = $this->getString('efatura.transmitter.nif');
 
         if ($value === '') {
-            $this->fail('transmitter.nif', __('efatura.config.transmitter_nif_required'));
+            $this->fail('transmitter.nif', Trans::get('efatura.config.transmitter_nif_required'));
         }
 
         return $value;
@@ -30,7 +31,7 @@ final readonly class EfaturaConfig
         $value = $this->getString('efatura.transmitter.led');
 
         if ($value === '') {
-            $this->fail('transmitter.led', __('efatura.config.transmitter_led_required'));
+            $this->fail('transmitter.led', Trans::get('efatura.config.transmitter_led_required'));
         }
 
         return $value;
@@ -41,7 +42,7 @@ final readonly class EfaturaConfig
         $value = $this->getString('efatura.software.code');
 
         if ($value === '') {
-            $this->fail('software.code', __('efatura.config.software_code_required'));
+            $this->fail('software.code', Trans::get('efatura.config.software_code_required'));
         }
 
         return $value;
@@ -52,7 +53,7 @@ final readonly class EfaturaConfig
         $value = $this->getString('efatura.software.name');
 
         if ($value === '') {
-            $this->fail('software.name', __('efatura.config.software_name_required'));
+            $this->fail('software.name', Trans::get('efatura.config.software_name_required'));
         }
 
         return $value;
@@ -63,7 +64,7 @@ final readonly class EfaturaConfig
         $value = $this->getString('efatura.software.version');
 
         if ($value === '') {
-            $this->fail('software.version', __('efatura.config.software_version_required'));
+            $this->fail('software.version', Trans::get('efatura.config.software_version_required'));
         }
 
         return $value;
@@ -74,7 +75,7 @@ final readonly class EfaturaConfig
         $value = $this->getString('efatura.middleware.base_url');
 
         if ($value === '') {
-            $this->fail('middleware.base_url', __('efatura.config.middleware_base_url_required'));
+            $this->fail('middleware.base_url', Trans::get('efatura.config.middleware_base_url_required'));
         }
 
         return $value;
@@ -104,7 +105,7 @@ final readonly class EfaturaConfig
             }
         }
 
-        $this->fail('middleware.environment', __('efatura.config.environment_invalid'));
+        $this->fail('middleware.environment', Trans::get('efatura.config.environment_invalid'));
     }
 
     public function repositoryCode(): int

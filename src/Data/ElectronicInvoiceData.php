@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Support\Trans;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
 
@@ -27,7 +28,7 @@ final class ElectronicInvoiceData extends Data
             }
 
             $data = $validator->getData();
-            $type = $data['invoice']['type'] ?? null;
+            $type = data_get($data, 'invoice.type');
 
             self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_INVOICE, $type, 'invoice.type');
         });
@@ -49,8 +50,8 @@ final class ElectronicInvoiceData extends Data
     public static function messages(): array
     {
         return [
-            'invoice.required' => __('efatura.validation.invoice_required'),
-            'invoice.array'    => __('efatura.validation.invoice_required'),
+            'invoice.required' => Trans::get('efatura.validation.invoice_required'),
+            'invoice.array'    => Trans::get('efatura.validation.invoice_required'),
         ];
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Concerns;
 
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Support\Trans;
 use Illuminate\Contracts\Validation\Validator;
 
 trait ValidatesInvoiceType
@@ -14,7 +15,7 @@ trait ValidatesInvoiceType
         $documentType = self::normalizeDocumentType($value);
 
         if ($documentType !== $expected) {
-            $validator->errors()->add($path, __('efatura.validation.invoice_type_mismatch'));
+            $validator->errors()->add($path, Trans::get('efatura.validation.invoice_type_mismatch'));
         }
     }
 

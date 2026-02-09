@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Support\Trans;
 use Spatie\LaravelData\Data;
 
 final class TaxData extends Data
@@ -31,7 +32,7 @@ final class TaxData extends Data
     public static function messages(): array
     {
         return [
-            'exemptionReason.required_if' => __('efatura.validation.na_tax_exemption_required'),
+            'exemptionReason.required_if' => Trans::get('efatura.validation.na_tax_exemption_required'),
         ];
     }
 

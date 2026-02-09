@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Support\Trans;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
 
@@ -27,7 +28,7 @@ final class SalesReceiptData extends Data
             }
 
             $data = $validator->getData();
-            $type = $data['invoice']['type'] ?? null;
+            $type = data_get($data, 'invoice.type');
 
             self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_SALES_TICKET, $type, 'invoice.type');
 
@@ -35,17 +36,17 @@ final class SalesReceiptData extends Data
                 return;
             }
 
-            $total    = $data['invoice']['totals']['grandTotal'] ?? null;
-            $receiver = $data['invoice']['receiver'] ?? null;
+            $total    = data_get($data, 'invoice.totals.grandTotal');
+            $receiver = data_get($data, 'invoice.receiver');
 
             if (is_numeric($total) && (float) $total >= 20000.0 && $receiver === null) {
-                $validator->errors()->add('invoice.receiver', __('efatura.invoice.receiver_required_for_type'));
+                $validator->errors()->add('invoice.receiver', Trans::get('efatura.invoice.receiver_required_for_type'));
 
                 return;
             }
 
             if (is_numeric($total) && (float) $total >= 20000.0 && ! \is_array($receiver)) {
-                $validator->errors()->add('invoice.receiver', __('efatura.validation.receiver_required'));
+                $validator->errors()->add('invoice.receiver', Trans::get('efatura.validation.receiver_required'));
             }
         });
     }
@@ -71,8 +72,8 @@ final class SalesReceiptData extends Data
     public static function messages(): array
     {
         return [
-            'invoice.required' => __('efatura.validation.invoice_required'),
-            'invoice.array'    => __('efatura.validation.invoice_required'),
+            'invoice.required' => Trans::get('efatura.validation.invoice_required'),
+            'invoice.array'    => Trans::get('efatura.validation.invoice_required'),
         ];
     }
 }

@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Contracts\DocumentTypePolicy;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Support\Trans;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
 
@@ -45,14 +46,14 @@ final class InvoiceData extends Data
     public static function messages(): array
     {
         return [
-            'emitter.required'   => __('efatura.validation.emitter_required'),
-            'emitter.array'      => __('efatura.validation.emitter_required'),
-            'issueDate.required' => __('efatura.invoice.issue_date_required'),
-            'lines.required'     => __('efatura.validation.lines_required'),
-            'lines.min'          => __('efatura.validation.lines_required'),
-            'receiver.array'     => __('efatura.validation.receiver_required'),
-            'totals.required'    => __('efatura.validation.totals_required'),
-            'totals.array'       => __('efatura.validation.totals_required'),
+            'emitter.required'   => Trans::get('efatura.validation.emitter_required'),
+            'emitter.array'      => Trans::get('efatura.validation.emitter_required'),
+            'issueDate.required' => Trans::get('efatura.invoice.issue_date_required'),
+            'lines.required'     => Trans::get('efatura.validation.lines_required'),
+            'lines.min'          => Trans::get('efatura.validation.lines_required'),
+            'receiver.array'     => Trans::get('efatura.validation.receiver_required'),
+            'totals.required'    => Trans::get('efatura.validation.totals_required'),
+            'totals.array'       => Trans::get('efatura.validation.totals_required'),
         ];
     }
 
@@ -64,9 +65,9 @@ final class InvoiceData extends Data
             }
 
             $data     = $validator->getData();
-            $type     = $data['type'] ?? null;
-            $receiver = $data['receiver'] ?? null;
-            $lines    = $data['lines'] ?? null;
+            $type     = data_get($data, 'type');
+            $receiver = data_get($data, 'receiver');
+            $lines    = data_get($data, 'lines');
 
             if ($type instanceof DocumentType) {
                 $documentType = $type;
@@ -83,7 +84,7 @@ final class InvoiceData extends Data
             $policy = resolve(DocumentTypePolicy::class);
 
             if (! $policy->supportsEmission($documentType)) {
-                $validator->errors()->add('type', __('efatura.invoice.document_type_not_supported', [
+                $validator->errors()->add('type', Trans::get('efatura.invoice.document_type_not_supported', [
                     'type' => $documentType->value,
                 ]));
 
@@ -95,19 +96,19 @@ final class InvoiceData extends Data
             }
 
             if (! \is_array($lines) || $lines === []) {
-                $validator->errors()->add('lines', __('efatura.validation.lines_required'));
+                $validator->errors()->add('lines', Trans::get('efatura.validation.lines_required'));
 
                 return;
             }
 
             if ($receiver === null) {
-                $validator->errors()->add('receiver', __('efatura.invoice.receiver_required_for_type'));
+                $validator->errors()->add('receiver', Trans::get('efatura.invoice.receiver_required_for_type'));
 
                 return;
             }
 
             if (! \is_array($receiver)) {
-                $validator->errors()->add('receiver', __('efatura.validation.receiver_required'));
+                $validator->errors()->add('receiver', Trans::get('efatura.validation.receiver_required'));
             }
         });
     }

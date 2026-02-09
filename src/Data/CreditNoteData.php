@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Support\Trans;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
 
@@ -37,10 +38,10 @@ final class CreditNoteData extends Data
     public static function messages(): array
     {
         return [
-            'invoice.required'                  => __('efatura.validation.invoice_required'),
-            'invoice.array'                     => __('efatura.validation.invoice_required'),
-            'invoice.originalIud.required'      => __('efatura.invoice.original_iud_required'),
-            'invoice.creditNoteReason.required' => __('efatura.invoice.credit_note_reason_required'),
+            'invoice.required'                  => Trans::get('efatura.validation.invoice_required'),
+            'invoice.array'                     => Trans::get('efatura.validation.invoice_required'),
+            'invoice.originalIud.required'      => Trans::get('efatura.invoice.original_iud_required'),
+            'invoice.creditNoteReason.required' => Trans::get('efatura.invoice.credit_note_reason_required'),
         ];
     }
 
@@ -52,7 +53,7 @@ final class CreditNoteData extends Data
             }
 
             $data = $validator->getData();
-            $type = $data['invoice']['type'] ?? null;
+            $type = data_get($data, 'invoice.type');
 
             self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_CREDIT_NOTE, $type, 'invoice.type');
         });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Support\Trans;
 use Spatie\LaravelData\Data;
 
 final class PartyData extends Data
@@ -33,8 +34,8 @@ final class PartyData extends Data
     public static function messages(): array
     {
         return [
-            'nif.required'  => __('efatura.validation.party_nif_required'),
-            'name.required' => __('efatura.validation.party_name_required'),
+            'nif.required'  => Trans::get('efatura.validation.party_nif_required'),
+            'name.required' => Trans::get('efatura.validation.party_name_required'),
         ];
     }
 
