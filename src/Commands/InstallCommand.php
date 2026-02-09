@@ -71,7 +71,7 @@ final class InstallCommand extends Command
 
         $variables = [
             'EFATURA_TRANSMITTER_NIF'     => '',
-            'EFATURA_LED_CODE'            => '',
+            'EFATURA_TRANSMITTER_LED'     => '',
             'EFATURA_TRANSMITTER_KEY'     => '',
             'EFATURA_MIDDLEWARE_BASE_URL' => 'https://localhost:3443',
             'EFATURA_ENVIRONMENT'         => 'test',

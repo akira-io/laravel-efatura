@@ -41,7 +41,7 @@ All values are read from environment variables. Configure them in your `.env` an
 - `EFATURA_TRANSMITTER_LED`: issuer LED code assigned by DNRE.
 - `EFATURA_TRANSMITTER_KEY`: middleware credential or shared key.
 - `EFATURA_MIDDLEWARE_BASE_URL`: middleware base URL.
-- `EFATURA_MIDDLEWARE_ENV`: `sandbox` or `production`.
+- `EFATURA_ENVIRONMENT`: `sandbox` or `production`.
 
 ## Core concepts
 

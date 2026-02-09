@@ -42,7 +42,7 @@ function efaturaEnvDefaults(): array
 {
     return [
         'EFATURA_TRANSMITTER_NIF'     => '123456789',
-        'EFATURA_LED_CODE'            => 'LED123',
+        'EFATURA_TRANSMITTER_LED'     => 'LED123',
         'EFATURA_TRANSMITTER_KEY'     => 'secret',
         'EFATURA_MIDDLEWARE_BASE_URL' => 'https://localhost:3443',
         'EFATURA_ENVIRONMENT'         => 'test',
@@ -103,7 +103,7 @@ it('appends missing env variables when confirmed', function (): void {
 
     artisan('efatura:install')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']), 'yes')
-        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_LED_CODE']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_LED']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_MIDDLEWARE_BASE_URL']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_ENVIRONMENT']), 'yes')
@@ -113,7 +113,7 @@ it('appends missing env variables when confirmed', function (): void {
 
     expect($contents)->toContain('# akira/efatura')
         ->and($contents)->toContain('EFATURA_TRANSMITTER_NIF=')
-        ->and($contents)->toContain('EFATURA_LED_CODE=')
+        ->and($contents)->toContain('EFATURA_TRANSMITTER_LED=')
         ->and($contents)->toContain('EFATURA_TRANSMITTER_KEY=')
         ->and($contents)->toContain('EFATURA_MIDDLEWARE_BASE_URL=https://localhost:3443')
         ->and($contents)->toContain('EFATURA_ENVIRONMENT=test');
@@ -149,7 +149,7 @@ it('is idempotent when run twice', function (): void {
 
     artisan('efatura:install')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']), 'yes')
-        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_LED_CODE']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_LED']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_MIDDLEWARE_BASE_URL']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_ENVIRONMENT']), 'yes')
