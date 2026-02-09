@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Support;
 
-class Trans
+final class Trans
 {
     /**
      * @param array<string, string> $replace
