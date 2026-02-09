@@ -26,7 +26,8 @@ final class TransportDocumentData extends Data
                 return;
             }
 
-            $type = data_get($validator->getData(), 'invoice.type');
+            $data = $validator->getData();
+            $type = $data['invoice']['type'] ?? null;
 
             self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_TRANSPORT_DOCUMENT, $type, 'invoice.type');
         });

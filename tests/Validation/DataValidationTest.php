@@ -108,7 +108,7 @@ it('covers tax rules and messages', function (): void {
 });
 
 it('covers tax data constructor', function (): void {
-    $tax = new TaxData('IVA', 15.0, 150.0, null);
+    $tax = new TaxData('IVA', 15.0, 150.0);
 
     expect($tax->type)->toBe('IVA')
         ->and($tax->rate)->toBe(15.0)
@@ -144,7 +144,7 @@ it('requires receiver for non sales receipt types', function (): void {
 });
 
 it('accepts supported document types', function (): void {
-    $policy = app(DocumentTypePolicy::class);
+    $policy = resolve(DocumentTypePolicy::class);
 
     foreach (DocumentType::cases() as $type) {
         if (! $policy->supportsEmission($type)) {
@@ -191,7 +191,7 @@ it('rejects unsupported document types', function (): void {
 });
 
 it('covers invoice type non string branch', function (): void {
-    $validator = app('validator')->make(['type' => 123], []);
+    $validator = resolve('validator')->make(['type' => 123], []);
     InvoiceData::withValidator($validator);
     $validator->passes();
 
@@ -203,7 +203,7 @@ it('covers invoice type invalid string branch', function (): void {
         'type' => 'INVALID',
     ];
 
-    $validator = app('validator')->make($data, []);
+    $validator = resolve('validator')->make($data, []);
     InvoiceData::withValidator($validator);
     $validator->passes();
 
@@ -235,7 +235,7 @@ it('covers receiver invalid type branch', function (): void {
         ],
     ];
 
-    $validator = app('validator')->make($data, []);
+    $validator = resolve('validator')->make($data, []);
     InvoiceData::withValidator($validator);
     $validator->passes();
 
@@ -264,7 +264,7 @@ it('covers invoice lines branch', function (): void {
         ],
     ];
 
-    $validator = app('validator')->make($data, []);
+    $validator = resolve('validator')->make($data, []);
     InvoiceData::withValidator($validator);
     $validator->passes();
 
@@ -282,7 +282,7 @@ it('covers sales receipt receiver type branch', function (): void {
         ],
     ];
 
-    $validator = app('validator')->make($data, []);
+    $validator = resolve('validator')->make($data, []);
     SalesReceiptData::withValidator($validator);
     $validator->passes();
 
@@ -292,13 +292,13 @@ it('covers sales receipt receiver type branch', function (): void {
 });
 
 it('covers sales receipt early return branches', function (): void {
-    $validator = app('validator')->make([], ['invoice' => ['required']]);
+    $validator = resolve('validator')->make([], ['invoice' => ['required']]);
     SalesReceiptData::withValidator($validator);
     $validator->passes();
 
     expect($validator->errors()->isNotEmpty())->toBeTrue();
 
-    $validator = app('validator')->make(['invoice' => ['type' => 'FTE']], []);
+    $validator = resolve('validator')->make(['invoice' => ['type' => 'FTE']], []);
     SalesReceiptData::withValidator($validator);
     $validator->passes();
 
@@ -312,7 +312,7 @@ it('covers credit note type validator branch', function (): void {
         ],
     ];
 
-    $validator = app('validator')->make($data, []);
+    $validator = resolve('validator')->make($data, []);
     CreditNoteData::withValidator($validator);
     $validator->passes();
 
@@ -376,7 +376,7 @@ it('covers invoice type trait with invalid value', function (): void {
         }
     };
 
-    $validator = app('validator')->make(['type' => 123], []);
+    $validator = resolve('validator')->make(['type' => 123], []);
     $tester::run($validator, DocumentType::ELECTRONIC_INVOICE, 123, 'type');
 
     expect($validator->errors()->toArray())->toHaveKey('type');

@@ -51,7 +51,8 @@ final class CreditNoteData extends Data
                 return;
             }
 
-            $type = data_get($validator->getData(), 'invoice.type');
+            $data = $validator->getData();
+            $type = $data['invoice']['type'] ?? null;
 
             self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_CREDIT_NOTE, $type, 'invoice.type');
         });

@@ -27,7 +27,7 @@ final class SalesReceiptData extends Data
             }
 
             $data = $validator->getData();
-            $type = data_get($data, 'invoice.type');
+            $type = $data['invoice']['type'] ?? null;
 
             self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_SALES_TICKET, $type, 'invoice.type');
 
@@ -35,8 +35,8 @@ final class SalesReceiptData extends Data
                 return;
             }
 
-            $total    = data_get($data, 'invoice.totals.grandTotal');
-            $receiver = data_get($data, 'invoice.receiver');
+            $total    = $data['invoice']['totals']['grandTotal'] ?? null;
+            $receiver = $data['invoice']['receiver'] ?? null;
 
             if (is_numeric($total) && (float) $total >= 20000.0 && $receiver === null) {
                 $validator->errors()->add('invoice.receiver', __('efatura.invoice.receiver_required_for_type'));

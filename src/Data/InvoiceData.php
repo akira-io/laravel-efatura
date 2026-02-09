@@ -64,9 +64,9 @@ final class InvoiceData extends Data
             }
 
             $data     = $validator->getData();
-            $type     = data_get($data, 'type');
-            $receiver = data_get($data, 'receiver');
-            $lines    = data_get($data, 'lines');
+            $type     = $data['type'] ?? null;
+            $receiver = $data['receiver'] ?? null;
+            $lines    = $data['lines'] ?? null;
 
             if ($type instanceof DocumentType) {
                 $documentType = $type;

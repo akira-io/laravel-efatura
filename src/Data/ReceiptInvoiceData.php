@@ -26,7 +26,8 @@ final class ReceiptInvoiceData extends Data
                 return;
             }
 
-            $type = data_get($validator->getData(), 'invoice.type');
+            $data = $validator->getData();
+            $type = $data['invoice']['type'] ?? null;
 
             self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_INVOICE_RECEIPT, $type, 'invoice.type');
         });
