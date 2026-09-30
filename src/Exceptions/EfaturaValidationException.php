@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Exceptions;
 
-use RuntimeException;
-
-final class EfaturaValidationException extends RuntimeException
+final class EfaturaValidationException extends EfaturaException
 {
     public function __construct(
-        private readonly string $field,
+        string $field,
         string $message,
     ) {
-        parent::__construct($message);
+        parent::__construct('validation.invalid_value', $message, $field);
     }
 
     public function field(): string
     {
-        return $this->field;
+        return (string) $this->field;
     }
 }

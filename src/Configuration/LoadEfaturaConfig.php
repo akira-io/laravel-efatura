@@ -7,10 +7,11 @@ namespace Akira\Efatura\Configuration;
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Illuminate\Contracts\Config\Repository;
+use SensitiveParameter;
 
 final readonly class LoadEfaturaConfig
 {
-    public function __construct(private Repository $repository) {}
+    public function __construct(#[SensitiveParameter] private Repository $repository) {}
 
     public function __invoke(): EfaturaConfig
     {
@@ -65,13 +66,13 @@ final readonly class LoadEfaturaConfig
         );
     }
 
-    private function inherit(ConfigInput $settings, string $key, string $hostPath): string
+    private function inherit(#[SensitiveParameter] ConfigInput $settings, string $key, string $hostPath): string
     {
         return $settings->string($key) ?? ConfigInput::normalizeString($this->repository->get($hostPath), $hostPath)
             ?? throw new ConfigurationException('configuration.invalid_type', $hostPath);
     }
 
-    private function environment(mixed $configured): Environment
+    private function environment(#[SensitiveParameter] mixed $configured): Environment
     {
         if ($configured instanceof Environment) {
             return $configured;
@@ -95,7 +96,7 @@ final readonly class LoadEfaturaConfig
         throw new ConfigurationException('configuration.invalid_environment', 'efatura.environment');
     }
 
-    private function emitter(ConfigInput $settings): ?EmitterConfig
+    private function emitter(#[SensitiveParameter] ConfigInput $settings): ?EmitterConfig
     {
         $address  = $settings->section('address');
         $contacts = $settings->section('contacts');
@@ -122,7 +123,7 @@ final readonly class LoadEfaturaConfig
         return null;
     }
 
-    private function http(ConfigInput $settings): HttpConfig
+    private function http(#[SensitiveParameter] ConfigInput $settings): HttpConfig
     {
         $defaults = $this->httpClient($settings, new HttpClientConfig(null, 30, 10, 2, 200, 5, true));
 
@@ -135,8 +136,14 @@ final readonly class LoadEfaturaConfig
         );
     }
 
-    private function httpClient(ConfigInput $settings, HttpClientConfig $defaults, ?string $baseUrl = null): HttpClientConfig
-    {
+    private function httpClient(
+        #[SensitiveParameter]
+        ConfigInput $settings,
+        #[SensitiveParameter]
+        HttpClientConfig $defaults,
+        #[SensitiveParameter]
+        ?string $baseUrl = null,
+    ): HttpClientConfig {
         return new HttpClientConfig(
             $settings->url('base_url', $baseUrl),
             $settings->integer('timeout_seconds', $defaults->timeoutSeconds),

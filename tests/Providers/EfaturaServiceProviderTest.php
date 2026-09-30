@@ -28,7 +28,7 @@ it('shares one manager with the resolved configuration', function (): void {
         ->and($manager->config())->toBe(resolve(EfaturaConfig::class));
 });
 
-it('registers through package discovery without registering absent views', function (): void {
+it('declares the provider metadata and registers without absent views', function (): void {
     $composer = json_decode((string) file_get_contents(__DIR__ . '/../../composer.json'), true, 512, JSON_THROW_ON_ERROR);
 
     expect($composer['extra']['laravel']['providers'])->toContain(EfaturaServiceProvider::class)

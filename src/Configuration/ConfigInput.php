@@ -15,7 +15,7 @@ final readonly class ConfigInput
     /**
      * @param array<string, mixed> $settings
      */
-    private function __construct(private array $settings, private string $path) {}
+    private function __construct(#[SensitiveParameter] private array $settings, private string $path) {}
 
     public static function from(#[SensitiveParameter] mixed $settings, string $path): self
     {
@@ -52,7 +52,7 @@ final readonly class ConfigInput
         return $secret ? $setting : trim($setting);
     }
 
-    public function read(string $key, mixed $default = null): mixed
+    public function read(string $key, #[SensitiveParameter] mixed $default = null): mixed
     {
         return \array_key_exists($key, $this->settings) ? $this->settings[$key] : $default;
     }
@@ -64,12 +64,12 @@ final readonly class ConfigInput
         return self::from($nullable && $section === null ? [] : $section, $this->field($key));
     }
 
-    public function string(string $key, ?string $default = null, bool $secret = false): ?string
+    public function string(string $key, #[SensitiveParameter] ?string $default = null, bool $secret = false): ?string
     {
         return self::normalizeString($this->read($key, $default), $this->field($key), $secret);
     }
 
-    public function requiredString(string $key, ?string $default = null): string
+    public function requiredString(string $key, #[SensitiveParameter] ?string $default = null): string
     {
         return $this->string($key, $default) ?? throw new ConfigurationException('configuration.invalid_type', $this->field($key));
     }
@@ -108,7 +108,7 @@ final readonly class ConfigInput
         return $taxId;
     }
 
-    public function url(string $key, ?string $default = null): ?string
+    public function url(string $key, #[SensitiveParameter] ?string $default = null): ?string
     {
         $url = $this->string($key, $default);
         if ($url === null) {
@@ -125,7 +125,7 @@ final readonly class ConfigInput
         return rtrim($url, '/');
     }
 
-    public function relativePath(string $key, ?string $default = null): ?string
+    public function relativePath(string $key, #[SensitiveParameter] ?string $default = null): ?string
     {
         $path = $this->string($key, $default);
         if ($path !== null && (preg_match('/[\x00-\x1f\\\:]/', $path) === 1 || str_starts_with($path, '/')
@@ -136,7 +136,7 @@ final readonly class ConfigInput
         return $path;
     }
 
-    public function identifier(string $key, string $default): string
+    public function identifier(string $key, #[SensitiveParameter] string $default): string
     {
         $identifier = $this->requiredString($key, $default);
         if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $identifier) !== 1) {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Support\OfficialArtifacts;
 use Akira\Efatura\Tests\Support\ArtifactFixture;
 
@@ -24,17 +25,17 @@ it('rejects unsafe or unknown artifact paths', function (string $path): void {
     $this->fixture->manifest(['files' => [$path => ['sha256' => hash('sha256', "original\r\nbytes\r\n")]]]);
 
     expect(fn (): string => new OfficialArtifacts($this->fixture->root)->path($path))
-        ->toThrow(InvalidArgumentException::class);
+        ->toThrow(OfficialArtifactException::class, 'artifacts.unknown_or_unsafe_path');
 })->with(['', '../example.xsd', '/nested/example.xsd', 'C:/nested/example.xsd', 'nested\example.xsd', "nested/example.xsd\0", './nested/example.xsd', 'nested/../example.xsd', 'nested//example.xsd']);
 
 it('rejects files absent from the manifest', function (): void {
     expect(fn (): string => new OfficialArtifacts($this->fixture->root)->path('official-artifacts.json'))
-        ->toThrow(InvalidArgumentException::class);
+        ->toThrow(OfficialArtifactException::class, 'artifacts.unknown_or_unsafe_path');
 });
 
 it('rejects unknown signature profiles', function (): void {
     expect(fn (): string => new OfficialArtifacts($this->fixture->root)->xsdEntry('enveloped'))
-        ->toThrow(InvalidArgumentException::class);
+        ->toThrow(OfficialArtifactException::class, 'artifacts.unknown_profile');
 });
 
 it('detects modified bytes including line ending normalization on every lookup', function (): void {
@@ -42,7 +43,7 @@ it('detects modified bytes including line ending normalization on every lookup',
     $path      = $artifacts->path('nested/example.xsd');
     file_put_contents($path, "original\nbytes\n");
 
-    expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(UnexpectedValueException::class);
+    expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(OfficialArtifactException::class, 'artifacts.checksum_mismatch');
 });
 
 it('rejects missing files and directories', function (bool $directory): void {
@@ -52,7 +53,7 @@ it('rejects missing files and directories', function (bool $directory): void {
     }
 
     expect(fn (): string => new OfficialArtifacts($this->fixture->root)->path('nested/example.xsd'))
-        ->toThrow(UnexpectedValueException::class);
+        ->toThrow(OfficialArtifactException::class, 'artifacts.missing_or_unreadable');
 })->with([true, false]);
 
 it('rejects symbolic links even when their target has the expected bytes', function (): void {
@@ -60,7 +61,7 @@ it('rejects symbolic links even when their target has the expected bytes', funct
     symlink($this->fixture->root . '/target.xsd', $this->fixture->root . '/nested/example.xsd');
 
     expect(fn (): string => new OfficialArtifacts($this->fixture->root)->path('nested/example.xsd'))
-        ->toThrow(UnexpectedValueException::class);
+        ->toThrow(OfficialArtifactException::class, 'artifacts.symbolic_link');
 });
 
 it('rejects symbolic link directories', function (): void {
@@ -68,25 +69,25 @@ it('rejects symbolic link directories', function (): void {
     symlink($this->fixture->root . '/target', $this->fixture->root . '/nested');
 
     expect(fn (): string => new OfficialArtifacts($this->fixture->root)->path('nested/example.xsd'))
-        ->toThrow(UnexpectedValueException::class);
+        ->toThrow(OfficialArtifactException::class, 'artifacts.symbolic_link');
 });
 
 it('fails safely when the resource root or manifest is missing', function (bool $root): void {
     unlink($this->fixture->root . '/official-artifacts.json');
 
     expect(fn (): OfficialArtifacts => new OfficialArtifacts($this->fixture->root . ($root ? '/absent' : '')))
-        ->toThrow(UnexpectedValueException::class);
+        ->toThrow(OfficialArtifactException::class, $root ? 'artifacts.missing_root' : 'artifacts.missing_or_unreadable');
 })->with([true, false]);
 
 it('rejects an invalid manifest', function (string $contents): void {
     file_put_contents($this->fixture->root . '/official-artifacts.json', $contents);
 
-    expect(fn (): OfficialArtifacts => new OfficialArtifacts($this->fixture->root))->toThrow(UnexpectedValueException::class);
+    expect(fn (): OfficialArtifacts => new OfficialArtifacts($this->fixture->root))->toThrow(OfficialArtifactException::class, 'artifacts.invalid_manifest');
 })->with(['{', 'null', '{}', '{"files":[],"signature_profiles":null}']);
 
 it('rejects invalid checksum records', function (mixed $record): void {
     $this->fixture->manifest(['files' => ['nested/example.xsd' => $record]]);
 
     expect(fn (): string => new OfficialArtifacts($this->fixture->root)->path('nested/example.xsd'))
-        ->toThrow(UnexpectedValueException::class);
+        ->toThrow(OfficialArtifactException::class, 'artifacts.invalid_checksum');
 })->with([[false], [['sha256' => 123]], [['sha256' => 'invalid']]]);

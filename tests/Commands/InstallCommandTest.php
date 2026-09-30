@@ -3,8 +3,14 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Commands\InstallCommand;
+use Akira\Efatura\Configuration\EfaturaConfig;
+use Akira\Efatura\EfaturaManager;
+use Dotenv\Dotenv;
+use Dotenv\Repository\Adapter\ArrayAdapter;
+use Dotenv\Repository\RepositoryBuilder;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Env;
 use Illuminate\Support\Str;
 
 use function Pest\Laravel\artisan;
@@ -43,8 +49,8 @@ function testOriginalBasePath(): string
 function efaturaEnvDefaults(): array
 {
     return [
-        'EFATURA_TRANSMITTER_NIF'     => '123456789',
-        'EFATURA_LED_CODE'            => 'LED123',
+        'EFATURA_TRANSMITTER_TAX_ID'  => '123456789',
+        'EFATURA_EMITTER_LED'         => 'LED123',
         'EFATURA_TRANSMITTER_KEY'     => 'secret',
         'EFATURA_MIDDLEWARE_BASE_URL' => 'https://localhost:3443',
         'EFATURA_ENVIRONMENT'         => 'test',
@@ -86,7 +92,7 @@ it('runs without interaction when all variables exist', function (): void {
     artisan('efatura:install')
         ->expectsOutputToContain(trans('efatura.install.config_exists'))
         ->expectsOutputToContain(trans('efatura.install.completed'))
-        ->doesntExpectOutputToContain(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']))
+        ->doesntExpectOutputToContain(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_TAX_ID']))
         ->doesntExpectOutputToContain(trans('efatura.install.optional_packages_notice', ['packages' => 'akira/laravel-pdf-invoice, akira/laravel-qrcode']))
         ->assertExitCode(0);
 
@@ -114,8 +120,8 @@ it('appends missing env variables when confirmed', function (): void {
     testFiles()->put($configPath, '');
 
     artisan('efatura:install')
-        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']), 'yes')
-        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_LED_CODE']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_TAX_ID']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_EMITTER_LED']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_MIDDLEWARE_BASE_URL']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_ENVIRONMENT']), 'yes')
@@ -124,8 +130,8 @@ it('appends missing env variables when confirmed', function (): void {
     $contents = testFiles()->get($envPath);
 
     expect($contents)->toContain('# akira/efatura')
-        ->and($contents)->toContain('EFATURA_TRANSMITTER_NIF=')
-        ->and($contents)->toContain('EFATURA_LED_CODE=')
+        ->and($contents)->toContain('EFATURA_TRANSMITTER_TAX_ID=')
+        ->and($contents)->toContain('EFATURA_EMITTER_LED=')
         ->and($contents)->toContain('EFATURA_TRANSMITTER_KEY=')
         ->and($contents)->toContain('EFATURA_MIDDLEWARE_BASE_URL=https://localhost:3443')
         ->and($contents)->toContain('EFATURA_ENVIRONMENT=test');
@@ -160,8 +166,8 @@ it('is idempotent when run twice', function (): void {
     testFiles()->put($configPath, '');
 
     artisan('efatura:install')
-        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']), 'yes')
-        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_LED_CODE']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_TAX_ID']), 'yes')
+        ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_EMITTER_LED']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_MIDDLEWARE_BASE_URL']), 'yes')
         ->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_ENVIRONMENT']), 'yes')
@@ -170,7 +176,7 @@ it('is idempotent when run twice', function (): void {
     $first = testFiles()->get($envPath);
 
     artisan('efatura:install')
-        ->doesntExpectOutputToContain(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_NIF']))
+        ->doesntExpectOutputToContain(trans('efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_TAX_ID']))
         ->assertExitCode(0);
 
     $second = testFiles()->get($envPath);
@@ -212,4 +218,51 @@ it('does not notify when optional packages are present', function (): void {
     artisan('efatura:install')
         ->doesntExpectOutputToContain(trans('efatura.install.optional_packages_notice', ['packages' => 'akira/laravel-pdf-invoice, akira/laravel-qrcode']))
         ->assertExitCode(0);
+});
+
+it('resolves the manager from the installed environment and published config', function (): void {
+    testFiles()->put(base_path('.env'), "APP_ENV=testing\n");
+    $command = artisan('efatura:install');
+    foreach (array_keys(efaturaEnvDefaults()) as $key) {
+        $command->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => $key]), 'yes');
+    }
+
+    $command->assertExitCode(0)->run();
+
+    $property    = new ReflectionProperty(Env::class, 'repository');
+    $original    = $property->getValue();
+    $environment = RepositoryBuilder::createWithNoAdapters()->addAdapter(ArrayAdapter::class)->make();
+    $property->setValue(null, $environment);
+
+    try {
+        Dotenv::create($environment, base_path())->load();
+        config()->set('efatura', require config_path('efatura.php'));
+        $config = resolve(EfaturaManager::class)->config();
+
+        expect($config)->toBe(resolve(EfaturaConfig::class))
+            ->and($config->emitter)->toBeNull()
+            ->and($config->transmitter->taxId)->toBeNull()
+            ->and($config->transmitter->middlewareKey)->toBeNull()
+            ->and($config->transmitter->oauth->clientSecret)->toBeNull()
+            ->and($config->environment->repositoryCode())->toBe(3)
+            ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443');
+
+        $contents = testFiles()->get(base_path('.env'));
+        expect($contents)->toContain('EFATURA_TRANSMITTER_TAX_ID=null', 'EFATURA_EMITTER_LED=null');
+        testFiles()->put(base_path('.env'), str_replace(
+            ['EFATURA_TRANSMITTER_TAX_ID=null', 'EFATURA_EMITTER_LED=null'],
+            ['EFATURA_TRANSMITTER_TAX_ID=123456789', 'EFATURA_EMITTER_LED=LED123'],
+            $contents,
+        ));
+        Dotenv::create($environment, base_path())->load();
+        config()->set('efatura', require config_path('efatura.php'));
+        app()->forgetInstance(EfaturaConfig::class);
+        app()->forgetInstance(EfaturaManager::class);
+
+        $configured = resolve(EfaturaManager::class)->config();
+        expect($configured->transmitter->taxId)->toBe('123456789')
+            ->and($configured->emitter->led)->toBe('LED123');
+    } finally {
+        $property->setValue(null, $original);
+    }
 });
