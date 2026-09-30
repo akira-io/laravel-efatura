@@ -1,0 +1,270 @@
+{
+    "schema_version": 1,
+    "retrieved_on": "2026-09-30",
+    "sources": {
+        "xml-xsd": {
+            "url": "https://efatura.cv/assets/files/2024-05-27-XML-XSD-497f4b5a8e89ac2a3f766bb0cb85f9d9.zip",
+            "publication_label": "XML-XSD 2024-05-27",
+            "path": "catalogs/source/2024-05-27-XML-XSD.zip",
+            "sha256": "1ec1b89aab234e5da75c280eaa30346f23340515f557a392efe01f2493638d3c",
+            "size": 66878
+        },
+        "measurement-units": {
+            "url": "https://efatura.cv/assets/files/codigos-de-unidades-de-medidas-827b26a9ab0b39dae05ffd6aaa48d021.xls",
+            "publication_label": "Códigos de unidades de medidas",
+            "path": "catalogs/source/codigos-de-unidades-de-medidas.xls",
+            "sha256": "07377e4d947ad6190a806fd532b4830ae803aaf5ae3aba631a7f81857da58b6f",
+            "size": 460800
+        },
+        "countries-places": {
+            "url": "https://efatura.cv/assets/files/codigo-paises-lugares-cv-ec5b0f91dffe499afec52be683b4f1b3.xlsx",
+            "publication_label": "Código países e lugares CV",
+            "path": "catalogs/source/codigo-paises-lugares-cv.xlsx",
+            "sha256": "82422c6d3533a325265ede53e9dfaf1469e329306afc6909f1d9f99c913e00a2",
+            "size": 223331
+        },
+        "tax-exemptions": {
+            "url": "https://efatura.cv/assets/files/Lista-de-Motivos-de-Nao-Liquidacao-de-Imposto-7745511b183179e6e111a9e3f1b559f4.xlsx",
+            "publication_label": "Lista de Motivos de Não Liquidação de Imposto",
+            "path": "catalogs/source/Lista-de-Motivos-de-Nao-Liquidacao-de-Imposto.xlsx",
+            "sha256": "3cb226133310982435be876a519e7b71f2f69313c9f78a37c3173d49c7443108",
+            "size": 21014
+        }
+    },
+    "signature_profiles": {
+        "EnvelopedSignature": "xsd/efatura/2024-05-27/EnvelopedSignature.xsd",
+        "InternallyDetachedSignature": "xsd/efatura/2024-05-27/InternallyDetachedSignature.xsd"
+    },
+    "files": {
+        "catalogs/source/2024-05-27-XML-XSD.zip": {
+            "source": "xml-xsd",
+            "sha256": "1ec1b89aab234e5da75c280eaa30346f23340515f557a392efe01f2493638d3c",
+            "size": 66878
+        },
+        "catalogs/source/Lista-de-Motivos-de-Nao-Liquidacao-de-Imposto.xlsx": {
+            "source": "tax-exemptions",
+            "sha256": "3cb226133310982435be876a519e7b71f2f69313c9f78a37c3173d49c7443108",
+            "size": 21014
+        },
+        "catalogs/source/codigo-paises-lugares-cv.xlsx": {
+            "source": "countries-places",
+            "sha256": "82422c6d3533a325265ede53e9dfaf1469e329306afc6909f1d9f99c913e00a2",
+            "size": 223331
+        },
+        "catalogs/source/codigos-de-unidades-de-medidas.xls": {
+            "source": "measurement-units",
+            "sha256": "07377e4d947ad6190a806fd532b4830ae803aaf5ae3aba631a7f81857da58b6f",
+            "size": 460800
+        },
+        "xsd/efatura/2024-05-27/1 Invoice - EnvelopedSignature.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "1 Invoice - EnvelopedSignature.xml",
+            "sha256": "72737403a53151c221ca80e77f8991d1455d2e207d72851c4bb83d09e615be2f",
+            "size": 9997
+        },
+        "xsd/efatura/2024-05-27/1 Invoice - InternallyDetachedSignature.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "1 Invoice - InternallyDetachedSignature.xml",
+            "sha256": "698d0985d5f13ae3c389b243bc9a5bdd10a9e1c9e9a8ae92c8e92af4c69cc7b0",
+            "size": 7887
+        },
+        "xsd/efatura/2024-05-27/2 InvoiceReceipt.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "2 InvoiceReceipt.xml",
+            "sha256": "09c0211a3e16cffac4bfcc8b106ec98f5e8dbdce8ec1604118f78272965b7efb",
+            "size": 7984
+        },
+        "xsd/efatura/2024-05-27/3 SalesReceipt.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "3 SalesReceipt.xml",
+            "sha256": "bff88a8081ad39d1af51967af03722e0101124d2414b7cb62a5f309b16e5bcbe",
+            "size": 7130
+        },
+        "xsd/efatura/2024-05-27/4 Receipt.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "4 Receipt.xml",
+            "sha256": "9d7384cee001b7f476665e47038e84d1ba383313607eda9625c007d9dfd0d270",
+            "size": 7670
+        },
+        "xsd/efatura/2024-05-27/5 CreditNote.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "5 CreditNote.xml",
+            "sha256": "dab1df6a7906dde1b2a7ac5b2ec824fc2e7d9372f43ab085cac58eeab8d2c2f8",
+            "size": 6654
+        },
+        "xsd/efatura/2024-05-27/6 DebitNote.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "6 DebitNote.xml",
+            "sha256": "be5f99231fdd75ac9d17443350d9aabc43e5d8c729bae8b3856a4c0921cc2b79",
+            "size": 6504
+        },
+        "xsd/efatura/2024-05-27/7 Transport.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "7 Transport.xml",
+            "sha256": "730ee2c140c8c1bd2bcea55dd9968c7dc3640c8efacc37b594460d9e3e16e734",
+            "size": 7687
+        },
+        "xsd/efatura/2024-05-27/8 ReturnNote.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "8 ReturnNote.xml",
+            "sha256": "bcba283b566005bff9a9ae0f7350920afe550b3d3aa894a6f00bf7e767d1235b",
+            "size": 6608
+        },
+        "xsd/efatura/2024-05-27/9 RegistrationNote.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "9 RegistrationNote.xml",
+            "sha256": "be6afb8541a3c91c2f749efc70ba033bef18950168dfe80f367e18e83c071367",
+            "size": 7680
+        },
+        "xsd/efatura/2024-05-27/99 Event.xml": {
+            "source": "xml-xsd",
+            "archive_entry": "99 Event.xml",
+            "sha256": "37aa2e653292bb0dd78e592cf38d74ea6e7402629345c21e4df69cf1382c42e8",
+            "size": 3957
+        },
+        "xsd/efatura/2024-05-27/EnvelopedSignature.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "EnvelopedSignature.xsd",
+            "sha256": "6fa26040a711209634b04f337c23bc057d079085c4d1287fac213f236d6c5d66",
+            "size": 1238
+        },
+        "xsd/efatura/2024-05-27/InternallyDetachedSignature.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "InternallyDetachedSignature.xsd",
+            "sha256": "06e927f32d096501ce4bef6059066839f6c78cb54121ff5eb1bfc83c374926dd",
+            "size": 970
+        },
+        "xsd/efatura/2024-05-27/Read Me.txt": {
+            "source": "xml-xsd",
+            "archive_entry": "Read Me.txt",
+            "sha256": "6a07817f9fc23ad4bef921a6a70f97e54b53e849a80f28220ecb90e1268a305e",
+            "size": 12724
+        },
+        "xsd/efatura/2024-05-27/XML Fields Map.txt": {
+            "source": "xml-xsd",
+            "archive_entry": "XML Fields Map.txt",
+            "sha256": "a4f57bd15c89f4c8505088a029c855611d3ba6bc86a28e5b74192af9dfb2507c",
+            "size": 11931
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_CreditNote_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_CreditNote_v1.0.xsd",
+            "sha256": "83c723a107e14582666e1f32d9523bdaaa94a5912abdcf7cf3201f9a5949ec9a",
+            "size": 895
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_DebitNote_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_DebitNote_v1.0.xsd",
+            "sha256": "b518de9bcade9d315aebcc08389929ab5508fbf2beada2519926e7b04bd9617a",
+            "size": 796
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_Elements_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_Elements_v1.0.xsd",
+            "sha256": "850aed8638223d951568f121e6bac2e91bf68fa6c7dfe4f1df86a94c3f0ab372",
+            "size": 20183
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_InvoiceReceipt_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_InvoiceReceipt_v1.0.xsd",
+            "sha256": "2335f88dbb79aaec6b9fb36d12c53d5bb70b9503d1bff6f58645183c6ae4c952",
+            "size": 1041
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_Invoice_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_Invoice_v1.0.xsd",
+            "sha256": "296329e7a3a7c3896c867250d877570db0e6b7820eb4277464ebd710504180a5",
+            "size": 1025
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_MainElements_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_MainElements_v1.0.xsd",
+            "sha256": "72eba1c1e0690072e952959a1aa17d824fe0885afe8846120d7897a30fa89868",
+            "size": 425
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_MainTypes_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_MainTypes_v1.0.xsd",
+            "sha256": "3d27a6c52644cdbe8464b8424ad18c83ca3c0999cccd8297be86b3ced57552ee",
+            "size": 2636
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_Receipt_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_Receipt_v1.0.xsd",
+            "sha256": "bd02bd027244f732e2590ab648fe1e16df70972a867596fdefabe83a82c77c3e",
+            "size": 909
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_RegistrationNote_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_RegistrationNote_v1.0.xsd",
+            "sha256": "5a674452b74244df24a200eba96632d34baada957372c41d9c92d39d99413342",
+            "size": 869
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_ReturnNote_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_ReturnNote_v1.0.xsd",
+            "sha256": "0384a1d4054642cadc4d8b53dc03ff257795a7b7bf142a134e598b9ef85847d8",
+            "size": 899
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_SalesReceipt_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_SalesReceipt_v1.0.xsd",
+            "sha256": "8fbef70880543f5a8ee088965a6825426583a5142c250a441ac0bd1df06b68f1",
+            "size": 823
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_TaxExemptionReason_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_TaxExemptionReason_v1.0.xsd",
+            "sha256": "69faae4766c4b19d1ef9e12d5cdd4fa907c60815c0bf06e7003c3cd639e92041",
+            "size": 7038
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_Transport_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_Transport_v1.0.xsd",
+            "sha256": "aeb108ceaa5c2e7651fe9bc0942c1dd6c29f55e96d68c1bc46e46f5a48b279db",
+            "size": 951
+        },
+        "xsd/efatura/2024-05-27/common/CV_EFatura_Types_v1.0.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/CV_EFatura_Types_v1.0.xsd",
+            "sha256": "f22a6b31f3d5e334fbd50f987e46dc9b802d111a9ac09990d2fb76b6492c66ae",
+            "size": 16276
+        },
+        "xsd/efatura/2024-05-27/common/ETSI_XAdESv132.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/ETSI_XAdESv132.xsd",
+            "sha256": "d7149bf453d6e368e07a062558e605e995a65448b042f0b5bd178d568a7ca5f5",
+            "size": 21732
+        },
+        "xsd/efatura/2024-05-27/common/ETSI_XAdESv141.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/ETSI_XAdESv141.xsd",
+            "sha256": "599eaead077742f72b9848ac3733f763af62528f6d74c4c69b183b48ade0f0de",
+            "size": 943
+        },
+        "xsd/efatura/2024-05-27/common/ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd",
+            "sha256": "e6e2c1663aaa3848f8da769c22d1c35b745b22dca09a334dae86ff1f8127a403",
+            "size": 46992
+        },
+        "xsd/efatura/2024-05-27/common/ISO_ISOTwo-letterCountryCode_SecondEdition2006.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/ISO_ISOTwo-letterCountryCode_SecondEdition2006.xsd",
+            "sha256": "18e89626bee20422a9eaef80e4547893283ebe337ae9b7e6c00c49c5ab20d18c",
+            "size": 63439
+        },
+        "xsd/efatura/2024-05-27/common/UNECE_PaymentMeansCode_D19B.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/UNECE_PaymentMeansCode_D19B.xsd",
+            "sha256": "b3bb42511a062c558b53a95589326b5c0ebce1ed781b4051d13c9636001aa7cd",
+            "size": 37925
+        },
+        "xsd/efatura/2024-05-27/common/W3C_XMLDSig.xsd": {
+            "source": "xml-xsd",
+            "archive_entry": "common/W3C_XMLDSig.xsd",
+            "sha256": "dfd23db8fe48d6a37339d5f81adf4f3fa14bdb0a436b5a5cb5e1713cc2a9b5f4",
+            "size": 10003
+        }
+    }
+}

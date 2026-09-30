@@ -29,3 +29,6 @@
 /testbench.yaml export-ignore
 /workbench export-ignore
 /art export-ignore
+# Preserve official downloads and extracted bytes, including upstream whitespace.
+/resources/catalogs/source/** -text -whitespace
+/resources/xsd/efatura/2024-05-27/** -text -whitespace

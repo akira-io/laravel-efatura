@@ -10,8 +10,12 @@
             "nif",
             "dfa",
             "bcv",
-            "homologation"
+            "homologation",
+            "xsd"
         ],
-        "paths": []
+        "paths": [
+            "resources/catalogs/source",
+            "resources/xsd"
+        ]
     }
 }
