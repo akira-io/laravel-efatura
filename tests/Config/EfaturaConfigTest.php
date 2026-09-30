@@ -2,259 +2,196 @@
 
 declare(strict_types=1);
 
-use Akira\Efatura\Config\EfaturaConfig;
-use Akira\Efatura\Contracts\DocumentTypePolicy;
+use Akira\Efatura\Configuration\EfaturaConfig;
+use Akira\Efatura\Configuration\LoadEfaturaConfig;
 use Akira\Efatura\Enums\Environment;
-use Akira\Efatura\Exceptions\EfaturaValidationException;
-use Akira\Efatura\Support\DefaultDocumentTypePolicy;
+use Illuminate\Config\Repository;
 
-function makeConfig(array $overrides = []): EfaturaConfig
+/**
+ * @param array<string, mixed> $overrides
+ */
+function loadEfaturaConfig(array $overrides = []): EfaturaConfig
 {
-    $config = resolve('config');
+    $repository = new Repository([
+        'filesystems' => ['default' => 'host-disk'],
+        'cache'       => ['default' => 'host-cache'],
+        'database'    => ['default' => 'host-database'],
+        'queue'       => ['default' => 'host-queue', 'connections' => ['host-queue' => ['queue' => 'host-jobs']]],
+        'efatura'     => $overrides,
+    ]);
 
-    $config->set('efatura', array_replace_recursive([
-        'transmitter' => [
-            'nif' => '100200300',
-            'led' => 'LED123',
-        ],
-        'software' => [
-            'code'    => 'SW-001',
-            'name'    => 'Efatura Suite',
-            'version' => '1.0.0',
-        ],
-        'middleware' => [
-            'base_url'    => 'https://middleware.example',
-            'environment' => 'TEST',
-        ],
-    ], $overrides));
-
-    return new EfaturaConfig($config);
+    return (new LoadEfaturaConfig($repository))();
 }
 
-it('defaults repository environment to TEST when empty', function (): void {
-    $config = makeConfig([
-        'middleware' => [
-            'environment' => '',
-        ],
+it('resolves minimal host defaults without optional identities or secrets', function (): void {
+    $config = loadEfaturaConfig();
+
+    expect($config->environment->environment)->toBe(Environment::TEST)
+        ->and($config->environment->repositoryCode())->toBe(3)
+        ->and($config->emitter)->toBeNull()
+        ->and($config->transmitter->taxId)->toBeNull()
+        ->and($config->transmitter->middlewareKey)->toBeNull()
+        ->and($config->transmitter->oauth->clientId)->toBeNull()
+        ->and($config->transmitter->oauth->clientSecret)->toBeNull()
+        ->and($config->software->code)->toBeNull()
+        ->and($config->certificates->disk)->toBe('host-disk')
+        ->and($config->certificates->certificatePath)->toBeNull()
+        ->and($config->certificates->privateKeyPath)->toBeNull()
+        ->and($config->certificates->passphrase)->toBeNull()
+        ->and($config->storage->disk)->toBe('host-disk')
+        ->and($config->storage->path)->toBe('efatura')
+        ->and($config->cache->store)->toBe('host-cache')
+        ->and($config->cache->prefix)->toBe('efatura')
+        ->and($config->cache->exchangeRatesTtlSeconds)->toBe(3600)
+        ->and($config->database->connection)->toBe('host-database')
+        ->and($config->database->sequencesTable)->toBe('efatura_sequences')
+        ->and($config->queue->connection)->toBe('host-queue')
+        ->and($config->queue->queue)->toBe('host-jobs');
+
+    foreach ([$config->http->defaults, $config->http->middleware, $config->http->platform, $config->http->bcv, $config->http->worldBank] as $client) {
+        expect($client->timeoutSeconds)->toBe(30)
+            ->and($client->connectTimeoutSeconds)->toBe(10)
+            ->and($client->retries)->toBe(2)
+            ->and($client->retryDelayMilliseconds)->toBe(200)
+            ->and($client->concurrency)->toBe(5)
+            ->and($client->verifyTls)->toBeTrue();
+    }
+
+    expect($config->http->middleware->baseUrl)->toBe('https://localhost:3443')
+        ->and($config->http->platform->baseUrl)->toBe('https://services.efatura.cv/v1')
+        ->and($config->http->bcv->baseUrl)->toBeNull()
+        ->and($config->http->worldBank->baseUrl)->toBeNull();
+});
+
+it('boots with the published configuration and no operation credentials', function (): void {
+    $config = (new LoadEfaturaConfig(resolve('config')))();
+
+    expect($config->emitter)->toBeNull()
+        ->and($config->transmitter->middlewareKey)->toBeNull()
+        ->and($config->transmitter->oauth->clientSecret)->toBeNull()
+        ->and($config->certificates->privateKeyPath)->toBeNull()
+        ->and($config->environment->repositoryCode())->toBe(3);
+});
+
+it('keeps published defaults aligned with loader defaults', function (): void {
+    expect(loadEfaturaConfig(require __DIR__ . '/../../config/efatura.php'))->toEqual(loadEfaturaConfig());
+});
+
+it('retains partial emitter defaults independently from transmitter identity', function (): void {
+    $config = loadEfaturaConfig([
+        'emitter'     => ['contacts' => ['email' => 'fiscal@example.test']],
+        'transmitter' => ['tax_id' => '100200300', 'name' => 'Transmitter'],
     ]);
 
-    expect($config->environment())->toBe(Environment::TEST)
-        ->and($config->repositoryCode())->toBe(3);
+    expect($config->emitter->taxId)->toBeNull()
+        ->and($config->emitter->name)->toBeNull()
+        ->and($config->emitter->contacts->email)->toBe('fiscal@example.test');
 });
 
-it('maps repository environment codes', function (): void {
-    expect(Environment::PRODUCTION->code())->toBe(1)
-        ->and(Environment::HOMOLOGATION->code())->toBe(2)
-        ->and(Environment::TEST->code())->toBe(3);
-});
-
-it('accepts environment by name', function (): void {
-    $config = makeConfig([
-        'middleware' => [
-            'environment' => 'PRODUCTION',
+it('normalizes configured identities infrastructure and client overrides', function (): void {
+    $config = loadEfaturaConfig([
+        'environment' => ' production ',
+        'emitter'     => [
+            'tax_id'   => '100200300', 'name' => ' Fiscal party ', 'led' => 'LED-1',
+            'address'  => ['country_code' => 'CV', 'region' => 'Santiago', 'city' => 'Praia', 'street' => 'Rua 1', 'postal_code' => '7600'],
+            'contacts' => ['email' => 'fiscal@example.test', 'telephone' => '2600000', 'mobile' => '9900000'],
         ],
-    ]);
-
-    expect($config->environment())->toBe(Environment::PRODUCTION)
-        ->and($config->repositoryCode())->toBe(1);
-});
-
-it('accepts environment by numeric code', function (): void {
-    $config = makeConfig([
-        'middleware' => [
-            'environment' => '2',
-        ],
-    ]);
-
-    expect($config->environment())->toBe(Environment::HOMOLOGATION)
-        ->and($config->repositoryCode())->toBe(2);
-});
-
-it('accepts environment by integer code', function (): void {
-    $config = makeConfig([
-        'middleware' => [
-            'environment' => 2,
-        ],
-    ]);
-
-    expect($config->environment())->toBe(Environment::HOMOLOGATION)
-        ->and($config->repositoryCode())->toBe(2);
-});
-
-it('normalizes environment strings with whitespace', function (): void {
-    $config = makeConfig([
-        'middleware' => [
-            'environment' => '  production  ',
-        ],
-    ]);
-
-    expect($config->environment())->toBe(Environment::PRODUCTION)
-        ->and($config->repositoryCode())->toBe(1);
-});
-
-it('returns configured values and asArray', function (): void {
-    $config = makeConfig([
-        'middleware' => [
-            'environment' => Environment::HOMOLOGATION,
-        ],
-    ]);
-
-    expect($config->transmitterNif())->toBe('100200300')
-        ->and($config->transmitterLedCode())->toBe('LED123')
-        ->and($config->softwareCode())->toBe('SW-001')
-        ->and($config->softwareName())->toBe('Efatura Suite')
-        ->and($config->softwareVersion())->toBe('1.0.0')
-        ->and($config->middlewareBaseUrl())->toBe('https://middleware.example')
-        ->and($config->environment())->toBe(Environment::HOMOLOGATION)
-        ->and($config->repositoryCode())->toBe(2);
-
-    $array = $config->asArray();
-
-    expect($array['transmitter']['nif'])->toBe('100200300')
-        ->and($array['software']['code'])->toBe('SW-001')
-        ->and($array['middleware']['repository_code'])->toBe(2);
-});
-
-it('fails on invalid numeric environment', function (): void {
-    $config = makeConfig([
-        'middleware' => [
-            'environment' => 99,
-        ],
-    ]);
-
-    expect(fn (): Environment => $config->environment())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.environment_invalid'));
-});
-
-it('covers getString reflection branches', function (): void {
-    $config = makeConfig();
-
-    $reflection = new ReflectionMethod(EfaturaConfig::class, 'getString');
-
-    expect($reflection->invoke($config, 'efatura.transmitter.nif'))->toBe('100200300');
-
-    config(['efatura.transmitter.led' => ['invalid']]);
-
-    expect($reflection->invoke($config, 'efatura.transmitter.led'))->toBe('');
-});
-
-it('rejects invalid environment values', function (): void {
-    $config = makeConfig([
-        'middleware' => [
-            'environment' => 'INVALID',
-        ],
-    ]);
-
-    expect(fn (): Environment => $config->environment())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.environment_invalid'));
-});
-
-it('requires transmitter nif', function (): void {
-    $config = makeConfig([
         'transmitter' => [
-            'nif' => '',
+            'tax_id' => '100200300', 'name' => 'Transmission party', 'middleware_key' => ' test-key ',
+            'oauth'  => ['client_id' => 'test-client', 'client_secret' => ' test-secret '],
+        ],
+        'software'     => ['code' => 'SW-1', 'name' => 'Fiscal software', 'version' => '1.0'],
+        'certificates' => ['disk' => 'secret-disk', 'certificate_path' => 'certs/public.pem', 'private_key_path' => 'certs/private.pem', 'passphrase' => ' test-passphrase '],
+        'storage'      => ['disk' => 'fiscal-disk', 'path' => 'tenant/fiscal'],
+        'cache'        => ['store' => 'fiscal-cache', 'prefix' => 'tenant:fiscal', 'exchange_rates_ttl_seconds' => '120'],
+        'database'     => ['connection' => 'fiscal-database', 'sequences_table' => 'tenant_sequences'],
+        'queue'        => ['connection' => 'fiscal-queue', 'queue' => 'fiscal-jobs'],
+        'http'         => [
+            'timeout_seconds'          => '45', 'connect_timeout_seconds' => 15, 'retries' => 0,
+            'retry_delay_milliseconds' => 0, 'concurrency' => 3, 'verify_tls' => false,
+            'middleware'               => ['base_url' => 'https://middleware.example.test/api/', 'timeout_seconds' => 90],
+            'platform'                 => ['connect_timeout_seconds' => 20, 'retries' => 4],
+            'bcv'                      => ['retry_delay_milliseconds' => 400, 'concurrency' => 1],
+            'world_bank'               => ['base_url' => 'https://rates.example.test', 'verify_tls' => true],
         ],
     ]);
 
-    expect(fn (): string => $config->transmitterNif())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.transmitter_nif_required'));
+    expect($config->environment->repositoryCode())->toBe(1)
+        ->and($config->emitter->taxId)->toBe('100200300')
+        ->and($config->emitter->name)->toBe('Fiscal party')
+        ->and($config->emitter->led)->toBe('LED-1')
+        ->and($config->emitter->address->countryCode)->toBe('CV')
+        ->and($config->emitter->address->region)->toBe('Santiago')
+        ->and($config->emitter->address->city)->toBe('Praia')
+        ->and($config->emitter->address->street)->toBe('Rua 1')
+        ->and($config->emitter->address->postalCode)->toBe('7600')
+        ->and($config->emitter->contacts->email)->toBe('fiscal@example.test')
+        ->and($config->emitter->contacts->telephone)->toBe('2600000')
+        ->and($config->emitter->contacts->mobile)->toBe('9900000')
+        ->and($config->transmitter->name)->toBe('Transmission party')
+        ->and($config->transmitter->taxId)->toBe($config->emitter->taxId)
+        ->and($config->transmitter->middlewareKey)->toBe(' test-key ')
+        ->and($config->transmitter->oauth->clientId)->toBe('test-client')
+        ->and($config->transmitter->oauth->clientSecret)->toBe(' test-secret ')
+        ->and($config->software->code)->toBe('SW-1')
+        ->and($config->software->name)->toBe('Fiscal software')
+        ->and($config->software->version)->toBe('1.0')
+        ->and($config->certificates->disk)->toBe('secret-disk')
+        ->and($config->certificates->certificatePath)->toBe('certs/public.pem')
+        ->and($config->certificates->privateKeyPath)->toBe('certs/private.pem')
+        ->and($config->certificates->passphrase)->toBe(' test-passphrase ')
+        ->and($config->storage->disk)->toBe('fiscal-disk')
+        ->and($config->storage->path)->toBe('tenant/fiscal')
+        ->and($config->cache->store)->toBe('fiscal-cache')
+        ->and($config->cache->prefix)->toBe('tenant:fiscal')
+        ->and($config->cache->exchangeRatesTtlSeconds)->toBe(120)
+        ->and($config->database->connection)->toBe('fiscal-database')
+        ->and($config->database->sequencesTable)->toBe('tenant_sequences')
+        ->and($config->queue->connection)->toBe('fiscal-queue')
+        ->and($config->queue->queue)->toBe('fiscal-jobs')
+        ->and($config->http->defaults->timeoutSeconds)->toBe(45)
+        ->and($config->http->middleware->baseUrl)->toBe('https://middleware.example.test/api')
+        ->and($config->http->middleware->timeoutSeconds)->toBe(90)
+        ->and($config->http->platform->timeoutSeconds)->toBe(45)
+        ->and($config->http->platform->connectTimeoutSeconds)->toBe(20)
+        ->and($config->http->platform->retries)->toBe(4)
+        ->and($config->http->bcv->retryDelayMilliseconds)->toBe(400)
+        ->and($config->http->bcv->concurrency)->toBe(1)
+        ->and($config->http->bcv->verifyTls)->toBeFalse()
+        ->and($config->http->worldBank->baseUrl)->toBe('https://rates.example.test')
+        ->and($config->http->worldBank->verifyTls)->toBeTrue();
 });
 
-it('requires transmitter LED code', function (): void {
-    $config = makeConfig([
-        'transmitter' => [
-            'led' => '',
-        ],
+it('accepts official environment names codes and enum cases', function (mixed $environment, int $code): void {
+    expect(loadEfaturaConfig(['environment' => $environment])->environment->repositoryCode())->toBe($code);
+})->with([[Environment::HOMOLOGATION, 2], ['homologation', 2], [1, 1], ['1', 1], ['2', 2], ['3', 3]]);
+
+it('inherits explicit null overrides including the selected queue connection', function (): void {
+    $repository = new Repository([
+        'filesystems' => ['default' => 'local'], 'cache' => ['default' => 'array'],
+        'database'    => ['default' => 'sqlite'],
+        'queue'       => ['default' => 'sync', 'connections' => ['redis' => ['queue' => 'priority']]],
+        'efatura'     => ['emitter' => null, 'queue' => ['connection' => 'redis', 'queue' => null], 'http' => ['middleware' => ['timeout_seconds' => null]]],
     ]);
 
-    expect(fn (): string => $config->transmitterLedCode())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.transmitter_led_required'));
+    expect((new LoadEfaturaConfig($repository))()->queue->queue)->toBe('priority');
+    $repository->set('efatura.queue.connection');
+    expect((new LoadEfaturaConfig($repository))()->queue->queue)->toBeNull();
 });
 
-it('requires middleware base url', function (): void {
-    $config = makeConfig([
-        'middleware' => [
-            'base_url' => '',
-        ],
-    ]);
+it('observes repository overrides before loading and keeps resolved graphs immutable', function (): void {
+    $repository = resolve('config');
+    $repository->set('efatura.environment', 'PRODUCTION');
+    $repository->set('efatura.transmitter.tax_id', '100200300');
 
-    expect(fn (): string => $config->middlewareBaseUrl())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.middleware_base_url_required'));
-});
+    $loader   = new LoadEfaturaConfig($repository);
+    $original = $loader();
+    $repository->set('efatura.environment', 'TEST');
 
-it('covers getString int and empty branches', function (): void {
-    $config = makeConfig([
-        'transmitter' => [
-            'nif' => 123,
-            'led' => null,
-        ],
-    ]);
-
-    expect($config->transmitterNif())->toBe('123');
-
-    expect(fn (): string => $config->transmitterLedCode())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.transmitter_led_required'));
-});
-
-it('covers getString reflection branch', function (): void {
-    $config = makeConfig();
-
-    $reflection = new ReflectionMethod(EfaturaConfig::class, 'getString');
-
-    expect($reflection->invoke($config, 'efatura.transmitter.nif'))->toBe('100200300');
-});
-
-it('resolves document type policy from the container', function (): void {
-    $policy = resolve(DocumentTypePolicy::class);
-
-    expect($policy)->toBeInstanceOf(DefaultDocumentTypePolicy::class);
-});
-
-it('requires software code', function (): void {
-    $config = makeConfig([
-        'software' => [
-            'code' => '',
-        ],
-    ]);
-
-    expect(fn (): string => $config->softwareCode())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.software_code_required'));
-});
-
-it('requires software name', function (): void {
-    $config = makeConfig([
-        'software' => [
-            'name' => '',
-        ],
-    ]);
-
-    expect(fn (): string => $config->softwareName())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.software_name_required'));
-});
-
-it('requires software version', function (): void {
-    $config = makeConfig([
-        'software' => [
-            'version' => '',
-        ],
-    ]);
-
-    expect(fn (): string => $config->softwareVersion())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.software_version_required'));
-});
-
-it('falls back to English translations', function (): void {
-    config(['app.fallback_locale' => 'en']);
-    app()->setLocale('fr');
-
-    $config = makeConfig([
-        'transmitter' => [
-            'nif' => '',
-        ],
-    ]);
-
-    expect(fn (): string => $config->transmitterNif())
-        ->toThrow(EfaturaValidationException::class, trans('efatura.config.transmitter_nif_required', [], 'en'));
-
-    app()->setLocale('en');
+    expect($original->environment->repositoryCode())->toBe(1)
+        ->and($loader()->environment->repositoryCode())->toBe(3)
+        ->and($original->emitter)->toBeNull();
+    expect(function () use ($original): void {
+        $original->http->defaults->timeoutSeconds = 99;
+    })->toThrow(Error::class);
 });

@@ -2,6 +2,8 @@ parameters:
     level: max
     paths:
         - src
+    configDirectories:
+        - config
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true

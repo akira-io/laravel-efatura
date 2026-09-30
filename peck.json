@@ -9,6 +9,7 @@
             "filesystem",
             "nif",
             "dfa",
+            "bcv",
             "homologation"
         ],
         "paths": []
