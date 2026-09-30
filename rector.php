@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 use Rector\CodeQuality\Rector\ClassMethod\LocallyCalledStaticMethodToNonStaticRector;
-use Rector\CodeQuality\Rector\If_\ExplicitBoolCompareRector;
-use Rector\CodingStyle\Rector\Closure\StaticClosureRector;
-use Rector\CodingStyle\Rector\Encapsed\EncapsedStringsToSprintfRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodParameterRector;
 use Rector\DeadCode\Rector\Property\RemoveUnusedPrivatePropertyRector;
@@ -15,7 +12,6 @@ use Rector\Renaming\Rector\Name\RenameClassRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
 use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
-use RectorLaravel\Set\LaravelLevelSetList;
 use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
@@ -25,8 +21,6 @@ return RectorConfig::configure()
         __DIR__ . '/tests',
     ])
     ->withSkip([
-        EncapsedStringsToSprintfRector::class,
-        ExplicitBoolCompareRector::class,
         LocallyCalledStaticMethodToNonStaticRector::class,
         RenameClassRector::class => [
             'Illuminate\Validation\Validator',
@@ -34,26 +28,22 @@ return RectorConfig::configure()
         ],
         RemoveUnusedPrivateMethodParameterRector::class,
         RemoveUnusedPrivatePropertyRector::class,
-        StaticClosureRector::class => [
-            __DIR__ . '/tests',
-        ],
     ])
+    ->withComposerBased(laravel: true)
     ->withSets([
-        LevelSetList::UP_TO_PHP_84,
+        LevelSetList::UP_TO_PHP_85,
         SetList::CODE_QUALITY,
         SetList::CODING_STYLE,
         SetList::DEAD_CODE,
         SetList::EARLY_RETURN,
         SetList::PRIVATIZATION,
         SetList::TYPE_DECLARATION,
-        LaravelLevelSetList::UP_TO_LARAVEL_120,
         LaravelSetList::LARAVEL_CODE_QUALITY,
         LaravelSetList::LARAVEL_ELOQUENT_MAGIC_METHOD_TO_QUERY_BUILDER,
     ])
     ->withRules([
         DeclareStrictTypesRector::class,
         ClassPropertyAssignToConstructorPromotionRector::class,
-        StaticClosureRector::class,
         AddOverrideAttributeToOverriddenMethodsRector::class,
     ])
     ->withParallel();

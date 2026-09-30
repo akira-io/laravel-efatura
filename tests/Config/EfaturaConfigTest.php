@@ -10,7 +10,7 @@ use Akira\Efatura\Support\DefaultDocumentTypePolicy;
 
 function makeConfig(array $overrides = []): EfaturaConfig
 {
-    $config = app('config');
+    $config = resolve('config');
 
     $config->set('efatura', array_replace_recursive([
         'transmitter' => [
@@ -205,7 +205,7 @@ it('covers getString reflection branch', function (): void {
 });
 
 it('resolves document type policy from the container', function (): void {
-    $policy = app(DocumentTypePolicy::class);
+    $policy = resolve(DocumentTypePolicy::class);
 
     expect($policy)->toBeInstanceOf(DefaultDocumentTypePolicy::class);
 });

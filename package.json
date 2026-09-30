@@ -1,29 +1,27 @@
 {
     "name": "laravel-efatura",
     "version": "0.0.0",
-    "description": "[![Latest Version on Packagist](https://img.shields.io/packagist/v/akira-io/efatura.svg?style=flat-square)](https://packagist.org/packages/akira-io/efatura) [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/akira-io/efatura/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/akira-io/efatura/actions?query=workflow%3Arun-tests+branch%3Amain) [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/akira-io/efatura/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/akira-io/efatura/actions?query=workflow%3A\"Fix+PHP+code+style+issues\"+branch%3Amain) [![Total Downloads](https://img.shields.io/packagist/dt/akira-io/efatura.svg?style=flat-square)](https://packagist.org/packages/akira-io/efatura)",
+    "packageManager": "bun@1.3.14",
+    "description": "Laravel package for Cabo Verde e-Fatura fiscal data, configuration, and validation.",
     "main": "index.js",
     "directories": {
         "test": "tests"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "release": "release-it"
+        "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/kidiatoliny/laravel-efatura.git"
+        "url": "git+https://github.com/akira-io/laravel-efatura.git"
     },
     "author": "",
-    "license": "ISC",
+    "license": "(MIT OR Apache-2.0)",
     "bugs": {
-        "url": "https://github.com/kidiatoliny/laravel-efatura/issues"
+        "url": "https://github.com/akira-io/laravel-efatura/issues"
     },
-    "homepage": "https://github.com/kidiatoliny/laravel-efatura#readme",
+    "homepage": "https://github.com/akira-io/laravel-efatura#readme",
     "devDependencies": {
         "@commitlint/cli": "^20.4.1",
-        "@commitlint/config-conventional": "^20.4.1",
-        "@release-it/conventional-changelog": "^10.0.5",
-        "release-it": "^19.2.4"
+        "@commitlint/config-conventional": "^20.4.1"
     }
 }

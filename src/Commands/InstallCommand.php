@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Commands;
 
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
@@ -15,17 +16,14 @@ use function Laravel\Prompts\warning;
 
 use const PHP_EOL;
 
+#[Signature('efatura:install')]
 final class InstallCommand extends Command
 {
-    public $signature = 'efatura:install';
-
-    public $description = '';
-
     public function __construct()
     {
         parent::__construct();
 
-        $this->description = __('efatura.install.command_description');
+        $this->setDescription(__('efatura.install.command_description'));
     }
 
     public function handle(Filesystem $filesystem): int
