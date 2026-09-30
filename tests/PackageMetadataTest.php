@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Symfony\Component\Process\Process;
+
 function composerMetadata(): array
 {
     return json_decode((string) file_get_contents(__DIR__ . '/../composer.json'), true, 512, JSON_THROW_ON_ERROR);
@@ -42,9 +44,12 @@ it('retains the package runtime and development tools', function (): void {
     ]);
 });
 
-it('purges the current package from the clear script', function (): void {
-    expect(composerMetadata()['scripts']['clear'])
-        ->toBe('@php vendor/bin/testbench package:purge-akira/efatura --ansi');
+it('runs the clear script as a registered Testbench command', function (): void {
+    $clearHelp = new Process(['composer', 'run', 'clear', '--', '--help'], __DIR__ . '/..');
+    $clearHelp->run();
+
+    expect($clearHelp->isSuccessful())->toBeTrue()
+        ->and($clearHelp->getOutput())->toContain('Usage:')->toContain('package:purge-skeleton');
 });
 
 it('accepts the official DFA acronym in package tooling', function (): void {
