@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Facades;
 
+use Akira\Efatura\Configuration\EfaturaConfig;
+use Akira\Efatura\Efatura as EfaturaEntry;
+use Akira\Efatura\EfaturaManager;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \Akira\Efatura\Efatura
+ * @method static EfaturaConfig  config()
+ * @method static EfaturaEntry   efatura()
+ * @method static EfaturaManager withConfig(EfaturaConfig $config)
  */
 final class Efatura extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \Akira\Efatura\Efatura::class;
+        return EfaturaManager::class;
     }
 }
