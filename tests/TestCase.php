@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Tests;
 
-use Akira\Debugger\DebuggerServiceProvider;
 use Akira\Efatura\EfaturaServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Filesystem\Filesystem;
@@ -31,18 +30,11 @@ abstract class TestCase extends Orchestra
     {
         return [
             EfaturaServiceProvider::class,
-            DebuggerServiceProvider::class,
         ];
     }
 
     protected function getEnvironmentSetUp($app): void
     {
         config()->set('database.default', 'testing');
-
-        /*
-         foreach (\Illuminate\Support\Facades\File::allFiles(__DIR__ . '/../database/migrations') as $migration) {
-            (include $migration->getRealPath())->up();
-         }
-         */
     }
 }

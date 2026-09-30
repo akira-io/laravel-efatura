@@ -1,123 +1,113 @@
-# akira/efatura
+<p align="center">
+  <img src="assets/banner.svg" alt="Laravel Efatura" />
+</p>
 
-Fiscal compliance engine for Cabo Verde e-Fatura (DNRE) focused on XML, IUD, and middleware communication.
+<p align="center">
+  <a href="https://packagist.org/packages/akira/efatura"><img src="https://img.shields.io/packagist/v/akira/efatura.svg" alt="Packagist Version"></a>
+  <a href="https://packagist.org/packages/akira/efatura"><img src="https://img.shields.io/packagist/dt/akira/efatura.svg" alt="downloads"></a>
+  <a href="https://github.com/akira-io/laravel-efatura/actions/workflows/tests.yml"><img src="https://github.com/akira-io/laravel-efatura/actions/workflows/tests.yml/badge.svg" alt="tests"></a>
+  <img src="https://img.shields.io/packagist/l/akira/efatura.svg" alt="license">
+  <img src="https://img.shields.io/packagist/php-v/akira/efatura" alt="php">
+</p>
 
-## Overview
+Laravel package for Cabo Verde e-Fatura fiscal data, configuration, and validation.
 
-This package implements the Cabo Verde e-Fatura requirements defined by the `Manual Tecnico da Fatura Eletronica v10.0.` It is scoped to `DNRE` compliance only and does not attempt to cover other jurisdictions or fiscal regimes.
+## Install
 
-## Key design principles
-
-- Middleware-first: all submissions and status checks flow through authorized middleware.
-- Data-first: input is structured fiscal Data, output is compliant XML.
-- Contracts: optional capabilities (PDF, QR, transport) are expressed through contracts.
-- Laravel-first: configuration and integration follow Laravel conventions.
-
-## What the package does
-
-- Builds compliant XML documents for e-Fatura flows.
-- Generates IUD values and validates their check digit.
-- Prepares payloads for middleware submission and status updates.
-- Normalizes error reporting from validation and middleware responses.
-
-## What the package does NOT do
-
-- Render PDFs or QR codes by default.
-- Provide UI screens or storage for issued documents.
-- Calculate taxes, pricing, or accounting totals.
-- Connect directly to the tax authority without middleware.
-
-## Installation
-
-```bash
+```sh
 composer require akira/efatura
 ```
 
-## Configuration
+```json
+{
+  "require": {
+    "akira/efatura": "^1.0"
+  }
+}
+```
 
-All values are read from environment variables. Configure them in your `.env` and publish or reference `config/efatura.php` as needed.
+Publish the package configuration and prepare the required environment keys:
 
-- `EFATURA_TRANSMITTER_NIF`: issuer tax identifier (NIF).
-- `EFATURA_TRANSMITTER_LED`: issuer LED code assigned by DNRE.
-- `EFATURA_TRANSMITTER_KEY`: middleware credential or shared key.
-- `EFATURA_MIDDLEWARE_BASE_URL`: middleware base URL.
-- `EFATURA_MIDDLEWARE_ENV`: `sandbox` or `production`.
+```sh
+php artisan efatura:install
+```
 
-## Core concepts
+## Quick Start
 
-### IUD
+```php
+use Akira\Efatura\Data\ElectronicInvoiceData;
+use Akira\Efatura\Enums\DocumentType;
 
-The `IUD` is a unique identifier defined by the DNRE specification. It is assembled from issuer and document Data (such as issuer identifiers, document type, serial and sequence, and issue date) and ends with a Luhn check digit (DV). The package derives the IUD from Data inputs and appends the Luhn DV deterministically.
+$document = ElectronicInvoiceData::from([
+    'invoice' => [
+        'type' => DocumentType::ELECTRONIC_INVOICE,
+        'issueDate' => now()->toDateString(),
+        'emitter' => [
+            'nif' => '100200300',
+            'name' => 'Emitter',
+        ],
+        'receiver' => [
+            'nif' => '900800700',
+            'name' => 'Receiver',
+        ],
+        'lines' => [
+            [
+                'description' => 'Service',
+                'quantity' => 1,
+                'unitPrice' => 1000,
+                'total' => 1000,
+                'taxes' => [
+                    [
+                        'type' => 'IVA',
+                        'rate' => 15,
+                        'amount' => 150,
+                    ],
+                ],
+            ],
+        ],
+        'totals' => [
+            'subtotal' => 1000,
+            'taxTotal' => 150,
+            'grandTotal' => 1150,
+        ],
+    ],
+]);
+```
 
-### Issue Modes
+## Documentation
 
-- `Normal`: online issuance with immediate middleware submission.
-- `Offline`: issuance without live submission, followed by later transmission.
-- `Off`: issuance intentionally disabled by issuer policy or environment.
-- `Contingency`: issuance when middleware is unavailable, flagged for later reconciliation.
+- [Documentation index](docs/README.md)
+- Configuration: [config/efatura.php](config/efatura.php)
+- API reference: [source API](https://github.com/akira-io/laravel-efatura/tree/main/src)
 
-## Emitting an invoice
+## Testing
 
-Example flow (no implementation yet):
+```sh
+composer test
+```
 
-1. Collect invoice Data (issuer, customer, lines, totals, taxes, issue date).
-2. Generate the IUD and apply the Luhn DV.
-3. Build the XML payload and validate it against the applicable XSD.
-4. Package and sign (when required) for middleware transport.
-5. Submit to middleware and record the response and status.
+## Changelog
 
-## Credit notes
+See [CHANGELOG.md](CHANGELOG.md) for what has changed recently. Releases use conventional commits, and `git-cliff` generates the changelog when a version tag is pushed.
 
-Credit notes must reference the original invoice IUD. The reference is part of the fiscal Data and must be kept immutable for audit traceability.
+## Contributing
 
-## Middleware communication
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution details.
 
-This package does not communicate directly with the tax authority. All submissions, status checks, and acknowledgements are performed through authorized middleware using configured credentials.
+## Security
 
-## PDF and QR generation philosophy
-
-PDF and QR generation are optional and contract-based. The package provides compliant Data and identifiers but does not render or impose any layout, styling, or visual output.
-
-## Recommended PDF & QR Implementations
-
-`PDF` and `QR Code` generation are optional features and are handled via contracts. If no implementation is provided, the core functionality remains fully operational. The package does not depend on any specific PDF or QR engine, and using the recommended packages is a convenience, not a requirement.
-
-The following packages are officially recommended and work out of the box when installed together with akira/efatura:
-
-- `akira/laravel-pdf-invoice`
-- `akira/laravel-qrcode`
-
-When these packages are installed, they are automatically discovered and bound by akira/efatura, and no additional configuration is required for basic usage.
-
-Developers are free to use the recommended packages, use any third-party library, or implement their own PDF or QR generation logic. Visual layout, branding, and rendering decisions are outside the scope of the akira/efatura core.
-
-## Contracts overview
-
-Contracts describe integration points for optional capabilities such as middleware transport, signing and packaging, and PDF or QR rendering. Implementations are left to the host application or external packages to preserve flexibility and compliance requirements.
-
-## Error handling philosophy
-
-Validation errors are surfaced before submission. Middleware and transport errors are mapped into consistent error structures and are never silently corrected. All error responses are intended to be auditable and traceable.
-
-## Testing philosophy
-
-Testing focuses on Data validation, IUD calculation, XML generation, and schema compliance. Rendering, UI, and middleware infrastructure are out of scope for automated tests in this package.
-
-## Compliance notes
-
-- UTF-8 encoding is required for all XML content.
-- XML must validate against DNRE XSD definitions.
-- Packaging may require ZIP and legal flags for issue mode.
-- All issuance modes must be correctly flagged for audit and reconciliation.
+Review [SECURITY.md](SECURITY.md) to report security vulnerabilities.
 
 ## Credits
+
 - [kidiatoliny](https://github.com/kidiatoliny)
-- [All Contributors](../../contributors)
+- [All Contributors](https://github.com/akira-io/laravel-efatura/graphs/contributors)
 
 ## License
 
-MIT
+Dual-licensed under either of the following, at your option:
 
-## Final note
+- MIT License ([LICENSE-MIT](LICENSE-MIT) or https://opensource.org/licenses/MIT)
+- Apache License 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or https://www.apache.org/licenses/LICENSE-2.0)
 
-`akira/efatura` is a Laravel-first fiscal engine focused on compliant Data, identifiers, and middleware communication for Cabo Verde e-Fatura.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this project by you, as defined in the Apache-2.0 license, shall be dual-licensed as above, without extra terms or conditions.

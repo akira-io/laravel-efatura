@@ -7,6 +7,7 @@ namespace Akira\Efatura\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+use Override;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\info;
@@ -17,8 +18,10 @@ use const PHP_EOL;
 
 final class InstallCommand extends Command
 {
+    #[Override]
     public $signature = 'efatura:install';
 
+    #[Override]
     public $description = '';
 
     public function __construct()

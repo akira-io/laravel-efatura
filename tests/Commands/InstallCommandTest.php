@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use function Pest\Laravel\artisan;
 
 beforeEach(function (): void {
-    $GLOBALS['efaturaFiles']            = new Filesystem();
+    $GLOBALS['efaturaFiles']            = new Filesystem;
     $GLOBALS['efaturaOriginalBasePath'] = app()->basePath();
     $GLOBALS['efaturaBasePath']         = sys_get_temp_dir() . '/efatura-install-' . Str::uuid()->toString();
 
