@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Commands\InstallCommand;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
@@ -59,6 +61,16 @@ function envContent(array $variables): string
 
     return implode(PHP_EOL, $lines) . PHP_EOL;
 }
+
+it('uses the Laravel 13 command signature attribute', function (): void {
+    $attributes = new ReflectionClass(InstallCommand::class)
+        ->getAttributes(Signature::class);
+
+    expect($attributes)->toHaveCount(1)
+        ->and($attributes[0]->newInstance()->signature)->toBe('efatura:install')
+        ->and(resolve(InstallCommand::class)->getDescription())
+        ->toBe(trans('efatura.install.command_description'));
+});
 
 it('runs without interaction when all variables exist', function (): void {
     $envPath    = base_path('.env');

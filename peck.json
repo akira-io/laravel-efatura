@@ -5,6 +5,7 @@
             "php",
             "efatura",
             "bun",
+            "commitlint",
             "filesystem",
             "nif",
             "homologation"
