@@ -14,8 +14,17 @@
     ],
     "require": {
         "php": "^8.5",
+        "ext-dom": "*",
+        "ext-libxml": "*",
+        "ext-openssl": "*",
+        "ext-zip": "*",
         "spatie/laravel-package-tools": "^1.16",
+        "illuminate/config": "^13.0",
+        "illuminate/console": "^13.0",
         "illuminate/contracts": "^13.0",
+        "illuminate/filesystem": "^13.0",
+        "illuminate/support": "^13.0",
+        "illuminate/validation": "^13.0",
         "spatie/laravel-data": "^4.19",
         "brick/money": "^0.11.0"
     },
@@ -60,7 +69,7 @@
     },
     "scripts": {
         "post-autoload-dump": "@composer run prepare",
-        "clear": "@php vendor/bin/testbench package:purge-laravel-sisp --ansi",
+        "clear": "@php vendor/bin/testbench package:purge-akira/efatura --ansi",
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "build": [
             "@composer run prepare",
