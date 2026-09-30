@@ -37,7 +37,7 @@ it('preserves every official file byte for byte against its manifest', function 
     foreach (['catalogs/source', 'xsd/efatura/2024-05-27'] as $directory) {
         $entries = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $directory, FilesystemIterator::SKIP_DOTS));
         foreach ($entries as $entry) {
-            $bundled[] = substr($entry->getPathname(), strlen($root) + 1);
+            $bundled[] = substr((string) $entry->getPathname(), strlen($root) + 1);
         }
     }
 
