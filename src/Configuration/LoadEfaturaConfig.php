@@ -75,7 +75,7 @@ final readonly class LoadEfaturaConfig
             throw new ConfigurationException('configuration.invalid_type', $path);
         }
 
-        foreach ($section as $key => $value) {
+        foreach (collect($section)->keys() as $key) {
             if (! \is_string($key)) {
                 throw new ConfigurationException('configuration.invalid_type', $path);
             }

@@ -25,7 +25,7 @@ trait ValidatesConfigurationValues
     private function validatedRelativePath(#[SensitiveParameter] ?string $value, string $path): ?string
     {
         if ($value !== null && (preg_match('/[\x00-\x1f\\\:]/', $value) === 1 || Str::startsWith($value, '/')
-            || array_intersect(explode('/', $value), ['', '.', '..']) !== [])) {
+            || Str::of($value)->explode('/')->intersect(['', '.', '..'])->isNotEmpty())) {
             throw new ConfigurationException('configuration.unsafe_path', $path);
         }
 
