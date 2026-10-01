@@ -5,67 +5,42 @@ declare(strict_types=1);
 use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\EfaturaManager;
+use Akira\Efatura\Tests\Support\InstallCommandFixture;
 use Dotenv\Dotenv;
 use Dotenv\Repository\Adapter\ArrayAdapter;
 use Dotenv\Repository\RepositoryBuilder;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Env;
-use Illuminate\Support\Str;
 
 use function Pest\Laravel\artisan;
 
 beforeEach(function (): void {
-    $GLOBALS['efaturaFiles']            = new Filesystem;
-    $GLOBALS['efaturaOriginalBasePath'] = app()->basePath();
-    $GLOBALS['efaturaBasePath']         = sys_get_temp_dir() . '/efatura-install-' . Str::uuid()->toString();
-
-    testFiles()->ensureDirectoryExists(testBasePath());
-    testFiles()->ensureDirectoryExists(testBasePath() . '/config');
-
-    app()->setBasePath(testBasePath());
+    $GLOBALS['efaturaInstallFixture'] = new InstallCommandFixture(new Filesystem);
 });
 
 afterEach(function (): void {
-    testFiles()->deleteDirectory(testBasePath());
-    app()->setBasePath(testOriginalBasePath());
+    installFixture()->tearDown();
 });
+
+function installFixture(): InstallCommandFixture
+{
+    return $GLOBALS['efaturaInstallFixture'];
+}
 
 function testFiles(): Filesystem
 {
-    return $GLOBALS['efaturaFiles'];
-}
-
-function testBasePath(): string
-{
-    return $GLOBALS['efaturaBasePath'];
-}
-
-function testOriginalBasePath(): string
-{
-    return $GLOBALS['efaturaOriginalBasePath'];
+    return installFixture()->files;
 }
 
 function efaturaEnvDefaults(): array
 {
-    return [
-        'EFATURA_TRANSMITTER_TAX_ID'  => '123456789',
-        'EFATURA_EMITTER_LED'         => 'LED123',
-        'EFATURA_TRANSMITTER_KEY'     => 'secret',
-        'EFATURA_MIDDLEWARE_BASE_URL' => 'https://localhost:3443',
-        'EFATURA_ENVIRONMENT'         => 'test',
-    ];
+    return installFixture()->envDefaults();
 }
 
 function envContent(array $variables): string
 {
-    $lines = [];
-
-    foreach ($variables as $key => $value) {
-        $lines[] = $key . '=' . $value;
-    }
-
-    return implode(PHP_EOL, $lines) . PHP_EOL;
+    return installFixture()->envContent($variables);
 }
 
 it('uses the Laravel 13 command signature attribute', function (): void {

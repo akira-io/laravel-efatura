@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Enums;
 
+use Illuminate\Support\Arr;
+
 enum Environment: int
 {
     case PRODUCTION   = 1;
@@ -12,7 +14,7 @@ enum Environment: int
 
     public static function fromName(string $name): ?self
     {
-        return array_find(
+        return Arr::first(
             self::cases(),
             static fn (self $case): bool => $case->name === $name,
         );
