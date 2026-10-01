@@ -16,11 +16,12 @@ use Illuminate\Support\Env;
 use function Pest\Laravel\artisan;
 
 beforeEach(function (): void {
+    $GLOBALS['efaturaInstallFixture'] = null;
     $GLOBALS['efaturaInstallFixture'] = new InstallCommandFixture(new Filesystem);
 });
 
 afterEach(function (): void {
-    installFixture()->tearDown();
+    $GLOBALS['efaturaInstallFixture']?->tearDown();
 });
 
 function installFixture(): InstallCommandFixture

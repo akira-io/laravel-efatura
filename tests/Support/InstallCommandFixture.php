@@ -7,6 +7,7 @@ namespace Akira\Efatura\Tests\Support;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Throwable;
 
 use const PHP_EOL;
 
@@ -21,10 +22,20 @@ final readonly class InstallCommandFixture
         $this->originalBasePath = app()->basePath();
         $this->basePath         = sys_get_temp_dir() . '/efatura-install-' . Str::uuid()->toString();
 
-        $this->files->ensureDirectoryExists($this->basePath);
-        $this->files->ensureDirectoryExists($this->basePath . '/config');
+        try {
+            $this->files->ensureDirectoryExists($this->basePath);
+            $this->files->ensureDirectoryExists($this->basePath . '/config');
 
-        app()->setBasePath($this->basePath);
+            app()->setBasePath($this->basePath);
+        } catch (Throwable $throwable) {
+            try {
+                $this->files->deleteDirectory($this->basePath);
+            } finally {
+                app()->setBasePath($this->originalBasePath);
+            }
+
+            throw $throwable;
+        }
     }
 
     public function tearDown(): void
