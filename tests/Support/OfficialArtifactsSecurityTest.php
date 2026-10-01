@@ -9,6 +9,7 @@ use Illuminate\Filesystem\Filesystem;
 
 beforeEach(function (): void {
     $this->fixture = new ArtifactFixture;
+    $this->files   = new Filesystem;
 });
 
 afterEach(function (): void {
@@ -42,19 +43,19 @@ it('rejects unknown signature profiles', function (): void {
 it('detects modified bytes including line ending normalization on every lookup', function (): void {
     $artifacts = $this->fixture->artifacts();
     $path      = $artifacts->path('nested/example.xsd');
-    file_put_contents($path, "original\nbytes\n");
+    $this->files->put($path, "original\nbytes\n");
 
     expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(OfficialArtifactException::class, 'artifacts.size_mismatch');
 
-    file_put_contents($path, "changed!\r\nbytes\r\n");
+    $this->files->put($path, "changed!\r\nbytes\r\n");
 
     expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(OfficialArtifactException::class, 'artifacts.checksum_mismatch');
 });
 
 it('rejects missing files and directories', function (bool $directory): void {
-    unlink($this->fixture->root . '/nested/example.xsd');
+    $this->files->delete($this->fixture->root . '/nested/example.xsd');
     if ($directory) {
-        mkdir($this->fixture->root . '/nested/example.xsd');
+        $this->files->ensureDirectoryExists($this->fixture->root . '/nested/example.xsd');
     }
 
     expect(fn (): string => $this->fixture->artifacts()->path('nested/example.xsd'))
@@ -62,7 +63,7 @@ it('rejects missing files and directories', function (bool $directory): void {
 })->with([true, false]);
 
 it('rejects symbolic links even when their target has the expected bytes', function (): void {
-    rename($this->fixture->root . '/nested/example.xsd', $this->fixture->root . '/target.xsd');
+    $this->files->move($this->fixture->root . '/nested/example.xsd', $this->fixture->root . '/target.xsd');
     symlink($this->fixture->root . '/target.xsd', $this->fixture->root . '/nested/example.xsd');
 
     expect(fn (): string => $this->fixture->artifacts()->path('nested/example.xsd'))
@@ -70,7 +71,7 @@ it('rejects symbolic links even when their target has the expected bytes', funct
 });
 
 it('rejects symbolic link directories', function (): void {
-    rename($this->fixture->root . '/nested', $this->fixture->root . '/target');
+    $this->files->moveDirectory($this->fixture->root . '/nested', $this->fixture->root . '/target');
     symlink($this->fixture->root . '/target', $this->fixture->root . '/nested');
 
     expect(fn (): string => $this->fixture->artifacts()->path('nested/example.xsd'))
@@ -78,14 +79,14 @@ it('rejects symbolic link directories', function (): void {
 });
 
 it('fails safely when the resource root or manifest is missing', function (bool $root): void {
-    unlink($this->fixture->root . '/official-artifacts.json');
+    $this->files->delete($this->fixture->root . '/official-artifacts.json');
 
     expect(fn (): OfficialArtifacts => new OfficialArtifacts(new Filesystem, $this->fixture->root . ($root ? '/absent' : '')))
         ->toThrow(OfficialArtifactException::class, $root ? 'artifacts.missing_root' : 'artifacts.missing_or_unreadable');
 })->with([true, false]);
 
 it('rejects an invalid manifest', function (string $contents): void {
-    file_put_contents($this->fixture->root . '/official-artifacts.json', $contents);
+    $this->files->put($this->fixture->root . '/official-artifacts.json', $contents);
 
     expect(fn (): OfficialArtifacts => $this->fixture->artifacts())->toThrow(OfficialArtifactException::class, 'artifacts.invalid_manifest');
 })->with(['{', 'null', '"string"', '123', '{}', '{"files":[],"signature_profiles":null}']);
@@ -126,7 +127,7 @@ it('rejects a same-byte symlink swapped in during hashing without leaking the ro
         public function hash($path, $algorithm = 'md5')
         {
             if ($path === $this->root . '/nested/example.xsd') {
-                rename($path, $this->root . '/target.xsd');
+                $this->move($path, $this->root . '/target.xsd');
                 symlink($this->root . '/target.xsd', $path);
             }
 

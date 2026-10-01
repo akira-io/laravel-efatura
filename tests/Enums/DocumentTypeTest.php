@@ -6,8 +6,11 @@ use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Support\DefaultDocumentTypePolicy;
 
 it('includes all official document types', function (): void {
-    $values = array_map(static fn (DocumentType $type): string => $type->value, DocumentType::cases());
-    sort($values);
+    $values = collect(DocumentType::cases())
+        ->map(static fn (DocumentType $type): string => $type->value)
+        ->sort()
+        ->values()
+        ->all();
 
     expect($values)->toBe([
         'DTE',

@@ -12,6 +12,7 @@ use Dotenv\Repository\RepositoryBuilder;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Env;
+use Illuminate\Support\Str;
 
 use function Pest\Laravel\artisan;
 
@@ -199,7 +200,7 @@ it('does not notify when optional packages are present', function (): void {
 it('resolves the manager from the installed environment and published config', function (): void {
     testFiles()->put(base_path('.env'), "APP_ENV=testing\n");
     $command = artisan('efatura:install');
-    foreach (array_keys(efaturaEnvDefaults()) as $key) {
+    foreach (collect(efaturaEnvDefaults())->keys() as $key) {
         $command->expectsConfirmation(trans('efatura.install.env_add_confirm', ['key' => $key]), 'yes');
     }
 
@@ -225,7 +226,7 @@ it('resolves the manager from the installed environment and published config', f
 
         $contents = testFiles()->get(base_path('.env'));
         expect($contents)->toContain('EFATURA_TRANSMITTER_TAX_ID=null', 'EFATURA_EMITTER_LED=null');
-        testFiles()->put(base_path('.env'), str_replace(
+        testFiles()->put(base_path('.env'), Str::replace(
             ['EFATURA_TRANSMITTER_TAX_ID=null', 'EFATURA_EMITTER_LED=null'],
             ['EFATURA_TRANSMITTER_TAX_ID=123456789', 'EFATURA_EMITTER_LED=LED123'],
             $contents,
