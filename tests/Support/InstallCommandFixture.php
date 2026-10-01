@@ -30,6 +30,8 @@ final readonly class InstallCommandFixture
         } catch (Throwable $throwable) {
             try {
                 $this->files->deleteDirectory($this->basePath);
+            } catch (Throwable) {
+                throw $throwable;
             } finally {
                 app()->setBasePath($this->originalBasePath);
             }

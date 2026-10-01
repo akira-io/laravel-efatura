@@ -67,7 +67,6 @@ trait ValidatesConfigurationValues
         }
 
         if (\is_string($value)) {
-            // Environment names are ASCII tokens; Unicode case folding broadens the accepted set.
             $normalized = strtoupper(Str::trim($value, " \n\r\t\v\0"));
 
             return Environment::fromName($normalized) ?? match ($normalized) {

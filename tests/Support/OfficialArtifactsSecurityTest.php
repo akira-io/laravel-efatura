@@ -85,6 +85,27 @@ it('fails safely when the resource root or manifest is missing', function (bool 
         ->toThrow(OfficialArtifactException::class, $root ? 'artifacts.missing_root' : 'artifacts.missing_or_unreadable');
 })->with([true, false]);
 
+it('normalizes a native root canonicalization failure without exposing the supplied path', function (): void {
+    $original  = ini_set('zend.exception_ignore_args', '0');
+    $resources = $this->fixture->root . "/synthetic-private-root\0invalid";
+
+    try {
+        try {
+            new OfficialArtifacts(new Filesystem, $resources);
+            test()->fail('An invalid resource root was accepted.');
+        } catch (OfficialArtifactException $exception) {
+            expect($exception->errorCode)->toBe('artifacts.missing_root')
+                ->and($exception->getMessage())->toBe('artifacts.missing_root')
+                ->and($exception->context)->toBe(['operation' => 'load_manifest'])
+                ->and($exception->getPrevious())->toBeNull()
+                ->and(array_column($exception->getTrace(), 'args'))->not->toBeEmpty()
+                ->and(print_r($exception->getTrace(), true))->not->toContain($resources, 'synthetic-private-root');
+        }
+    } finally {
+        ini_set('zend.exception_ignore_args', $original);
+    }
+});
+
 it('rejects an invalid manifest', function (string $contents): void {
     $this->files->put($this->fixture->root . '/official-artifacts.json', $contents);
 

@@ -25,7 +25,12 @@ final readonly class OfficialArtifacts
 
     public function __construct(private Filesystem $filesystem, #[SensitiveParameter] string $resources = __DIR__ . '/../../resources')
     {
-        $root = realpath($resources);
+        try {
+            $root = realpath($resources);
+        } catch (Throwable) {
+            throw new OfficialArtifactException('artifacts.missing_root', 'load_manifest');
+        }
+
         if ($root === false) {
             throw new OfficialArtifactException('artifacts.missing_root', 'load_manifest');
         }
@@ -85,7 +90,7 @@ final readonly class OfficialArtifacts
         $path = $this->checkedPath($artifact);
 
         try {
-            $size = @$this->filesystem->size($path);
+            $size = $this->filesystem->size($path);
         } catch (Throwable) {
             throw new OfficialArtifactException('artifacts.missing_or_unreadable', 'resolve');
         }
@@ -95,7 +100,7 @@ final readonly class OfficialArtifacts
         }
 
         try {
-            $hash = @$this->filesystem->hash($path, 'sha256');
+            $hash = $this->filesystem->hash($path, 'sha256');
         } catch (Throwable) {
             throw new OfficialArtifactException('artifacts.checksum_mismatch', 'resolve');
         }
