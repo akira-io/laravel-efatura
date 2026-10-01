@@ -8,8 +8,15 @@
             "commitlint",
             "filesystem",
             "nif",
-            "homologation"
+            "dfa",
+            "bcv",
+            "homologation",
+            "xsd",
+            "retryable"
         ],
-        "paths": []
+        "paths": [
+            "resources/catalogs/source",
+            "resources/xsd"
+        ]
     }
 }

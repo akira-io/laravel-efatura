@@ -68,9 +68,9 @@ final class InstallCommand extends Command
         $contents = $filesystem->get($envPath);
 
         $variables = [
-            'EFATURA_TRANSMITTER_NIF'     => '',
-            'EFATURA_LED_CODE'            => '',
-            'EFATURA_TRANSMITTER_KEY'     => '',
+            'EFATURA_TRANSMITTER_TAX_ID'  => 'null',
+            'EFATURA_EMITTER_LED'         => 'null',
+            'EFATURA_TRANSMITTER_KEY'     => 'null',
             'EFATURA_MIDDLEWARE_BASE_URL' => 'https://localhost:3443',
             'EFATURA_ENVIRONMENT'         => 'test',
         ];
