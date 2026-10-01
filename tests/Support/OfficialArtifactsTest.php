@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 use Akira\Efatura\Support\OfficialArtifacts;
 
+it('resolves bundled artifacts from the Laravel container', function (): void {
+    $entry = resolve(OfficialArtifacts::class)->xsdEntry('EnvelopedSignature');
+
+    expect($entry)->toBe(dirname(__DIR__, 2) . '/resources/xsd/efatura/2024-05-27/EnvelopedSignature.xsd');
+});
+
 it('bundles the original official downloads with provenance', function (): void {
     $root = dirname(__DIR__, 2) . '/resources';
     expect($root . '/official-artifacts.json')->toBeFile();
@@ -71,7 +77,7 @@ it('retains every archive member and exposes both official signature entry point
             ...$members, ...array_column($manifest['sources'], 'path'),
         ]);
 
-    $artifacts = new OfficialArtifacts;
+    $artifacts = resolve(OfficialArtifacts::class);
     foreach (['EnvelopedSignature', 'InternallyDetachedSignature'] as $profile) {
         expect($artifacts->xsdEntry($profile))->toBe($root . '/' . $prefix . $profile . '.xsd')
             ->and(file_get_contents($root . '/' . $prefix . 'Read Me.txt'))->toContain($profile . '.xsd');

@@ -29,7 +29,7 @@ it('preserves validation field access while exposing the package base', function
 
 it('provides a typed safe artifact failure for unknown profiles', function (): void {
     try {
-        new OfficialArtifacts()->xsdEntry('untrusted-profile-secret');
+        resolve(OfficialArtifacts::class)->xsdEntry('untrusted-profile-secret');
         test()->fail('Unknown profile was accepted.');
     } catch (OfficialArtifactException $officialArtifactException) {
         expect($officialArtifactException)->toBeInstanceOf(EfaturaException::class)

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Tests\Support;
 
+use Akira\Efatura\Support\OfficialArtifacts;
 use Illuminate\Filesystem\Filesystem;
 
 use const JSON_THROW_ON_ERROR;
@@ -28,9 +29,14 @@ final readonly class ArtifactFixture
     {
         $manifest = array_replace([
             'signature_profiles' => ['EnvelopedSignature' => 'nested/example.xsd'],
-            'files'              => ['nested/example.xsd' => ['sha256' => hash('sha256', "original\r\nbytes\r\n")]],
+            'files'              => ['nested/example.xsd' => ['sha256' => hash('sha256', "original\r\nbytes\r\n"), 'size' => 17]],
         ], $changes);
         file_put_contents($this->root . '/official-artifacts.json', json_encode($manifest, JSON_THROW_ON_ERROR));
+    }
+
+    public function artifacts(?Filesystem $filesystem = null): OfficialArtifacts
+    {
+        return new OfficialArtifacts($filesystem ?? new Filesystem, $this->root);
     }
 
     public function remove(): void
