@@ -45,4 +45,6 @@ it('redacts raw configuration from every captured exception argument', function 
     'client URL credentials'     => ['efatura.http.middleware.base_url', 'url'],
     'raw environment value'      => ['efatura.environment', 'raw'],
     'raw emitter value'          => ['efatura.emitter', 'emitter'],
+    'raw oauth section'          => ['efatura.transmitter.oauth', 'raw'],
+    'raw software section'       => ['efatura.software', 'raw'],
 ]);

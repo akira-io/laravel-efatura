@@ -166,6 +166,19 @@ it('accepts official environment names codes and enum cases', function (mixed $e
     expect(loadEfaturaConfig(['environment' => $environment])->environment->repositoryCode())->toBe($code);
 })->with([[Environment::HOMOLOGATION, 2], ['homologation', 2], [1, 1], ['1', 1], ['2', 2], ['3', 3]]);
 
+it('trims ASCII edge whitespace while preserving non-breaking spaces and secrets', function (): void {
+    $nonBreaking = "\u{00A0}name\u{00A0}";
+    $config      = loadEfaturaConfig([
+        'software'    => ['name' => $nonBreaking, 'code' => " \tcode\r\n"],
+        'transmitter' => ['middleware_key' => " \tsecret\r\n", 'oauth' => ['client_secret' => "\u{00A0}secret\u{00A0}"]],
+    ]);
+
+    expect($config->software->name)->toBe($nonBreaking)
+        ->and($config->software->code)->toBe('code')
+        ->and($config->transmitter->middlewareKey)->toBe(" \tsecret\r\n")
+        ->and($config->transmitter->oauth->clientSecret)->toBe("\u{00A0}secret\u{00A0}");
+});
+
 it('inherits explicit null overrides including the selected queue connection', function (): void {
     $repository = new Repository([
         'filesystems' => ['default' => 'local'], 'cache' => ['default' => 'array'],
