@@ -32,7 +32,7 @@ with `new` no longer validates: build Data from arrays with `from()` when the
 input is untrusted. `PartyData::validateEmitter()` and
 `ContactsData::validateEmitter()` are gone; the emitter rules now belong to the
 document and report under `emitter.*`. `OfficialCode` takes the `Catalogs`
-service as its second argument. Builders defer draft validation to `validate()`,
+service as its second argument. Builders defer draft validation to `build()`,
 which validates the assembled document, including Data passed into setters. A builder defaults issue date/time from the package
 clock, while direct DTO construction requires them explicitly. Successful
 validation yields staged fiscal data: sequence/IUD allocation, completed XML
@@ -46,7 +46,7 @@ operations. There is no `issue()` operation in this API.
 
 The emission window (online: 24 hours before to one hour after the clock;
 contingency: seven days before) is checked only when a document is issued
-through `InvoiceBuilder::validate()`. `from()` and `validateAndCreate()` no
+through `InvoiceBuilder::build()`. `from()` and `validateAndCreate()` no
 longer reject a document because of its age, so an issued document can be
 rehydrated from storage. Code that relied on `from()` to enforce the window
 must issue through the builder or call `ValidateIssueDateAction` itself.
@@ -88,9 +88,14 @@ and `ContactsConfig::contactsPayload()` (where `mobile` becomes
 reaches document validation and fails at its `emitter.*` path.
 
 Builders keep the Data, enums and dates passed to their setters and assemble
-the document once, when it is validated. `Builders\Concerns\HasDocumentSections`
+the document once, in `build()`. `Builders\Concerns\HasDocumentSections`
 is folded into `InvoiceBuilder`, and every builder setter returns `static`.
 Data given to `from()`, `validateAndCreate()` or a builder contributes its
 values: `only()`, `except()`, `include()` and `exclude()` on that Data no longer
 remove fields from the input, and `FiscalData::toPayload()` returns the same
 values as an array.
+
+The terminal builder method is now `build()`: `InvoiceBuilder::validate()` and
+`EventBuilder::validate()` are renamed, with the same return types and the
+same validation. `InvoiceBuilder::build()` still checks the emission window
+against the builder's clock.

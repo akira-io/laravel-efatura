@@ -204,7 +204,7 @@ final class InvoiceBuilder
         return $this->section('transportRoute', $route);
     }
 
-    public function validate(): InvoiceData
+    public function build(): InvoiceData
     {
         $document = $this->documentType->dataClass()::from([
             'emitter' => $this->emitter instanceof EmitterConfig ? $this->emitter->partyPayload() : $this->emitter,

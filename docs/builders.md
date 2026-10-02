@@ -3,7 +3,7 @@
 `Efatura::invoice()` returns a new mutable `InvoiceBuilder`, defaulting to
 `DocumentType::Invoice`. `Efatura::event()` returns a new `EventBuilder`; select
 its event type explicitly. The facade, `EfaturaManager`, and its `efatura()`
-entry point expose the same methods. Each `validate()` returns a fresh canonical
+entry point expose the same methods. Each `build()` returns a fresh canonical
 Data graph with readonly fiscal fields. It never allocates a number or IUD,
 signs, submits, or issues a document.
 
@@ -12,7 +12,7 @@ Invoice setters are `type`, `emitter`, `ledCode`, `header`, `issuedAt`, `receive
 expose every official common field, including series, supplied document number,
 self-billing authorization, note, and extra fields. `line` and `reference` append;
 other setters replace their entire value. The builder keeps the Data, enums and
-dates you pass and assembles the document from them when you validate, so the
+dates you pass and assembles the document from them in `build()`, so the
 whole graph is validated once, at its full paths. Data contributes its values:
 presentation partials such as `only()` or `except()` on the source Data, before
 or after it is set, do not change the document. Dates are kept as immutable
@@ -47,7 +47,7 @@ writes its Cabo Verde date and time, so `00:30 UTC` on 3 October becomes issue
 date 2 October at `23:30:00`. `dueDate()` and `taxPointDate()` take a calendar
 date: they write the Carbon's own `Y-m-d`, with no timezone shift. `header()` replaces
 all header fields, including LED and dates. No numbering fields are generated.
-`InvoiceBuilder::validate()` also checks the emission window against the same
+`InvoiceBuilder::build()` also checks the emission window against the same
 clock and reports `header.issueDate` when the issue date and time fall outside it.
 Transmission software and transmitter configuration remain separate: only an
 explicit `emission()` sets transmission context at this stage. Credentials never

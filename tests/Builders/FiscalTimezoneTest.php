@@ -41,7 +41,7 @@ it('converts the issuance instant to Cape Verde time and keeps calendar dates as
     $calendarDay = CarbonImmutable::parse('2026-10-02');
     $document    = Efatura::invoice()->emitter(B::emitter(), 1)->issuedAt(CarbonImmutable::parse('2026-10-03 00:30', 'UTC'))
         ->dueDate($calendarDay)->taxPointDate($calendarDay)
-        ->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals())->validate();
+        ->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals())->build();
 
     expect($document->toArray()['header'])->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00'])
         ->and($document->toArray())->toMatchArray(['dueDate' => '2026-10-02', 'taxPointDate' => '2026-10-02']);
@@ -50,7 +50,7 @@ it('converts the issuance instant to Cape Verde time and keeps calendar dates as
 it('formats event dates in Cape Verde time', function (): void {
     $event = Efatura::event()->type(EventType::FiscalDocumentCancellation)->emitter(new TaxIdData('100200300', 'CV'))
         ->issuedAt(CarbonImmutable::parse('2026-10-03 00:30', 'UTC'))->reason('Document cancelled by emitter')
-        ->iud('CV1261002100200300' . str_repeat('0', 27))->validate();
+        ->iud('CV1261002100200300' . str_repeat('0', 27))->build();
 
     expect($event->toArray()['issueDateTime'])->toBe('2026-10-02T23:30:00');
 });
@@ -58,9 +58,9 @@ it('formats event dates in Cape Verde time', function (): void {
 it('defaults builder dates from a host timezone clock in Cape Verde time', function (): void {
     $this->app->instance(ClockInterface::class, new FactoryImmutable(['timezone' => 'UTC']));
     $document = Efatura::efatura()->invoice()->emitter(B::emitter(), 1)
-        ->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals())->validate();
+        ->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals())->build();
     $event = Efatura::efatura()->event()->type(EventType::FiscalDocumentCancellation)->emitter(new TaxIdData('100200300', 'CV'))
-        ->reason('Document cancelled by emitter')->iud('CV1261002100200300' . str_repeat('0', 27))->validate();
+        ->reason('Document cancelled by emitter')->iud('CV1261002100200300' . str_repeat('0', 27))->build();
 
     expect($document->toArray()['header'])->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00'])
         ->and($event->toArray()['issueDateTime'])->toBe('2026-10-02T23:30:00');

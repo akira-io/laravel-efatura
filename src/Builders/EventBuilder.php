@@ -87,7 +87,7 @@ final class EventBuilder
         return $this;
     }
 
-    public function validate(): EventData
+    public function build(): EventData
     {
         return EventData::from([
             'eventTypeCode'          => $this->type,

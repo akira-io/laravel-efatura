@@ -75,8 +75,8 @@ it('uses an injected clock and inclusive seven day contingency floor at issuance
     CarbonImmutable::setTestNow('2026-10-09T12:00:00-01:00');
     $emission = EmissionContextData::from(['issueMode' => 2, 'contingency' => ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1, 'reasonTypeCode' => '4']]);
     $header   = ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1];
-    expect(B::issuance($header)->emission($emission)->validate()->header->issueDate->format('Y-m-d'))->toBe('2026-10-02');
-    expect(fn (): InvoiceData => B::issuance([...$header, 'issueTime' => '11:59:59'])->emission($emission)->validate())
+    expect(B::issuance($header)->emission($emission)->build()->header->issueDate->format('Y-m-d'))->toBe('2026-10-02');
+    expect(fn (): InvoiceData => B::issuance([...$header, 'issueTime' => '11:59:59'])->emission($emission)->build())
         ->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
         });

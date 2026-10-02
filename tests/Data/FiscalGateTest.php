@@ -98,7 +98,7 @@ it('requires an emitter address in document and builder validation', function ()
 
     $valid = ElectronicInvoiceData::from(F::payload());
     expectFiscalGateField(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from(['header' => $valid->header, 'emitter' => $emitter, 'receiver' => $valid->receiver, 'lines' => $valid->lines, 'totals' => $valid->totals]), 'emitter.address');
-    expectFiscalGateField(fn () => Efatura::invoice()->emitter($emitter, 1)->receiver($valid->receiver)->line($valid->lines[0])->totals($valid->totals)->validate(), 'emitter.address');
+    expectFiscalGateField(fn () => Efatura::invoice()->emitter($emitter, 1)->receiver($valid->receiver)->line($valid->lines[0])->totals($valid->totals)->build(), 'emitter.address');
 });
 
 it('requires a CV emitter address while keeping a foreign receiver address valid', function (): void {

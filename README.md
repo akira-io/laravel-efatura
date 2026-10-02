@@ -68,7 +68,7 @@ $document = Efatura::invoice()
         'priceExtensionTotalAmount' => '100', 'netTotalAmount' => '100',
         'taxTotalAmount' => '15', 'payableAmount' => '115',
     ]))
-    ->validate(); // ElectronicInvoiceData; no issuance or sequence allocation.
+    ->build(); // ElectronicInvoiceData; no issuance or sequence allocation.
 ```
 
 Replace the example identities, address and LED with your registered fiscal data.

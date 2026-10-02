@@ -32,7 +32,7 @@ it('stamps builders from the injected clock, also on scoped managers', function 
     $scoped = resolve(EfaturaManager::class)->withConfig(resolve(LoadEfaturaConfig::class)());
 
     $event = $scoped->event()->type(EventType::FiscalDocumentCancellation)->emitter(new TaxIdData('100200300', Fiscal::COUNTRY))
-        ->reason('Document cancelled by emitter')->iud('CV1261002100200300' . str_repeat('0', 27))->validate();
+        ->reason('Document cancelled by emitter')->iud('CV1261002100200300' . str_repeat('0', 27))->build();
 
     expect($event->issueDateTime->format(Fiscal::DATE_TIME_FORMAT))->toBe('2026-10-02T23:30:00');
 });

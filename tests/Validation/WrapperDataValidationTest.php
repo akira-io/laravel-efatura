@@ -55,9 +55,9 @@ it('preserves self billing authorization', function (): void {
 it('enforces inclusive online date windows in Cabo Verde time at issuance', function (string $date, string $time, bool $valid): void {
     $draft = B::issuance(['issueDate' => $date, 'issueTime' => $time, 'ledCode' => 1]);
     if ($valid) {
-        expect($draft->validate()->header->issueDate->format('Y-m-d'))->toBe($date);
+        expect($draft->build()->header->issueDate->format('Y-m-d'))->toBe($date);
     } else {
-        expect(fn (): InvoiceData => $draft->validate())->toThrow(function (ValidationException $exception): void {
+        expect(fn (): InvoiceData => $draft->build())->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
         });
     }

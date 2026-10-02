@@ -26,7 +26,7 @@ it('creates independent canonical invoice drafts with clock defaults and exact t
     $builder = Efatura::invoice()->type(DocumentType::Invoice)
         ->emitter(B::emitter(), 7)
         ->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals());
-    $document = $builder->validate();
+    $document = $builder->build();
     expect($document)->toBeInstanceOf(ElectronicInvoiceData::class)
         ->and($document->header->ledCode)->toBe(7)
         ->and($document->header->issueDate->format('Y-m-d'))->toBe('2026-10-02')
@@ -34,12 +34,12 @@ it('creates independent canonical invoice drafts with clock defaults and exact t
         ->and($document->header->documentNumber)->toBeNull()
         ->and($document->totals->payableAmount->getAmount()->isEqualTo('115'))->toBeTrue();
     $builder->ledCode(9);
-    expect($document->header->ledCode)->toBe(7)->and($builder->validate()->header->ledCode)->toBe(9);
+    expect($document->header->ledCode)->toBe(7)->and($builder->build()->header->ledCode)->toBe(9);
     config()->set('efatura.emitter');
     $missingEmitter = Efatura::invoice()->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals());
 
     try {
-        $missingEmitter->validate();
+        $missingEmitter->build();
         test()->fail('Expected a missing emitter validation error');
     } catch (ValidationException $validationException) {
         expect(array_keys($validationException->errors()))->toContain('emitter');
@@ -63,9 +63,9 @@ it('loads complete CV defaults and alternates emitters without leaking identity 
     $other = $manager->invoice()->emitter($party)->ledCode(22)->receiver(PartyData::from(F::payload()['receiver']))->line($line)->totals(F::totals());
     $party->exclude('contacts');
     $line->exclude('taxes');
-    $b = $other->validate();
+    $b = $other->build();
     foreach ([$manager->invoice(), $manager->efatura()->invoice()] as $draft) {
-        $a = $draft->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals())->validate();
+        $a = $draft->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals())->build();
         expect($a->emitter->taxId->value)->toBe('100200300')->and($a->header->ledCode)->toBe(11)
             ->and($a->emitter->address->addressDetail)->toBe('Praia office')
             ->and($a->emitter->address->buildingFloor)->toBe('2')->and($a->emitter->contacts->telefax)->toBe('1234568')
@@ -82,18 +82,18 @@ it('defers incomplete defaults until validation and keeps the LED when the emitt
     config()->set('efatura.emitter', ['tax_id' => '100200300', 'led' => '11', 'address' => ['country_code' => 'CV']]);
     $manager = resolve(EfaturaManager::class)->withConfig(resolve(LoadEfaturaConfig::class)());
     $draft   = $manager->invoice()->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals());
-    expect(fn (): InvoiceData => $draft->validate())->toThrow(ValidationException::class)
-        ->and($draft->emitter(B::emitter())->validate()->header->ledCode)->toBe(11)
-        ->and($draft->ledCode(22)->emitter(B::emitter())->validate()->header->ledCode)->toBe(22)
-        ->and($draft->emitter(B::emitter())->ledCode(33)->validate()->header->ledCode)->toBe(33)
-        ->and($draft->emitter(B::emitter(), 44)->validate()->header->ledCode)->toBe(44);
+    expect(fn (): InvoiceData => $draft->build())->toThrow(ValidationException::class)
+        ->and($draft->emitter(B::emitter())->build()->header->ledCode)->toBe(11)
+        ->and($draft->ledCode(22)->emitter(B::emitter())->build()->header->ledCode)->toBe(22)
+        ->and($draft->emitter(B::emitter())->ledCode(33)->build()->header->ledCode)->toBe(33)
+        ->and($draft->emitter(B::emitter(), 44)->build()->header->ledCode)->toBe(44);
 });
 
 it('rehydrates a document issued days ago but refuses to issue it through the builder', function (): void {
     $header = ['issueDate' => '2026-09-29', 'issueTime' => '12:00:00', 'ledCode' => 1];
 
     expect(ElectronicInvoiceData::from(F::payload(['header' => $header]))->header->issueDate->format('Y-m-d'))->toBe('2026-09-29')
-        ->and(fn (): InvoiceData => B::issuance($header)->validate())->toThrow(function (ValidationException $exception): void {
+        ->and(fn (): InvoiceData => B::issuance($header)->build())->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
         });
 });
@@ -104,7 +104,7 @@ it('assembles supplied data by value and ignores its presentation partials', fun
     $dueDate  = Date::parse('2026-10-31');
     $draft    = Efatura::invoice()->emitter(B::emitter(), 1)->receiver($receiver)->line($line)->totals(F::totals())->dueDate($dueDate);
     $dueDate->addDay();
-    $document = $draft->validate();
+    $document = $draft->build();
 
     expect($document->receiver->taxId->value)->toBe(F::payload()['receiver']['taxId']['value'])
         ->and($document->lines[0]->taxes)->toHaveCount(1)
