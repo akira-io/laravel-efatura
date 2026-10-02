@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Exceptions\CatalogException;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Exceptions\EfaturaException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Exceptions\OfficialArtifactException;
+use Akira\Efatura\Exceptions\ResourceException;
 use Akira\Efatura\Support\OfficialArtifacts;
 
 it('exposes configuration failures through the package base', function (): void {
@@ -39,3 +41,14 @@ it('provides a typed safe artifact failure for unknown profiles', function (): v
             ->and($officialArtifactException->getMessage())->not->toContain('untrusted-profile-secret');
     }
 });
+
+it('shares one packaged resource failure shape across catalogs and artifacts', function (string $exceptionClass): void {
+    $previous  = new RuntimeException('disk failure');
+    $exception = new $exceptionClass('resource.missing_or_unreadable', 'load', $previous);
+
+    expect($exception)->toBeInstanceOf(ResourceException::class)
+        ->and($exception->errorCode)->toBe('resource.missing_or_unreadable')
+        ->and($exception->getMessage())->toBe('resource.missing_or_unreadable')
+        ->and($exception->context)->toBe(['operation' => 'load'])
+        ->and($exception->getPrevious())->toBe($previous);
+})->with([CatalogException::class, OfficialArtifactException::class]);
