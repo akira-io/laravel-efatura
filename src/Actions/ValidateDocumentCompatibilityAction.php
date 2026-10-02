@@ -17,7 +17,6 @@ use Akira\Efatura\Data\ReturnNoteData;
 use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\SelfBillingData;
 use Akira\Efatura\Data\TransportDocumentData;
-use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Enums\IssueReason;
 use Akira\Efatura\Enums\LineType;
 use Akira\Efatura\Enums\PartyReference;
@@ -31,11 +30,10 @@ use Illuminate\Validation\Rule;
 
 final readonly class ValidateDocumentCompatibilityAction
 {
-    public function __construct(private ValidateIssueDateAction $dates, private VerifyDocumentTotalsAction $totals) {}
+    public function __construct(private VerifyDocumentTotalsAction $totals) {}
 
     public function handle(InvoiceData $document): void
     {
-        $this->dates->handle($document->header, $document->emission->issueMode ?? EmissionMode::Online);
         Validator::make(['receiverReference' => $document->receiver?->reference?->value], ['receiverReference' => ['nullable', Rule::in([PartyReference::Emitter->value])]])->validate();
         if ($document->header->selfBilling instanceof SelfBillingData) {
             Validator::make(['receiver' => $document->receiver], ['receiver' => ['required']])->validate();

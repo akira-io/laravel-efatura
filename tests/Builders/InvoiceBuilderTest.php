@@ -89,3 +89,12 @@ it('defers incomplete defaults until validation and clears LED on explicit emitt
     $draft->emitter(B::emitter());
     expect(fn (): InvoiceData => $draft->validate())->toThrow(ValidationException::class);
 });
+
+it('rehydrates a document issued days ago but refuses to issue it through the builder', function (): void {
+    $header = ['issueDate' => '2026-09-29', 'issueTime' => '12:00:00', 'ledCode' => 1];
+
+    expect(ElectronicInvoiceData::from(F::payload(['header' => $header]))->header->issueDate->format('Y-m-d'))->toBe('2026-09-29')
+        ->and(fn (): InvoiceData => B::issuance($header)->validate())->toThrow(function (ValidationException $exception): void {
+            expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
+        });
+});

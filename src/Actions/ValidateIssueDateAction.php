@@ -13,14 +13,22 @@ use Psr\Clock\ClockInterface;
 
 final readonly class ValidateIssueDateAction
 {
+    private const int ONLINE_PAST_HOURS = 24;
+
+    private const int ONLINE_FUTURE_HOURS = 1;
+
+    private const int CONTINGENCY_PAST_DAYS = 7;
+
     public function __construct(private ClockInterface $clock) {}
 
     public function handle(DocumentHeaderData $header, EmissionMode $mode): void
     {
-        $issued   = new CarbonImmutable($header->issueDate->format(Fiscal::DATE_FORMAT) . 'T' . $header->issueTime->format(Fiscal::TIME_FORMAT), Fiscal::TIMEZONE);
+        $issued   = $header->issueDate->setTimeFrom($header->issueTime);
         $now      = CarbonImmutable::instance($this->clock->now())->setTimezone(Fiscal::TIMEZONE);
-        $earliest = $mode === EmissionMode::Online ? $now->subHours(24) : $now->subDays(7);
-        if ($issued->lessThan($earliest) || ($mode === EmissionMode::Online && $issued->greaterThan($now->addHour()))) {
+        $online   = $mode === EmissionMode::Online;
+        $earliest = $online ? $now->subHours(self::ONLINE_PAST_HOURS) : $now->subDays(self::CONTINGENCY_PAST_DAYS);
+
+        if ($issued->lessThan($earliest) || ($online && $issued->greaterThan($now->addHours(self::ONLINE_FUTURE_HOURS)))) {
             throw ValidationException::withMessages(['header.issueDate' => __('efatura::efatura.validation.issue_date_window')]);
         }
     }

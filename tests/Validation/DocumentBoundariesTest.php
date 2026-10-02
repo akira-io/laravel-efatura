@@ -7,11 +7,13 @@ use Akira\Efatura\Data\DocumentFooterData;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\EmissionContextData;
+use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\ReturnNoteData;
 use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\IssueReason;
+use Akira\Efatura\Tests\Support\BuilderFixtures as B;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
@@ -69,12 +71,15 @@ it('validates footer extensions as typed text and preserves empty extension cont
     expect(fn (): DocumentFooterData => DocumentFooterData::from(['note' => 'short']))->toThrow(ValidationException::class);
 });
 
-it('uses an injected clock and inclusive seven day contingency floor', function (): void {
+it('uses an injected clock and inclusive seven day contingency floor at issuance', function (): void {
     CarbonImmutable::setTestNow('2026-10-09T12:00:00-01:00');
-    $payload = F::payload(['emission' => ['issueMode' => 2, 'contingency' => ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1, 'reasonTypeCode' => '4']]]);
-    expect(ElectronicInvoiceData::from($payload)->header->issueDate->format('Y-m-d'))->toBe('2026-10-02');
-    $payload['header']['issueTime'] = '11:59:59';
-    expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($payload))->toThrow(ValidationException::class);
+    $emission = EmissionContextData::from(['issueMode' => 2, 'contingency' => ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1, 'reasonTypeCode' => '4']]);
+    $header   = ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1];
+    expect(B::issuance($header)->emission($emission)->validate()->header->issueDate->format('Y-m-d'))->toBe('2026-10-02');
+    expect(fn (): InvoiceData => B::issuance([...$header, 'issueTime' => '11:59:59'])->emission($emission)->validate())
+        ->toThrow(function (ValidationException $exception): void {
+            expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
+        });
 });
 
 it('rejects future tax point and mismatched immediate payment date', function (): void {

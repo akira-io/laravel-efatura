@@ -42,6 +42,8 @@ Both builders snapshot the injected PSR-20 `ClockInterface` at creation. The def
 Atlantic/Cape_Verde. `issuedAt()` preserves the supplied CarbonImmutable's local
 date/time components; supply the fiscal timezone explicitly. `header()` replaces
 all header fields, including LED and dates. No numbering fields are generated.
+`InvoiceBuilder::validate()` also checks the emission window against the same
+clock and reports `header.issueDate` when the issue date and time fall outside it.
 Transmission software and transmitter configuration remain separate: only an
 explicit `emission()` sets transmission context at this stage. Credentials never
 enter the fiscal Data graph.

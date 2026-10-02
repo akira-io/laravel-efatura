@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Builders;
 
+use Akira\Efatura\Actions\ValidateIssueDateAction;
 use Akira\Efatura\Builders\Concerns\HasDocumentSections;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Data\CreditNoteData;
@@ -24,6 +25,7 @@ use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\TotalsData;
 use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Psr\Clock\ClockInterface;
@@ -46,11 +48,14 @@ final class InvoiceBuilder
     /** @var list<array<array-key, mixed>> */
     private array $references = [];
 
+    private readonly ValidateIssueDateAction $issueDate;
+
     public function __construct(EfaturaConfig $config, ClockInterface $clock)
     {
-        $now          = $clock->now();
-        $this->draft  = ['emitter' => ConfiguredEmitter::party($config->emitter)];
-        $this->header = ['issueDate' => $now->format(Fiscal::DATE_FORMAT), 'issueTime' => $now->format(Fiscal::TIME_FORMAT), 'ledCode' => $config->emitter?->led];
+        $now             = $clock->now();
+        $this->issueDate = new ValidateIssueDateAction($clock);
+        $this->draft     = ['emitter' => ConfiguredEmitter::party($config->emitter)];
+        $this->header    = ['issueDate' => $now->format(Fiscal::DATE_FORMAT), 'issueTime' => $now->format(Fiscal::TIME_FORMAT), 'ledCode' => $config->emitter?->led];
     }
 
     public function type(DocumentType $type): self
@@ -148,6 +153,9 @@ final class InvoiceBuilder
             DocumentType::Transport        => TransportDocumentData::class,
         };
 
-        return $class::validateAndCreate([...$this->draft, 'header' => $this->header]);
+        $document = $class::validateAndCreate([...$this->draft, 'header' => $this->header]);
+        $this->issueDate->handle($document->header, $document->emission->issueMode ?? EmissionMode::Online);
+
+        return $document;
     }
 }

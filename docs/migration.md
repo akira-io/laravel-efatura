@@ -43,3 +43,10 @@ operations. There is no `issue()` operation in this API.
 `handle()` returns `void` instead of echoing the `TotalsData` it received.
 `DecimalFormatter::roundingMode(bool)` is replaced by
 `DecimalFormatter::fiscalRounding()`, which names the half-up fiscal rounding.
+
+The emission window (online: 24 hours before to one hour after the clock;
+contingency: seven days before) is checked only when a document is issued
+through `InvoiceBuilder::validate()`. `from()` and `validateAndCreate()` no
+longer reject a document because of its age, so an issued document can be
+rehydrated from storage. Code that relied on `from()` to enforce the window
+must issue through the builder or call `ValidateIssueDateAction` itself.

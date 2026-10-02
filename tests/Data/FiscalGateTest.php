@@ -29,10 +29,10 @@ it('accepts the fixture inside the online window of the fiscal clock', function 
     expect(ElectronicInvoiceData::from(F::payload()))->toBeInstanceOf(ElectronicInvoiceData::class);
 });
 
-it('rejects the fixture once the fiscal clock leaves the online window', function (): void {
-    CarbonImmutable::setTestNow('2026-10-04T12:00:00-01:00');
+it('rehydrates an issued document after the fiscal clock leaves the online window', function (): void {
+    CarbonImmutable::setTestNow('2026-10-05T12:00:00-01:00');
 
-    expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from(F::payload()))->toThrow(ValidationException::class);
+    expect(ElectronicInvoiceData::from(F::payload())->header->issueDate->format('Y-m-d'))->toBe('2026-10-02');
 });
 
 function expectFiscalGateField(Closure $callback, string $field): void

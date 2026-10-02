@@ -3,10 +3,12 @@
 declare(strict_types=1);
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
+use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\PartyData;
 use Akira\Efatura\Data\ReceiptData;
 use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\EmissionMode;
+use Akira\Efatura\Tests\Support\BuilderFixtures as B;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
@@ -50,12 +52,14 @@ it('preserves self billing authorization', function (): void {
     $payload['header']['selfBilling'] = ['authorizationId' => '12345678-1234-1234-1234-123456789abc', 'authorizationCode' => '1234'];
     expect(ElectronicInvoiceData::from($payload)->header->selfBilling->authorizationCode)->toBe('1234');
 });
-it('enforces inclusive online date windows in Cabo Verde time', function (string $date, string $time, bool $valid): void {
-    $payload = F::payload(['header' => ['issueDate' => $date, 'issueTime' => $time, 'ledCode' => 1]]);
+it('enforces inclusive online date windows in Cabo Verde time at issuance', function (string $date, string $time, bool $valid): void {
+    $draft = B::issuance(['issueDate' => $date, 'issueTime' => $time, 'ledCode' => 1]);
     if ($valid) {
-        expect(ElectronicInvoiceData::from($payload)->header->issueDate->format('Y-m-d'))->toBe($date);
+        expect($draft->validate()->header->issueDate->format('Y-m-d'))->toBe($date);
     } else {
-        expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($payload))->toThrow(ValidationException::class);
+        expect(fn (): InvoiceData => $draft->validate())->toThrow(function (ValidationException $exception): void {
+            expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
+        });
     }
 })->with([['2026-10-02', '13:00:00', true], ['2026-10-02', '13:00:01', false], ['2026-10-01', '12:00:00', true], ['2026-10-01', '11:59:59', false]]);
 it('requires mode compatible contingency evidence', function (int $mode, ?array $contingency, bool $valid): void {
