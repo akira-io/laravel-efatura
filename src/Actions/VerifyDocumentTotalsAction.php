@@ -13,6 +13,7 @@ use Akira\Efatura\Enums\LineType;
 use Akira\Efatura\Enums\TaxType;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Money\TotalsAccumulator;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 use Illuminate\Validation\ValidationException;
@@ -22,6 +23,8 @@ final readonly class VerifyDocumentTotalsAction
     private const int HUNDRED = 100;
 
     private const int ROUNDED_SCALE = 2;
+
+    private const array ACCEPTED_SCALES = [self::ROUNDED_SCALE, Fiscal::AMOUNT_SCALE];
 
     /**
      * @param list<LineItemData> $lines
@@ -115,7 +118,7 @@ final readonly class VerifyDocumentTotalsAction
     private function tax(TotalsAccumulator $sum, TaxData $tax, int $index, LineType $type, BigDecimal $net): TotalsAccumulator
     {
         $amount = $tax->taxPercentage instanceof BigDecimal
-            ? $net->multipliedBy($tax->taxPercentage)->dividedBy(self::HUNDRED)
+            ? $net->multipliedBy($tax->taxPercentage)->dividedByExact(self::HUNDRED)
             : ($tax->taxAmount?->getAmount() ?? BigDecimal::zero());
 
         if ($tax->taxTotal instanceof Money) {
@@ -141,7 +144,7 @@ final readonly class VerifyDocumentTotalsAction
 
         $value = $discount->value instanceof Money ? $discount->value->getAmount() : $discount->value;
 
-        return $discount->valueType === DiscountValueType::Amount ? $value : $base->multipliedBy($value)->dividedBy(self::HUNDRED);
+        return $discount->valueType === DiscountValueType::Amount ? $value : $base->multipliedBy($value)->dividedByExact(self::HUNDRED);
     }
 
     private function round(BigDecimal $value): BigDecimal
@@ -169,12 +172,19 @@ final readonly class VerifyDocumentTotalsAction
     private function matchesRounded(string $field, BigDecimal $actual, array $candidates): void
     {
         foreach ($candidates as $candidate) {
-            if (! $candidate->isNegative() && ($actual->isEqualTo($candidate) || $actual->isEqualTo($this->round($candidate)))) {
+            if (! $candidate->isNegative() && $this->roundsTo($candidate, $actual)) {
                 return;
             }
         }
 
         $this->fail($field);
+    }
+
+    private function roundsTo(BigDecimal $candidate, BigDecimal $actual): bool
+    {
+        return $actual->isEqualTo($candidate) || collect(self::ACCEPTED_SCALES)->contains(
+            static fn (int $scale): bool => $actual->isEqualTo($candidate->toScale($scale, DecimalFormatter::fiscalRounding())),
+        );
     }
 
     private function fail(string $field): never

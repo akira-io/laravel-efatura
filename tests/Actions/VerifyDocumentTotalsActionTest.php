@@ -16,7 +16,9 @@ beforeEach(function (): void {
 
 function verifiesTotals(array $lines, TotalsData $totals): void
 {
-    expect(fn () => resolve(VerifyDocumentTotalsAction::class)->handle($lines, $totals))->not->toThrow(ValidationException::class);
+    resolve(VerifyDocumentTotalsAction::class)->handle($lines, $totals);
+
+    expect($lines)->not->toBeEmpty();
 }
 
 function rejectsTotals(array $lines, TotalsData $totals, string $field): void
@@ -95,3 +97,26 @@ it('accepts exact and rounded final tax sums without arbitrary tolerance', funct
         rejectsTotals($lines, $totals, 'totals.taxTotalAmount');
     }
 })->with([['0.014', '0.154', true], ['0.01', '0.15', true], ['0.02', '0.16', true], ['0.015', '0.155', false]]);
+
+it('accepts line evidence rounded half up to the five decimal XSD scale', function (array $line, array $totals): void {
+    verifiesTotals([F::line($line)], F::totals($totals));
+})->with([
+    'price extension' => [
+        ['quantity' => ['value' => '3.33333', 'unitCode' => 'C62'], 'price' => '0.33333', 'priceExtension' => '1.11110', 'netTotal' => '1.11110'],
+        ['priceExtensionTotalAmount' => '1.11110', 'netTotalAmount' => '1.11110', 'taxTotalAmount' => '0.17', 'payableAmount' => '1.28110'],
+    ],
+    'percentage discount net' => [
+        ['price' => '0.33333', 'priceExtension' => '0.33333', 'discount' => ['value' => '33.333'], 'netTotal' => '0.22222'],
+        ['priceExtensionTotalAmount' => '0.33333', 'netTotalAmount' => '0.22222', 'discountTotalAmount' => '0.11111', 'taxTotalAmount' => '0.03', 'payableAmount' => '0.25222'],
+    ],
+    'line tax total' => [
+        ['price' => '1.1111', 'priceExtension' => '1.1111', 'netTotal' => '1.1111', 'taxes' => [['taxTypeCode' => 'IVA', 'taxPercentage' => '15', 'taxTotal' => '0.16667']]],
+        ['priceExtensionTotalAmount' => '1.1111', 'netTotalAmount' => '1.1111', 'taxTotalAmount' => '0.17', 'payableAmount' => '1.2811'],
+    ],
+]);
+
+it('rejects five decimal evidence rounded in the wrong direction', function (): void {
+    $line = ['quantity' => ['value' => '3.33333', 'unitCode' => 'C62'], 'price' => '0.33333', 'priceExtension' => '1.11109', 'netTotal' => '1.11109'];
+
+    rejectsTotals([F::line($line)], F::totals(['priceExtensionTotalAmount' => '1.11109', 'netTotalAmount' => '1.11109', 'taxTotalAmount' => '0.17', 'payableAmount' => '1.28109']), 'lines.0.priceExtension');
+});
