@@ -12,6 +12,7 @@ use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\FiscalRules;
 use Brick\Money\Money;
+use Illuminate\Support\Facades\Validator;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
@@ -45,6 +46,7 @@ final class LineItemData extends Data
         $rules            = self::rules();
         $rules['taxes'][] = new DataInstances(TaxData::class);
         $this->validateFiscalFields($rules);
+        Validator::make(['quantity' => ['value' => $quantity->value]], ['quantity.value' => ['required', new FiscalNumber(positive: true)]])->validate();
     }
 
     /**
@@ -54,7 +56,7 @@ final class LineItemData extends Data
     {
         return [
             'id'                 => ['nullable', ...FiscalRules::code()],
-            'lineReferenceId'    => ['nullable', ...FiscalRules::code()],
+            'lineReferenceId'    => ['nullable', 'required_if:lineTypeCode,C', ...FiscalRules::code()],
             'orderLineReference' => ['nullable', 'integer', 'between:1,99999'],
             'price'              => ['nullable', new FiscalNumber(currency: 'CVE')],
             'priceExtension'     => ['nullable', new FiscalNumber(currency: 'CVE')],

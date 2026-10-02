@@ -15,6 +15,12 @@ trait ValidatesFiscalFields
     protected function validateFiscalFields(array $rules): void
     {
         $values = collect(get_object_vars($this))->map(static fn (mixed $value): mixed => $value instanceof BackedEnum ? $value->value : $value)->all();
+        foreach ($values as $attribute => $value) {
+            if (\is_string($value)) {
+                $rules[$attribute][] = 'required';
+            }
+        }
+
         Validator::make($values, $rules)->validate();
     }
 }

@@ -6,7 +6,9 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Rules\DataInstances;
+use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\FiscalRules;
+use Illuminate\Support\Facades\Validator;
 use Spatie\LaravelData\Data;
 
 final class ItemData extends Data
@@ -30,6 +32,7 @@ final class ItemData extends Data
         $rules                      = self::rules();
         $rules['extraProperties'][] = new DataInstances(ExtraPropertyData::class);
         $this->validateFiscalFields($rules);
+        Validator::make(['packQuantity' => ['value' => $packQuantity?->value]], ['packQuantity.value' => ['nullable', new FiscalNumber(positive: true)]])->validate();
     }
 
     /**
