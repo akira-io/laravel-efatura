@@ -7,14 +7,15 @@ namespace Akira\Efatura;
 use Akira\Efatura\Builders\EventBuilder;
 use Akira\Efatura\Builders\InvoiceBuilder;
 use Akira\Efatura\Configuration\EfaturaConfig;
+use Psr\Clock\ClockInterface;
 
 final readonly class EfaturaManager
 {
     private Efatura $efatura;
 
-    public function __construct(private EfaturaConfig $config)
+    public function __construct(private EfaturaConfig $config, private ClockInterface $clock)
     {
-        $this->efatura = new Efatura($config);
+        $this->efatura = new Efatura($config, $clock);
     }
 
     public function config(): EfaturaConfig
@@ -24,7 +25,7 @@ final readonly class EfaturaManager
 
     public function withConfig(EfaturaConfig $config): self
     {
-        return new self($config);
+        return new self($config, $this->clock);
     }
 
     public function efatura(): Efatura

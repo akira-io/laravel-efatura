@@ -6,7 +6,6 @@ namespace Akira\Efatura\Builders;
 
 use Akira\Efatura\Builders\Concerns\HasDocumentSections;
 use Akira\Efatura\Configuration\EfaturaConfig;
-use Akira\Efatura\Contracts\Clock;
 use Akira\Efatura\Data\CreditNoteData;
 use Akira\Efatura\Data\DebitNoteData;
 use Akira\Efatura\Data\DocumentFooterData;
@@ -27,6 +26,7 @@ use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
+use Psr\Clock\ClockInterface;
 
 final class InvoiceBuilder
 {
@@ -46,7 +46,7 @@ final class InvoiceBuilder
     /** @var list<array<array-key, mixed>> */
     private array $references = [];
 
-    public function __construct(EfaturaConfig $config, Clock $clock)
+    public function __construct(EfaturaConfig $config, ClockInterface $clock)
     {
         $now          = $clock->now();
         $this->draft  = ['emitter' => ConfiguredEmitter::party($config->emitter)];

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Akira\Efatura\Builders;
 
 use Akira\Efatura\Configuration\EfaturaConfig;
-use Akira\Efatura\Contracts\Clock;
 use Akira\Efatura\Data\EmissionContextData;
 use Akira\Efatura\Data\EventData;
 use Akira\Efatura\Data\EventNumberRangeData;
@@ -13,6 +12,7 @@ use Akira\Efatura\Data\TaxIdData;
 use Akira\Efatura\Enums\EventType;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
+use Psr\Clock\ClockInterface;
 
 final class EventBuilder
 {
@@ -22,7 +22,7 @@ final class EventBuilder
     /** @var list<string> */
     private array $iuds = [];
 
-    public function __construct(EfaturaConfig $config, Clock $clock)
+    public function __construct(EfaturaConfig $config, ClockInterface $clock)
     {
         $this->draft = ['emitterTaxId' => ConfiguredEmitter::taxId($config->emitter), 'issueDateTime' => $clock->now()->format(Fiscal::DATE_TIME_FORMAT)];
     }

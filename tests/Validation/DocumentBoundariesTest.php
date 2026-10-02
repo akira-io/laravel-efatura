@@ -1,7 +1,6 @@
 <?php
 
 declare(strict_types=1);
-use Akira\Efatura\Contracts\Clock;
 use Akira\Efatura\Data\CreditNoteData;
 use Akira\Efatura\Data\DebitNoteData;
 use Akira\Efatura\Data\DocumentFooterData;
@@ -71,13 +70,7 @@ it('validates footer extensions as typed text and preserves empty extension cont
 });
 
 it('uses an injected clock and inclusive seven day contingency floor', function (): void {
-    $this->app->instance(Clock::class, new class implements Clock
-    {
-        public function now(): CarbonImmutable
-        {
-            return new CarbonImmutable('2026-10-09T12:00:00-01:00');
-        }
-    });
+    CarbonImmutable::setTestNow('2026-10-09T12:00:00-01:00');
     $payload = F::payload(['emission' => ['issueMode' => 2, 'contingency' => ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1, 'reasonTypeCode' => '4']]]);
     expect(ElectronicInvoiceData::from($payload)->header->issueDate->format('Y-m-d'))->toBe('2026-10-02');
     $payload['header']['issueTime'] = '11:59:59';

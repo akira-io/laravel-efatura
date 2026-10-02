@@ -7,10 +7,11 @@ namespace Akira\Efatura;
 use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
-use Akira\Efatura\Contracts\Clock;
-use Akira\Efatura\Support\SystemClock;
+use Akira\Efatura\Support\Fiscal;
+use Carbon\FactoryImmutable;
 use Illuminate\Foundation\Application;
 use Override;
+use Psr\Clock\ClockInterface;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -27,7 +28,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             return $loader();
         });
         $this->app->singleton(EfaturaManager::class);
-        $this->app->singleton(Clock::class, SystemClock::class);
+        $this->app->singleton(ClockInterface::class, fn (): ClockInterface => new FactoryImmutable(['timezone' => Fiscal::TIMEZONE]));
     }
 
     public function configurePackage(Package $package): void

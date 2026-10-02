@@ -38,7 +38,7 @@ Events expose `type(EventType)`, `emitter(TaxIdData)`, `issuedAt(CarbonImmutable
 `emission(EmissionContextData)`. FDC requires IUDs; UDN requires a number range.
 Their conflicting target sections fail validation.
 
-Both builders snapshot the injected `Clock` at creation. The default clock uses
+Both builders snapshot the injected PSR-20 `ClockInterface` at creation. The default clock uses
 Atlantic/Cape_Verde. `issuedAt()` preserves the supplied CarbonImmutable's local
 date/time components; supply the fiscal timezone explicitly. `header()` replaces
 all header fields, including LED and dates. No numbering fields are generated.

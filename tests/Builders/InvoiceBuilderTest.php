@@ -79,7 +79,7 @@ it('loads complete CV defaults and alternates emitters without leaking identity 
 
 it('defers incomplete defaults until validation and clears LED on explicit emitter replacement', function (): void {
     config()->set('efatura.emitter', ['tax_id' => '100200300', 'led' => '11', 'address' => ['country_code' => 'CV']]);
-    $manager = new EfaturaManager(resolve(LoadEfaturaConfig::class)());
+    $manager = resolve(EfaturaManager::class)->withConfig(resolve(LoadEfaturaConfig::class)());
     $draft   = $manager->invoice()->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals());
     expect(fn (): InvoiceData => $draft->validate())->toThrow(ValidationException::class);
     $draft->emitter(B::emitter());
