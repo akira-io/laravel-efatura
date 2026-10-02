@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Akira\Efatura\Rules;
 
 use Akira\Efatura\Support\FieldPath;
-use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
 use Carbon\CarbonInterface;
 use Closure;
@@ -40,7 +39,7 @@ final readonly class ChronologicalOrder implements ValidationRule
         $parts = collect($formats)->map(static function (string $format, string $field) use ($context): ?string {
             $value = ValidationPayload::value($context, $field);
 
-            return $value instanceof CarbonInterface ? Fiscal::local($value)->format($format) : (\is_string($value) ? $value : null);
+            return $value instanceof CarbonInterface ? $value->format($format) : (\is_string($value) ? $value : null);
         });
 
         return $parts->contains(null) ? null : $parts->implode('T');

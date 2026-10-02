@@ -95,7 +95,7 @@ it('preserves explicit header context footer and invoice optional fields', funct
         ->header(DocumentHeaderData::from([...F::payload()['header'], 'serie' => 'A', 'documentNumber' => 8, 'innerDocumentNumber' => 'HOST-8', 'isIsolatedAct' => true,
             'selfBilling'                                                     => ['authorizationId' => '12345678-1234-1234-1234-123456789abc', 'authorizationCode' => '1234']]))
         ->issuedAt(new CarbonImmutable('2026-10-02T10:00:00-01:00'))
-        ->dueDate(new CarbonImmutable('2026-10-31', 'Atlantic/Cape_Verde'))->taxPointDate(new CarbonImmutable('2026-10-01', 'Atlantic/Cape_Verde'))->orderReference('ORDER-1')
+        ->dueDate(new CarbonImmutable('2026-10-31'))->taxPointDate(new CarbonImmutable('2026-10-01'))->orderReference('ORDER-1')
         ->delivery(DeliveryData::from(['deliveryDate' => '2026-10-02', 'address' => ['countryCode' => 'PT', 'addressDetail' => 'Lisbon']]))
         ->emission(EmissionContextData::from(['transmitterTaxId' => ['value' => '123456789', 'countryCode' => 'CV'], 'software' => ['code' => 'APP', 'name' => 'Fiscal App', 'version' => '1.0']]))
         ->footer(DocumentFooterData::from(['note' => 'Customer delivery note', 'extraFields' => [['name' => 'CustomerHint', 'value' => 'Ready']]]));

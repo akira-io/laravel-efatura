@@ -21,14 +21,14 @@ trait HasDocumentSections
 {
     public function dueDate(CarbonInterface $date): self
     {
-        $this->draft['dueDate'] = Fiscal::local($date)->format(Fiscal::DATE_FORMAT);
+        $this->draft['dueDate'] = $date->format(Fiscal::DATE_FORMAT);
 
         return $this;
     }
 
     public function taxPointDate(CarbonInterface $date): self
     {
-        $this->draft['taxPointDate'] = Fiscal::local($date)->format(Fiscal::DATE_FORMAT);
+        $this->draft['taxPointDate'] = $date->format(Fiscal::DATE_FORMAT);
 
         return $this;
     }

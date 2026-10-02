@@ -60,12 +60,13 @@ of the payload and report at full paths: duplicate line identifiers under
 `payments`, `paymentDate`, `receiverReference`) are gone. Allowed issue
 reasons per document come from `IssueReason::allowedFor(DocumentType)`.
 
-Carbon instances are instants, not wall-clock fields. Builder date setters
-(`issuedAt()`, `dueDate()`, `taxPointDate()`, `EventBuilder::issuedAt()`), fiscal
-date casts, rules and transformers convert them to `Atlantic/Cape_Verde` before
-formatting or comparing. Code that built `CarbonImmutable::parse('2026-10-02')`
-in a UTC host to mean the Cabo Verde calendar day must now create it in the
-fiscal timezone, or pass the date as a `Y-m-d` string.
+Issuance Carbon values are instants. `InvoiceBuilder::issuedAt()`,
+`EventBuilder::issuedAt()`, the builder clock, `DocumentHeaderData::$issueDate`
+and `$issueTime`, and `EventData::$issueDateTime` convert any `CarbonInterface`
+to `Atlantic/Cape_Verde` before formatting, so a UTC `00:30` on 3 October is
+issued on 2 October at `23:30:00`. Code that built those values from a host
+clock and relied on the host's wall-clock fields now gets Cabo Verde time.
+Calendar fields keep the date as given.
 
 `EmitterConfig::$led` is now `?int`. The loader accepts only `EFATURA_EMITTER_LED`
 values matching `[1-9][0-9]{0,4}` and fails with `configuration.invalid_led`

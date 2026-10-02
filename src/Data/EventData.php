@@ -23,7 +23,7 @@ final class EventData extends FiscalData
     public function __construct(
         public readonly EventType $eventTypeCode,
         public readonly TaxIdData $emitterTaxId,
-        #[FiscalDateFormat(Fiscal::DATE_TIME_FORMAT)]
+        #[FiscalDateFormat(Fiscal::DATE_TIME_FORMAT, instant: true)]
         public readonly CarbonImmutable $issueDateTime,
         public readonly string $issueReasonDescription,
         #[RequiredIf('eventTypeCode', EventType::FiscalDocumentCancellation)]
@@ -41,7 +41,7 @@ final class EventData extends FiscalData
 
         return [
             'emitterTaxId.countryCode' => ['in:' . Fiscal::COUNTRY],
-            'issueDateTime'            => [new FiscalDate(Fiscal::DATE_TIME_FORMAT), 'after_or_equal:' . Fiscal::EARLIEST_DATE],
+            'issueDateTime'            => [new FiscalDate(Fiscal::DATE_TIME_FORMAT, instant: true), 'after_or_equal:' . Fiscal::EARLIEST_DATE],
             'issueReasonDescription'   => FiscalRules::text(10, 500),
             'iuds'                     => ['list', Rule::prohibitedIf($type === EventType::UnusedDocumentNumber)],
             'iuds.*'                   => ['required', 'distinct:strict', ...FiscalRules::iud()],

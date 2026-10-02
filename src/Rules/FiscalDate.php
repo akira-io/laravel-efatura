@@ -12,12 +12,12 @@ use Illuminate\Support\Facades\Validator;
 
 final readonly class FiscalDate implements ValidationRule
 {
-    public function __construct(private string $format = Fiscal::DATE_FORMAT) {}
+    public function __construct(private string $format = Fiscal::DATE_FORMAT, private bool $instant = false) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if ($value instanceof CarbonInterface) {
-            $value = Fiscal::local($value)->format($this->format);
+            $value = Fiscal::format($value, $this->format, $this->instant);
         }
 
         $rules = ['required', 'string', 'date_format:' . $this->format];

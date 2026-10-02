@@ -21,7 +21,7 @@ use Spatie\LaravelData\Transformers\Transformer;
 
 final readonly class FiscalDateCast implements Cast, Transformer
 {
-    public function __construct(private string $format = Fiscal::DATE_FORMAT) {}
+    public function __construct(private string $format = Fiscal::DATE_FORMAT, private bool $instant = false) {}
 
     /**
      * @param array<string, mixed>  $properties
@@ -30,7 +30,7 @@ final readonly class FiscalDateCast implements Cast, Transformer
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): CarbonImmutable
     {
         if ($value instanceof CarbonInterface) {
-            $value = Fiscal::local($value)->format($this->format);
+            $value = Fiscal::format($value, $this->format, $this->instant);
         }
 
         $date = \is_string($value) ? $this->parse($value) : null;
@@ -48,7 +48,11 @@ final readonly class FiscalDateCast implements Cast, Transformer
 
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
-        return new DateTimeInterfaceTransformer($this->format, Fiscal::TIMEZONE)->transform($property, $value, $context);
+        if (! $value instanceof CarbonInterface) {
+            return new DateTimeInterfaceTransformer($this->format, '')->transform($property, $value, $context);
+        }
+
+        return Fiscal::format($value, $this->format, $this->instant);
     }
 
     private function parse(string $value): ?CarbonImmutable

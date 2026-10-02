@@ -95,7 +95,7 @@ it('validates strict immutable dates and paired chronological transport duration
     ]]);
     expect($route->locations[0]->duration->startDate)->toBeInstanceOf(CarbonImmutable::class)
         ->and($duration->toArray()['startTime'])->toBe('09:00:00')
-        ->and(new DeliveryData(CarbonImmutable::parse('2026-10-02', 'Atlantic/Cape_Verde'), $address)->toArray()['deliveryDate'])->toBe('2026-10-02');
+        ->and(new DeliveryData(CarbonImmutable::parse('2026-10-02'), $address)->toArray()['deliveryDate'])->toBe('2026-10-02');
     expect(fn (): DatePeriodData => DatePeriodData::from(['startDate' => '2026-02-30', 'endDate' => '2026-03-01']))->toThrow(ValidationException::class)
         ->and(fn (): DatePeriodData => DatePeriodData::from(['startDate' => '2020-12-31', 'endDate' => '2026-03-01']))->toThrow(ValidationException::class)
         ->and(fn (): DatePeriodData => DatePeriodData::from(['startDate' => '2026-03-02', 'endDate' => '2026-03-01']))->toThrow(ValidationException::class)

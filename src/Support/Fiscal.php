@@ -33,4 +33,9 @@ final class Fiscal
     {
         return $moment->toImmutable()->setTimezone(self::TIMEZONE);
     }
+
+    public static function format(CarbonInterface $moment, string $format, bool $instant): string
+    {
+        return ($instant ? self::local($moment) : $moment)->format($format);
+    }
 }

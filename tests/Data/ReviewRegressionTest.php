@@ -94,11 +94,11 @@ it('restricts emitter tax country while permitting foreign parties in other role
     CarbonImmutable::setTestNow();
 });
 
-it('compares fiscal periods as Cape Verde calendar dates whatever the carbon timezone', function (): void {
-    $payload = ['startDate' => CarbonImmutable::parse('2026-10-02 12:00:00', 'Pacific/Kiritimati'), 'endDate' => CarbonImmutable::parse('2026-10-01 20:00:00', 'Pacific/Honolulu')];
-    expect(new DatePeriodData(...$payload)->toArray())->toMatchArray(['startDate' => '2026-10-01', 'endDate' => '2026-10-02']);
+it('compares fiscal periods as calendar dates regardless of hidden time and timezone', function (): void {
+    $payload = ['startDate' => CarbonImmutable::parse('2026-10-02 23:00:00', 'Pacific/Honolulu'), 'endDate' => CarbonImmutable::parse('2026-10-02 00:00:00', 'Pacific/Kiritimati')];
+    expect(new DatePeriodData(...$payload)->toArray()['endDate'])->toBe('2026-10-02');
     foreach (['from', 'validateAndCreate'] as $method) {
-        expect(DatePeriodData::$method($payload)->toArray())->toMatchArray(['startDate' => '2026-10-01', 'endDate' => '2026-10-02']);
+        expect(DatePeriodData::$method($payload)->toArray()['endDate'])->toBe('2026-10-02');
         expect(fn (): DatePeriodData => DatePeriodData::$method(['startDate' => '2026-10-03', 'endDate' => '2026-10-02']))->toThrow(ValidationException::class);
     }
 });

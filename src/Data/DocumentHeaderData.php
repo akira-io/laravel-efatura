@@ -13,9 +13,9 @@ use Carbon\CarbonImmutable;
 final class DocumentHeaderData extends FiscalData
 {
     public function __construct(
-        #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
+        #[FiscalDateFormat(Fiscal::DATE_FORMAT, instant: true)]
         public readonly CarbonImmutable $issueDate,
-        #[FiscalDateFormat(Fiscal::TIME_FORMAT)]
+        #[FiscalDateFormat(Fiscal::TIME_FORMAT, instant: true)]
         public readonly CarbonImmutable $issueTime,
         public readonly int $ledCode,
         public readonly ?string $serie = null,
@@ -31,8 +31,8 @@ final class DocumentHeaderData extends FiscalData
     public static function rules(): array
     {
         return [
-            'issueDate'           => [new FiscalDate],
-            'issueTime'           => [new FiscalDate(Fiscal::TIME_FORMAT)],
+            'issueDate'           => [new FiscalDate(instant: true)],
+            'issueTime'           => [new FiscalDate(Fiscal::TIME_FORMAT, instant: true)],
             'ledCode'             => FiscalRules::ledCode(),
             'serie'               => FiscalRules::series(),
             'documentNumber'      => FiscalRules::documentNumber(),

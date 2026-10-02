@@ -11,8 +11,8 @@ use Spatie\LaravelData\Attributes\WithCastAndTransformer;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final class FiscalDateFormat extends WithCastAndTransformer
 {
-    public function __construct(string $format)
+    public function __construct(string $format, bool $instant = false)
     {
-        parent::__construct(FiscalDateCast::class, $format);
+        parent::__construct(FiscalDateCast::class, $format, $instant);
     }
 }

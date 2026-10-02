@@ -25,7 +25,7 @@ final readonly class ValidateDocumentCompatibilityAction
 
         $issueDay = Fiscal::local($document->header->issueDate)->toDateString();
 
-        if ($document instanceof HasTaxPointDate && $document->taxPointDate instanceof CarbonImmutable && Fiscal::local($document->taxPointDate)->toDateString() > $issueDay) {
+        if ($document instanceof HasTaxPointDate && $document->taxPointDate instanceof CarbonImmutable && $document->taxPointDate->toDateString() > $issueDay) {
             $this->fail('taxPointDate', 'tax_point_after_issue');
         }
 
@@ -40,7 +40,7 @@ final readonly class ValidateDocumentCompatibilityAction
     private function paidOnIssueDay(string $issueDay, array $payments): void
     {
         $late = collect($payments)->search(
-            static fn (PaymentData $payment): bool => $payment->paymentDate instanceof CarbonImmutable && Fiscal::local($payment->paymentDate)->toDateString() !== $issueDay,
+            static fn (PaymentData $payment): bool => $payment->paymentDate instanceof CarbonImmutable && $payment->paymentDate->toDateString() !== $issueDay,
         );
 
         if (\is_int($late)) {
