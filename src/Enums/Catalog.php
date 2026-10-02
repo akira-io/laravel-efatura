@@ -12,12 +12,4 @@ enum Catalog: string
     case Currencies          = 'currencies';
     case PaymentMeans        = 'payment_means';
     case TaxExemptionReasons = 'tax_exemption_reasons';
-
-    public function codeField(): string
-    {
-        return match ($this) {
-            self::Locations                                                                               => 'codigo',
-            self::Units, self::Countries, self::Currencies, self::PaymentMeans, self::TaxExemptionReasons => 'code',
-        };
-    }
 }

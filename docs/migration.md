@@ -100,6 +100,15 @@ The terminal builder method is now `build()`: `DocumentBuilder::validate()` and
 same validation. `DocumentBuilder::build()` still checks the emission window
 against the builder's clock.
 
+Catalog records use English keys: location rows returned by
+`Catalogs::find(Catalog::Locations, ...)` and `Catalogs::records()` carry `code`,
+`level`, `country`, `island`, `municipality`, `parish`, `zone`, `place` and
+`name` instead of `codigo`, `nivel`, `pais`, `ilha`, `concelho`, `freguesia`,
+`zona`, `lugar` and `nome`. `Catalog::codeField()` is gone, since every record
+keys its code as `code`, and so is `Catalogs::sources()`: the checksums of the
+official downloads live in `resources/official-artifacts.json`. The accepted
+codes are unchanged.
+
 ## Renamed symbols
 
 PHP names describe the domain concept; wire names (input keys, `toArray()`
