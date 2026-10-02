@@ -52,7 +52,11 @@ final class TaxData extends FiscalData
             ...FiscalRules::exactlyOneOf($context, [
                 'taxPercentage'          => [FiscalNumber::positive(3, '100')],
                 'taxAmount'              => [FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
-                'taxExemptionReasonCode' => [new NotBlank, Rule::requiredIf($type === TaxType::NotApplicable), new OfficialCode(Catalog::TaxExemptionReasons, $catalogs)],
+                'taxExemptionReasonCode' => [
+                    new NotBlank,
+                    Rule::requiredIf($type === TaxType::NotApplicable),
+                    new OfficialCode(Catalog::TaxExemptionReasons, $catalogs),
+                ],
             ]),
             'stampTaxCode' => [Rule::requiredIf($type === TaxType::StampTax)],
             'taxTotal'     => [FiscalNumber::positiveAmount(Fiscal::CURRENCY)],

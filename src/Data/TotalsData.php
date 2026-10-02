@@ -13,6 +13,16 @@ use Spatie\LaravelData\Attributes\Validation\ListType;
 
 final class TotalsData extends FiscalData
 {
+    private const array UNSIGNED_AMOUNTS = [
+        'priceExtensionTotalAmount',
+        'netTotalAmount',
+        'taxTotalAmount',
+        'payableAmount',
+        'chargeTotalAmount',
+        'discountTotalAmount',
+        'withholdingTaxTotalAmount',
+    ];
+
     /**
      * @param list<PayableAlternativeAmountData> $payableAlternativeAmounts
      */
@@ -44,7 +54,7 @@ final class TotalsData extends FiscalData
     public static function rules(): array
     {
         return [
-            ...collect(['priceExtensionTotalAmount', 'netTotalAmount', 'taxTotalAmount', 'payableAmount', 'chargeTotalAmount', 'discountTotalAmount', 'withholdingTaxTotalAmount'])
+            ...collect(self::UNSIGNED_AMOUNTS)
                 ->mapWithKeys(static fn (string $field): array => [$field => [FiscalNumber::amount(Fiscal::CURRENCY)]])->all(),
             'payableRoundingAmount' => [FiscalNumber::signedAmount(Fiscal::CURRENCY)],
         ];

@@ -31,14 +31,15 @@ final readonly class VerifyDocumentTotalsAction
      */
     public function handle(array $lines, TotalsData $totals): void
     {
-        $amountDiscount = $totals->discount?->valueType === DiscountValueType::Amount;
+        $discount       = $totals->discount;
+        $amountDiscount = $discount?->valueType === DiscountValueType::Amount;
         $sum            = collect($lines)->reduce(
-            fn (TotalsAccumulator $carry, LineItemData $line, int $index): TotalsAccumulator => $this->line($carry, $line, $index, $totals->discount, $amountDiscount),
+            fn (TotalsAccumulator $carry, LineItemData $line, int $index): TotalsAccumulator => $this->line($carry, $line, $index, $discount, $amountDiscount),
             TotalsAccumulator::zero(),
         );
 
         if ($amountDiscount) {
-            $this->matchesExact('totals.discount', $this->discount($totals->discount, BigDecimal::zero()), [$sum->allocatedDiscount]);
+            $this->matchesExact('totals.discount', $this->discount($discount, BigDecimal::zero()), [$sum->allocatedDiscount]);
         }
 
         $this->matchesRounded('totals.priceExtensionTotalAmount', $totals->priceExtensionTotalAmount->getAmount(), [$sum->priceExtension]);
@@ -53,11 +54,13 @@ final readonly class VerifyDocumentTotalsAction
             $this->matchesRounded('totals.discountTotalAmount', $totals->discountTotalAmount->getAmount(), [$sum->discount]);
         }
 
-        if ($totals->withholdingTaxTotalAmount instanceof Money) {
-            $this->matchesRounded('totals.withholdingTaxTotalAmount', $totals->withholdingTaxTotalAmount->getAmount(), [$sum->withholding, $sum->roundedWithholding]);
+        $withholding = $totals->withholdingTaxTotalAmount;
+
+        if ($withholding instanceof Money) {
+            $this->matchesRounded('totals.withholdingTaxTotalAmount', $withholding->getAmount(), [$sum->withholding, $sum->roundedWithholding]);
         }
 
-        if (! $totals->withholdingTaxTotalAmount instanceof Money && ! $sum->withholding->isZero()) {
+        if (! $withholding instanceof Money && ! $sum->withholding->isZero()) {
             $this->fail('totals.withholdingTaxTotalAmount');
         }
 
@@ -98,8 +101,14 @@ final readonly class VerifyDocumentTotalsAction
         );
     }
 
-    private function allocatedDiscount(int $index, LineType $type, BigDecimal $base, BigDecimal $net, ?DiscountData $globalDiscount, bool $amountDiscount): BigDecimal
-    {
+    private function allocatedDiscount(
+        int $index,
+        LineType $type,
+        BigDecimal $base,
+        BigDecimal $net,
+        ?DiscountData $globalDiscount,
+        bool $amountDiscount,
+    ): BigDecimal {
         if ($amountDiscount && \in_array($type, [LineType::Normal, LineType::Charge], true)) {
             $allocation = $base->minus($net);
             if ($allocation->isNegative()) {

@@ -38,7 +38,12 @@ final class AddressData extends FiscalData
         return [
             'countryCode'   => [new OfficialCode(Catalog::Countries, $catalogs)],
             'addressDetail' => FiscalRules::text(1, 100),
-            'addressCode'   => [new NotBlank, 'required_if:' . FieldPath::of($context, 'countryCode') . ',' . Fiscal::COUNTRY, 'regex:/\ACV[0-9]{18}\z/', new OfficialCode(Catalog::Locations, $catalogs)],
+            'addressCode'   => [
+                new NotBlank,
+                'required_if:' . FieldPath::of($context, 'countryCode') . ',' . Fiscal::COUNTRY,
+                'regex:/\ACV[0-9]{18}\z/',
+                new OfficialCode(Catalog::Locations, $catalogs),
+            ],
             ...collect(['state', 'city', 'region', 'street', 'streetDetail', 'buildingName', 'buildingNumber', 'buildingFloor', 'postalCode'])
                 ->mapWithKeys(static fn (string $field): array => [$field => FiscalRules::text(1, 100)])->all(),
         ];

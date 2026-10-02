@@ -62,7 +62,9 @@ final class DocumentRules
             'lines.*.id'              => ['nullable', 'distinct:strict'],
             'lines.*.lineReferenceId' => ['nullable', Rule::in($lineTypes->keys()->all())],
             ...$lines->filter(static fn (array $line): bool => ($line['lineTypeCode'] ?? null) === LineType::Charge->value)
-                ->mapWithKeys(static fn (array $line, int|string $index): array => ['lines.' . $index . '.lineReferenceId' => ['required', Rule::in($normalIds)]])
+                ->mapWithKeys(static fn (array $line, int|string $index): array => [
+                    'lines.' . $index . '.lineReferenceId' => ['required', Rule::in($normalIds)],
+                ])
                 ->all(),
         ];
 

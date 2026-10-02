@@ -76,7 +76,7 @@ final readonly class CatalogGenerator
     public function stale(): array
     {
         return collect($this->render())
-            ->reject(fn (string $contents, string $catalog): bool => $this->files->isFile($this->target($catalog)) && $this->files->get($this->target($catalog)) === $contents)
+            ->reject(fn (string $contents, string $catalog): bool => $this->isCurrent($catalog, $contents))
             ->keys()
             ->all();
     }
@@ -128,7 +128,7 @@ final readonly class CatalogGenerator
     {
         $rows   = $this->workbook->rows($this->source(self::PLACES), 'CODIGOS');
         $fields = collect($rows[0] ?? [])
-            ->map(fn (float|int|string $header): string => self::PLACE_FIELDS[(string) $header] ?? throw new UnexpectedValueException('Unknown location column: ' . $header))
+            ->map($this->placeField(...))
             ->all();
 
         return collect($rows)
@@ -150,7 +150,9 @@ final readonly class CatalogGenerator
             ->all();
 
         return collect($this->xsd->records($this->source(self::XSD . 'ISO_ISOTwo-letterCountryCode_SecondEdition2006.xsd')))
-            ->map(fn (array $country): array => isset($published[$country['code']]) ? [...$country, 'published_name' => $published[$country['code']]] : $country)
+            ->map(fn (array $country): array => isset($published[$country['code']])
+                ? [...$country, 'published_name' => $published[$country['code']]]
+                : $country)
             ->all();
     }
 
@@ -173,6 +175,18 @@ final readonly class CatalogGenerator
         );
 
         return $reasons;
+    }
+
+    private function isCurrent(string $catalog, string $contents): bool
+    {
+        $target = $this->target($catalog);
+
+        return $this->files->isFile($target) && $this->files->get($target) === $contents;
+    }
+
+    private function placeField(float|int|string $header): string
+    {
+        return self::PLACE_FIELDS[(string) $header] ?? throw new UnexpectedValueException('Unknown location column: ' . $header);
     }
 
     private function source(string $path): string

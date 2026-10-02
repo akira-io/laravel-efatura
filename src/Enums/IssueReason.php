@@ -23,7 +23,14 @@ enum IssueReason: string
      */
     public static function allowedFor(DocumentType $type): array
     {
-        $corrections = [self::Article65Paragraph2, self::Article65Paragraph3, self::Article65Paragraph6, self::Article65Paragraph8, self::Article65Paragraph9, self::Unavailable];
+        $corrections = [
+            self::Article65Paragraph2,
+            self::Article65Paragraph3,
+            self::Article65Paragraph6,
+            self::Article65Paragraph8,
+            self::Article65Paragraph9,
+            self::Unavailable,
+        ];
 
         return match ($type) {
             DocumentType::CreditNote => [...$corrections, self::Article65Paragraph7, self::RappelDiscount],

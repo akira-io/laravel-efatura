@@ -32,7 +32,12 @@ final class Workbook
             $value === null                                        => '',
             \is_float($value) && floor($value) === $value          => (int) $value,
             \is_string($value), \is_int($value), \is_float($value) => $value,
-            default                                                => throw new UnexpectedValueException('Unexpected worksheet value: ' . get_debug_type($value)),
+            default                                                => $this->unexpected($value),
         };
+    }
+
+    private function unexpected(mixed $value): never
+    {
+        throw new UnexpectedValueException('Unexpected worksheet value: ' . get_debug_type($value));
     }
 }

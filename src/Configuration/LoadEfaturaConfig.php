@@ -17,11 +17,23 @@ final readonly class LoadEfaturaConfig
 {
     use ValidatesConfigurationValues;
 
+    private const array SECTIONS = [
+        'efatura',
+        'efatura.transmitter',
+        'efatura.transmitter.oauth',
+        'efatura.software',
+        'efatura.certificates',
+        'efatura.storage',
+        'efatura.cache',
+        'efatura.database',
+        'efatura.queue',
+    ];
+
     public function __construct(#[SensitiveParameter] private Repository $repository) {}
 
     public function __invoke(): EfaturaConfig
     {
-        foreach (['efatura', 'efatura.transmitter', 'efatura.transmitter.oauth', 'efatura.software', 'efatura.certificates', 'efatura.storage', 'efatura.cache', 'efatura.database', 'efatura.queue'] as $path) {
+        foreach (self::SECTIONS as $path) {
             $this->section($path);
         }
 
@@ -35,7 +47,11 @@ final readonly class LoadEfaturaConfig
                 $this->string('efatura.transmitter.middleware_key', secret: true),
                 new OAuthConfig($this->string('efatura.transmitter.oauth.client_id'), $this->string('efatura.transmitter.oauth.client_secret', secret: true)),
             ),
-            software: new SoftwareConfig($this->string('efatura.software.code'), $this->string('efatura.software.name'), $this->string('efatura.software.version')),
+            software: new SoftwareConfig(
+                $this->string('efatura.software.code'),
+                $this->string('efatura.software.name'),
+                $this->string('efatura.software.version'),
+            ),
             environment: new EnvironmentConfig($this->environment($this->repository->get('efatura.environment', Environment::Test))),
             certificates: new CertificateConfig(
                 $this->inherit('efatura.certificates.disk', 'filesystems.default'),
@@ -45,7 +61,8 @@ final readonly class LoadEfaturaConfig
             ),
             storage: new StorageConfig(
                 $this->inherit('efatura.storage.disk', 'filesystems.default'),
-                $this->relativePath('efatura.storage.path', 'efatura') ?? throw new ConfigurationException('configuration.invalid_type', 'efatura.storage.path'),
+                $this->relativePath('efatura.storage.path', 'efatura')
+                    ?? throw new ConfigurationException('configuration.invalid_type', 'efatura.storage.path'),
             ),
             cache: new CacheConfig(
                 $this->inherit('efatura.cache.store', 'cache.default'),

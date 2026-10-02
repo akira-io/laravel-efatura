@@ -47,7 +47,10 @@ final class EventData extends FiscalData
             'issueReasonDescription'   => FiscalRules::text(10, 500),
             'iuds'                     => ['list', Rule::prohibitedIf($type === EventType::UnusedDocumentNumber)],
             'iuds.*'                   => ['required', 'distinct:strict', ...FiscalRules::iud()],
-            'numberRange'              => [Rule::requiredIf($type === EventType::UnusedDocumentNumber), Rule::prohibitedIf($type === EventType::FiscalDocumentCancellation)],
+            'numberRange'              => [
+                Rule::requiredIf($type === EventType::UnusedDocumentNumber),
+                Rule::prohibitedIf($type === EventType::FiscalDocumentCancellation),
+            ],
         ];
     }
 }
