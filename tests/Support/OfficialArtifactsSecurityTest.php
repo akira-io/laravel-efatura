@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Support\OfficialArtifacts;
 use Akira\Efatura\Tests\Support\ArtifactFixture;
+use Akira\Efatura\Tests\Support\ExceptionTrace;
 use Illuminate\Filesystem\Filesystem;
 
 beforeEach(function (): void {
@@ -90,17 +91,18 @@ it('normalizes a native root canonicalization failure without exposing the suppl
     $resources = $this->fixture->root . "/synthetic-private-root\0invalid";
 
     try {
-        try {
-            new OfficialArtifacts(new Filesystem, $resources);
-            test()->fail('An invalid resource root was accepted.');
-        } catch (OfficialArtifactException $exception) {
-            expect($exception->errorCode)->toBe('artifacts.missing_root')
-                ->and($exception->getMessage())->toBe('artifacts.missing_root')
-                ->and($exception->context)->toBe(['operation' => 'load_manifest'])
-                ->and($exception->getPrevious())->toBeNull()
-                ->and(array_column($exception->getTrace(), 'args'))->not->toBeEmpty()
-                ->and(print_r($exception->getTrace(), true))->not->toContain($resources, 'synthetic-private-root');
-        }
+        expect(fn (): OfficialArtifacts => new OfficialArtifacts(new Filesystem, $resources))
+            ->toThrow(function (OfficialArtifactException $exception) use ($resources): void {
+                $dump = print_r(ExceptionTrace::packageArguments($exception), true);
+
+                expect($exception->errorCode)->toBe('artifacts.missing_root')
+                    ->and($exception->getMessage())->toBe('artifacts.missing_root')
+                    ->and($exception->context)->toBe(['operation' => 'load_manifest'])
+                    ->and($exception->getPrevious())->toBeNull()
+                    ->and($exception->getTrace()[0]['args'][1] ?? null)->toBeInstanceOf(SensitiveParameterValue::class)
+                    ->and($dump)->not->toContain($resources)
+                    ->and($dump)->not->toContain('synthetic-private-root');
+            });
     } finally {
         ini_set('zend.exception_ignore_args', $original);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
 use Akira\Efatura\Exceptions\ConfigurationException;
+use Akira\Efatura\Tests\Support\ExceptionTrace;
 use Illuminate\Config\Repository;
 
 it('redacts raw configuration from every captured exception argument', function (string $field, mixed $value): void {
@@ -20,22 +21,16 @@ it('redacts raw configuration from every captured exception argument', function 
             default   => $value,
         });
 
-        try {
-            (new LoadEfaturaConfig($repository))();
-            test()->fail('Invalid configuration was accepted.');
-        } catch (ConfigurationException $exception) {
-            $arguments = array_column($exception->getTrace(), 'args');
-            expect($arguments)->not->toBeEmpty();
-            $serialized = print_r($arguments, true);
-            foreach ([
-                'synthetic-signing-passphrase',
-                'synthetic-user',
-                'synthetic-password',
-                'synthetic-raw-secret',
-            ] as $secret) {
-                expect($serialized)->not->toContain($secret);
-            }
-        }
+        expect(fn (): mixed => (new LoadEfaturaConfig($repository))())->toThrow(function (ConfigurationException $exception): void {
+            $arguments = ExceptionTrace::packageArguments($exception);
+            $dump      = print_r($arguments, true);
+
+            expect($arguments)->not->toBeEmpty()
+                ->and($dump)->not->toContain('synthetic-signing-passphrase')
+                ->and($dump)->not->toContain('synthetic-user')
+                ->and($dump)->not->toContain('synthetic-password')
+                ->and($dump)->not->toContain('synthetic-raw-secret');
+        });
     } finally {
         ini_set('zend.exception_ignore_args', $original);
     }
