@@ -38,3 +38,8 @@ clock, while direct DTO construction requires them explicitly. Successful
 validation yields staged fiscal data: sequence/IUD allocation, completed XML
 envelope preparation, signing, transmission and authority acceptance are later
 operations. There is no `issue()` operation in this API.
+
+`ReconcileDocumentTotalsAction` is now `VerifyDocumentTotalsAction`. Its
+`handle()` returns `void` instead of echoing the `TotalsData` it received.
+`DecimalFormatter::roundingMode(bool)` is replaced by
+`DecimalFormatter::fiscalRounding()`, which names the half-up fiscal rounding.

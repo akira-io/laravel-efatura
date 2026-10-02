@@ -71,12 +71,12 @@ final class DecimalFormatter
             throw EfaturaValidationException::decimalScaleExceeded($field);
         }
 
-        return (string) $value->getAmount()->toScale($scale, self::roundingMode($round));
+        return (string) $value->getAmount()->toScale($scale, $round ? self::fiscalRounding() : RoundingMode::Unnecessary);
     }
 
-    public static function roundingMode(bool $round): RoundingMode
+    public static function fiscalRounding(): RoundingMode
     {
-        return $round ? RoundingMode::HalfUp : RoundingMode::Unnecessary;
+        return RoundingMode::HalfUp;
     }
 
     private static function checkScale(int $scale): void

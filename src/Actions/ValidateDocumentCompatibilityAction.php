@@ -31,7 +31,7 @@ use Illuminate\Validation\Rule;
 
 final readonly class ValidateDocumentCompatibilityAction
 {
-    public function __construct(private ValidateIssueDateAction $dates, private ReconcileDocumentTotalsAction $totals) {}
+    public function __construct(private ValidateIssueDateAction $dates, private VerifyDocumentTotalsAction $totals) {}
 
     public function handle(InvoiceData $document): void
     {

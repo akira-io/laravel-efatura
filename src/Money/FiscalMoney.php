@@ -8,6 +8,7 @@ use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\Exception\MathException;
+use Brick\Math\RoundingMode;
 use Brick\Money\Context\CustomContext;
 use Brick\Money\Exception\MoneyException;
 use Brick\Money\Money;
@@ -59,7 +60,7 @@ final class FiscalMoney
                 $decimal,
                 $currency,
                 new CustomContext($scale),
-                DecimalFormatter::roundingMode($round),
+                $round ? DecimalFormatter::fiscalRounding() : RoundingMode::Unnecessary,
             );
         } catch (MathException|MoneyException) {
             throw EfaturaValidationException::invalidMoney($field);
