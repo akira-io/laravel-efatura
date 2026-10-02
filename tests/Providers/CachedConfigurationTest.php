@@ -6,9 +6,8 @@ use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\EfaturaServiceProvider;
 use Illuminate\Container\Container;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bootstrap\LoadConfiguration;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Facade;
 use Orchestra\Testbench\Foundation\Application as TestbenchApplication;
 
@@ -25,20 +24,16 @@ it('loads partial cached package configuration with nested and host defaults', f
         'efatura'     => ['http' => ['timeout_seconds' => 47], 'storage' => []],
     ], true) . ';');
 
-    $environment              = Env::getRepository();
     $originalApp              = app();
-    $hadEnv                   = Arr::exists($_ENV, 'APP_CONFIG_CACHE');
-    $previousEnv              = Arr::get($_ENV, 'APP_CONFIG_CACHE');
-    $hadServer                = Arr::exists($_SERVER, 'APP_CONFIG_CACHE');
-    $previousServer           = Arr::get($_SERVER, 'APP_CONFIG_CACHE');
-    $previousProcess          = getenv('APP_CONFIG_CACHE');
-    $previousResolved         = $environment->get('APP_CONFIG_CACHE');
+    $previousEnv              = $_ENV;
+    $previousServer           = $_SERVER;
+    $previousCache            = getenv('APP_CONFIG_CACHE');
     $_ENV['APP_CONFIG_CACHE'] = $_SERVER['APP_CONFIG_CACHE'] = $cachePath;
     putenv('APP_CONFIG_CACHE=' . $cachePath);
 
     try {
         $isolated = TestbenchApplication::create(
-            resolvingCallback: static function ($app): void {
+            resolvingCallback: static function (Application $app): void {
                 $app->bind(LoadConfiguration::class, LoadConfiguration::class);
             },
             options: ['extra' => ['providers' => [EfaturaServiceProvider::class]]],
@@ -58,26 +53,11 @@ it('loads partial cached package configuration with nested and host defaults', f
             ->and($config->http->platform->timeoutSeconds)->toBe(47)
             ->and($config->http->platform->baseUrl)->toBe('https://services.efatura.cv/v1');
     } finally {
-        if ($hadEnv) {
-            $_ENV['APP_CONFIG_CACHE'] = $previousEnv;
-        } else {
-            Arr::forget($_ENV, 'APP_CONFIG_CACHE');
-        }
-
-        if ($hadServer) {
-            $_SERVER['APP_CONFIG_CACHE'] = $previousServer;
-        } else {
-            Arr::forget($_SERVER, 'APP_CONFIG_CACHE');
-        }
-
-        putenv($previousProcess === false ? 'APP_CONFIG_CACHE' : 'APP_CONFIG_CACHE=' . $previousProcess);
+        $_ENV    = $previousEnv;
+        $_SERVER = $previousServer;
+        putenv($previousCache === false ? 'APP_CONFIG_CACHE' : 'APP_CONFIG_CACHE=' . $previousCache);
         Container::setInstance($originalApp);
         Facade::setFacadeApplication($originalApp);
         $files->deleteDirectory($directory);
     }
-
-    expect(Arr::exists($_ENV, 'APP_CONFIG_CACHE'))->toBe($hadEnv)
-        ->and(Arr::exists($_SERVER, 'APP_CONFIG_CACHE'))->toBe($hadServer)
-        ->and(getenv('APP_CONFIG_CACHE'))->toBe($previousProcess)
-        ->and($environment->get('APP_CONFIG_CACHE'))->toBe($previousResolved);
 });

@@ -22,6 +22,12 @@ it('round trips fiscal date, time and date time formats', function (string $form
 ]);
 
 it('rejects fiscal dates before the earliest accepted date', function (): void {
-    expect(validator(['date' => '2020-12-31'], ['date' => ['after_or_equal:' . Fiscal::EARLIEST_DATE]])->fails())->toBeTrue()
-        ->and(validator(['date' => Fiscal::EARLIEST_DATE], ['date' => ['after_or_equal:' . Fiscal::EARLIEST_DATE]])->passes())->toBeTrue();
+    $validator = validator(['date' => '2020-12-31'], ['date' => ['after_or_equal:' . Fiscal::EARLIEST_DATE]]);
+
+    expect($validator->fails())->toBeTrue()
+        ->and($validator->errors()->first('date'))->toBe('The date field must be a date after or equal to 2021-01-01.');
+});
+
+it('accepts the earliest accepted fiscal date', function (): void {
+    expect(validator(['date' => Fiscal::EARLIEST_DATE], ['date' => ['after_or_equal:' . Fiscal::EARLIEST_DATE]])->passes())->toBeTrue();
 });

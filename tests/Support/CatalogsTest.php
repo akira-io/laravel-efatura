@@ -67,19 +67,19 @@ it('finds official codes by catalog with case-sensitive lookups', function (Cata
 it('returns null for unknown, miscased or non fiscal location codes', function (Catalog $catalog, string $code): void {
     expect(resolve(Catalogs::class)->find($catalog, $code))->toBeNull();
 })->with([
-    [Catalog::Units, 'kgm'],
-    [Catalog::Countries, 'AN'],
-    [Catalog::Countries, 'XK'],
-    [Catalog::Countries, 'cv'],
-    [Catalog::Locations, 'CV'],
-    [Catalog::Locations, 'AN'],
-    [Catalog::Locations, 'XK'],
-    [Catalog::Locations, 'cv1'],
-    [Catalog::PaymentMeans, '01'],
-    [Catalog::TaxExemptionReasons, '022'],
-    [Catalog::Currencies, 'IDR'],
-    [Catalog::Currencies, 'idr'],
-    [Catalog::Currencies, 'ZZZ'],
+    'lowercase unit'                 => [Catalog::Units, 'kgm'],
+    'withdrawn country AN'           => [Catalog::Countries, 'AN'],
+    'unofficial country XK'          => [Catalog::Countries, 'XK'],
+    'lowercase country'              => [Catalog::Countries, 'cv'],
+    'country level location'         => [Catalog::Locations, 'CV'],
+    'withdrawn country location'     => [Catalog::Locations, 'AN'],
+    'unofficial country location'    => [Catalog::Locations, 'XK'],
+    'lowercase island'               => [Catalog::Locations, 'cv1'],
+    'zero padded payment mean'       => [Catalog::PaymentMeans, '01'],
+    'zero padded exemption reason'   => [Catalog::TaxExemptionReasons, '022'],
+    'uppercased schema currency IdR' => [Catalog::Currencies, 'IDR'],
+    'lowercase currency'             => [Catalog::Currencies, 'idr'],
+    'unknown currency'               => [Catalog::Currencies, 'ZZZ'],
 ]);
 
 it('keeps all country rows of the location catalog for audit', function (): void {
@@ -116,14 +116,17 @@ it('reads each catalog file once', function (): void {
 });
 
 it('rejects missing catalog resources', function (): void {
-    expect(fn (): ?array => new Catalogs(new Filesystem, $this->catalogDirectory)->find(Catalog::Units, 'KGM'))
+    $catalogs = new Catalogs(new Filesystem, $this->catalogDirectory);
+
+    expect(fn (): ?array => $catalogs->find(Catalog::Units, 'KGM'))
         ->toThrow(CatalogException::class, 'catalogs.missing_or_unreadable');
 });
 
 it('rejects malformed catalog resources', function (string $contents): void {
     new Filesystem()->put($this->catalogDirectory . '/units.json', $contents);
+    $catalogs = new Catalogs(new Filesystem, $this->catalogDirectory);
 
-    expect(fn (): ?array => new Catalogs(new Filesystem, $this->catalogDirectory)->find(Catalog::Units, 'KGM'))
+    expect(fn (): ?array => $catalogs->find(Catalog::Units, 'KGM'))
         ->toThrow(CatalogException::class, 'catalogs.invalid');
 })->with([
     'invalid json'        => '{invalid',

@@ -158,16 +158,16 @@ it('rejects a same-byte symlink swapped in during hashing without leaking the ro
         }
     };
 
-    try {
-        new OfficialArtifacts($filesystem, $root)->path('nested/example.xsd');
-        test()->fail('A symlink replacement was accepted.');
-    } catch (OfficialArtifactException $officialArtifactException) {
-        expect($officialArtifactException->errorCode)->toBeIn(['artifacts.symbolic_link', 'artifacts.missing_or_unreadable'])
-            ->and($officialArtifactException->getMessage())->not->toContain($root)
-            ->and(json_encode($officialArtifactException->context, JSON_THROW_ON_ERROR))->not->toContain($root)
-            ->and($officialArtifactException->getPrevious())->toBeNull()
-            ->and(json_encode($officialArtifactException->getTrace(), JSON_THROW_ON_ERROR))->not->toContain($root);
-    }
+    $artifacts = new OfficialArtifacts($filesystem, $root);
+
+    expect(fn (): string => $artifacts->path('nested/example.xsd'))
+        ->toThrow(function (OfficialArtifactException $officialArtifactException) use ($root): void {
+            expect($officialArtifactException->errorCode)->toBeIn(['artifacts.symbolic_link', 'artifacts.missing_or_unreadable'])
+                ->and($officialArtifactException->getMessage())->not->toContain($root)
+                ->and(json_encode($officialArtifactException->context, JSON_THROW_ON_ERROR))->not->toContain($root)
+                ->and($officialArtifactException->getPrevious())->toBeNull()
+                ->and(json_encode($officialArtifactException->getTrace(), JSON_THROW_ON_ERROR))->not->toContain($root);
+        });
 });
 
 it('returns safe errors for failed filesystem checks', function (string $method, string $errorCode): void {
@@ -217,16 +217,14 @@ it('returns safe errors for failed filesystem checks', function (string $method,
         }
     };
 
-    try {
-        $this->fixture->artifacts($filesystem)->path('nested/example.xsd');
-        test()->fail('A filesystem failure was accepted.');
-    } catch (OfficialArtifactException $officialArtifactException) {
-        expect($officialArtifactException->errorCode)->toBe($errorCode)
-            ->and($officialArtifactException->getMessage())->not->toContain($root)
-            ->and(json_encode($officialArtifactException->context, JSON_THROW_ON_ERROR))->not->toContain($root)
-            ->and($officialArtifactException->getPrevious())->toBeNull()
-            ->and(json_encode($officialArtifactException->getTrace(), JSON_THROW_ON_ERROR))->not->toContain($root);
-    }
+    expect(fn (): string => $this->fixture->artifacts($filesystem)->path('nested/example.xsd'))
+        ->toThrow(function (OfficialArtifactException $officialArtifactException) use ($root, $errorCode): void {
+            expect($officialArtifactException->errorCode)->toBe($errorCode)
+                ->and($officialArtifactException->getMessage())->not->toContain($root)
+                ->and(json_encode($officialArtifactException->context, JSON_THROW_ON_ERROR))->not->toContain($root)
+                ->and($officialArtifactException->getPrevious())->toBeNull()
+                ->and(json_encode($officialArtifactException->getTrace(), JSON_THROW_ON_ERROR))->not->toContain($root);
+        });
 })->with([
     ['isDirectory', 'artifacts.missing_root'],
     ['isDirectoryFalse', 'artifacts.missing_root'],

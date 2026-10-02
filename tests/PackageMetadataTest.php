@@ -2,16 +2,12 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Tests\Support\ComposerMetadata;
 use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 
-function composerMetadata(): array
-{
-    return (new Filesystem)->json(__DIR__ . '/../composer.json', JSON_THROW_ON_ERROR);
-}
-
 it('declares the runtime platform and imported Laravel components', function (): void {
-    $requirements = composerMetadata()['require'];
+    $requirements = ComposerMetadata::read()['require'];
 
     expect($requirements)->toMatchArray([
         'php'                   => '^8.5',
@@ -29,7 +25,7 @@ it('declares the runtime platform and imported Laravel components', function ():
 });
 
 it('retains the package runtime and development tools', function (): void {
-    $composer = composerMetadata();
+    $composer = ComposerMetadata::read();
 
     expect($composer['require'])->toMatchArray([
         'brick/money'                  => '^0.11.0',
