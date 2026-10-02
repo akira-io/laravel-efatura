@@ -80,6 +80,16 @@ enum DocumentType: string
 
     public function xmlElement(): string
     {
-        return $this->name;
+        return match ($this) {
+            self::Invoice          => 'Invoice',
+            self::InvoiceReceipt   => 'InvoiceReceipt',
+            self::SalesReceipt     => 'SalesReceipt',
+            self::Receipt          => 'Receipt',
+            self::CreditNote       => 'CreditNote',
+            self::DebitNote        => 'DebitNote',
+            self::Transport        => 'Transport',
+            self::ReturnNote       => 'ReturnNote',
+            self::RegistrationNote => 'RegistrationNote',
+        };
     }
 }
