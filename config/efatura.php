@@ -26,6 +26,10 @@ return [
     | boot; required fiscal fields are checked when building the document.
     | Tax IDs are nine-digit strings; names, LED, address and contact values
     | are nullable strings. No field is copied from the transmitter.
+    | A CV address needs country_code, address_detail and an official
+    | address_code. Contacts need email and telephone or mobile. LED is a
+    | decimal string (1..99999). An explicit builder emitter replaces all
+    | defaults and clears LED; supply emitter($party, $led) or ledCode() after.
     |
     */
     'emitter' => [
@@ -33,16 +37,25 @@ return [
         'name'    => env('EFATURA_EMITTER_NAME'),
         'led'     => env('EFATURA_EMITTER_LED'),
         'address' => [
-            'country_code' => env('EFATURA_EMITTER_COUNTRY_CODE'),
-            'region'       => env('EFATURA_EMITTER_REGION'),
-            'city'         => env('EFATURA_EMITTER_CITY'),
-            'street'       => env('EFATURA_EMITTER_STREET'),
-            'postal_code'  => env('EFATURA_EMITTER_POSTAL_CODE'),
+            'country_code'    => env('EFATURA_EMITTER_COUNTRY_CODE'),
+            'region'          => env('EFATURA_EMITTER_REGION'),
+            'city'            => env('EFATURA_EMITTER_CITY'),
+            'street'          => env('EFATURA_EMITTER_STREET'),
+            'postal_code'     => env('EFATURA_EMITTER_POSTAL_CODE'),
+            'address_detail'  => env('EFATURA_EMITTER_ADDRESS_DETAIL'),
+            'address_code'    => env('EFATURA_EMITTER_ADDRESS_CODE'),
+            'state'           => env('EFATURA_EMITTER_STATE'),
+            'street_detail'   => env('EFATURA_EMITTER_STREET_DETAIL'),
+            'building_name'   => env('EFATURA_EMITTER_BUILDING_NAME'),
+            'building_number' => env('EFATURA_EMITTER_BUILDING_NUMBER'),
+            'building_floor'  => env('EFATURA_EMITTER_BUILDING_FLOOR'),
         ],
         'contacts' => [
             'email'     => env('EFATURA_EMITTER_EMAIL'),
             'telephone' => env('EFATURA_EMITTER_TELEPHONE'),
             'mobile'    => env('EFATURA_EMITTER_MOBILE'),
+            'telefax'   => env('EFATURA_EMITTER_TELEFAX'),
+            'website'   => env('EFATURA_EMITTER_WEBSITE'),
         ],
     ],
 

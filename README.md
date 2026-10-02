@@ -35,44 +35,48 @@ php artisan efatura:install
 ## Quick Start
 
 ```php
-use Akira\Efatura\Data\ElectronicInvoiceData;
+use Akira\Efatura\Data\LineItemData;
+use Akira\Efatura\Data\PartyData;
+use Akira\Efatura\Data\TotalsData;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Facades\Efatura;
 
-$document = ElectronicInvoiceData::from([
-    'invoice' => [
-        'type' => DocumentType::ELECTRONIC_INVOICE,
-        'issueDate' => now()->toDateString(),
-        'emitter' => [
-            'nif' => '100200300',
-            'name' => 'Emitter',
-        ],
-        'receiver' => [
-            'nif' => '900800700',
-            'name' => 'Receiver',
-        ],
-        'lines' => [
-            [
-                'description' => 'Service',
-                'quantity' => 1,
-                'unitPrice' => 1000,
-                'total' => 1000,
-                'taxes' => [
-                    [
-                        'type' => 'IVA',
-                        'rate' => 15,
-                        'amount' => 150,
-                    ],
-                ],
-            ],
-        ],
-        'totals' => [
-            'subtotal' => 1000,
-            'taxTotal' => 150,
-            'grandTotal' => 1150,
-        ],
+$emitter = PartyData::from([
+    'taxId' => ['value' => '100200300', 'countryCode' => 'CV'],
+    'name' => 'Example emitter',
+    'address' => [
+        'countryCode' => 'CV', 'addressDetail' => 'Praia office',
+        'addressCode' => 'CV111111111011110101',
     ],
+    'contacts' => ['email' => 'billing@example.cv', 'telephone' => '2600000'],
 ]);
+
+$document = Efatura::invoice()
+    ->type(DocumentType::Invoice)
+    ->emitter($emitter, ledCode: 1)
+    ->receiver(PartyData::from([
+        'taxId' => ['value' => '900800700', 'countryCode' => 'CV'],
+        'name' => 'Example receiver',
+    ]))
+    ->line(LineItemData::from([
+        'quantity' => ['value' => '1', 'unitCode' => 'C62'],
+        'item' => ['description' => 'Service', 'emitterIdentification' => 'SERVICE-1'],
+        'price' => '100', 'priceExtension' => '100', 'netTotal' => '100',
+        'taxes' => [['taxTypeCode' => 'IVA', 'taxPercentage' => '15']],
+    ]))
+    ->totals(TotalsData::from([
+        'priceExtensionTotalAmount' => '100', 'netTotalAmount' => '100',
+        'taxTotalAmount' => '15', 'payableAmount' => '115',
+    ]))
+    ->validate(); // ElectronicInvoiceData; no issuance or sequence allocation.
 ```
+
+Replace the example identities, address and LED with your registered fiscal data.
+The builder snapshots the package clock (Atlantic/Cape_Verde) when created; use
+`issuedAt(CarbonImmutable $dateTime)` or `header(DocumentHeaderData $header)` for
+explicit dates. Decimal strings avoid float rounding. A configured complete emitter
+can replace the explicit `emitter()` call. See [builders and configuration](docs/builders.md)
+and the [migration guide](docs/migration.md).
 
 ## Documentation
 

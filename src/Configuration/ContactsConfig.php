@@ -10,5 +10,7 @@ final readonly class ContactsConfig
         public ?string $email,
         public ?string $telephone,
         public ?string $mobile,
+        public ?string $telefax = null,
+        public ?string $website = null,
     ) {}
 }
