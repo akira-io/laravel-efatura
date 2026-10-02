@@ -7,13 +7,15 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\FiscalRules;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class EventNumberRangeData extends FiscalData
 {
     public function __construct(
         public readonly int $ledCode,
-        public readonly string $serie,
+        #[MapName('serie')]
+        public readonly string $series,
         public readonly DocumentType $documentTypeCode,
         public readonly int $documentNumberStart,
         public readonly int $documentNumberEnd,

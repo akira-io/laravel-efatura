@@ -48,7 +48,7 @@ it('rejects punctuation inside a website host', function (string $character): vo
 })->with('ascii punctuation between Z and a');
 
 it('keeps accepting alphanumeric series, references, units and websites', function (): void {
-    expect(DocumentHeaderData::from(['issueDate' => '2026-10-02', 'issueTime' => '09:00:00', 'ledCode' => 1, 'serie' => 'Ab9_C-1'])->serie)->toBe('Ab9_C-1')
+    expect(DocumentHeaderData::from(['issueDate' => '2026-10-02', 'issueTime' => '09:00:00', 'ledCode' => 1, 'serie' => 'Ab9_C-1'])->series)->toBe('Ab9_C-1')
         ->and(FiscalDocumentData::from(['value' => '1/2026/Ab9_C-1/123', 'isOldDocument' => true])->value)->toBe('1/2026/Ab9_C-1/123')
         ->and(QuantityData::from(['value' => '1', 'unitCode' => 'aZ09'])->unitCode)->toBe('aZ09')
         ->and(ContactsData::from(['website' => 'https://www.Exa_mple-1.cv:8080/a.b?x=1&y=%2B#top'])->website)->toBe('https://www.Exa_mple-1.cv:8080/a.b?x=1&y=%2B#top');

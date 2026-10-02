@@ -9,6 +9,7 @@ use Akira\Efatura\Rules\FiscalDate;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Carbon\CarbonImmutable;
+use Spatie\LaravelData\Attributes\MapName;
 
 final class DocumentHeaderData extends FiscalData
 {
@@ -18,7 +19,8 @@ final class DocumentHeaderData extends FiscalData
         #[FiscalDateFormat(Fiscal::TIME_FORMAT, instant: true)]
         public readonly CarbonImmutable $issueTime,
         public readonly int $ledCode,
-        public readonly ?string $serie = null,
+        #[MapName('serie')]
+        public readonly ?string $series = null,
         public readonly ?int $documentNumber = null,
         public readonly ?string $innerDocumentNumber = null,
         public readonly ?bool $isIsolatedAct = null,

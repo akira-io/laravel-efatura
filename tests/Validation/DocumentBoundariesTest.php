@@ -59,7 +59,7 @@ it('rejects explicit empty constrained document text', function (string $class, 
 
 it('keeps fiscal header values explicit and validates supplied allocations', function (): void {
     $header = DocumentHeaderData::from(['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 99999, 'serie' => 'A-1', 'documentNumber' => 999999999, 'innerDocumentNumber' => 'INV-1', 'isIsolatedAct' => true]);
-    expect($header->documentNumber)->toBe(999999999)->and($header->serie)->toBe('A-1');
+    expect($header->documentNumber)->toBe(999999999)->and($header->series)->toBe('A-1');
     foreach (['ledCode' => 0, 'serie' => 'bad space', 'documentNumber' => 0, 'innerDocumentNumber' => ''] as $field => $value) {
         expect(fn (): DocumentHeaderData => DocumentHeaderData::from(array_replace($header->toArray(), [$field => $value])))->toThrow(ValidationException::class);
     }

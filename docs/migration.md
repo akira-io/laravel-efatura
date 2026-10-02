@@ -109,3 +109,5 @@ output and XML elements) are unchanged unless the table says otherwise.
 | --- | --- |
 | `Data\InvoiceData` | `Data\DocumentData` |
 | `Builders\InvoiceBuilder` | `Builders\DocumentBuilder` (`Efatura::invoice()` keeps its name) |
+| `DocumentHeaderData::$serie` | `DocumentHeaderData::$series` (input and output key `serie`) |
+| `EventNumberRangeData::$serie` | `EventNumberRangeData::$series` (input and output key `serie`) |
