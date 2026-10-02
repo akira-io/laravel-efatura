@@ -28,6 +28,11 @@
 /psalm.xml.dist export-ignore
 /testbench.yaml export-ignore
 /workbench export-ignore
+/package.json export-ignore
+/bun.lock export-ignore
+/commitlint.config.js export-ignore
+/cliff.toml export-ignore
+/peck.json export-ignore
 /tools export-ignore
 /resources/catalogs/source export-ignore
 /art export-ignore

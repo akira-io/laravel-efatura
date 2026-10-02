@@ -58,3 +58,28 @@ it('accepts the official DFA acronym in package tooling', function (): void {
 
     expect($peck['ignore']['words'])->toContain('dfa');
 });
+
+it('ships runtime resources and leaves development files out of dist archives', function (string $path, string $exported): void {
+    $attribute = new Process(['git', 'check-attr', 'export-ignore', '--', $path], __DIR__ . '/..');
+    $attribute->mustRun();
+
+    expect(trim($attribute->getOutput()))->toBe($path . ': export-ignore: ' . $exported);
+})->with([
+    ['src/Efatura.php', 'unspecified'],
+    ['config/efatura.php', 'unspecified'],
+    ['resources/lang/en/efatura.php', 'unspecified'],
+    ['resources/catalogs/units.json', 'unspecified'],
+    ['resources/official-artifacts.json', 'unspecified'],
+    ['resources/xsd/efatura/2024-05-27/EnvelopedSignature.xsd', 'unspecified'],
+    ['composer.json', 'unspecified'],
+    ['tests', 'set'],
+    ['tools', 'set'],
+    ['docs', 'set'],
+    ['.github', 'set'],
+    ['resources/catalogs/source', 'set'],
+    ['package.json', 'set'],
+    ['bun.lock', 'set'],
+    ['commitlint.config.js', 'set'],
+    ['cliff.toml', 'set'],
+    ['peck.json', 'set'],
+]);
