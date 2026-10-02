@@ -12,24 +12,27 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
-it('reports each fiscal number failure with its own message', function (mixed $value, FiscalNumber $rule, ?string $message): void {
-    $errors = Validator::make(['value' => $value], ['value' => [$rule]])->errors()->get('value');
-
-    expect($errors)->toBe($message === null ? [] : [$message]);
+it('accepts fiscal numbers within the rule', function (mixed $value, FiscalNumber $rule): void {
+    expect(Validator::make(['value' => $value], ['value' => [$rule]])->errors()->get('value'))->toBe([]);
 })->with([
-    'plain decimal'          => ['1.5', FiscalNumber::nonNegative(), null],
+    'plain decimal'          => ['1.5', FiscalNumber::nonNegative()],
+    'insignificant zeros'    => ['15.12300', FiscalNumber::positive(3)],
+    'zero when non-negative' => ['0', FiscalNumber::nonNegative()],
+    'at maximum'             => ['100', FiscalNumber::positive(3, '100')],
+    'signed amount'          => [Money::of('-0.5', 'CVE'), FiscalNumber::signedAmount('CVE')],
+]);
+
+it('reports each fiscal number failure with its own message', function (mixed $value, FiscalNumber $rule, string $message): void {
+    expect(Validator::make(['value' => $value], ['value' => [$rule]])->errors()->get('value'))->toBe([$message]);
+})->with([
     'text'                   => ['abc', FiscalNumber::nonNegative(), 'Value must be a plain decimal number.'],
     'float'                  => [1.5, FiscalNumber::nonNegative(), 'Value must be a plain decimal number.'],
     'scientific notation'    => ['1e3', FiscalNumber::nonNegative(), 'Value must be a plain decimal number.'],
     'scale exceeded'         => ['1.123456', FiscalNumber::nonNegative(), 'Value exceeds the allowed decimal precision.'],
     'custom scale exceeded'  => ['15.1234', FiscalNumber::positive(3), 'Value exceeds the allowed decimal precision.'],
-    'insignificant zeros'    => ['15.12300', FiscalNumber::positive(3), null],
     'zero when positive'     => ['0', FiscalNumber::positive(), 'The value is outside its permitted numeric bounds.'],
-    'zero when non-negative' => ['0', FiscalNumber::nonNegative(), null],
     'negative'               => ['-1', FiscalNumber::nonNegative(), 'The value is outside its permitted numeric bounds.'],
     'above maximum'          => ['100.001', FiscalNumber::positive(3, '100'), 'The value is outside its permitted numeric bounds.'],
-    'at maximum'             => ['100', FiscalNumber::positive(3, '100'), null],
-    'signed amount'          => [Money::of('-0.5', 'CVE'), FiscalNumber::signedAmount('CVE'), null],
     'negative amount'        => [Money::of('-0.5', 'CVE'), FiscalNumber::amount('CVE'), 'The value is outside its permitted numeric bounds.'],
     'zero positive amount'   => [Money::of('0', 'CVE'), FiscalNumber::positiveAmount('CVE'), 'The value is outside its permitted numeric bounds.'],
     'currency mismatch'      => [Money::of('1', 'USD'), FiscalNumber::amount('CVE'), 'Money currency does not match the requested currency.'],

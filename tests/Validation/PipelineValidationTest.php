@@ -7,6 +7,7 @@ use Akira\Efatura\Data\TaxIdData;
 use Akira\Efatura\Enums\ContingencyReason;
 use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
+use Akira\Efatura\Tests\Support\DocumentPayloads as P;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Support\Facades\Validator;
@@ -16,17 +17,6 @@ use Illuminate\Validation\Validator as LaravelValidator;
 beforeEach(function (): void {
     CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
 });
-
-function pipelineErrorsOf(Closure $creation): array
-{
-    try {
-        $creation();
-    } catch (ValidationException $validationException) {
-        return $validationException->errors();
-    }
-
-    test()->fail('Expected a ValidationException.');
-}
 
 it('validates a document payload once per entry point', function (string $method): void {
     $documentValidations = 0;
@@ -47,41 +37,58 @@ it('reports nested and document failures together at their full paths', function
     $payload                                 = F::payload(['lines' => $lines]);
     $payload['emitter']['contacts']['email'] = null;
 
-    $errors = pipelineErrorsOf(fn (): ElectronicInvoiceData => ElectronicInvoiceData::validateAndCreate($payload));
-
-    expect($errors)->toHaveKeys(['lines.2.taxes.0.taxTypeCode', 'emitter.contacts.email']);
+    expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::validateAndCreate($payload))->toThrow(function (ValidationException $exception): void {
+        expect($exception->errors())->toBe([
+            'emitter.contacts.email'      => ['The emitter.contacts.email field is required.'],
+            'lines.2.taxes.0.taxTypeCode' => ['The selected lines.2.taxes.0.tax type code is invalid.'],
+        ]);
+    });
 });
 
 it('rejects fields that do not belong to the document type with the package message', function (): void {
-    $errors = pipelineErrorsOf(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from(F::payload(['issueReasonCode' => '2'])));
+    $payload = F::payload(['issueReasonCode' => '2']);
 
-    expect($errors['issueReasonCode'] ?? null)->toBe(['This field does not belong to this fiscal document type.']);
+    expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($payload))->toThrow(function (ValidationException $exception): void {
+        expect($exception->errors())->toBe(['issueReasonCode' => ['This field does not belong to this fiscal document type.']]);
+    });
 });
 
 it('validates array payloads on from without opting in', function (): void {
-    expect(fn (): TaxIdData => TaxIdData::from(['value' => '012345678', 'countryCode' => 'CV']))
-        ->toThrow(function (ValidationException $exception): void {
-            expect($exception->errors())->toHaveKey('value');
-        });
+    $payload = ['value' => '012345678', 'countryCode' => 'CV'];
+
+    expect(fn (): TaxIdData => TaxIdData::from($payload))
+        ->toFailValidationOn('value', 'The value must be a valid tax identifier for its country.');
 });
 
 it('constructs data objects directly without validating them', function (): void {
     expect(new TaxIdData('012345678', 'CV')->value)->toBe('012345678');
 });
 
-it('accepts only the contingency reasons allowed for the emission mode', function (EmissionMode $mode, ContingencyReason $reason, bool $allowed): void {
-    $contingency = ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1, 'iuc' => '2026/1', 'reasonTypeCode' => $reason->value, 'reasonDescription' => 'Temporary service interruption'];
-    $create      = fn (): ElectronicInvoiceData => ElectronicInvoiceData::from(F::payload(['emission' => ['issueMode' => $mode->value, 'contingency' => $contingency]]));
-
-    expect(in_array($reason, ContingencyReason::allowedFor($mode), true))->toBe($allowed);
-    $allowed
-        ? expect($create()->emission?->contingency?->reason)->toBe($reason)
-        : expect($create)->toThrow(function (ValidationException $exception): void {
-            expect($exception->errors())->toHaveKey('emission.contingency.reasonTypeCode');
-        });
+it('lists the contingency reasons allowed for each emission mode', function (EmissionMode $mode, array $reasons): void {
+    expect(ContingencyReason::allowedFor($mode))->toBe($reasons);
 })->with([
-    [EmissionMode::Offline, ContingencyReason::InternetUnavailable, true],
-    [EmissionMode::Offline, ContingencyReason::PowerFailure, false],
-    [EmissionMode::Off, ContingencyReason::PowerFailure, true],
-    [EmissionMode::Off, ContingencyReason::InternetUnavailable, false],
+    'online'  => [EmissionMode::Online, []],
+    'offline' => [EmissionMode::Offline, [
+        ContingencyReason::Other, ContingencyReason::AuthorizationServiceUnavailable, ContingencyReason::InternetUnavailable, ContingencyReason::TimestampServiceUnavailable,
+    ]],
+    'off' => [EmissionMode::Off, [ContingencyReason::Other, ContingencyReason::PowerFailure, ContingencyReason::TaxpayerSystemUnavailable]],
+]);
+
+it('accepts a contingency reason allowed for the emission mode', function (EmissionMode $mode, ContingencyReason $reason): void {
+    $document = ElectronicInvoiceData::from(F::payload(['emission' => ['issueMode' => $mode->value, 'contingency' => P::contingency($reason)]]));
+
+    expect($document->emission?->contingency?->reason)->toBe($reason);
+})->with([
+    'internet outage offline' => [EmissionMode::Offline, ContingencyReason::InternetUnavailable],
+    'power failure off'       => [EmissionMode::Off, ContingencyReason::PowerFailure],
+]);
+
+it('rejects a contingency reason not allowed for the emission mode', function (EmissionMode $mode, ContingencyReason $reason): void {
+    $payload = F::payload(['emission' => ['issueMode' => $mode->value, 'contingency' => P::contingency($reason)]]);
+
+    expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($payload))
+        ->toFailValidationOn('emission.contingency.reasonTypeCode', 'The selected emission.contingency.reason type code is invalid.');
+})->with([
+    'power failure offline' => [EmissionMode::Offline, ContingencyReason::PowerFailure],
+    'internet outage off'   => [EmissionMode::Off, ContingencyReason::InternetUnavailable],
 ]);

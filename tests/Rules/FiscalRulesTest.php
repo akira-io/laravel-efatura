@@ -10,26 +10,54 @@ use Akira\Efatura\Rules\ValidTaxId;
 use Akira\Efatura\Support\Catalogs;
 use Illuminate\Support\Facades\Validator;
 
-it('rejects unknown and incorrectly cased official codes', function (): void {
-    expect(Validator::make(['code' => 'CV'], ['code' => [new OfficialCode(Catalog::Countries, resolve(Catalogs::class))]])->passes())->toBeTrue()
-        ->and(Validator::make(['code' => 'cv'], ['code' => [new OfficialCode(Catalog::Countries, resolve(Catalogs::class))]])->fails())->toBeTrue()
-        ->and(Validator::make(['code' => 1], ['code' => [new OfficialCode(Catalog::Countries, resolve(Catalogs::class))]])->fails())->toBeTrue();
+it('accepts a known official code', function (): void {
+    expect(Validator::make(['code' => 'CV'], ['code' => [new OfficialCode(Catalog::Countries, resolve(Catalogs::class))]])->errors()->all())->toBe([]);
 });
 
-it('rejects unsupported rule input types', function (): void {
-    expect(Validator::make(['value' => 1.2], ['value' => [FiscalNumber::nonNegative()]])->fails())->toBeTrue()
-        ->and(Validator::make(['value' => '1e3'], ['value' => [FiscalNumber::nonNegative()]])->fails())->toBeTrue()
-        ->and(Validator::make(['value' => 12], ['value' => [new ValidTaxId('CV')]])->fails())->toBeTrue();
+it('rejects unknown and incorrectly cased official codes', function (string|int $code): void {
+    $validator = Validator::make(['code' => $code], ['code' => [new OfficialCode(Catalog::Countries, resolve(Catalogs::class))]]);
+
+    expect($validator->fails())->toBeTrue()
+        ->and($validator->errors()->get('code'))->toBe(['The code must be a code in the official catalog.']);
+})->with([
+    'lower case' => ['cv'],
+    'integer'    => [1],
+]);
+
+it('rejects unsupported fiscal number input types', function (float|string $value): void {
+    $validator = Validator::make(['value' => $value], ['value' => [FiscalNumber::nonNegative()]]);
+
+    expect($validator->fails())->toBeTrue()
+        ->and($validator->errors()->get('value'))->toBe(['Value must be a plain decimal number.']);
+})->with([
+    'float'               => [1.2],
+    'scientific notation' => ['1e3'],
+]);
+
+it('rejects a tax identifier that is not text', function (): void {
+    $validator = Validator::make(['value' => 12], ['value' => [new ValidTaxId('CV')]]);
+
+    expect($validator->fails())->toBeTrue()
+        ->and($validator->errors()->get('value'))->toBe(['The value must be a valid tax identifier for its country.']);
 });
 
-it('validates tax identifiers with their declared country', function (): void {
-    expect(Validator::make(['taxId' => '123456789'], ['taxId' => [new ValidTaxId('CV')]])->passes())->toBeTrue()
-        ->and(Validator::make(['taxId' => '012345678'], ['taxId' => [new ValidTaxId('CV')]])->fails())->toBeTrue()
-        ->and(Validator::make(['taxId' => 'AB12345'], ['taxId' => [new ValidTaxId('PT')]])->passes())->toBeTrue();
+it('accepts tax identifiers valid for their declared country', function (string $taxId, string $country): void {
+    expect(Validator::make(['taxId' => $taxId], ['taxId' => [new ValidTaxId($country)]])->errors()->all())->toBe([]);
+})->with([
+    'Cabo Verde' => ['123456789', 'CV'],
+    'Portugal'   => ['AB12345', 'PT'],
+]);
+
+it('rejects a tax identifier invalid for its declared country', function (): void {
+    $validator = Validator::make(['taxId' => '012345678'], ['taxId' => [new ValidTaxId('CV')]]);
+
+    expect($validator->fails())->toBeTrue()
+        ->and($validator->errors()->get('taxId'))->toBe(['The tax id must be a valid tax identifier for its country.']);
 });
 
 it('resolves package rule errors through the published translation namespace', function (): void {
     $validator = Validator::make(['taxId' => 'invalid'], ['taxId' => [new ValidTaxId('CV')]]);
+
     expect($validator->fails())->toBeTrue()
         ->and($validator->errors()->first('taxId'))->toBe('The tax id must be a valid tax identifier for its country.');
 });
