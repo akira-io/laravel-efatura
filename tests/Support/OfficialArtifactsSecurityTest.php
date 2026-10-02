@@ -41,27 +41,30 @@ it('rejects unknown signature profiles', function (): void {
         ->toThrow(OfficialArtifactException::class, 'artifacts.unknown_profile');
 });
 
-it('detects modified bytes including line ending normalization on every lookup', function (): void {
+it('detects modified bytes on every lookup', function (string $bytes, string $errorCode): void {
     $artifacts = $this->fixture->artifacts();
-    $path      = $artifacts->path('nested/example.xsd');
-    $this->files->put($path, "original\nbytes\n");
+    $this->files->put($artifacts->path('nested/example.xsd'), $bytes);
 
-    expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(OfficialArtifactException::class, 'artifacts.size_mismatch');
+    expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(OfficialArtifactException::class, $errorCode);
+})->with([
+    'normalized line endings' => ["original\nbytes\n", 'artifacts.size_mismatch'],
+    'same size, other bytes'  => ["changed!\r\nbytes\r\n", 'artifacts.checksum_mismatch'],
+]);
 
-    $this->files->put($path, "changed!\r\nbytes\r\n");
-
-    expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(OfficialArtifactException::class, 'artifacts.checksum_mismatch');
-});
-
-it('rejects missing files and directories', function (bool $directory): void {
+it('rejects a missing file', function (): void {
     $this->files->delete($this->fixture->root . '/nested/example.xsd');
-    if ($directory) {
-        $this->files->ensureDirectoryExists($this->fixture->root . '/nested/example.xsd');
-    }
 
     expect(fn (): string => $this->fixture->artifacts()->path('nested/example.xsd'))
         ->toThrow(OfficialArtifactException::class, 'artifacts.missing_or_unreadable');
-})->with([true, false]);
+});
+
+it('rejects a directory in place of a file', function (): void {
+    $this->files->delete($this->fixture->root . '/nested/example.xsd');
+    $this->files->ensureDirectoryExists($this->fixture->root . '/nested/example.xsd');
+
+    expect(fn (): string => $this->fixture->artifacts()->path('nested/example.xsd'))
+        ->toThrow(OfficialArtifactException::class, 'artifacts.missing_or_unreadable');
+});
 
 it('rejects symbolic links even when their target has the expected bytes', function (): void {
     $this->files->move($this->fixture->root . '/nested/example.xsd', $this->fixture->root . '/target.xsd');
@@ -79,12 +82,15 @@ it('rejects symbolic link directories', function (): void {
         ->toThrow(OfficialArtifactException::class, 'artifacts.symbolic_link');
 });
 
-it('fails safely when the resource root or manifest is missing', function (bool $root): void {
+it('fails safely when the manifest or the resource root is missing', function (string $suffix, string $errorCode): void {
     $this->files->delete($this->fixture->root . '/official-artifacts.json');
+    $root = $this->fixture->root . $suffix;
 
-    expect(fn (): OfficialArtifacts => new OfficialArtifacts(new Filesystem, $this->fixture->root . ($root ? '/absent' : '')))
-        ->toThrow(OfficialArtifactException::class, $root ? 'artifacts.missing_root' : 'artifacts.missing_or_unreadable');
-})->with([true, false]);
+    expect(fn (): OfficialArtifacts => new OfficialArtifacts(new Filesystem, $root))->toThrow(OfficialArtifactException::class, $errorCode);
+})->with([
+    'missing root'     => ['/absent', 'artifacts.missing_root'],
+    'missing manifest' => ['', 'artifacts.missing_or_unreadable'],
+]);
 
 it('normalizes a native root canonicalization failure without exposing the supplied path', function (): void {
     $original  = ini_set('zend.exception_ignore_args', '0');
