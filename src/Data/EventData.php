@@ -12,6 +12,7 @@ use Akira\Efatura\Support\FiscalRules;
 use Akira\Efatura\Support\ValidationPayload;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\Rule;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\RequiredIf;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -21,7 +22,8 @@ final class EventData extends FiscalData
      * @param list<string> $iuds
      */
     public function __construct(
-        public readonly EventType $eventTypeCode,
+        #[MapName('eventTypeCode')]
+        public readonly EventType $eventType,
         public readonly TaxIdData $emitterTaxId,
         #[FiscalDateFormat(Fiscal::DATE_TIME_FORMAT, instant: true)]
         public readonly CarbonImmutable $issueDateTime,

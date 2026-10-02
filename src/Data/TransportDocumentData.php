@@ -13,6 +13,7 @@ use Akira\Efatura\Support\ValidationPayload;
 use Illuminate\Validation\Rule;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
@@ -26,12 +27,14 @@ final class TransportDocumentData extends DocumentData
     public function __construct(
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
-        public readonly TransportDocumentType $transportDocumentTypeCode,
+        #[MapName('transportDocumentTypeCode')]
+        public readonly TransportDocumentType $transportDocumentType,
         public readonly PartyData $transportServiceProvider,
         #[DataCollectionOf(LineItemData::class), ListType, Min(1)]
         public readonly array $lines,
         public readonly TransportRouteData $transportRoute,
-        public readonly ?TransportReceiverType $receiverTypeCode = null,
+        #[MapName('receiverTypeCode')]
+        public readonly ?TransportReceiverType $receiverType = null,
         public readonly ?PartyData $receiver = null,
         #[DataCollectionOf(ReferenceData::class), ListType]
         public readonly array $references = [],

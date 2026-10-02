@@ -79,7 +79,7 @@ it('accepts only the contingency reasons allowed for the emission mode', functio
 
     expect(in_array($reason, ContingencyReason::allowedFor($mode), true))->toBe($allowed);
     $allowed
-        ? expect($create()->emission?->contingency?->reasonTypeCode)->toBe($reason)
+        ? expect($create()->emission?->contingency?->reason)->toBe($reason)
         : expect($create)->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toHaveKey('emission.contingency.reasonTypeCode');
         });

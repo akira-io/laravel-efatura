@@ -8,14 +8,18 @@ use Akira\Efatura\Enums\ContractType;
 use Akira\Efatura\Enums\RentPurpose;
 use Akira\Efatura\Enums\RentType;
 use Akira\Efatura\Support\FiscalRules;
+use Spatie\LaravelData\Attributes\MapName;
 
 final class RentReceiptData extends FiscalData
 {
     public function __construct(
         public readonly string $assetId,
-        public readonly RentPurpose $rentPurposeTypeCode,
-        public readonly ContractType $contractTypeCode,
-        public readonly RentType $rentTypeCode,
+        #[MapName('rentPurposeTypeCode')]
+        public readonly RentPurpose $rentPurpose,
+        #[MapName('contractTypeCode')]
+        public readonly ContractType $contractType,
+        #[MapName('rentTypeCode')]
+        public readonly RentType $rentType,
         public readonly string $referencePeriod,
         public readonly AddressData $address,
     ) {}

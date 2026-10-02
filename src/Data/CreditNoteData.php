@@ -9,6 +9,7 @@ use Akira\Efatura\Enums\IssueReason;
 use Akira\Efatura\Support\DocumentRules;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
@@ -26,7 +27,8 @@ final class CreditNoteData extends DocumentData implements HasTotals
         #[DataCollectionOf(LineItemData::class), ListType, Min(1)]
         public readonly array $lines,
         public readonly TotalsData $totals,
-        public readonly IssueReason $issueReasonCode,
+        #[MapName('issueReasonCode')]
+        public readonly IssueReason $issueReason,
         #[DataCollectionOf(ReferenceData::class), ListType]
         public readonly array $references,
         public readonly ?DatePeriodData $rappelPeriod = null,

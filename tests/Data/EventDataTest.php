@@ -13,7 +13,7 @@ beforeEach(function (): void {
 it('validates cancellation and unused number event payload choices', function (): void {
     $common = ['emitterTaxId' => ['value' => '100200300', 'countryCode' => 'CV'], 'issueDateTime' => '2026-10-02T12:00:00', 'issueReasonDescription' => 'Document cancelled by emitter'];
     $id     = 'CV1261002100200300' . str_repeat('0', 27);
-    expect(EventData::from([...$common, 'eventTypeCode' => 'FDC', 'iuds' => [$id]])->eventTypeCode)->toBe(EventType::FiscalDocumentCancellation);
+    expect(EventData::from([...$common, 'eventTypeCode' => 'FDC', 'iuds' => [$id]])->eventType)->toBe(EventType::FiscalDocumentCancellation);
     $event = EventData::validateAndCreate([...$common, 'eventTypeCode' => 'UDN', 'numberRange' => ['ledCode' => 1, 'serie' => 'A', 'documentTypeCode' => 'FTE', 'documentNumberStart' => 1, 'documentNumberEnd' => 3]]);
     expect($event->numberRange->documentNumberEnd)->toBe(3);
 });

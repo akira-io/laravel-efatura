@@ -139,7 +139,7 @@ abstract class DocumentData extends FiscalData
     private static function foreignFieldRules(ValidationContext $context, DataConfig $config): array
     {
         $fields = $config->getDataClass(static::class)->properties
-            ->map(static fn (DataProperty $property): string => $property->inputMappedName ?? $property->name);
+            ->flatMap(static fn (DataProperty $property): array => [$property->name, $property->inputMappedName ?? $property->name]);
 
         return collect(\is_array($context->payload) ? array_keys($context->payload) : [])
             ->diff($fields)

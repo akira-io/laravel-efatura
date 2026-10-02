@@ -20,6 +20,7 @@ use Akira\Efatura\Support\ValidationPayload;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 use Illuminate\Validation\Rule;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
@@ -27,7 +28,8 @@ use Spatie\LaravelData\Support\Validation\ValidationContext;
 final class TaxData extends FiscalData
 {
     public function __construct(
-        public readonly TaxType $taxTypeCode,
+        #[MapName('taxTypeCode')]
+        public readonly TaxType $taxType,
         #[WithCast(BigDecimalCast::class, 3)]
         #[WithTransformer(BigDecimalTransformer::class, 3)]
         public readonly ?BigDecimal $taxPercentage = null,

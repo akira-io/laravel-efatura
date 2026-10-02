@@ -6,13 +6,15 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Enums\TransportMode;
 use Akira\Efatura\Support\FiscalRules;
+use Spatie\LaravelData\Attributes\MapName;
 
 final class TransportLocationData extends FiscalData
 {
     public function __construct(
         public readonly AddressData $address,
         public readonly DurationData $duration,
-        public readonly TransportMode $transportModeCode,
+        #[MapName('transportModeCode')]
+        public readonly TransportMode $transportMode,
         public readonly ?string $vehicleRegistrationCode = null,
     ) {}
 

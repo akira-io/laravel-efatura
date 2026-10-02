@@ -13,6 +13,7 @@ use Akira\Efatura\Support\ValidationPayload;
 use Brick\Money\Money;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
@@ -25,7 +26,8 @@ final class LineItemData extends FiscalData
     public function __construct(
         public readonly QuantityData $quantity,
         public readonly ItemData $item,
-        public readonly LineType $lineTypeCode = LineType::Normal,
+        #[MapName('lineTypeCode')]
+        public readonly LineType $lineType = LineType::Normal,
         public readonly ?string $id = null,
         public readonly ?string $lineReferenceId = null,
         public readonly ?int $orderLineReference = null,

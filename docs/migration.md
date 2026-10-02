@@ -103,7 +103,10 @@ against the builder's clock.
 ## Renamed symbols
 
 PHP names describe the domain concept; wire names (input keys, `toArray()`
-output and XML elements) are unchanged unless the table says otherwise.
+output, validation error keys and XML elements) are unchanged unless the table
+says otherwise. Properties that hold a code from an official table, such as
+`ledCode`, `addressCode`, `countryCode`, `unitCode` or `TaxData::$stampTaxCode`,
+keep their names.
 
 | Before | After |
 | --- | --- |
@@ -111,3 +114,16 @@ output and XML elements) are unchanged unless the table says otherwise.
 | `Builders\InvoiceBuilder` | `Builders\DocumentBuilder` (`Efatura::invoice()` keeps its name) |
 | `DocumentHeaderData::$serie` | `DocumentHeaderData::$series` (input and output key `serie`) |
 | `EventNumberRangeData::$serie` | `EventNumberRangeData::$series` (input and output key `serie`) |
+| `LineItemData::$lineTypeCode` | `LineItemData::$lineType` (key `lineTypeCode`) |
+| `TaxData::$taxTypeCode` | `TaxData::$taxType` (key `taxTypeCode`) |
+| `ReceiptData::$receiptTypeCode` | `ReceiptData::$receiptType` (key `receiptTypeCode`) |
+| `CreditNoteData`, `DebitNoteData`, `ReturnNoteData` `::$issueReasonCode` | `::$issueReason` (key `issueReasonCode`) |
+| `TransportDocumentData::$transportDocumentTypeCode` | `TransportDocumentData::$transportDocumentType` (key `transportDocumentTypeCode`) |
+| `TransportDocumentData::$receiverTypeCode` | `TransportDocumentData::$receiverType` (key `receiverTypeCode`) |
+| `TransportLocationData::$transportModeCode` | `TransportLocationData::$transportMode` (key `transportModeCode`) |
+| `ContingencyData::$reasonTypeCode` | `ContingencyData::$reason` (key `reasonTypeCode`) |
+| `EventData::$eventTypeCode` | `EventData::$eventType` (key `eventTypeCode`) |
+| `EventNumberRangeData::$documentTypeCode` | `EventNumberRangeData::$documentType` (key `documentTypeCode`) |
+| `RentReceiptData::$rentPurposeTypeCode` | `RentReceiptData::$rentPurpose` (key `rentPurposeTypeCode`) |
+| `RentReceiptData::$contractTypeCode` | `RentReceiptData::$contractType` (key `contractTypeCode`) |
+| `RentReceiptData::$rentTypeCode` | `RentReceiptData::$rentType` (key `rentTypeCode`) |

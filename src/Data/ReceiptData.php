@@ -10,6 +10,7 @@ use Akira\Efatura\Support\ValidationPayload;
 use Illuminate\Validation\Rule;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -22,7 +23,8 @@ final class ReceiptData extends DocumentData
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
         public readonly PartyData $receiver,
-        public readonly ReceiptType $receiptTypeCode,
+        #[MapName('receiptTypeCode')]
+        public readonly ReceiptType $receiptType,
         #[DataCollectionOf(ReferenceData::class), ListType]
         public readonly array $references,
         public readonly PaymentsData $payments,

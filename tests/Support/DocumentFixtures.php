@@ -55,6 +55,14 @@ final class DocumentFixtures
         return ['payments' => [['paymentMeansCode' => '10', 'paymentAmount' => '115']]];
     }
 
+    public static function receiptPayload(string $receiptTypeCode): array
+    {
+        $payload = self::payload(['receiptTypeCode' => $receiptTypeCode, 'references' => self::references(), 'payments' => self::payments()]);
+        unset($payload['lines'], $payload['totals']);
+
+        return $payload;
+    }
+
     public static function route(): array
     {
         $location = ['address' => ['countryCode' => 'PT', 'addressDetail' => 'Lisbon'],

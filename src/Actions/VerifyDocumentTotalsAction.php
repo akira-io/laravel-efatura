@@ -73,7 +73,7 @@ final readonly class VerifyDocumentTotalsAction
             $this->fail('lines.' . $index);
         }
 
-        $type           = $line->lineTypeCode;
+        $type           = $line->lineType;
         $priceExtension = $line->priceExtension->getAmount();
         $net            = $line->netTotal->getAmount();
         $this->matchesRounded('lines.' . $index . '.priceExtension', $priceExtension, [$line->price->getAmount()->multipliedBy($line->quantity->value)]);
@@ -125,7 +125,7 @@ final readonly class VerifyDocumentTotalsAction
             $this->matchesRounded('lines.' . $index . '.taxTotal', $tax->taxTotal->getAmount(), [$amount]);
         }
 
-        if ($tax->taxTypeCode === TaxType::IncomeTax) {
+        if ($tax->taxType === TaxType::IncomeTax) {
             $sign = $type->netSign();
 
             return $sum->addWithholding($amount->multipliedBy($sign), $this->round($amount)->multipliedBy($sign));

@@ -33,7 +33,7 @@ it('validates the complete reason compatibility matrix', function (string $class
         }
 
         if (in_array($reason->value, $allowed, true)) {
-            expect($class::from($payload)->issueReasonCode)->toBe($reason);
+            expect($class::from($payload)->issueReason)->toBe($reason);
         } else {
             try {
                 $class::from($payload);

@@ -13,6 +13,7 @@ use Akira\Efatura\Support\FiscalRules;
 use Akira\Efatura\Support\ValidationPayload;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\Rule;
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class ContingencyData extends FiscalData
@@ -20,7 +21,8 @@ final class ContingencyData extends FiscalData
     public function __construct(
         #[FiscalDateFormat(Fiscal::DATE_FORMAT, instant: true)]
         public readonly CarbonImmutable $issueDate,
-        public readonly ContingencyReason $reasonTypeCode,
+        #[MapName('reasonTypeCode')]
+        public readonly ContingencyReason $reason,
         public readonly int $ledCode,
         public readonly ?string $iuc = null,
         #[FiscalDateFormat(Fiscal::TIME_FORMAT, instant: true)]

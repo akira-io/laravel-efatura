@@ -16,7 +16,8 @@ final class EventNumberRangeData extends FiscalData
         public readonly int $ledCode,
         #[MapName('serie')]
         public readonly string $series,
-        public readonly DocumentType $documentTypeCode,
+        #[MapName('documentTypeCode')]
+        public readonly DocumentType $documentType,
         public readonly int $documentNumberStart,
         public readonly int $documentNumberEnd,
         public readonly ?int $year = null,
