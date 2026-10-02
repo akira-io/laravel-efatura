@@ -90,7 +90,7 @@ final class InvoiceData extends Data
                 return;
             }
 
-            if ($documentType === DocumentType::ELECTRONIC_SALES_TICKET) {
+            if ($documentType === DocumentType::SalesReceipt) {
                 return;
             }
 

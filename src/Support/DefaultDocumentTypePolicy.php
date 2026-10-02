@@ -12,12 +12,12 @@ final class DefaultDocumentTypePolicy implements DocumentTypePolicy
     public function supportsEmission(DocumentType $type): bool
     {
         return match ($type) {
-            DocumentType::ELECTRONIC_INVOICE,
-            DocumentType::ELECTRONIC_INVOICE_RECEIPT,
-            DocumentType::ELECTRONIC_SALES_TICKET,
-            DocumentType::ELECTRONIC_CREDIT_NOTE,
-            DocumentType::ELECTRONIC_TRANSPORT_DOCUMENT => true,
-            default                                     => false,
+            DocumentType::Invoice,
+            DocumentType::InvoiceReceipt,
+            DocumentType::SalesReceipt,
+            DocumentType::CreditNote,
+            DocumentType::Transport => true,
+            default                 => false,
         };
     }
 

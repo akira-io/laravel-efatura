@@ -12,7 +12,9 @@
             "bcv",
             "homologation",
             "xsd",
-            "retryable"
+            "retryable",
+            "sha256",
+            "sha"
         ],
         "paths": [
             "resources/catalogs/source",

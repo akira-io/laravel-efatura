@@ -21,7 +21,7 @@ use Illuminate\Validation\ValidationException;
 it('covers sales receipt receiver type branch', function (): void {
     $data = [
         'invoice' => [
-            'type'   => DocumentType::ELECTRONIC_SALES_TICKET,
+            'type'   => DocumentType::SalesReceipt,
             'totals' => [
                 'grandTotal' => 20000.0,
             ],
@@ -55,7 +55,7 @@ it('covers sales receipt early return branches', function (): void {
 it('covers credit note type validator branch', function (): void {
     $data = [
         'invoice' => [
-            'type' => DocumentType::ELECTRONIC_CREDIT_NOTE,
+            'type' => DocumentType::CreditNote,
         ],
     ];
 
@@ -68,7 +68,7 @@ it('covers credit note type validator branch', function (): void {
 
 it('covers wrapper constructors', function (): void {
     $invoice = new InvoiceData(
-        DocumentType::ELECTRONIC_INVOICE,
+        DocumentType::Invoice,
         '2026-02-08',
         new PartyData('100200300', 'Emitter'),
         new PartyData('900800700', 'Receiver'),
@@ -100,7 +100,7 @@ it('covers wrapper validation early return', function (): void {
 
 it('covers credit note type mismatch', function (): void {
     $payload = ValidationFixtures::invoicePayload([
-        'type'             => DocumentType::ELECTRONIC_INVOICE,
+        'type'             => DocumentType::Invoice,
         'originalIud'      => 'ORI-12345',
         'creditNoteReason' => 'Adjustment',
     ]);
@@ -124,14 +124,14 @@ it('covers invoice type trait with invalid value', function (): void {
     };
 
     $validator = resolve('validator')->make(['type' => 123], []);
-    $tester::run($validator, DocumentType::ELECTRONIC_INVOICE, 123, 'type');
+    $tester::run($validator, DocumentType::Invoice, 123, 'type');
 
     expect($validator->errors()->toArray())->toHaveKey('type');
 });
 
 it('allows sales receipt without receiver below threshold', function (): void {
     $payload = ValidationFixtures::invoicePayload([
-        'type'     => DocumentType::ELECTRONIC_SALES_TICKET,
+        'type'     => DocumentType::SalesReceipt,
         'receiver' => null,
         'totals'   => [
             'subtotal'   => 1000.0,
@@ -146,7 +146,7 @@ it('allows sales receipt without receiver below threshold', function (): void {
 
 it('requires receiver for sales receipt at threshold', function (): void {
     $payload = ValidationFixtures::invoicePayload([
-        'type'     => DocumentType::ELECTRONIC_SALES_TICKET,
+        'type'     => DocumentType::SalesReceipt,
         'receiver' => null,
         'totals'   => [
             'subtotal'   => 18000.0,
@@ -164,7 +164,7 @@ it('requires receiver for sales receipt at threshold', function (): void {
 
 it('requires credit note references', function (): void {
     $payload = ValidationFixtures::invoicePayload([
-        'type'             => DocumentType::ELECTRONIC_CREDIT_NOTE,
+        'type'             => DocumentType::CreditNote,
         'originalIud'      => '',
         'creditNoteReason' => '',
     ]);
@@ -219,7 +219,7 @@ it('requires party fields', function (): void {
 });
 
 it('rejects invoice type mismatch in wrappers', function (): void {
-    $payload = ValidationFixtures::invoicePayload(['type' => DocumentType::ELECTRONIC_INVOICE_RECEIPT]);
+    $payload = ValidationFixtures::invoicePayload(['type' => DocumentType::InvoiceReceipt]);
 
     ValidationFixtures::assertMessage(
         fn (): array => ElectronicInvoiceData::validate(['invoice' => $payload]),
@@ -227,7 +227,7 @@ it('rejects invoice type mismatch in wrappers', function (): void {
         trans('efatura.validation.invoice_type_mismatch'),
     );
 
-    $receiptPayload = ValidationFixtures::invoicePayload(['type' => DocumentType::ELECTRONIC_INVOICE]);
+    $receiptPayload = ValidationFixtures::invoicePayload(['type' => DocumentType::Invoice]);
 
     ValidationFixtures::assertMessage(
         fn (): array => ReceiptInvoiceData::validate(['invoice' => $receiptPayload]),
@@ -235,7 +235,7 @@ it('rejects invoice type mismatch in wrappers', function (): void {
         trans('efatura.validation.invoice_type_mismatch'),
     );
 
-    $transportPayload = ValidationFixtures::invoicePayload(['type' => DocumentType::ELECTRONIC_INVOICE]);
+    $transportPayload = ValidationFixtures::invoicePayload(['type' => DocumentType::Invoice]);
 
     ValidationFixtures::assertMessage(
         fn (): array => TransportDocumentData::validate(['invoice' => $transportPayload]),

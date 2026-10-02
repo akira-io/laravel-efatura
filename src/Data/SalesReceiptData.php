@@ -13,7 +13,7 @@ final class SalesReceiptData extends Data
 {
     use ValidatesInvoiceType;
 
-    public const DocumentType TYPE = DocumentType::ELECTRONIC_SALES_TICKET;
+    public const DocumentType TYPE = DocumentType::SalesReceipt;
 
     public function __construct(
         public readonly InvoiceData $invoice,
@@ -29,7 +29,7 @@ final class SalesReceiptData extends Data
             $data = $validator->getData();
             $type = data_get($data, 'invoice.type');
 
-            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_SALES_TICKET, $type, 'invoice.type');
+            self::ensureInvoiceType($validator, DocumentType::SalesReceipt, $type, 'invoice.type');
 
             if ($validator->errors()->isNotEmpty()) {
                 return;

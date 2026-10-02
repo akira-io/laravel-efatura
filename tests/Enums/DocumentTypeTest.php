@@ -34,6 +34,6 @@ it('marks supported document types', function (): void {
 it('covers policy support', function (): void {
     $policy = new DefaultDocumentTypePolicy;
 
-    expect($policy->supportsEmission(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->supportsEmission(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse();
+    expect($policy->supportsEmission(DocumentType::Invoice))->toBeTrue()
+        ->and($policy->supportsEmission(DocumentType::RegistrationNote))->toBeFalse();
 });

@@ -13,7 +13,7 @@ final class ReceiptInvoiceData extends Data
 {
     use ValidatesInvoiceType;
 
-    public const DocumentType TYPE = DocumentType::ELECTRONIC_INVOICE_RECEIPT;
+    public const DocumentType TYPE = DocumentType::InvoiceReceipt;
 
     public function __construct(
         public readonly InvoiceData $invoice,
@@ -28,7 +28,7 @@ final class ReceiptInvoiceData extends Data
 
             $type = data_get($validator->getData(), 'invoice.type');
 
-            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_INVOICE_RECEIPT, $type, 'invoice.type');
+            self::ensureInvoiceType($validator, DocumentType::InvoiceReceipt, $type, 'invoice.type');
         });
     }
 

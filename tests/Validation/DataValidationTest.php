@@ -32,14 +32,14 @@ it('covers line item construction', function (): void {
 it('covers policy behavior', function (): void {
     $policy = new DefaultDocumentTypePolicy;
 
-    expect($policy->supportsEmission(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->supportsEmission(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse()
-        ->and($policy->allowsIud(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->allowsIud(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse()
-        ->and($policy->allowsXml(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->allowsXml(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse()
-        ->and($policy->allowedInProduction(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->allowedInProduction(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse();
+    expect($policy->supportsEmission(DocumentType::Invoice))->toBeTrue()
+        ->and($policy->supportsEmission(DocumentType::RegistrationNote))->toBeFalse()
+        ->and($policy->allowsIud(DocumentType::Invoice))->toBeTrue()
+        ->and($policy->allowsIud(DocumentType::RegistrationNote))->toBeFalse()
+        ->and($policy->allowsXml(DocumentType::Invoice))->toBeTrue()
+        ->and($policy->allowsXml(DocumentType::RegistrationNote))->toBeFalse()
+        ->and($policy->allowedInProduction(DocumentType::Invoice))->toBeTrue()
+        ->and($policy->allowedInProduction(DocumentType::RegistrationNote))->toBeFalse();
 });
 
 it('covers party rules and messages', function (): void {
@@ -107,7 +107,7 @@ it('accepts supported document types', function (): void {
 
 it('covers invoice data constructor', function (): void {
     $invoice = new InvoiceData(
-        DocumentType::ELECTRONIC_INVOICE,
+        DocumentType::Invoice,
         '2026-02-08',
         new PartyData('100200300', 'Emitter'),
         new PartyData('900800700', 'Receiver'),
@@ -115,15 +115,15 @@ it('covers invoice data constructor', function (): void {
         new TotalsData(100.0, 0.0, 100.0),
     );
 
-    expect($invoice->type)->toBe(DocumentType::ELECTRONIC_INVOICE);
+    expect($invoice->type)->toBe(DocumentType::Invoice);
 });
 
 it('rejects unsupported document types', function (): void {
     $unsupported = [
-        DocumentType::ELECTRONIC_RECEIPT,
-        DocumentType::ELECTRONIC_DEBIT_NOTE,
-        DocumentType::ELECTRONIC_RETURN_NOTE,
-        DocumentType::ELECTRONIC_ENTRY_NOTE,
+        DocumentType::Receipt,
+        DocumentType::DebitNote,
+        DocumentType::ReturnNote,
+        DocumentType::RegistrationNote,
     ];
 
     foreach ($unsupported as $type) {
@@ -159,7 +159,7 @@ it('covers invoice type invalid string branch', function (): void {
 
 it('covers receiver invalid type branch', function (): void {
     $data = [
-        'type'      => DocumentType::ELECTRONIC_INVOICE,
+        'type'      => DocumentType::Invoice,
         'issueDate' => '2026-02-08',
         'emitter'   => [
             'nif'  => '100200300',
@@ -193,7 +193,7 @@ it('covers receiver invalid type branch', function (): void {
 
 it('covers invoice lines branch', function (): void {
     $data = [
-        'type'      => DocumentType::ELECTRONIC_INVOICE,
+        'type'      => DocumentType::Invoice,
         'issueDate' => '2026-02-08',
         'emitter'   => [
             'nif'  => '100200300',

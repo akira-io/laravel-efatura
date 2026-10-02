@@ -23,7 +23,7 @@ final class ValidationFixtures
     public static function invoicePayload(array $overrides = []): array
     {
         return collect([
-            'type'      => DocumentType::ELECTRONIC_INVOICE,
+            'type'      => DocumentType::Invoice,
             'issueDate' => '2026-02-08',
             'emitter'   => [
                 'nif'  => '100200300',
