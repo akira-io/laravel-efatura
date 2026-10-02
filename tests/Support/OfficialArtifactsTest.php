@@ -96,3 +96,30 @@ it('retains every archive member and exposes both official signature entry point
         expect($artifacts->path($prefix . $entry))->toBeFile();
     }
 });
+
+it('resolves every packaged artifact once the export-ignored sources are gone', function (): void {
+    $files   = new Filesystem;
+    $root    = dirname(__DIR__, 2);
+    $dist    = sys_get_temp_dir() . '/efatura-dist-' . Str::random(12);
+    $ignored = collect($files->lines($root . '/.gitattributes'))
+        ->filter(fn (string $line): bool => Str::startsWith($line, '/resources/') && Str::endsWith($line, ' export-ignore'))
+        ->map(fn (string $line): string => Str::between($line, '/resources/', ' export-ignore'))
+        ->values();
+
+    $files->copyDirectory($root . '/resources', $dist);
+    $ignored->each(fn (string $path): bool => $files->deleteDirectory($dist . '/' . $path));
+
+    try {
+        $artifacts = new OfficialArtifacts($files, $dist);
+        $shipped   = collect($files->json($dist . '/official-artifacts.json', JSON_THROW_ON_ERROR)['files'])
+            ->keys()
+            ->reject(fn (string $path): bool => $ignored->contains(fn (string $prefix): bool => Str::startsWith($path, $prefix . '/')));
+
+        expect($ignored->all())->toBe(['catalogs/source'])
+            ->and($shipped->map(fn (string $path): string => $artifacts->path($path)))->each->toBeFile()
+            ->and($artifacts->xsdEntry('EnvelopedSignature'))->toBeFile()
+            ->and($artifacts->xsdEntry('InternallyDetachedSignature'))->toBeFile();
+    } finally {
+        $files->deleteDirectory($dist);
+    }
+});
