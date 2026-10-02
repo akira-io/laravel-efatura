@@ -42,10 +42,12 @@ it('still requires valid extension names when their text is empty', function ():
     }
 });
 
-it('retains the explicit nonempty item property value contract', function (): void {
-    expect(fn (): ExtraPropertyData => new ExtraPropertyData('CustomFlag', ''))->toThrow(ValidationException::class);
-    foreach (['from', 'validateAndCreate'] as $method) {
-        expect(fn (): ExtraPropertyData => ExtraPropertyData::$method(['name' => 'CustomFlag', 'value' => '']))->toThrow(ValidationException::class);
+it('requires nonempty clean text for item properties', function (): void {
+    foreach (['', '   ', "\t\n"] as $value) {
+        expect(fn (): ExtraPropertyData => new ExtraPropertyData('CustomFlag', $value))->toThrow(ValidationException::class);
+        foreach (['from', 'validateAndCreate'] as $method) {
+            expect(fn (): ExtraPropertyData => ExtraPropertyData::$method(['name' => 'CustomFlag', 'value' => $value]))->toThrow(ValidationException::class);
+        }
     }
 });
 

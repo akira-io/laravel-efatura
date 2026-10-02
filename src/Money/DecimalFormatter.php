@@ -18,13 +18,17 @@ final class DecimalFormatter
         self::checkScale($maxScale);
 
         if (\is_string($value) && ! Str::isMatch('/^-?[0-9]+(?:\.[0-9]+)?$/D', $value)) {
-            throw new EfaturaValidationException('amount', __('efatura.validation.invalid_decimal'));
+            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.invalid_decimal'));
         }
 
         $decimal = BigDecimal::of($value);
 
-        if ($maxScale !== null && $decimal->strippedOfTrailingZeros()->getScale() > $maxScale) {
-            throw new EfaturaValidationException('amount', __('efatura.validation.decimal_scale_exceeded'));
+        if ($maxScale !== null) {
+            try {
+                $decimal->toScale($maxScale, RoundingMode::Unnecessary);
+            } catch (MathException) {
+                throw new EfaturaValidationException('amount', __('efatura::efatura.validation.decimal_scale_exceeded'));
+            }
         }
 
         return $decimal;
@@ -34,12 +38,15 @@ final class DecimalFormatter
     {
         self::checkScale($maxScale);
 
-        $plain = $value->strippedOfTrailingZeros();
-        if ($plain->getScale() > $maxScale) {
-            throw new EfaturaValidationException('amount', __('efatura.validation.decimal_scale_exceeded'));
+        try {
+            $value->toScale($maxScale, RoundingMode::Unnecessary);
+        } catch (MathException) {
+            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.decimal_scale_exceeded'));
         }
 
-        return $plain->toString();
+        $plain = (string) $value;
+
+        return str_contains($plain, '.') ? rtrim(rtrim($plain, '0'), '.') : $plain;
     }
 
     public static function money(Money $value, int $scale = 2, bool $round = true): string
@@ -47,12 +54,12 @@ final class DecimalFormatter
         self::checkScale($scale);
 
         try {
-            return $value->getAmount()->toScale(
+            return (string) $value->getAmount()->toScale(
                 $scale,
                 self::roundingMode($round),
-            )->toString();
+            );
         } catch (MathException) {
-            throw new EfaturaValidationException('amount', __('efatura.validation.decimal_scale_exceeded'));
+            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.decimal_scale_exceeded'));
         }
     }
 
@@ -64,7 +71,7 @@ final class DecimalFormatter
     private static function checkScale(?int $scale): void
     {
         if ($scale !== null && $scale < 0) {
-            throw new EfaturaValidationException('scale', __('efatura.validation.invalid_decimal_scale'));
+            throw new EfaturaValidationException('scale', __('efatura::efatura.validation.invalid_decimal_scale'));
         }
     }
 }

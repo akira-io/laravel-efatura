@@ -26,7 +26,7 @@ it('constructs and serializes complete immutable party details', function (): vo
     $party = PartyData::from([
         'taxId'    => ['value' => '123456789', 'countryCode' => 'CV'],
         'name'     => 'Example Company',
-        'address'  => ['countryCode' => 'PT', 'addressDetail' => 'Rua Principal 12', 'buildingFloor' => '3'],
+        'address'  => ['countryCode' => 'CV', 'addressDetail' => 'Praia office', 'addressCode' => 'CV111111111011110101', 'buildingFloor' => '3'],
         'contacts' => ['email' => 'billing@example.com', 'mobilephone' => '2389912345'],
     ]);
     $party->validateEmitter();

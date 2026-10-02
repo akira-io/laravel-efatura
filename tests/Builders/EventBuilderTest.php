@@ -34,7 +34,16 @@ it('builds isolated cancellation and unused number events with explicit context 
 });
 
 it('rejects missing emitters and conflicting event targets at validation', function (): void {
-    expect(fn (): EventData => Efatura::event()->validate())->toThrow(ValidationException::class);
+    config()->set('efatura.emitter');
+    $id = 'CV1261002100200300' . str_repeat('0', 27);
+
+    try {
+        Efatura::event()->type(EventType::FiscalDocumentCancellation)->reason('Document cancelled by emitter')->iud($id)->validate();
+        test()->fail('Expected a missing emitter validation error');
+    } catch (ValidationException $validationException) {
+        expect(array_keys($validationException->errors()))->toContain('emitterTaxId');
+    }
+
     $draft = Efatura::event()->type(EventType::FiscalDocumentCancellation)->emitter(new TaxIdData('100200300', 'CV'))
         ->reason('Document cancelled by emitter')->numberRange(EventNumberRangeData::from(['ledCode' => 2, 'serie' => 'A', 'documentTypeCode' => 'FTE', 'documentNumberStart' => 1, 'documentNumberEnd' => 3]));
     expect(fn (): EventData => $draft->validate())->toThrow(ValidationException::class);

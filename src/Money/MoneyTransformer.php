@@ -20,7 +20,7 @@ final readonly class MoneyTransformer implements Transformer
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
         if (! $value instanceof Money) {
-            throw new EfaturaValidationException($property->name, __('efatura.validation.invalid_money_input'));
+            throw new EfaturaValidationException($property->name, __('efatura::efatura.validation.invalid_money_input'));
         }
 
         return DecimalFormatter::money($value, $this->scale, $this->round);

@@ -28,8 +28,11 @@ final class PartyData extends Data
 
     public function validateEmitter(): void
     {
-        $this->validateFiscalFields(['taxId' => ['required'], 'contacts' => ['required'], 'reference' => ['prohibited']]);
-        Validator::make(['taxId' => ['countryCode' => $this->taxId?->countryCode]], ['taxId.countryCode' => ['required', 'in:CV']])->validate();
+        $this->validateFiscalFields(['taxId' => ['required'], 'address' => ['required'], 'contacts' => ['required'], 'reference' => ['prohibited']]);
+        Validator::make(
+            ['taxId' => ['countryCode' => $this->taxId?->countryCode], 'address' => ['countryCode' => $this->address?->countryCode]],
+            ['taxId.countryCode' => ['required', 'in:CV'], 'address.countryCode' => ['required', 'in:CV']],
+        )->validate();
         $this->contacts?->validateEmitter();
     }
 

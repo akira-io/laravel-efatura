@@ -17,7 +17,7 @@ final readonly class BigDecimalTransformer implements Transformer
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
         if (! $value instanceof BigDecimal) {
-            throw new EfaturaValidationException($property->name, __('efatura.validation.invalid_decimal'));
+            throw new EfaturaValidationException($property->name, __('efatura::efatura.validation.invalid_decimal'));
         }
 
         return DecimalFormatter::decimal($value, $this->maxScale);

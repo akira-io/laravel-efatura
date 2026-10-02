@@ -121,7 +121,7 @@ final class Catalogs
             return $this->loaded[$catalog];
         }
 
-        $path = \dirname(__DIR__, 2) . "/resources/catalogs/{$catalog}.json";
+        $path = \dirname(__DIR__, 2) . \sprintf('/resources/catalogs/%s.json', $catalog);
 
         try {
             $json = ($this->filesystem ?? new Filesystem)->get($path);

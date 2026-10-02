@@ -34,7 +34,15 @@ it('creates independent canonical invoice drafts with clock defaults and exact t
         ->and($document->totals->payableAmount->getAmount()->isEqualTo('115'))->toBeTrue();
     $builder->ledCode(9);
     expect($document->header->ledCode)->toBe(7)->and($builder->validate()->header->ledCode)->toBe(9);
-    expect(fn (): InvoiceData => Efatura::invoice()->validate())->toThrow(ValidationException::class);
+    config()->set('efatura.emitter');
+    $missingEmitter = Efatura::invoice()->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals());
+
+    try {
+        $missingEmitter->validate();
+        test()->fail('Expected a missing emitter validation error');
+    } catch (ValidationException $validationException) {
+        expect(array_keys($validationException->errors()))->toContain('emitter');
+    }
 });
 
 it('loads complete CV defaults and alternates emitters without leaking identity or presentation state', function (): void {

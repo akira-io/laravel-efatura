@@ -38,6 +38,16 @@ it('preserves a five-digit source amount until fiscal normalization is requested
         ->and(DecimalFormatter::money(FiscalMoney::cve($source)))->toBe('1.23');
 });
 
+it('accepts insignificant decimal zeros without losing exact precision boundaries', function (): void {
+    expect((string) DecimalFormatter::parse('1.23000', 2))->toBe('1.23000')
+        ->and(DecimalFormatter::decimal(BigDecimal::of('1.23000'), 2))->toBe('1.23')
+        ->and(DecimalFormatter::decimal(BigDecimal::of('10.00000'), 2))->toBe('10')
+        ->and(DecimalFormatter::decimal(BigDecimal::of('0.00000'), 2))->toBe('0')
+        ->and(DecimalFormatter::money(FiscalMoney::exact('1.23000', 'CVE'), 2, false))->toBe('1.23');
+    expect(fn (): string => DecimalFormatter::decimal(BigDecimal::of('1.23400'), 2))
+        ->toThrow(EfaturaValidationException::class);
+});
+
 it('rejects malformed amount text and unknown or mismatched currencies', function (string $amount, string $currency): void {
     expect(fn (): Money => FiscalMoney::of($amount, $currency))
         ->toThrow(EfaturaValidationException::class);

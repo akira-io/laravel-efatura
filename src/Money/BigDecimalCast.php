@@ -22,7 +22,7 @@ final readonly class BigDecimalCast implements Cast
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): BigDecimal
     {
         if (! \is_int($value) && ! \is_string($value) && ! $value instanceof BigDecimal) {
-            throw new EfaturaValidationException($property->name, __('efatura.validation.invalid_decimal'));
+            throw new EfaturaValidationException($property->name, __('efatura::efatura.validation.invalid_decimal'));
         }
 
         return DecimalFormatter::parse($value, $this->maxScale);

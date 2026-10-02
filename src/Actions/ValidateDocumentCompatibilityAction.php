@@ -85,18 +85,16 @@ final readonly class ValidateDocumentCompatibilityAction
             Validator::make(['dueDate' => $document->dueDate], ['dueDate' => ['nullable', new FiscalDate]])->validate();
         }
 
-        if ($document instanceof ElectronicInvoiceData || $document instanceof ReceiptInvoiceData || $document instanceof SalesReceiptData || $document instanceof ReceiptData || $document instanceof RegistrationNoteData) {
-            if ($document->payments instanceof PaymentsData) {
-                $payments = $document->payments;
-                $rules    = $document instanceof ElectronicInvoiceData ? ['payments' => ['prohibited']] : [
-                    'payments' => ['required', 'array', 'min:1'], 'paymentDueDate' => ['prohibited'], 'paymentTerms' => ['prohibited'], 'payeeFinancialAccounts' => ['prohibited'],
-                ];
-                Validator::make(['payments' => $payments->payments, 'paymentDueDate' => $payments->paymentDueDate,
-                    'paymentTerms'          => $payments->paymentTerms, 'payeeFinancialAccounts' => $payments->payeeFinancialAccounts], $rules)->validate();
-                if ($document instanceof ReceiptInvoiceData) {
-                    foreach ($payments->payments as $payment) {
-                        Validator::make(['paymentDate' => $payment->paymentDate?->format('Y-m-d')], ['paymentDate' => ['nullable', 'in:' . $document->header->issueDate->format('Y-m-d')]])->validate();
-                    }
+        if (($document instanceof ElectronicInvoiceData || $document instanceof ReceiptInvoiceData || $document instanceof SalesReceiptData || $document instanceof ReceiptData || $document instanceof RegistrationNoteData) && $document->payments instanceof PaymentsData) {
+            $payments = $document->payments;
+            $rules    = $document instanceof ElectronicInvoiceData ? ['payments' => ['prohibited']] : [
+                'payments' => ['required', 'array', 'min:1'], 'paymentDueDate' => ['prohibited'], 'paymentTerms' => ['prohibited'], 'payeeFinancialAccounts' => ['prohibited'],
+            ];
+            Validator::make(['payments' => $payments->payments, 'paymentDueDate' => $payments->paymentDueDate,
+                'paymentTerms'          => $payments->paymentTerms, 'payeeFinancialAccounts' => $payments->payeeFinancialAccounts], $rules)->validate();
+            if ($document instanceof ReceiptInvoiceData) {
+                foreach ($payments->payments as $payment) {
+                    Validator::make(['paymentDate' => $payment->paymentDate?->format('Y-m-d')], ['paymentDate' => ['nullable', 'in:' . $document->header->issueDate->format('Y-m-d')]])->validate();
                 }
             }
         }

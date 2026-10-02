@@ -31,15 +31,15 @@ final class FiscalMoney
     private static function create(int|string|Money $amount, string $currency, int $scale, bool $round): Money
     {
         if (! Str::isMatch('/^[A-Z]{3}$/D', $currency)) {
-            throw new EfaturaValidationException('currency', __('efatura.validation.invalid_currency'));
+            throw new EfaturaValidationException('currency', __('efatura::efatura.validation.invalid_currency'));
         }
 
         if ($scale < 0 || $scale > 5) {
-            throw new EfaturaValidationException('scale', __('efatura.validation.invalid_money_scale'));
+            throw new EfaturaValidationException('scale', __('efatura::efatura.validation.invalid_money_scale'));
         }
 
         if ($amount instanceof Money && $amount->getCurrency()->getCurrencyCode() !== $currency) {
-            throw new EfaturaValidationException('currency', __('efatura.validation.currency_mismatch'));
+            throw new EfaturaValidationException('currency', __('efatura::efatura.validation.currency_mismatch'));
         }
 
         $decimal = DecimalFormatter::parse(
@@ -55,7 +55,7 @@ final class FiscalMoney
                 DecimalFormatter::roundingMode($round),
             );
         } catch (MathException|MoneyException) {
-            throw new EfaturaValidationException('amount', __('efatura.validation.invalid_money'));
+            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.invalid_money'));
         }
     }
 }

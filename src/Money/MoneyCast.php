@@ -19,7 +19,7 @@ final readonly class MoneyCast implements Cast
         private bool $round = true,
     ) {
         if ($this->round && $this->scale !== 2) {
-            throw new EfaturaValidationException('scale', __('efatura.validation.invalid_money_rounding_scale'));
+            throw new EfaturaValidationException('scale', __('efatura::efatura.validation.invalid_money_rounding_scale'));
         }
     }
 
@@ -30,7 +30,7 @@ final readonly class MoneyCast implements Cast
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): Money
     {
         if (! \is_int($value) && ! \is_string($value) && ! $value instanceof Money) {
-            throw new EfaturaValidationException($property->name, __('efatura.validation.invalid_money_input'));
+            throw new EfaturaValidationException($property->name, __('efatura::efatura.validation.invalid_money_input'));
         }
 
         if ($this->round) {

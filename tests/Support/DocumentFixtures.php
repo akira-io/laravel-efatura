@@ -12,8 +12,10 @@ final class DocumentFixtures
     public static function payload(array $overrides = []): array
     {
         return array_replace([
-            'header'   => ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1],
-            'emitter'  => ['taxId' => ['value' => '100200300', 'countryCode' => 'CV'], 'name' => 'Emitter', 'contacts' => ['email' => 'emitter@example.cv', 'telephone' => '1234567']],
+            'header'  => ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1],
+            'emitter' => ['taxId' => ['value' => '100200300', 'countryCode' => 'CV'], 'name' => 'Emitter',
+                'address'         => ['countryCode' => 'CV', 'addressDetail' => 'Praia office', 'addressCode' => 'CV111111111011110101'],
+                'contacts'        => ['email' => 'emitter@example.cv', 'telephone' => '1234567']],
             'receiver' => ['taxId' => ['value' => '900800700', 'countryCode' => 'CV'], 'name' => 'Receiver'],
             'lines'    => [self::linePayload()], 'totals' => self::totalsPayload(),
         ], $overrides);
