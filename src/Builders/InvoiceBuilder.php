@@ -68,10 +68,9 @@ final class InvoiceBuilder
 
     public function emitter(PartyData $emitter, ?int $ledCode = null): self
     {
-        $this->draft['emitter']  = $emitter->toArray();
-        $this->header['ledCode'] = $ledCode;
+        $this->draft['emitter'] = $emitter->toArray();
 
-        return $this;
+        return $ledCode === null ? $this : $this->ledCode($ledCode);
     }
 
     public function ledCode(int $ledCode): self

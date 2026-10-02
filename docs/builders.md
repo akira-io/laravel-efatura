@@ -75,9 +75,9 @@ address and contact fields are optional; no values are fabricated.
 An all-null emitter or `emitter => null` provides no default. A partial profile
 can be loaded and replaced before validation. `emitter($party, ledCode: 22)`
 replaces the entire issuer profile. It never merges address or contact fields.
-Calling `emitter($party)` clears the previous LED even for the same tax ID; follow
-it with `ledCode(22)` or a matching `header()`. Calling `ledCode()` before
-`emitter()` loses that LED by design. Missing or invalid selected values fail
+Calling `emitter($party)` without a LED keeps the configured LED or the one set
+by `ledCode()`, in either order; when the new issuer uses another LED, pass it
+to `emitter()` or call `ledCode()`. Missing or invalid selected values fail
 with Laravel validation errors. Each new builder begins with the manager's
 immutable configuration, which remains unchanged by previous drafts.
 

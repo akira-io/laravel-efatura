@@ -22,8 +22,8 @@ state, street detail, building fields, telefax and website. Merge these keys int
 an existing application config using the [configuration reference](builders.md).
 Provide a complete CV address and contacts and replace nonnumeric LED values
 with the registered integer LED. Partial configuration can boot, but builders
-validate the chosen profile. Explicit emitter replacement clears the prior LED;
-pass it in the same call or set it afterward.
+validate the chosen profile. `emitter()` without a LED keeps the configured LED or
+the one set by `ledCode()`, whatever the call order; pass a LED to replace it.
 
 `from()` and `validateAndCreate()` validate the whole graph once, through
 Spatie's validation pipeline, and report each failure at its full path, such as

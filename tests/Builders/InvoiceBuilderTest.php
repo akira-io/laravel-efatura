@@ -77,17 +77,15 @@ it('loads complete CV defaults and alternates emitters without leaking identity 
         ->and($config->emitter->contacts->email)->toBe('default@example.cv')->and($config->emitter->led)->toBe('11');
 });
 
-it('defers incomplete defaults until validation and clears LED on explicit emitter replacement', function (): void {
+it('defers incomplete defaults until validation and keeps the LED when the emitter is replaced', function (): void {
     config()->set('efatura.emitter', ['tax_id' => '100200300', 'led' => '11', 'address' => ['country_code' => 'CV']]);
     $manager = resolve(EfaturaManager::class)->withConfig(resolve(LoadEfaturaConfig::class)());
     $draft   = $manager->invoice()->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals());
-    expect(fn (): InvoiceData => $draft->validate())->toThrow(ValidationException::class);
-    $draft->emitter(B::emitter());
-    expect(fn (): InvoiceData => $draft->validate())->toThrow(ValidationException::class);
-    expect($draft->ledCode(22)->validate()->header->ledCode)->toBe(22);
-
-    $draft->emitter(B::emitter());
-    expect(fn (): InvoiceData => $draft->validate())->toThrow(ValidationException::class);
+    expect(fn (): InvoiceData => $draft->validate())->toThrow(ValidationException::class)
+        ->and($draft->emitter(B::emitter())->validate()->header->ledCode)->toBe(11)
+        ->and($draft->ledCode(22)->emitter(B::emitter())->validate()->header->ledCode)->toBe(22)
+        ->and($draft->emitter(B::emitter())->ledCode(33)->validate()->header->ledCode)->toBe(33)
+        ->and($draft->emitter(B::emitter(), 44)->validate()->header->ledCode)->toBe(44);
 });
 
 it('rehydrates a document issued days ago but refuses to issue it through the builder', function (): void {
