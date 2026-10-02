@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Actions\ValidateIssueDateAction;
+use Akira\Efatura\Data\ContingencyData;
 use Akira\Efatura\Data\DeliveryData;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\DurationData;
@@ -10,6 +11,7 @@ use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\PartyData;
 use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\TaxIdData;
+use Akira\Efatura\Enums\ContingencyReason;
 use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Enums\EventType;
 use Akira\Efatura\Facades\Efatura;
@@ -86,6 +88,14 @@ it('transforms constructed carbon instances in Cape Verde time', function (): vo
 
     expect(new DocumentHeaderData($moment, $moment, 1)->toArray())->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00']);
 });
+
+it('converts the contingency issuance instant to Cape Verde time', function (string $method): void {
+    $moment      = CarbonImmutable::parse('2026-10-03 00:30', 'UTC');
+    $contingency = ContingencyData::$method(['issueDate' => $moment, 'issueTime' => $moment, 'reasonTypeCode' => ContingencyReason::Other, 'ledCode' => 1, 'reasonDescription' => 'Network outage at the store']);
+
+    expect($contingency->toArray())->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00'])
+        ->and(new ContingencyData($moment, ContingencyReason::Other, 1, issueTime: $moment)->toArray())->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00']);
+})->with(['from', 'validateAndCreate']);
 
 it('keeps calendar date fields as given on a UTC host', function (): void {
     $calendarDay = CarbonImmutable::parse('2026-10-02');

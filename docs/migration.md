@@ -62,7 +62,8 @@ reasons per document come from `IssueReason::allowedFor(DocumentType)`.
 
 Issuance Carbon values are instants. `InvoiceBuilder::issuedAt()`,
 `EventBuilder::issuedAt()`, the builder clock, `DocumentHeaderData::$issueDate`
-and `$issueTime`, and `EventData::$issueDateTime` convert any `CarbonInterface`
+and `$issueTime`, `ContingencyData::$issueDate` and `$issueTime`, and
+`EventData::$issueDateTime` convert any `CarbonInterface`
 to `Atlantic/Cape_Verde` before formatting, so a UTC `00:30` on 3 October is
 issued on 2 October at `23:30:00`. Code that built those values from a host
 clock and relied on the host's wall-clock fields now gets Cabo Verde time.

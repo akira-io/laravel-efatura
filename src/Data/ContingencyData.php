@@ -18,12 +18,12 @@ use Spatie\LaravelData\Support\Validation\ValidationContext;
 final class ContingencyData extends FiscalData
 {
     public function __construct(
-        #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
+        #[FiscalDateFormat(Fiscal::DATE_FORMAT, instant: true)]
         public readonly CarbonImmutable $issueDate,
         public readonly ContingencyReason $reasonTypeCode,
         public readonly int $ledCode,
         public readonly ?string $iuc = null,
-        #[FiscalDateFormat(Fiscal::TIME_FORMAT)]
+        #[FiscalDateFormat(Fiscal::TIME_FORMAT, instant: true)]
         public readonly ?CarbonImmutable $issueTime = null,
         public readonly ?string $reasonDescription = null,
     ) {}
@@ -36,10 +36,10 @@ final class ContingencyData extends FiscalData
         $reason = ValidationPayload::enum($context, 'reasonTypeCode', ContingencyReason::class);
 
         return [
-            'issueDate'         => [new FiscalDate],
+            'issueDate'         => [new FiscalDate(instant: true)],
             'ledCode'           => FiscalRules::ledCode(),
             'iuc'               => [new NotBlank, 'regex:/\A[0-9]{4}\/[0-9]+\z/'],
-            'issueTime'         => [new FiscalDate(Fiscal::TIME_FORMAT)],
+            'issueTime'         => [new FiscalDate(Fiscal::TIME_FORMAT, instant: true)],
             'reasonDescription' => [Rule::requiredIf($reason === ContingencyReason::Other), ...FiscalRules::text(10, 500)],
         ];
     }
