@@ -6,6 +6,7 @@ namespace Akira\Efatura\Concerns;
 
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Exceptions\ConfigurationException;
+use Akira\Efatura\Support\FiscalRules;
 use Illuminate\Support\Str;
 use SensitiveParameter;
 
@@ -15,11 +16,24 @@ trait ValidatesConfigurationValues
 {
     private function validatedTaxId(#[SensitiveParameter] ?string $taxId, string $path): ?string
     {
-        if ($taxId !== null && preg_match('/^[0-9]{9}$/D', $taxId) !== 1) {
+        if ($taxId !== null && preg_match('/\A' . FiscalRules::CV_TAX_ID . '\z/', $taxId) !== 1) {
             throw new ConfigurationException('configuration.invalid_tax_id', $path);
         }
 
         return $taxId;
+    }
+
+    private function validatedLed(?string $led, string $path): ?int
+    {
+        if ($led === null) {
+            return null;
+        }
+
+        if (preg_match('/\A' . FiscalRules::LED . '\z/', $led) !== 1) {
+            throw new ConfigurationException('configuration.invalid_led', $path);
+        }
+
+        return (int) $led;
     }
 
     private function validatedRelativePath(#[SensitiveParameter] ?string $value, string $path): ?string

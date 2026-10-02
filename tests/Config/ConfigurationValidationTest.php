@@ -41,6 +41,16 @@ it('rejects invalid configuration with stable safe field errors', function (stri
     ['efatura.transmitter.tax_id', '123', 'configuration.invalid_tax_id'],
     ['efatura.emitter.tax_id', 'abcdefghi', 'configuration.invalid_tax_id'],
     ['efatura.emitter.tax_id', 100200300, 'configuration.invalid_type'],
+    ['efatura.emitter.tax_id', '012345678', 'configuration.invalid_tax_id'],
+    ['efatura.transmitter.tax_id', '012345678', 'configuration.invalid_tax_id'],
+    ['efatura.emitter.led', '1e2', 'configuration.invalid_led'],
+    ['efatura.emitter.led', '1.0', 'configuration.invalid_led'],
+    ['efatura.emitter.led', 'abc', 'configuration.invalid_led'],
+    ['efatura.emitter.led', '0', 'configuration.invalid_led'],
+    ['efatura.emitter.led', '01', 'configuration.invalid_led'],
+    ['efatura.emitter.led', '100000', 'configuration.invalid_led'],
+    ['efatura.emitter.led', '+5', 'configuration.invalid_led'],
+    ['efatura.emitter.led', 5, 'configuration.invalid_type'],
     ['efatura.storage.disk', '', 'configuration.empty_string'],
     ['efatura.cache.store', ' ', 'configuration.empty_string'],
     ['efatura.storage.path', '../private', 'configuration.unsafe_path'],
@@ -82,3 +92,10 @@ it('rejects missing required host defaults with their original field path', func
     expect(fn (): EfaturaConfig => (new LoadEfaturaConfig(new Repository))())
         ->toThrow(ConfigurationException::class, 'configuration.invalid_type: queue.default');
 });
+
+it('converts a configured LED to its integer header value', function (string $configured, int $led): void {
+    $repository = resolve('config');
+    $repository->set('efatura.emitter.led', $configured);
+
+    expect((new LoadEfaturaConfig($repository))()->emitter->led)->toBe($led);
+})->with([['1', 1], ['99999', 99999], [' 5 ', 5]]);

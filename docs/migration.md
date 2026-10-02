@@ -66,3 +66,9 @@ date casts, rules and transformers convert them to `Atlantic/Cape_Verde` before
 formatting or comparing. Code that built `CarbonImmutable::parse('2026-10-02')`
 in a UTC host to mean the Cabo Verde calendar day must now create it in the
 fiscal timezone, or pass the date as a `Y-m-d` string.
+
+`EmitterConfig::$led` is now `?int`. The loader accepts only `EFATURA_EMITTER_LED`
+values matching `[1-9][0-9]{0,4}` and fails with `configuration.invalid_led`
+otherwise, instead of letting `1e2` become 100 or `abc` fail later with a type
+error. Configured emitter and transmitter tax IDs follow the document pattern
+`[1-9][0-9]{8}`, so a NIF starting with 0 now fails loading.

@@ -92,7 +92,7 @@ it('normalizes configured identities infrastructure and client overrides', funct
     $config = loadEfaturaConfig([
         'environment' => ' production ',
         'emitter'     => [
-            'tax_id'   => '100200300', 'name' => ' Fiscal party ', 'led' => 'LED-1',
+            'tax_id'   => '100200300', 'name' => ' Fiscal party ', 'led' => '12',
             'address'  => ['country_code' => 'CV', 'region' => 'Santiago', 'city' => 'Praia', 'street' => 'Rua 1', 'postal_code' => '7600'],
             'contacts' => ['email' => 'fiscal@example.test', 'telephone' => '2600000', 'mobile' => '9900000'],
         ],
@@ -119,7 +119,7 @@ it('normalizes configured identities infrastructure and client overrides', funct
     expect($config->environment->repositoryCode())->toBe(1)
         ->and($config->emitter->taxId)->toBe('100200300')
         ->and($config->emitter->name)->toBe('Fiscal party')
-        ->and($config->emitter->led)->toBe('LED-1')
+        ->and($config->emitter->led)->toBe(12)
         ->and($config->emitter->address->countryCode)->toBe('CV')
         ->and($config->emitter->address->region)->toBe('Santiago')
         ->and($config->emitter->address->city)->toBe('Praia')

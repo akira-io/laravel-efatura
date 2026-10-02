@@ -54,8 +54,9 @@ enter the fiscal Data graph.
 The published [Laravel config](../config/efatura.php) documents infrastructure,
 host inheritance, secrets, HTTP defaults and all environment keys. Emitter
 values below are nullable strings, default to `null`, and are normalized at
-configuration load. Invalid non-string or blank supplied values fail loading;
-complete fiscal validation happens when validating the selected document.
+configuration load. Invalid non-string or blank supplied values fail loading, and
+so do a tax ID or LED that does not match its fiscal pattern; complete fiscal
+validation happens when validating the selected document.
 
 | Config key below `efatura.emitter` | Typed config property / Data field |
 | --- | --- |
@@ -66,10 +67,13 @@ complete fiscal validation happens when validating the selected document.
 | `contacts.email`, `contacts.telephone`, `contacts.mobile` | `email`, `telephone`, `mobile` / `mobilephone` |
 | `contacts.telefax`, `contacts.website` | `telefax`, `website` |
 
-A complete CV emitter supplies a nine-digit tax ID, name, country `CV`, an
+A complete CV emitter supplies a CV tax ID (nine digits, the first from 1 to 9), name, country `CV`, an
 address detail, an official address code, email, telephone or mobile, and LED.
-LED must be a decimal integer string in `1..99999`; the canonical header holds
-an integer. Address codes must occur in the bundled location catalog. Additional
+LED must be a decimal integer string in `1..99999` without sign, exponent,
+fraction or leading zero (`FiscalRules::LED`); surrounding whitespace is trimmed
+like every config string. Anything else fails loading with
+`configuration.invalid_led`, and `EmitterConfig::$led` holds the converted integer.
+Configured tax IDs share `FiscalRules::CV_TAX_ID` with document validation. Address codes must occur in the bundled location catalog. Additional
 address and contact fields are optional; no values are fabricated.
 
 An all-null emitter or `emitter => null` provides no default. A partial profile

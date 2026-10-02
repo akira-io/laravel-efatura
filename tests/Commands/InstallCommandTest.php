@@ -228,7 +228,7 @@ it('resolves the manager from the installed environment and published config', f
         expect($contents)->toContain('EFATURA_TRANSMITTER_TAX_ID=null', 'EFATURA_EMITTER_LED=null');
         testFiles()->put(base_path('.env'), Str::replace(
             ['EFATURA_TRANSMITTER_TAX_ID=null', 'EFATURA_EMITTER_LED=null'],
-            ['EFATURA_TRANSMITTER_TAX_ID=123456789', 'EFATURA_EMITTER_LED=LED123'],
+            ['EFATURA_TRANSMITTER_TAX_ID=123456789', 'EFATURA_EMITTER_LED=123'],
             $contents,
         ));
         Dotenv::create($environment, base_path())->load();
@@ -238,7 +238,7 @@ it('resolves the manager from the installed environment and published config', f
 
         $configured = resolve(EfaturaManager::class)->config();
         expect($configured->transmitter->taxId)->toBe('123456789')
-            ->and($configured->emitter->led)->toBe('LED123');
+            ->and($configured->emitter->led)->toBe(123);
     } finally {
         $property->setValue(null, $original);
     }

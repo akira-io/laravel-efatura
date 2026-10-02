@@ -9,7 +9,7 @@ final readonly class EmitterConfig
     public function __construct(
         public ?string $taxId,
         public ?string $name,
-        public ?string $led,
+        public ?int $led,
         public AddressConfig $address,
         public ContactsConfig $contacts,
     ) {}

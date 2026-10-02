@@ -167,7 +167,7 @@ final readonly class LoadEfaturaConfig
         $emitter = new EmitterConfig(
             $this->taxId('efatura.emitter.tax_id'),
             $this->string('efatura.emitter.name'),
-            $this->string('efatura.emitter.led'),
+            $this->validatedLed($this->string('efatura.emitter.led'), 'efatura.emitter.led'),
             new AddressConfig(
                 $this->string('efatura.emitter.address.country_code'),
                 $this->string('efatura.emitter.address.region'),

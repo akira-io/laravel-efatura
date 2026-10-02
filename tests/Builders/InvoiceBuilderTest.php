@@ -74,7 +74,7 @@ it('loads complete CV defaults and alternates emitters without leaking identity 
     expect($b->emitter->taxId->value)->toBe('900800700')->and($b->header->ledCode)->toBe(22)
         ->and($b->emitter->address->addressDetail)->toBe('Other office')->and($b->emitter->contacts->telephone)->toBeNull()
         ->and($b->emitter->contacts->email)->toBe('other@example.cv')->and($b->lines[0]->taxes)->toHaveCount(1)
-        ->and($config->emitter->contacts->email)->toBe('default@example.cv')->and($config->emitter->led)->toBe('11');
+        ->and($config->emitter->contacts->email)->toBe('default@example.cv')->and($config->emitter->led)->toBe(11);
 });
 
 it('defers incomplete defaults until validation and keeps the LED when the emitter is replaced', function (): void {

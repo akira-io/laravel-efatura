@@ -9,6 +9,10 @@ use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class FiscalRules
 {
+    public const string CV_TAX_ID = '[1-9][0-9]{8}';
+
+    public const string LED = '[1-9][0-9]{0,4}';
+
     private const string SERIES = '[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)*';
 
     private const string IUD = 'CV[0-9][0-9]{2}(?:0[1-9]|1[012])(?:0[1-9]|[12][0-9]|3[01])[1-9][0-9]{35}';
