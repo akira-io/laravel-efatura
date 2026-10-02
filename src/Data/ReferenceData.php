@@ -47,7 +47,7 @@ final class ReferenceData extends Data
         return [
             'fiscalDocument'      => ['required_without_all:' . $field('paymentAmount') . ',' . $field('taxes')],
             'innerDocumentNumber' => ['nullable', ...FiscalRules::code()],
-            'paymentAmount'       => ['nullable', new FiscalNumber(positive: true, currency: Fiscal::CURRENCY)],
+            'paymentAmount'       => ['nullable', FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
             'taxes'               => ['array', 'list', 'max:2'],
         ];
     }

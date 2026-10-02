@@ -15,8 +15,8 @@ it('rejects unknown and incorrectly cased official codes', function (): void {
 });
 
 it('rejects unsupported rule input types', function (): void {
-    expect(Validator::make(['value' => 1.2], ['value' => [new FiscalNumber]])->fails())->toBeTrue()
-        ->and(Validator::make(['value' => '1e3'], ['value' => [new FiscalNumber]])->fails())->toBeTrue()
+    expect(Validator::make(['value' => 1.2], ['value' => [FiscalNumber::nonNegative()]])->fails())->toBeTrue()
+        ->and(Validator::make(['value' => '1e3'], ['value' => [FiscalNumber::nonNegative()]])->fails())->toBeTrue()
         ->and(Validator::make(['value' => 12], ['value' => [new ValidTaxId('CV')]])->fails())->toBeTrue();
 });
 

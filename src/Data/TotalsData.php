@@ -61,14 +61,14 @@ final class TotalsData extends Data
     public static function rules(): array
     {
         return [
-            'priceExtensionTotalAmount' => ['required', new FiscalNumber(currency: Fiscal::CURRENCY)],
-            'netTotalAmount'            => ['required', new FiscalNumber(currency: Fiscal::CURRENCY)],
-            'taxTotalAmount'            => ['required', new FiscalNumber(currency: Fiscal::CURRENCY)],
-            'payableAmount'             => ['required', new FiscalNumber(currency: Fiscal::CURRENCY)],
-            'chargeTotalAmount'         => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
-            'discountTotalAmount'       => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
-            'withholdingTaxTotalAmount' => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
-            'payableRoundingAmount'     => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY, signed: true)],
+            'priceExtensionTotalAmount' => ['required', FiscalNumber::amount(Fiscal::CURRENCY)],
+            'netTotalAmount'            => ['required', FiscalNumber::amount(Fiscal::CURRENCY)],
+            'taxTotalAmount'            => ['required', FiscalNumber::amount(Fiscal::CURRENCY)],
+            'payableAmount'             => ['required', FiscalNumber::amount(Fiscal::CURRENCY)],
+            'chargeTotalAmount'         => ['nullable', FiscalNumber::amount(Fiscal::CURRENCY)],
+            'discountTotalAmount'       => ['nullable', FiscalNumber::amount(Fiscal::CURRENCY)],
+            'withholdingTaxTotalAmount' => ['nullable', FiscalNumber::amount(Fiscal::CURRENCY)],
+            'payableRoundingAmount'     => ['nullable', FiscalNumber::signedAmount(Fiscal::CURRENCY)],
             'payableAlternativeAmounts' => ['array', 'list'],
         ];
     }

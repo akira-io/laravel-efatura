@@ -26,10 +26,9 @@ final class DiscountData extends Data
         public readonly Money|BigDecimal $value,
         public readonly DiscountValueType $valueType = DiscountValueType::Percentage,
     ) {
-        $this->validateFiscalFields(['value' => ['required', new FiscalNumber(
-            maximum: $valueType === DiscountValueType::Percentage ? '100' : null,
-            currency: $valueType === DiscountValueType::Amount ? Fiscal::CURRENCY : null,
-        )]]);
+        $this->validateFiscalFields(['value' => ['required', $valueType === DiscountValueType::Amount
+            ? FiscalNumber::amount(Fiscal::CURRENCY)
+            : FiscalNumber::nonNegative(maximum: '100')]]);
     }
 
     /**

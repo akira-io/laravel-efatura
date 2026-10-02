@@ -48,7 +48,7 @@ final class PaymentData extends Data
             'paymentMeansCode' => ['nullable', new OfficialCode(Catalog::PaymentMeans)],
             'paymentReference' => ['nullable', ...FiscalRules::code()],
             'paymentDate'      => ['nullable', new FiscalDate],
-            'paymentAmount'    => ['nullable', new FiscalNumber(positive: true, currency: Fiscal::CURRENCY)],
+            'paymentAmount'    => ['nullable', FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
         ];
     }
 }

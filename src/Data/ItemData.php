@@ -32,7 +32,7 @@ final class ItemData extends Data
         $rules                      = self::rules();
         $rules['extraProperties'][] = new DataInstances(ExtraPropertyData::class);
         $this->validateFiscalFields($rules);
-        Validator::make(['packQuantity' => ['value' => $packQuantity?->value]], ['packQuantity.value' => ['nullable', new FiscalNumber(positive: true)]])->validate();
+        Validator::make(['packQuantity' => ['value' => $packQuantity?->value]], ['packQuantity.value' => ['nullable', FiscalNumber::positive()]])->validate();
     }
 
     /**

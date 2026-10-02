@@ -48,7 +48,7 @@ final class LineItemData extends Data
         $rules            = self::rules();
         $rules['taxes'][] = new DataInstances(TaxData::class);
         $this->validateFiscalFields($rules);
-        Validator::make(['quantity' => ['value' => $quantity->value]], ['quantity.value' => ['required', new FiscalNumber(positive: true)]])->validate();
+        Validator::make(['quantity' => ['value' => $quantity->value]], ['quantity.value' => ['required', FiscalNumber::positive()]])->validate();
     }
 
     /**
@@ -62,9 +62,9 @@ final class LineItemData extends Data
             'id'                 => ['nullable', ...FiscalRules::code()],
             'lineReferenceId'    => ['nullable', 'required_if:' . $field('lineTypeCode') . ',C', ...FiscalRules::code()],
             'orderLineReference' => ['nullable', 'integer', 'between:1,99999'],
-            'price'              => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
-            'priceExtension'     => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
-            'netTotal'           => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'price'              => ['nullable', FiscalNumber::amount(Fiscal::CURRENCY)],
+            'priceExtension'     => ['nullable', FiscalNumber::amount(Fiscal::CURRENCY)],
+            'netTotal'           => ['nullable', FiscalNumber::amount(Fiscal::CURRENCY)],
             'taxes'              => ['array', 'list', 'max:2'],
         ];
     }

@@ -39,6 +39,6 @@ final class QuantityData extends Data
      */
     public static function rules(): array
     {
-        return ['value' => ['required', new FiscalNumber], 'unitCode' => ['required', 'regex:/\A[aA-zZ0-9]{1,10}\z/']];
+        return ['value' => ['required', FiscalNumber::nonNegative()], 'unitCode' => ['required', 'regex:/\A[aA-zZ0-9]{1,10}\z/']];
     }
 }

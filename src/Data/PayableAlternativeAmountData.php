@@ -32,7 +32,7 @@ final class PayableAlternativeAmountData extends Data
         #[WithTransformer(BigDecimalTransformer::class)]
         public readonly BigDecimal $exchangeRate,
     ) {
-        $this->validateFiscalFields([...self::rules(), 'value' => ['required', new FiscalNumber(currency: $currencyCode)]]);
+        $this->validateFiscalFields([...self::rules(), 'value' => ['required', FiscalNumber::amount($currencyCode)]]);
     }
 
     /**
@@ -42,7 +42,7 @@ final class PayableAlternativeAmountData extends Data
     {
         return [
             'currencyCode' => ['required', new OfficialCode(Catalog::Currencies)],
-            'exchangeRate' => ['required', new FiscalNumber(positive: true)],
+            'exchangeRate' => ['required', FiscalNumber::positive()],
         ];
     }
 }

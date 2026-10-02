@@ -17,7 +17,7 @@ final class DecimalFormatter
     private const string PLAIN_DECIMAL = '/^-?[0-9]+(?:\.[0-9]+)?$/D';
 
     /**
-     * @phpstan-assert-if-true int|string|BigDecimal $value
+     * @phpstan-assert-if-true =int|string|BigDecimal $value
      */
     public static function isPlainDecimal(mixed $value): bool
     {

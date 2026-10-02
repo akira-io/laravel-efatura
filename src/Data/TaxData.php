@@ -53,11 +53,11 @@ final class TaxData extends Data
 
         return [
             'taxTypeCode'            => ['required', Rule::enum(TaxType::class)],
-            'taxPercentage'          => ['nullable', 'required_without_all:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), 'prohibits:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(3, true, '100')],
-            'taxAmount'              => ['nullable', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(positive: true, currency: Fiscal::CURRENCY)],
+            'taxPercentage'          => ['nullable', 'required_without_all:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), 'prohibits:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), FiscalNumber::positive(3, '100')],
+            'taxAmount'              => ['nullable', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxExemptionReasonCode'), FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
             'taxExemptionReasonCode' => ['nullable', 'required_if:' . $field('taxTypeCode') . ',NA', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxAmount'), new OfficialCode(Catalog::TaxExemptionReasons)],
             'stampTaxCode'           => ['nullable', 'required_if:' . $field('taxTypeCode') . ',IS', Rule::enum(StampTaxCode::class)],
-            'taxTotal'               => ['nullable', new FiscalNumber(positive: true, currency: Fiscal::CURRENCY)],
+            'taxTotal'               => ['nullable', FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
         ];
     }
 }
