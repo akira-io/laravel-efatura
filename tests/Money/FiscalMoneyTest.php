@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Money\FiscalMoney;
@@ -76,16 +77,42 @@ it('rejects source precision beyond the owning field scale', function (): void {
 
 it('does not accept a rounded Money cast with a non-fiscal scale', function (): void {
     expect(fn (): MoneyCast => new MoneyCast('CVE', 3, true))
-        ->toThrow(EfaturaValidationException::class);
+        ->toThrow(DefinitionException::class);
 });
 
 it('rejects invalid precision policies and strict serialization that would lose digits', function (): void {
     $source = Money::of('1.23456', 'CVE', new CustomContext(5));
 
     expect(fn (): Money => FiscalMoney::exact('1', 'CVE', 6))
-        ->toThrow(EfaturaValidationException::class)
+        ->toThrow(DefinitionException::class)
         ->and(fn (): string => DecimalFormatter::money($source, 2, false))
         ->toThrow(EfaturaValidationException::class)
         ->and(fn (): string => DecimalFormatter::decimal(BigDecimal::one(), -1))
-        ->toThrow(EfaturaValidationException::class);
+        ->toThrow(DefinitionException::class);
+});
+
+it('reports programmatic failures at the field the caller names', function (Closure $call, string $errorCode): void {
+    expect($call)->toThrow(function (EfaturaValidationException $exception) use ($errorCode): void {
+        expect($exception->field())->toBe('lines.3.price')
+            ->and($exception->errorCode)->toBe($errorCode);
+    });
+})->with([
+    'malformed'         => [fn (): Money => FiscalMoney::cve('abc', 'lines.3.price'), 'decimal.invalid'],
+    'excess scale'      => [fn (): Money => FiscalMoney::exact('1.123456', 'CVE', 5, 'lines.3.price'), 'decimal.scale_exceeded'],
+    'float'             => [fn (): Money => FiscalMoney::of(1.5, 'CVE', 'lines.3.price'), 'money.invalid'],
+    'unknown currency'  => [fn (): Money => FiscalMoney::of('1', 'ZZZ', 'lines.3.price'), 'money.invalid'],
+    'invalid currency'  => [fn (): Money => FiscalMoney::of('1', 'cve', 'lines.3.price'), 'money.invalid_currency'],
+    'currency mismatch' => [fn (): Money => FiscalMoney::cve(Money::of('1', 'USD'), 'lines.3.price'), 'money.currency_mismatch'],
+    'parse'             => [fn (): BigDecimal => DecimalFormatter::parse('1.234', 2, 'lines.3.price'), 'decimal.scale_exceeded'],
+]);
+
+it('answers decimal shape and scale questions without throwing', function (): void {
+    expect(DecimalFormatter::isPlainDecimal('-1.50'))->toBeTrue()
+        ->and(DecimalFormatter::isPlainDecimal(7))->toBeTrue()
+        ->and(DecimalFormatter::isPlainDecimal(BigDecimal::of('1.5')))->toBeTrue()
+        ->and(DecimalFormatter::isPlainDecimal('1e3'))->toBeFalse()
+        ->and(DecimalFormatter::isPlainDecimal(1.5))->toBeFalse()
+        ->and(DecimalFormatter::isPlainDecimal(null))->toBeFalse()
+        ->and(DecimalFormatter::fitsScale(BigDecimal::of('1.23000'), 2))->toBeTrue()
+        ->and(DecimalFormatter::fitsScale(BigDecimal::of('1.234'), 2))->toBeFalse();
 });

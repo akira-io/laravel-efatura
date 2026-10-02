@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Money;
 
-use Akira\Efatura\Exceptions\EfaturaValidationException;
+use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
+use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Casts\Cast;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Creation\CreationContext;
@@ -22,10 +23,16 @@ final readonly class BigDecimalCast implements Cast
      */
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): BigDecimal
     {
-        if (! \is_int($value) && ! \is_string($value) && ! $value instanceof BigDecimal) {
-            throw new EfaturaValidationException($property->name, __('efatura::efatura.validation.invalid_decimal'));
+        if (! DecimalFormatter::isPlainDecimal($value)) {
+            throw ValidationException::withMessages([FieldPath::of($context, $property) => __('efatura::efatura.validation.invalid_decimal')]);
         }
 
-        return DecimalFormatter::parse($value, $this->maxScale);
+        $decimal = BigDecimal::of($value);
+
+        if (! DecimalFormatter::fitsScale($decimal, $this->maxScale)) {
+            throw ValidationException::withMessages([FieldPath::of($context, $property) => __('efatura::efatura.validation.decimal_scale_exceeded')]);
+        }
+
+        return $decimal;
     }
 }

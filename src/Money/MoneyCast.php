@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Money;
 
+use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
+use Akira\Efatura\Support\FieldPath;
 use Brick\Money\Money;
+use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Casts\Cast;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Creation\CreationContext;
@@ -19,7 +22,7 @@ final readonly class MoneyCast implements Cast
         private bool $round = true,
     ) {
         if ($this->round && $this->scale !== 2) {
-            throw new EfaturaValidationException('scale', __('efatura::efatura.validation.invalid_money_rounding_scale'));
+            throw DefinitionException::roundingScale($this->scale);
         }
     }
 
@@ -29,14 +32,18 @@ final readonly class MoneyCast implements Cast
      */
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): Money
     {
+        $path = FieldPath::of($context, $property);
+
         if (! \is_int($value) && ! \is_string($value) && ! $value instanceof Money) {
-            throw new EfaturaValidationException($property->name, __('efatura::efatura.validation.invalid_money_input'));
+            throw ValidationException::withMessages([$path => __('efatura::efatura.validation.invalid_money_input')]);
         }
 
-        if ($this->round) {
-            return FiscalMoney::of($value, $this->currency);
+        try {
+            return $this->round
+                ? FiscalMoney::of($value, $this->currency, $path)
+                : FiscalMoney::exact($value, $this->currency, $this->scale, $path);
+        } catch (EfaturaValidationException $efaturaValidationException) {
+            throw ValidationException::withMessages([$path => $efaturaValidationException->getMessage()]);
         }
-
-        return FiscalMoney::exact($value, $this->currency, $this->scale);
     }
 }

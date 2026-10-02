@@ -6,7 +6,6 @@ use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Money\FiscalMoney;
-use Akira\Efatura\Money\MoneyCast;
 use Brick\Math\BigDecimal;
 
 it('renders package validation errors and install text from actual translations', function (): void {
@@ -27,12 +26,5 @@ it('renders numeric precision errors from package translations', function (): vo
         test()->fail('Expected decimal precision error');
     } catch (EfaturaValidationException $efaturaValidationException) {
         expect($efaturaValidationException->getMessage())->toBe('Value exceeds the allowed decimal precision.');
-    }
-
-    try {
-        new MoneyCast('CVE', 3, true);
-        test()->fail('Expected invalid money rounding scale');
-    } catch (EfaturaValidationException $efaturaValidationException) {
-        expect($efaturaValidationException->getMessage())->toBe('Rounded fiscal Money uses two decimal places.');
     }
 });

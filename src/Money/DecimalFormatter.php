@@ -4,49 +4,58 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Money;
 
+use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
-use Brick\Math\Exception\MathException;
 use Brick\Math\RoundingMode;
 use Brick\Money\Money;
 use Illuminate\Support\Str;
 
 final class DecimalFormatter
 {
-    public static function parse(int|float|string|BigDecimal $value, ?int $maxScale = null): BigDecimal
+    private const string PLAIN_DECIMAL = '/^-?[0-9]+(?:\.[0-9]+)?$/D';
+
+    /**
+     * @phpstan-assert-if-true int|string|BigDecimal $value
+     */
+    public static function isPlainDecimal(mixed $value): bool
     {
-        if (\is_float($value)) {
-            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.invalid_decimal'));
+        return \is_int($value)
+            || $value instanceof BigDecimal
+            || (\is_string($value) && Str::isMatch(self::PLAIN_DECIMAL, $value));
+    }
+
+    public static function fitsScale(BigDecimal $value, int $scale): bool
+    {
+        self::checkScale($scale);
+
+        return $value->strippedOfTrailingZeros()->getScale() <= $scale;
+    }
+
+    public static function parse(int|float|string|BigDecimal $value, ?int $maxScale = null, string $field = 'amount'): BigDecimal
+    {
+        if ($maxScale !== null) {
+            self::checkScale($maxScale);
         }
 
-        self::checkScale($maxScale);
-
-        if (\is_string($value) && ! Str::isMatch('/^-?[0-9]+(?:\.[0-9]+)?$/D', $value)) {
-            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.invalid_decimal'));
+        if (! self::isPlainDecimal($value)) {
+            throw EfaturaValidationException::invalidDecimal($field);
         }
 
         $decimal = BigDecimal::of($value);
 
-        if ($maxScale !== null) {
-            try {
-                $decimal->toScale($maxScale, RoundingMode::Unnecessary);
-            } catch (MathException) {
-                throw new EfaturaValidationException('amount', __('efatura::efatura.validation.decimal_scale_exceeded'));
-            }
+        if ($maxScale !== null && ! self::fitsScale($decimal, $maxScale)) {
+            throw EfaturaValidationException::decimalScaleExceeded($field);
         }
 
         return $decimal;
     }
 
-    public static function decimal(BigDecimal $value, int $maxScale = Fiscal::AMOUNT_SCALE): string
+    public static function decimal(BigDecimal $value, int $maxScale = Fiscal::AMOUNT_SCALE, string $field = 'amount'): string
     {
-        self::checkScale($maxScale);
-
-        try {
-            $value->toScale($maxScale, RoundingMode::Unnecessary);
-        } catch (MathException) {
-            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.decimal_scale_exceeded'));
+        if (! self::fitsScale($value, $maxScale)) {
+            throw EfaturaValidationException::decimalScaleExceeded($field);
         }
 
         $plain = (string) $value;
@@ -54,18 +63,15 @@ final class DecimalFormatter
         return str_contains($plain, '.') ? rtrim(rtrim($plain, '0'), '.') : $plain;
     }
 
-    public static function money(Money $value, int $scale = 2, bool $round = true): string
+    public static function money(Money $value, int $scale = 2, bool $round = true, string $field = 'amount'): string
     {
         self::checkScale($scale);
 
-        try {
-            return (string) $value->getAmount()->toScale(
-                $scale,
-                self::roundingMode($round),
-            );
-        } catch (MathException) {
-            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.decimal_scale_exceeded'));
+        if (! $round && ! self::fitsScale($value->getAmount(), $scale)) {
+            throw EfaturaValidationException::decimalScaleExceeded($field);
         }
+
+        return (string) $value->getAmount()->toScale($scale, self::roundingMode($round));
     }
 
     public static function roundingMode(bool $round): RoundingMode
@@ -73,10 +79,10 @@ final class DecimalFormatter
         return $round ? RoundingMode::HalfUp : RoundingMode::Unnecessary;
     }
 
-    private static function checkScale(?int $scale): void
+    private static function checkScale(int $scale): void
     {
-        if ($scale !== null && $scale < 0) {
-            throw new EfaturaValidationException('scale', __('efatura::efatura.validation.invalid_decimal_scale'));
+        if ($scale < 0) {
+            throw DefinitionException::negativeScale($scale);
         }
     }
 }

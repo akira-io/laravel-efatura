@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Money;
 
+use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\Exception\MathException;
@@ -14,42 +15,43 @@ use Illuminate\Support\Str;
 
 final class FiscalMoney
 {
-    public static function cve(int|float|string|Money $amount): Money
+    public static function cve(int|float|string|Money $amount, string $field = 'amount'): Money
     {
-        return self::of($amount, Fiscal::CURRENCY);
+        return self::of($amount, Fiscal::CURRENCY, $field);
     }
 
-    public static function of(int|float|string|Money $amount, string $currency): Money
+    public static function of(int|float|string|Money $amount, string $currency, string $field = 'amount'): Money
     {
-        return self::create($amount, $currency, 2, true);
+        return self::create($amount, $currency, 2, true, $field);
     }
 
-    public static function exact(int|float|string|Money $amount, string $currency, int $scale = Fiscal::AMOUNT_SCALE): Money
+    public static function exact(int|float|string|Money $amount, string $currency, int $scale = Fiscal::AMOUNT_SCALE, string $field = 'amount'): Money
     {
-        return self::create($amount, $currency, $scale, false);
+        return self::create($amount, $currency, $scale, false, $field);
     }
 
-    private static function create(int|float|string|Money $amount, string $currency, int $scale, bool $round): Money
+    private static function create(int|float|string|Money $amount, string $currency, int $scale, bool $round, string $field): Money
     {
+        if ($scale < 0 || $scale > Fiscal::AMOUNT_SCALE) {
+            throw DefinitionException::moneyScale($scale, Fiscal::AMOUNT_SCALE);
+        }
+
         if (\is_float($amount)) {
-            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.invalid_money'));
+            throw EfaturaValidationException::invalidMoney($field);
         }
 
         if (! Str::isMatch('/^[A-Z]{3}$/D', $currency)) {
-            throw new EfaturaValidationException('currency', __('efatura::efatura.validation.invalid_currency'));
-        }
-
-        if ($scale < 0 || $scale > Fiscal::AMOUNT_SCALE) {
-            throw new EfaturaValidationException('scale', __('efatura::efatura.validation.invalid_money_scale'));
+            throw EfaturaValidationException::invalidCurrency($field);
         }
 
         if ($amount instanceof Money && $amount->getCurrency()->getCurrencyCode() !== $currency) {
-            throw new EfaturaValidationException('currency', __('efatura::efatura.validation.currency_mismatch'));
+            throw EfaturaValidationException::currencyMismatch($field);
         }
 
         $decimal = DecimalFormatter::parse(
             $amount instanceof Money ? $amount->getAmount() : $amount,
             $round ? null : $scale,
+            $field,
         );
 
         try {
@@ -60,7 +62,7 @@ final class FiscalMoney
                 DecimalFormatter::roundingMode($round),
             );
         } catch (MathException|MoneyException) {
-            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.invalid_money'));
+            throw EfaturaValidationException::invalidMoney($field);
         }
     }
 }

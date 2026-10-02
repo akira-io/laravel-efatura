@@ -22,7 +22,6 @@ use Akira\Efatura\Enums\ContingencyReason;
 use Akira\Efatura\Enums\DiscountValueType;
 use Akira\Efatura\Enums\StampTaxCode;
 use Akira\Efatura\Enums\TaxType;
-use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\FiscalMoney;
 use Brick\Math\BigDecimal;
 use Brick\Money\Context\CustomContext;
@@ -116,7 +115,7 @@ it('keeps extension content as text and reserves official element names', functi
 it('accepts a cataloged CV address and rejects coercion at cast boundaries', function (): void {
     expect(new AddressData('CV', 'Boca de Pedregal', addressCode: 'CV111111111011110101')->addressCode)->toBe('CV111111111011110101');
     expect(fn (): DeliveryData => DeliveryData::from(['deliveryDate' => 123, 'address' => ['countryCode' => 'PT', 'addressDetail' => 'Example address']]))->toThrow(ValidationException::class)
-        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => '1', 'exchangeRate' => '1']))->toThrow(EfaturaValidationException::class);
+        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => '1', 'exchangeRate' => '1']))->toThrow(ValidationException::class);
 });
 
 it('preserves fiscal calendar dates and wall clock times under host timezone settings', function (): void {
