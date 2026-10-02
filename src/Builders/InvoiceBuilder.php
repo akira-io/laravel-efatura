@@ -7,23 +7,14 @@ namespace Akira\Efatura\Builders;
 use Akira\Efatura\Actions\ValidateIssueDateAction;
 use Akira\Efatura\Builders\Concerns\HasDocumentSections;
 use Akira\Efatura\Configuration\EfaturaConfig;
-use Akira\Efatura\Data\CreditNoteData;
-use Akira\Efatura\Data\DebitNoteData;
 use Akira\Efatura\Data\DocumentFooterData;
 use Akira\Efatura\Data\DocumentHeaderData;
-use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\EmissionContextData;
 use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\PartyData;
-use Akira\Efatura\Data\ReceiptData;
-use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\ReferenceData;
-use Akira\Efatura\Data\RegistrationNoteData;
-use Akira\Efatura\Data\ReturnNoteData;
-use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\TotalsData;
-use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Support\Fiscal;
@@ -142,19 +133,7 @@ final class InvoiceBuilder
 
     public function validate(): InvoiceData
     {
-        $class = match ($this->documentType) {
-            DocumentType::Invoice          => ElectronicInvoiceData::class,
-            DocumentType::InvoiceReceipt   => ReceiptInvoiceData::class,
-            DocumentType::SalesReceipt     => SalesReceiptData::class,
-            DocumentType::Receipt          => ReceiptData::class,
-            DocumentType::CreditNote       => CreditNoteData::class,
-            DocumentType::DebitNote        => DebitNoteData::class,
-            DocumentType::ReturnNote       => ReturnNoteData::class,
-            DocumentType::RegistrationNote => RegistrationNoteData::class,
-            DocumentType::Transport        => TransportDocumentData::class,
-        };
-
-        $document = $class::validateAndCreate([...$this->draft, 'header' => $this->header]);
+        $document = $this->documentType->dataClass()::validateAndCreate([...$this->draft, 'header' => $this->header]);
         $this->issueDate->handle($document->header, $document->emission->issueMode ?? EmissionMode::Online);
 
         return $document;

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Contracts\HasTotals;
-use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\IssueReason;
 use Akira\Efatura\Support\DocumentRules;
 use Akira\Efatura\Support\FiscalRules;
@@ -38,11 +37,6 @@ final class ReturnNoteData extends InvoiceData implements HasTotals
         public readonly ?DocumentFooterData $footer = null,
     ) {}
 
-    public function type(): DocumentType
-    {
-        return DocumentType::ReturnNote;
-    }
-
     /**
      * @return array<string, list<mixed>>
      */
@@ -52,9 +46,9 @@ final class ReturnNoteData extends InvoiceData implements HasTotals
         $other = ValidationPayload::enum($context, 'issueReasonCode', IssueReason::class) === IssueReason::Other;
 
         return [
-            ...DocumentRules::lines($context, DocumentType::ReturnNote),
+            ...DocumentRules::lines($context, self::documentType()),
             'references'             => DocumentRules::requiredList(),
-            'issueReasonCode'        => DocumentRules::issueReason(DocumentType::ReturnNote),
+            'issueReasonCode'        => DocumentRules::issueReason(self::documentType()),
             'issueReasonDescription' => [Rule::requiredIf($other), ...FiscalRules::text(10, 500)],
         ];
     }

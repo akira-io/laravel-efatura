@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\PartyReference;
 use Akira\Efatura\Enums\TransportDocumentType;
 use Akira\Efatura\Enums\TransportReceiverType;
@@ -40,11 +39,6 @@ final class TransportDocumentData extends InvoiceData
         public readonly ?DocumentFooterData $footer = null,
     ) {}
 
-    public function type(): DocumentType
-    {
-        return DocumentType::Transport;
-    }
-
     /**
      * @return array<string, list<mixed>>
      */
@@ -55,7 +49,7 @@ final class TransportDocumentData extends InvoiceData
         $undetermined       = $receiverType === TransportReceiverType::Undetermined;
         $providerIsReceiver = ValidationPayload::string($context, 'transportServiceProvider.reference') === PartyReference::Receiver->value;
         $rules              = [
-            ...DocumentRules::lines($context, DocumentType::Transport),
+            ...DocumentRules::lines($context, self::documentType()),
             'receiver' => [Rule::requiredIf(! $undetermined || $providerIsReceiver), Rule::prohibitedIf($undetermined)],
         ];
 

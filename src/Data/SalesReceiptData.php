@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Contracts\HasTotals;
-use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Support\DocumentRules;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
@@ -34,11 +33,6 @@ final class SalesReceiptData extends InvoiceData implements HasTotals
         public readonly ?DocumentFooterData $footer = null,
     ) {}
 
-    public function type(): DocumentType
-    {
-        return DocumentType::SalesReceipt;
-    }
-
     /**
      * @return array<string, list<mixed>>
      */
@@ -48,7 +42,7 @@ final class SalesReceiptData extends InvoiceData implements HasTotals
         $payable = ValidationPayload::decimal($context, 'totals.payableAmount');
 
         return [
-            ...DocumentRules::lines($context, DocumentType::SalesReceipt),
+            ...DocumentRules::lines($context, self::documentType()),
             ...DocumentRules::settledPayments($context),
             'receiver' => [Rule::requiredIf($payable?->isGreaterThanOrEqualTo(Fiscal::SALES_RECEIPT_IDENTIFIED_RECEIVER_AMOUNT) ?? false)],
         ];

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\ReceiptType;
 use Akira\Efatura\Support\DocumentRules;
 use Akira\Efatura\Support\ValidationPayload;
@@ -32,11 +31,6 @@ final class ReceiptData extends InvoiceData
         public readonly ?EmissionContextData $emission = null,
         public readonly ?DocumentFooterData $footer = null,
     ) {}
-
-    public function type(): DocumentType
-    {
-        return DocumentType::Receipt;
-    }
 
     /**
      * @return array<string, list<mixed>>

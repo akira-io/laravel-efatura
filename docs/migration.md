@@ -74,3 +74,8 @@ values matching `[1-9][0-9]{0,4}` and fails with `configuration.invalid_led`
 otherwise, instead of letting `1e2` become 100 or `abc` fail later with a type
 error. Configured emitter and transmitter tax IDs follow the document pattern
 `[1-9][0-9]{8}`, so a NIF starting with 0 now fails loading.
+
+`DocumentType::dataClass()` names the concrete Data class of each document
+type, and `DocumentType::fromDataClass()` resolves the reverse. `InvoiceData`
+derives `type()` and the static `documentType()` from that mapping, so both
+are final: a document class outside the nine official ones has no type.

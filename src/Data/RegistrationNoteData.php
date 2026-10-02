@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Contracts\HasTotals;
-use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Support\DocumentRules;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -34,11 +33,6 @@ final class RegistrationNoteData extends InvoiceData implements HasTotals
         public readonly ?DocumentFooterData $footer = null,
     ) {}
 
-    public function type(): DocumentType
-    {
-        return DocumentType::RegistrationNote;
-    }
-
     /**
      * @return array<string, list<mixed>>
      */
@@ -46,7 +40,7 @@ final class RegistrationNoteData extends InvoiceData implements HasTotals
     protected static function documentRules(ValidationContext $context): array
     {
         return [
-            ...DocumentRules::lines($context, DocumentType::RegistrationNote),
+            ...DocumentRules::lines($context, self::documentType()),
             ...DocumentRules::settledPayments($context),
         ];
     }

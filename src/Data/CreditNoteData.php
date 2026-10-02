@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Contracts\HasTotals;
-use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\IssueReason;
 use Akira\Efatura\Support\DocumentRules;
 use Override;
@@ -35,11 +34,6 @@ final class CreditNoteData extends InvoiceData implements HasTotals
         public readonly ?DocumentFooterData $footer = null,
     ) {}
 
-    public function type(): DocumentType
-    {
-        return DocumentType::CreditNote;
-    }
-
     /**
      * @return array<string, list<mixed>>
      */
@@ -47,9 +41,9 @@ final class CreditNoteData extends InvoiceData implements HasTotals
     protected static function documentRules(ValidationContext $context): array
     {
         return [
-            ...DocumentRules::lines($context, DocumentType::CreditNote),
+            ...DocumentRules::lines($context, self::documentType()),
             'references'      => DocumentRules::requiredList(),
-            'issueReasonCode' => DocumentRules::issueReason(DocumentType::CreditNote),
+            'issueReasonCode' => DocumentRules::issueReason(self::documentType()),
         ];
     }
 }

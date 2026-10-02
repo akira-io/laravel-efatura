@@ -28,7 +28,15 @@ abstract class InvoiceData extends FiscalData
 
     abstract public ?EmissionContextData $emission { get; }
 
-    abstract public function type(): DocumentType;
+    final public static function documentType(): DocumentType
+    {
+        return DocumentType::fromDataClass(static::class);
+    }
+
+    final public function type(): DocumentType
+    {
+        return self::documentType();
+    }
 
     #[Override]
     final public static function from(mixed ...$payloads): static

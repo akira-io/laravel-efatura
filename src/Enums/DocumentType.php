@@ -4,6 +4,17 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Enums;
 
+use Akira\Efatura\Data\CreditNoteData;
+use Akira\Efatura\Data\DebitNoteData;
+use Akira\Efatura\Data\ElectronicInvoiceData;
+use Akira\Efatura\Data\InvoiceData;
+use Akira\Efatura\Data\ReceiptData;
+use Akira\Efatura\Data\ReceiptInvoiceData;
+use Akira\Efatura\Data\RegistrationNoteData;
+use Akira\Efatura\Data\ReturnNoteData;
+use Akira\Efatura\Data\SalesReceiptData;
+use Akira\Efatura\Data\TransportDocumentData;
+
 enum DocumentType: string
 {
     case Invoice          = 'FTE';
@@ -28,6 +39,32 @@ enum DocumentType: string
             self::Transport        => 7,
             self::ReturnNote       => 8,
             self::RegistrationNote => 9,
+        };
+    }
+
+    /**
+     * @param class-string<InvoiceData> $dataClass
+     */
+    public static function fromDataClass(string $dataClass): self
+    {
+        return collect(self::cases())->firstOrFail(static fn (self $type): bool => $type->dataClass() === $dataClass);
+    }
+
+    /**
+     * @return class-string<InvoiceData>
+     */
+    public function dataClass(): string
+    {
+        return match ($this) {
+            self::Invoice          => ElectronicInvoiceData::class,
+            self::InvoiceReceipt   => ReceiptInvoiceData::class,
+            self::SalesReceipt     => SalesReceiptData::class,
+            self::Receipt          => ReceiptData::class,
+            self::CreditNote       => CreditNoteData::class,
+            self::DebitNote        => DebitNoteData::class,
+            self::Transport        => TransportDocumentData::class,
+            self::ReturnNote       => ReturnNoteData::class,
+            self::RegistrationNote => RegistrationNoteData::class,
         };
     }
 

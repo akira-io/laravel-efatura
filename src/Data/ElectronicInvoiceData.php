@@ -7,7 +7,6 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Data\Attributes\FiscalDateFormat;
 use Akira\Efatura\Data\Contracts\HasTaxPointDate;
 use Akira\Efatura\Data\Contracts\HasTotals;
-use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Support\DocumentRules;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
@@ -44,11 +43,6 @@ final class ElectronicInvoiceData extends InvoiceData implements HasTaxPointDate
         public readonly ?DocumentFooterData $footer = null,
     ) {}
 
-    public function type(): DocumentType
-    {
-        return DocumentType::Invoice;
-    }
-
     /**
      * @return array<string, list<mixed>>
      */
@@ -56,7 +50,7 @@ final class ElectronicInvoiceData extends InvoiceData implements HasTaxPointDate
     protected static function documentRules(ValidationContext $context): array
     {
         return [
-            ...DocumentRules::lines($context, DocumentType::Invoice),
+            ...DocumentRules::lines($context, self::documentType()),
             'orderReference'    => FiscalRules::code(),
             'payments.payments' => ['prohibited'],
         ];
