@@ -59,3 +59,10 @@ of the payload and report at full paths: duplicate line identifiers under
 `payments.payments.N.paymentDate`. The previous bare keys (`ids.N`, `price`,
 `payments`, `paymentDate`, `receiverReference`) are gone. Allowed issue
 reasons per document come from `IssueReason::allowedFor(DocumentType)`.
+
+Carbon instances are instants, not wall-clock fields. Builder date setters
+(`issuedAt()`, `dueDate()`, `taxPointDate()`, `EventBuilder::issuedAt()`), fiscal
+date casts, rules and transformers convert them to `Atlantic/Cape_Verde` before
+formatting or comparing. Code that built `CarbonImmutable::parse('2026-10-02')`
+in a UTC host to mean the Cabo Verde calendar day must now create it in the
+fiscal timezone, or pass the date as a `Y-m-d` string.

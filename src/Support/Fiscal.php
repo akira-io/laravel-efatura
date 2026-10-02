@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Support;
 
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
+
 final class Fiscal
 {
     public const string TIMEZONE = 'Atlantic/Cape_Verde';
@@ -25,4 +28,9 @@ final class Fiscal
     public const string SALES_RECEIPT_IDENTIFIED_RECEIVER_AMOUNT = '20000';
 
     public const string XML_NAMESPACE = 'urn:cv:efatura:xsd:v1.0';
+
+    public static function local(CarbonInterface $moment): CarbonImmutable
+    {
+        return $moment->toImmutable()->setTimezone(self::TIMEZONE);
+    }
 }

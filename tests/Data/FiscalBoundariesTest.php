@@ -118,9 +118,9 @@ it('accepts a cataloged CV address and rejects coercion at cast boundaries', fun
         ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => '1', 'exchangeRate' => '1']))->toThrow(ValidationException::class);
 });
 
-it('preserves fiscal calendar dates and wall clock times under host timezone settings', function (): void {
+it('formats fiscal dates and times in Cape Verde time whatever the data timezone setting', function (): void {
     config(['data.date_timezone' => 'Pacific/Honolulu']);
-    $duration = new DurationData(CarbonImmutable::parse('2026-10-02', 'UTC'), CarbonImmutable::parse('09:00:00', 'UTC'));
+    $duration = new DurationData(CarbonImmutable::parse('2026-10-02 12:00', 'UTC'), CarbonImmutable::parse('2026-10-02 09:00:00', 'UTC'));
     expect($duration->toArray()['startDate'])->toBe('2026-10-02')
-        ->and($duration->toArray()['startTime'])->toBe('09:00:00');
+        ->and($duration->toArray()['startTime'])->toBe('08:00:00');
 });

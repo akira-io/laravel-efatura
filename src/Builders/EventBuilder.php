@@ -12,6 +12,7 @@ use Akira\Efatura\Data\TaxIdData;
 use Akira\Efatura\Enums\EventType;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Psr\Clock\ClockInterface;
 
 final class EventBuilder
@@ -24,7 +25,7 @@ final class EventBuilder
 
     public function __construct(EfaturaConfig $config, ClockInterface $clock)
     {
-        $this->draft = ['emitterTaxId' => ConfiguredEmitter::taxId($config->emitter), 'issueDateTime' => $clock->now()->format(Fiscal::DATE_TIME_FORMAT)];
+        $this->draft = ['emitterTaxId' => ConfiguredEmitter::taxId($config->emitter), 'issueDateTime' => Fiscal::local(CarbonImmutable::instance($clock->now()))->format(Fiscal::DATE_TIME_FORMAT)];
     }
 
     public function type(EventType $type): self
@@ -41,9 +42,9 @@ final class EventBuilder
         return $this;
     }
 
-    public function issuedAt(CarbonImmutable $dateTime): self
+    public function issuedAt(CarbonInterface $dateTime): self
     {
-        $this->draft['issueDateTime'] = $dateTime->format(Fiscal::DATE_TIME_FORMAT);
+        $this->draft['issueDateTime'] = Fiscal::local($dateTime)->format(Fiscal::DATE_TIME_FORMAT);
 
         return $this;
     }

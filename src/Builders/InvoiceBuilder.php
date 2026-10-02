@@ -28,6 +28,7 @@ use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Psr\Clock\ClockInterface;
 
 final class InvoiceBuilder
@@ -52,7 +53,7 @@ final class InvoiceBuilder
 
     public function __construct(EfaturaConfig $config, ClockInterface $clock)
     {
-        $now             = $clock->now();
+        $now             = Fiscal::local(CarbonImmutable::instance($clock->now()));
         $this->issueDate = new ValidateIssueDateAction($clock);
         $this->draft     = ['emitter' => ConfiguredEmitter::party($config->emitter)];
         $this->header    = ['issueDate' => $now->format(Fiscal::DATE_FORMAT), 'issueTime' => $now->format(Fiscal::TIME_FORMAT), 'ledCode' => $config->emitter?->led];
@@ -87,10 +88,11 @@ final class InvoiceBuilder
         return $this;
     }
 
-    public function issuedAt(CarbonImmutable $dateTime): self
+    public function issuedAt(CarbonInterface $dateTime): self
     {
-        $this->header['issueDate'] = $dateTime->format(Fiscal::DATE_FORMAT);
-        $this->header['issueTime'] = $dateTime->format(Fiscal::TIME_FORMAT);
+        $local                     = Fiscal::local($dateTime);
+        $this->header['issueDate'] = $local->format(Fiscal::DATE_FORMAT);
+        $this->header['issueTime'] = $local->format(Fiscal::TIME_FORMAT);
 
         return $this;
     }

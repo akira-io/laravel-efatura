@@ -33,14 +33,15 @@ validation errors instead of silently disappearing. Start a fresh builder when
 switching to a different document shape. Optional receivers can simply be omitted
 on the types that permit them.
 
-Events expose `type(EventType)`, `emitter(TaxIdData)`, `issuedAt(CarbonImmutable)`,
+Events expose `type(EventType)`, `emitter(TaxIdData)`, `issuedAt(CarbonInterface)`,
 `reason(string)`, `iud(string)` (append), `numberRange(EventNumberRangeData)`, and
 `emission(EmissionContextData)`. FDC requires IUDs; UDN requires a number range.
 Their conflicting target sections fail validation.
 
 Both builders snapshot the injected PSR-20 `ClockInterface` at creation. The default clock uses
-Atlantic/Cape_Verde. `issuedAt()` preserves the supplied CarbonImmutable's local
-date/time components; supply the fiscal timezone explicitly. `header()` replaces
+Atlantic/Cape_Verde. `issuedAt()`, `dueDate()` and `taxPointDate()` take any
+`CarbonInterface` as an instant and write its Cabo Verde date and time, so
+`00:30 UTC` on 3 October becomes issue date 2 October at `23:30:00`. `header()` replaces
 all header fields, including LED and dates. No numbering fields are generated.
 `InvoiceBuilder::validate()` also checks the emission window against the same
 clock and reports `header.issueDate` when the issue date and time fall outside it.

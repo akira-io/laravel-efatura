@@ -23,7 +23,7 @@ final readonly class ValidateIssueDateAction
 
     public function handle(DocumentHeaderData $header, EmissionMode $mode): void
     {
-        $issued   = $header->issueDate->setTimeFrom($header->issueTime);
+        $issued   = Fiscal::local($header->issueDate)->setTimeFrom(Fiscal::local($header->issueTime));
         $now      = CarbonImmutable::instance($this->clock->now())->setTimezone(Fiscal::TIMEZONE);
         $online   = $mode === EmissionMode::Online;
         $earliest = $online ? $now->subHours(self::ONLINE_PAST_HOURS) : $now->subDays(self::CONTINGENCY_PAST_DAYS);

@@ -73,7 +73,7 @@ $document = Efatura::invoice()
 
 Replace the example identities, address and LED with your registered fiscal data.
 The builder snapshots the package clock (Atlantic/Cape_Verde) when created; use
-`issuedAt(CarbonImmutable $dateTime)` or `header(DocumentHeaderData $header)` for
+`issuedAt(CarbonInterface $dateTime)` (converted to Cabo Verde time) or `header(DocumentHeaderData $header)` for
 explicit dates. Decimal strings avoid float rounding. A configured complete emitter
 can replace the explicit `emitter()` call. See [builders and configuration](docs/builders.md)
 and the [migration guide](docs/migration.md).

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Rules;
 
 use Akira\Efatura\Support\Fiscal;
-use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Validator;
@@ -16,8 +16,8 @@ final readonly class FiscalDate implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if ($value instanceof CarbonImmutable) {
-            $value = $value->format($this->format);
+        if ($value instanceof CarbonInterface) {
+            $value = Fiscal::local($value)->format($this->format);
         }
 
         $rules = ['required', 'string', 'date_format:' . $this->format];

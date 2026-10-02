@@ -7,6 +7,7 @@ namespace Akira\Efatura\Casts;
 use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -28,6 +29,10 @@ final readonly class FiscalDateCast implements Cast, Transformer
      */
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): CarbonImmutable
     {
+        if ($value instanceof CarbonInterface) {
+            $value = Fiscal::local($value)->format($this->format);
+        }
+
         $date = \is_string($value) ? $this->parse($value) : null;
 
         if (! $date instanceof CarbonImmutable) {
@@ -43,7 +48,7 @@ final readonly class FiscalDateCast implements Cast, Transformer
 
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
-        return new DateTimeInterfaceTransformer($this->format, '')->transform($property, $value, $context);
+        return new DateTimeInterfaceTransformer($this->format, Fiscal::TIMEZONE)->transform($property, $value, $context);
     }
 
     private function parse(string $value): ?CarbonImmutable
