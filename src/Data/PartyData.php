@@ -4,42 +4,41 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Enums\PartyReference;
+use Akira\Efatura\Support\FiscalRules;
+use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
 
 final class PartyData extends Data
 {
+    use ValidatesFiscalFields;
+
     public function __construct(
-        public readonly string $nif,
-        public readonly string $name,
-        public readonly ?string $address = null,
-        public readonly ?string $city = null,
-        public readonly ?string $country = null,
-    ) {}
+        public readonly ?TaxIdData $taxId = null,
+        public readonly ?string $name = null,
+        public readonly ?AddressData $address = null,
+        public readonly ?ContactsData $contacts = null,
+        public readonly ?PartyReference $reference = null,
+    ) {
+        $this->validateFiscalFields(self::rules());
+    }
+
+    public function validateEmitter(): void
+    {
+        $this->validateFiscalFields(['taxId' => ['required'], 'contacts' => ['required'], 'reference' => ['prohibited']]);
+        $this->contacts?->validateEmitter();
+    }
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, mixed>>
      */
     public static function rules(): array
     {
         return [
-            'nif'  => ['bail', 'required', 'string'],
-            'name' => ['bail', 'required', 'string'],
+            'taxId'     => ['required_without:reference'],
+            'name'      => ['nullable', 'required_without:reference', ...FiscalRules::text(3, 150)],
+            'reference' => ['nullable', Rule::enum(PartyReference::class), 'prohibits:taxId,name,address,contacts'],
         ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
-    {
-        return [
-            'nif.required'  => __('efatura.validation.party_nif_required'),
-            'name.required' => __('efatura.validation.party_name_required'),
-        ];
-    }
-
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
     }
 }

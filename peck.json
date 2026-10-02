@@ -14,6 +14,13 @@
             "xsd",
             "retryable",
             "sha256",
+            "mobilephone",
+            "telefax",
+            "iuc",
+            "gtin",
+            "ean",
+            "pharmacode",
+            "multimodal",
             "sha"
         ],
         "paths": [

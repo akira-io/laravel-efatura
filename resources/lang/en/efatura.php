@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 return [
     'validation' => [
+        'reserved_field'               => 'The :attribute is reserved for an official fiscal field.',
+        'data_instances'               => 'The :attribute must contain the expected immutable data values.',
+        'fiscal_date'                  => 'The :attribute must use a valid fiscal date or time.',
+        'official_code'                => 'The :attribute must be a code in the official catalog.',
+        'tax_id'                       => 'The :attribute must be a valid tax identifier for its country.',
+        'number_bounds'                => 'The :attribute is outside its permitted numeric bounds.',
         'invoice_type_mismatch'        => 'Invoice type does not match the expected document type.',
         'emitter_nif_required'         => 'Emitter NIF is required.',
         'emitter_name_required'        => 'Emitter name is required.',

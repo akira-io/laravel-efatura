@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 use Akira\Efatura\Contracts\DocumentTypePolicy;
 use Akira\Efatura\Data\InvoiceData;
+use Akira\Efatura\Data\ItemData;
 use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\PartyData;
+use Akira\Efatura\Data\QuantityData;
 use Akira\Efatura\Data\TaxData;
+use Akira\Efatura\Data\TaxIdData;
 use Akira\Efatura\Data\TotalsData;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Enums\TaxType;
+use Akira\Efatura\Money\FiscalMoney;
 use Akira\Efatura\Support\DefaultDocumentTypePolicy;
 use Akira\Efatura\Tests\Support\ValidationFixtures;
+use Brick\Math\BigDecimal;
 use Illuminate\Validation\ValidationException;
 
 it('validates invoice issue date', function (): void {
@@ -24,9 +30,9 @@ it('validates invoice issue date', function (): void {
 });
 
 it('covers line item construction', function (): void {
-    $line = new LineItemData('Item', 1.0, 100.0, 100.0, []);
+    $line = new LineItemData(new QuantityData(BigDecimal::of('1'), 'C62'), new ItemData('Item', 'SKU-1'), price: FiscalMoney::cve('100'), netTotal: FiscalMoney::cve('100'));
 
-    expect($line->description)->toBe('Item');
+    expect($line->item->description)->toBe('Item');
 });
 
 it('covers policy behavior', function (): void {
@@ -42,31 +48,13 @@ it('covers policy behavior', function (): void {
         ->and($policy->allowedInProduction(DocumentType::RegistrationNote))->toBeFalse();
 });
 
-it('covers party rules and messages', function (): void {
-    expect(PartyData::rules())->toHaveKey('nif')
-        ->and(PartyData::messages())->toHaveKey('nif.required')
-        ->and(PartyData::stopOnFirstFailure())->toBeTrue();
-});
-
-it('covers tax rules and messages', function (): void {
-    expect(TaxData::rules())->toHaveKey('exemptionReason')
-        ->and(TaxData::messages())->toHaveKey('exemptionReason.required_if')
-        ->and(TaxData::stopOnFirstFailure())->toBeTrue();
-});
-
 it('covers tax data constructor', function (): void {
-    $tax = new TaxData('IVA', 15.0, 150.0);
+    $tax = new TaxData(TaxType::ValueAddedTax, taxPercentage: BigDecimal::of('15'), taxTotal: FiscalMoney::cve('150'));
 
-    expect($tax->type)->toBe('IVA')
-        ->and($tax->rate)->toBe(15.0)
-        ->and($tax->amount)->toBe(150.0)
-        ->and($tax->exemptionReason)->toBeNull();
-});
-
-it('covers totals rules and messages', function (): void {
-    expect(TotalsData::rules())->toHaveKey('subtotal')
-        ->and(TotalsData::messages())->toHaveKey('subtotal.min')
-        ->and(TotalsData::stopOnFirstFailure())->toBeTrue();
+    expect($tax->taxTypeCode)->toBe(TaxType::ValueAddedTax)
+        ->and((string) $tax->taxPercentage)->toBe('15')
+        ->and((string) $tax->taxTotal->getAmount())->toBe('150.00')
+        ->and($tax->taxExemptionReasonCode)->toBeNull();
 });
 
 it('requires invoice lines', function (): void {
@@ -109,10 +97,10 @@ it('covers invoice data constructor', function (): void {
     $invoice = new InvoiceData(
         DocumentType::Invoice,
         '2026-02-08',
-        new PartyData('100200300', 'Emitter'),
-        new PartyData('900800700', 'Receiver'),
-        [new LineItemData('Item', 1.0, 100.0, 100.0, [])],
-        new TotalsData(100.0, 0.0, 100.0),
+        new PartyData(new TaxIdData('100200300', 'CV'), 'Emitter'),
+        new PartyData(new TaxIdData('900800700', 'CV'), 'Receiver'),
+        [new LineItemData(new QuantityData(BigDecimal::of('1'), 'C62'), new ItemData('Item', 'SKU-1'), price: FiscalMoney::cve('100'), netTotal: FiscalMoney::cve('100'))],
+        new TotalsData(FiscalMoney::cve('100'), FiscalMoney::cve('100'), FiscalMoney::cve('0'), FiscalMoney::cve('100')),
     );
 
     expect($invoice->type)->toBe(DocumentType::Invoice);
@@ -158,29 +146,7 @@ it('covers invoice type invalid string branch', function (): void {
 });
 
 it('covers receiver invalid type branch', function (): void {
-    $data = [
-        'type'      => DocumentType::Invoice,
-        'issueDate' => '2026-02-08',
-        'emitter'   => [
-            'nif'  => '100200300',
-            'name' => 'Emitter',
-        ],
-        'receiver' => 'invalid',
-        'lines'    => [
-            [
-                'description' => 'Item',
-                'quantity'    => 1,
-                'unitPrice'   => 1000.0,
-                'total'       => 1000.0,
-                'taxes'       => [],
-            ],
-        ],
-        'totals' => [
-            'subtotal'   => 1000.0,
-            'taxTotal'   => 0.0,
-            'grandTotal' => 1000.0,
-        ],
-    ];
+    $data = ValidationFixtures::invoicePayload(['receiver' => 'invalid']);
 
     $validator = resolve('validator')->make($data, []);
     InvoiceData::withValidator($validator);
@@ -192,24 +158,8 @@ it('covers receiver invalid type branch', function (): void {
 });
 
 it('covers invoice lines branch', function (): void {
-    $data = [
-        'type'      => DocumentType::Invoice,
-        'issueDate' => '2026-02-08',
-        'emitter'   => [
-            'nif'  => '100200300',
-            'name' => 'Emitter',
-        ],
-        'receiver' => [
-            'nif'  => '900800700',
-            'name' => 'Receiver',
-        ],
-        'lines'  => [],
-        'totals' => [
-            'subtotal'   => 1000.0,
-            'taxTotal'   => 0.0,
-            'grandTotal' => 1000.0,
-        ],
-    ];
+    $data          = ValidationFixtures::invoicePayload();
+    $data['lines'] = [];
 
     $validator = resolve('validator')->make($data, []);
     InvoiceData::withValidator($validator);

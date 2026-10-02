@@ -6,15 +6,21 @@ use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Data\CreditNoteData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\InvoiceData;
+use Akira\Efatura\Data\ItemData;
 use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\PartyData;
+use Akira\Efatura\Data\QuantityData;
 use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\TaxData;
+use Akira\Efatura\Data\TaxIdData;
 use Akira\Efatura\Data\TotalsData;
 use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Enums\TaxType;
+use Akira\Efatura\Money\FiscalMoney;
 use Akira\Efatura\Tests\Support\ValidationFixtures;
+use Brick\Math\BigDecimal;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -23,7 +29,7 @@ it('covers sales receipt receiver type branch', function (): void {
         'invoice' => [
             'type'   => DocumentType::SalesReceipt,
             'totals' => [
-                'grandTotal' => 20000.0,
+                'payableAmount' => '20000',
             ],
             'receiver' => 'invalid',
         ],
@@ -70,10 +76,10 @@ it('covers wrapper constructors', function (): void {
     $invoice = new InvoiceData(
         DocumentType::Invoice,
         '2026-02-08',
-        new PartyData('100200300', 'Emitter'),
-        new PartyData('900800700', 'Receiver'),
-        [new LineItemData('Item', 1.0, 100.0, 100.0, [])],
-        new TotalsData(100.0, 0.0, 100.0),
+        new PartyData(new TaxIdData('100200300', 'CV'), 'Emitter'),
+        new PartyData(new TaxIdData('900800700', 'CV'), 'Receiver'),
+        [new LineItemData(new QuantityData(BigDecimal::of('1'), 'C62'), new ItemData('Item', 'SKU-1'), price: FiscalMoney::cve('100'), netTotal: FiscalMoney::cve('100'))],
+        new TotalsData(FiscalMoney::cve('100'), FiscalMoney::cve('100'), FiscalMoney::cve('0'), FiscalMoney::cve('100')),
     );
 
     expect(new ElectronicInvoiceData($invoice))->toBeInstanceOf(ElectronicInvoiceData::class)
@@ -134,9 +140,9 @@ it('allows sales receipt without receiver below threshold', function (): void {
         'type'     => DocumentType::SalesReceipt,
         'receiver' => null,
         'totals'   => [
-            'subtotal'   => 1000.0,
-            'taxTotal'   => 150.0,
-            'grandTotal' => 19000.0,
+            'netTotalAmount' => '1000',
+            'taxTotalAmount' => '150',
+            'payableAmount'  => '19000',
         ],
     ]);
 
@@ -149,9 +155,9 @@ it('requires receiver for sales receipt at threshold', function (): void {
         'type'     => DocumentType::SalesReceipt,
         'receiver' => null,
         'totals'   => [
-            'subtotal'   => 18000.0,
-            'taxTotal'   => 2000.0,
-            'grandTotal' => 20000.0,
+            'netTotalAmount' => '18000',
+            'taxTotalAmount' => '2000',
+            'payableAmount'  => '20000',
         ],
     ]);
 
@@ -177,45 +183,15 @@ it('requires credit note references', function (): void {
 });
 
 it('requires NA tax exemption reason', function (): void {
-    $payload = [
-        'type'            => 'NA',
-        'rate'            => 0.0,
-        'amount'          => 0.0,
-        'exemptionReason' => null,
-    ];
-
-    ValidationFixtures::assertMessage(
-        fn (): array => TaxData::validate($payload),
-        'exemptionReason',
-        trans('efatura.validation.na_tax_exemption_required'),
-    );
+    expect(fn (): TaxData => new TaxData(TaxType::NotApplicable))->toThrow(ValidationException::class);
 });
 
 it('rejects negative totals', function (): void {
-    $payload = [
-        'subtotal'   => -1.0,
-        'taxTotal'   => 0.0,
-        'grandTotal' => 0.0,
-    ];
-
-    ValidationFixtures::assertMessage(
-        fn (): array => TotalsData::validate($payload),
-        'subtotal',
-        trans('efatura.validation.totals_negative'),
-    );
+    expect(fn (): TotalsData => new TotalsData(FiscalMoney::cve('-1'), FiscalMoney::cve('0'), FiscalMoney::cve('0'), FiscalMoney::cve('0')))->toThrow(ValidationException::class);
 });
 
 it('requires party fields', function (): void {
-    $payload = [
-        'nif'  => '',
-        'name' => '',
-    ];
-
-    ValidationFixtures::assertMessage(
-        fn (): array => PartyData::validate($payload),
-        'nif',
-        trans('efatura.validation.party_nif_required'),
-    );
+    expect(fn (): PartyData => new PartyData)->toThrow(ValidationException::class);
 });
 
 it('rejects invoice type mismatch in wrappers', function (): void {

@@ -26,32 +26,34 @@ final class ValidationFixtures
             'type'      => DocumentType::Invoice,
             'issueDate' => '2026-02-08',
             'emitter'   => [
-                'nif'  => '100200300',
-                'name' => 'Emitter',
+                'taxId' => ['value' => '100200300', 'countryCode' => 'CV'],
+                'name'  => 'Emitter',
             ],
             'receiver' => [
-                'nif'  => '900800700',
-                'name' => 'Receiver',
+                'taxId' => ['value' => '900800700', 'countryCode' => 'CV'],
+                'name'  => 'Receiver',
             ],
             'lines' => [
                 [
-                    'description' => 'Item',
-                    'quantity'    => 1,
-                    'unitPrice'   => 1000.0,
-                    'total'       => 1000.0,
-                    'taxes'       => [
+                    'item'           => ['description' => 'Item', 'emitterIdentification' => 'SKU-1'],
+                    'quantity'       => ['value' => '1', 'unitCode' => 'C62'],
+                    'price'          => '1000',
+                    'priceExtension' => '1000',
+                    'netTotal'       => '1000',
+                    'taxes'          => [
                         [
-                            'type'   => 'IVA',
-                            'rate'   => 15.0,
-                            'amount' => 150.0,
+                            'taxTypeCode'   => 'IVA',
+                            'taxPercentage' => '15',
+                            'taxTotal'      => '150',
                         ],
                     ],
                 ],
             ],
             'totals' => [
-                'subtotal'   => 1000.0,
-                'taxTotal'   => 150.0,
-                'grandTotal' => 1150.0,
+                'priceExtensionTotalAmount' => '1000',
+                'netTotalAmount'            => '1000',
+                'taxTotalAmount'            => '150',
+                'payableAmount'             => '1150',
             ],
         ])->replaceRecursive($overrides)->all();
     }

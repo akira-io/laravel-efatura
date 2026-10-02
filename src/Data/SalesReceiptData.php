@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Enums\DocumentType;
+use Brick\Math\BigDecimal;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
 
@@ -35,16 +36,16 @@ final class SalesReceiptData extends Data
                 return;
             }
 
-            $total    = data_get($data, 'invoice.totals.grandTotal');
+            $total    = data_get($data, 'invoice.totals.payableAmount');
             $receiver = data_get($data, 'invoice.receiver');
 
-            if (is_numeric($total) && (float) $total >= 20000.0 && $receiver === null) {
+            if ((\is_string($total) || \is_int($total)) && BigDecimal::of($total)->isGreaterThanOrEqualTo('20000') && $receiver === null) {
                 $validator->errors()->add('invoice.receiver', __('efatura.invoice.receiver_required_for_type'));
 
                 return;
             }
 
-            if (is_numeric($total) && (float) $total >= 20000.0 && ! \is_array($receiver)) {
+            if ((\is_string($total) || \is_int($total)) && BigDecimal::of($total)->isGreaterThanOrEqualTo('20000') && ! \is_array($receiver)) {
                 $validator->errors()->add('invoice.receiver', __('efatura.validation.receiver_required'));
             }
         });
