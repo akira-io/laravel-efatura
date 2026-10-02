@@ -4,61 +4,32 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Enums\DocumentType;
-use Illuminate\Validation\Validator;
-use Spatie\LaravelData\Data;
+use Akira\Efatura\Enums\IssueReason;
 
-final class CreditNoteData extends Data
+final class CreditNoteData extends InvoiceData
 {
-    use ValidatesInvoiceType;
-
-    public const DocumentType TYPE = DocumentType::ELECTRONIC_CREDIT_NOTE;
-
+    /**
+     * @param list<LineItemData>  $lines
+     * @param list<ReferenceData> $references
+     */
     public function __construct(
-        public readonly InvoiceData $invoice,
-    ) {}
-
-    /**
-     * @return array<string, array<int, string>>
-     */
-    public static function rules(): array
-    {
-        return [
-            'invoice'                  => ['bail', 'required', 'array'],
-            'invoice.originalIud'      => ['bail', 'required', 'string'],
-            'invoice.creditNoteReason' => ['bail', 'required', 'string'],
-        ];
+        public readonly DocumentHeaderData $header,
+        public readonly PartyData $emitter,
+        public readonly PartyData $receiver,
+        public readonly array $lines,
+        public readonly TotalsData $totals,
+        public readonly IssueReason $issueReasonCode,
+        public readonly array $references,
+        public readonly ?DatePeriodData $rappelPeriod = null,
+        public readonly ?EmissionContextData $emission = null,
+        public readonly ?DocumentFooterData $footer = null,
+    ) {
+        $this->validateDocument();
     }
 
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
+    public function type(): DocumentType
     {
-        return [
-            'invoice.required'                  => __('efatura.validation.invoice_required'),
-            'invoice.array'                     => __('efatura.validation.invoice_required'),
-            'invoice.originalIud.required'      => __('efatura.invoice.original_iud_required'),
-            'invoice.creditNoteReason.required' => __('efatura.invoice.credit_note_reason_required'),
-        ];
-    }
-
-    public static function withValidator(Validator $validator): void
-    {
-        $validator->after(static function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $type = data_get($validator->getData(), 'invoice.type');
-
-            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_CREDIT_NOTE, $type, 'invoice.type');
-        });
-    }
-
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
+        return DocumentType::CreditNote;
     }
 }

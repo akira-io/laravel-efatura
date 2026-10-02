@@ -174,11 +174,20 @@ final readonly class LoadEfaturaConfig
                 $this->string('efatura.emitter.address.city'),
                 $this->string('efatura.emitter.address.street'),
                 $this->string('efatura.emitter.address.postal_code'),
+                $this->string('efatura.emitter.address.address_detail'),
+                $this->string('efatura.emitter.address.address_code'),
+                $this->string('efatura.emitter.address.state'),
+                $this->string('efatura.emitter.address.street_detail'),
+                $this->string('efatura.emitter.address.building_name'),
+                $this->string('efatura.emitter.address.building_number'),
+                $this->string('efatura.emitter.address.building_floor'),
             ),
             new ContactsConfig(
                 $this->string('efatura.emitter.contacts.email'),
                 $this->string('efatura.emitter.contacts.telephone'),
                 $this->string('efatura.emitter.contacts.mobile'),
+                $this->string('efatura.emitter.contacts.telefax'),
+                $this->string('efatura.emitter.contacts.website'),
             ),
         );
         foreach ([$emitter->taxId, $emitter->name, $emitter->led, ...get_object_vars($emitter->address), ...get_object_vars($emitter->contacts)] as $field) {

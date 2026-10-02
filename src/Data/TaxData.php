@@ -4,39 +4,58 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Enums\StampTaxCode;
+use Akira\Efatura\Enums\TaxType;
+use Akira\Efatura\Money\BigDecimalCast;
+use Akira\Efatura\Money\BigDecimalTransformer;
+use Akira\Efatura\Money\MoneyCast;
+use Akira\Efatura\Money\MoneyTransformer;
+use Akira\Efatura\Rules\FiscalNumber;
+use Akira\Efatura\Rules\OfficialCode;
+use Brick\Math\BigDecimal;
+use Brick\Money\Money;
+use Illuminate\Validation\Rule;
+use Spatie\LaravelData\Attributes\WithCast;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class TaxData extends Data
 {
+    use ValidatesFiscalFields;
+
     public function __construct(
-        public readonly string $type,
-        public readonly float $rate,
-        public readonly float $amount,
-        public readonly ?string $exemptionReason = null,
-    ) {}
-
-    /**
-     * @return array<string, array<int, string>>
-     */
-    public static function rules(): array
-    {
-        return [
-            'exemptionReason' => ['bail', 'required_if:type,NA'],
-        ];
+        public readonly TaxType $taxTypeCode,
+        #[WithCast(BigDecimalCast::class, 3)]
+        #[WithTransformer(BigDecimalTransformer::class, 3)]
+        public readonly ?BigDecimal $taxPercentage = null,
+        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
+        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        public readonly ?Money $taxAmount = null,
+        public readonly ?string $taxExemptionReasonCode = null,
+        public readonly ?StampTaxCode $stampTaxCode = null,
+        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
+        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        public readonly ?Money $taxTotal = null,
+    ) {
+        $this->validateFiscalFields(self::rules());
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, array<int, mixed>>
      */
-    public static function messages(): array
+    public static function rules(?ValidationContext $context = null): array
     {
-        return [
-            'exemptionReason.required_if' => __('efatura.validation.na_tax_exemption_required'),
-        ];
-    }
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
 
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
+        return [
+            'taxTypeCode'            => ['required', Rule::enum(TaxType::class)],
+            'taxPercentage'          => ['nullable', 'required_without_all:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), 'prohibits:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(3, true, '100')],
+            'taxAmount'              => ['nullable', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(positive: true, currency: 'CVE')],
+            'taxExemptionReasonCode' => ['nullable', 'required_if:' . $field('taxTypeCode') . ',NA', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxAmount'), new OfficialCode('tax_exemption_reasons')],
+            'stampTaxCode'           => ['nullable', 'required_if:' . $field('taxTypeCode') . ',IS', Rule::enum(StampTaxCode::class)],
+            'taxTotal'               => ['nullable', new FiscalNumber(positive: true, currency: 'CVE')],
+        ];
     }
 }

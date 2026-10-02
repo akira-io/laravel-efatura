@@ -4,57 +4,34 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Enums\DocumentType;
-use Illuminate\Validation\Validator;
-use Spatie\LaravelData\Data;
+use Akira\Efatura\Enums\TransportDocumentType;
+use Akira\Efatura\Enums\TransportReceiverType;
 
-final class TransportDocumentData extends Data
+final class TransportDocumentData extends InvoiceData
 {
-    use ValidatesInvoiceType;
-
-    public const DocumentType TYPE = DocumentType::ELECTRONIC_TRANSPORT_DOCUMENT;
-
+    /**
+     * @param list<LineItemData>  $lines
+     * @param list<ReferenceData> $references
+     */
     public function __construct(
-        public readonly InvoiceData $invoice,
-    ) {}
-
-    public static function withValidator(Validator $validator): void
-    {
-        $validator->after(static function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $type = data_get($validator->getData(), 'invoice.type');
-
-            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_TRANSPORT_DOCUMENT, $type, 'invoice.type');
-        });
+        public readonly DocumentHeaderData $header,
+        public readonly PartyData $emitter,
+        public readonly TransportDocumentType $transportDocumentTypeCode,
+        public readonly PartyData $transportServiceProvider,
+        public readonly array $lines,
+        public readonly TransportRouteData $transportRoute,
+        public readonly ?TransportReceiverType $receiverTypeCode = null,
+        public readonly ?PartyData $receiver = null,
+        public readonly array $references = [],
+        public readonly ?EmissionContextData $emission = null,
+        public readonly ?DocumentFooterData $footer = null,
+    ) {
+        $this->validateDocument();
     }
 
-    /**
-     * @return array<string, array<int, string>>
-     */
-    public static function rules(): array
+    public function type(): DocumentType
     {
-        return [
-            'invoice' => ['bail', 'required', 'array'],
-        ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
-    {
-        return [
-            'invoice.required' => __('efatura.validation.invoice_required'),
-            'invoice.array'    => __('efatura.validation.invoice_required'),
-        ];
-    }
-
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
+        return DocumentType::Transport;
     }
 }

@@ -24,7 +24,7 @@ final class InstallCommand extends Command
     {
         parent::__construct();
 
-        $this->setDescription(__('efatura.install.command_description'));
+        $this->setDescription(__('efatura::efatura.install.command_description'));
     }
 
     public function handle(Filesystem $filesystem): int
@@ -33,7 +33,7 @@ final class InstallCommand extends Command
         $this->updateEnvironmentFile($filesystem);
         $this->notifyOptionalPackages($filesystem);
 
-        note(__('efatura.install.completed'));
+        note(__('efatura::efatura.install.completed'));
 
         return self::SUCCESS;
     }
@@ -43,7 +43,7 @@ final class InstallCommand extends Command
         $configPath = config_path('efatura.php');
 
         if ($filesystem->exists($configPath)) {
-            note(__('efatura.install.config_exists'));
+            note(__('efatura::efatura.install.config_exists'));
 
             return;
         }
@@ -53,7 +53,7 @@ final class InstallCommand extends Command
         $filesystem->ensureDirectoryExists(\dirname($configPath));
         $filesystem->copy($sourcePath, $configPath);
 
-        info(__('efatura.install.config_published'));
+        info(__('efatura::efatura.install.config_published'));
     }
 
     private function updateEnvironmentFile(Filesystem $filesystem): void
@@ -61,7 +61,7 @@ final class InstallCommand extends Command
         $envPath = base_path('.env');
 
         if (! $filesystem->exists($envPath)) {
-            warning(__('efatura.install.env_missing'));
+            warning(__('efatura::efatura.install.env_missing'));
 
             return;
         }
@@ -84,10 +84,10 @@ final class InstallCommand extends Command
                 continue;
             }
 
-            $confirmed = confirm(__('efatura.install.env_add_confirm', ['key' => $key]));
+            $confirmed = confirm(__('efatura::efatura.install.env_add_confirm', ['key' => $key]));
 
             if (! $confirmed) {
-                note(__('efatura.install.env_skipped', ['key' => $key]));
+                note(__('efatura::efatura.install.env_skipped', ['key' => $key]));
 
                 continue;
             }
@@ -98,7 +98,7 @@ final class InstallCommand extends Command
 
             $appendLines[] = $key . '=' . $value;
 
-            info(__('efatura.install.env_added', ['key' => $key]));
+            info(__('efatura::efatura.install.env_added', ['key' => $key]));
         }
 
         if ($appendLines !== []) {
@@ -125,7 +125,7 @@ final class InstallCommand extends Command
 
         $packages = Arr::join($missing, ', ');
 
-        info(__('efatura.install.optional_packages_notice', ['packages' => $packages]));
+        info(__('efatura::efatura.install.optional_packages_notice', ['packages' => $packages]));
     }
 
     private function environmentVariableExists(string $contents, string $key): bool

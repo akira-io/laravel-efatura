@@ -4,42 +4,49 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Enums\PartyReference;
+use Akira\Efatura\Support\FiscalRules;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class PartyData extends Data
 {
+    use ValidatesFiscalFields;
+
     public function __construct(
-        public readonly string $nif,
-        public readonly string $name,
-        public readonly ?string $address = null,
-        public readonly ?string $city = null,
-        public readonly ?string $country = null,
-    ) {}
+        public readonly ?TaxIdData $taxId = null,
+        public readonly ?string $name = null,
+        public readonly ?AddressData $address = null,
+        public readonly ?ContactsData $contacts = null,
+        public readonly ?PartyReference $reference = null,
+    ) {
+        $this->validateFiscalFields(self::rules());
+    }
 
-    /**
-     * @return array<string, array<int, string>>
-     */
-    public static function rules(): array
+    public function validateEmitter(): void
     {
-        return [
-            'nif'  => ['bail', 'required', 'string'],
-            'name' => ['bail', 'required', 'string'],
-        ];
+        $this->validateFiscalFields(['taxId' => ['required'], 'address' => ['required'], 'contacts' => ['required'], 'reference' => ['prohibited']]);
+        Validator::make(
+            ['taxId' => ['countryCode' => $this->taxId?->countryCode], 'address' => ['countryCode' => $this->address?->countryCode]],
+            ['taxId.countryCode' => ['required', 'in:CV'], 'address.countryCode' => ['required', 'in:CV']],
+        )->validate();
+        $this->contacts?->validateEmitter();
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, array<int, mixed>>
      */
-    public static function messages(): array
+    public static function rules(?ValidationContext $context = null): array
     {
-        return [
-            'nif.required'  => __('efatura.validation.party_nif_required'),
-            'name.required' => __('efatura.validation.party_name_required'),
-        ];
-    }
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
 
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
+        return [
+            'taxId'     => ['required_without:' . $field('reference')],
+            'name'      => ['nullable', 'required_without:' . $field('reference'), ...FiscalRules::text(3, 150)],
+            'reference' => ['nullable', Rule::enum(PartyReference::class), 'prohibits:' . $field('taxId') . ',' . $field('name') . ',' . $field('address') . ',' . $field('contacts')],
+        ];
     }
 }

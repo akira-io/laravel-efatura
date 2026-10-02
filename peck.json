@@ -12,7 +12,18 @@
             "bcv",
             "homologation",
             "xsd",
-            "retryable"
+            "retryable",
+            "sha256",
+            "mobilephone",
+            "telefax",
+            "iuc",
+            "gtin",
+            "ean",
+            "pharmacode",
+            "serie",
+            "iuds",
+            "multimodal",
+            "sha"
         ],
         "paths": [
             "resources/catalogs/source",

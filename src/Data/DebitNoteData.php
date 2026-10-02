@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Akira\Efatura\Data;
+
+use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Enums\IssueReason;
+
+final class DebitNoteData extends InvoiceData
+{
+    /**
+     * @param list<LineItemData>  $lines
+     * @param list<ReferenceData> $references
+     */
+    public function __construct(
+        public readonly DocumentHeaderData $header,
+        public readonly PartyData $emitter,
+        public readonly PartyData $receiver,
+        public readonly array $lines,
+        public readonly TotalsData $totals,
+        public readonly IssueReason $issueReasonCode,
+        public readonly array $references,
+        public readonly ?EmissionContextData $emission = null,
+        public readonly ?DocumentFooterData $footer = null,
+    ) {
+        $this->validateDocument();
+    }
+
+    public function type(): DocumentType
+    {
+        return DocumentType::DebitNote;
+    }
+}

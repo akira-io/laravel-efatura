@@ -6,13 +6,33 @@ namespace Akira\Efatura\Enums;
 
 enum DocumentType: string
 {
-    case ELECTRONIC_INVOICE            = 'FTE';
-    case ELECTRONIC_INVOICE_RECEIPT    = 'FRE';
-    case ELECTRONIC_SALES_TICKET       = 'TVE';
-    case ELECTRONIC_RECEIPT            = 'RCE';
-    case ELECTRONIC_CREDIT_NOTE        = 'NCE';
-    case ELECTRONIC_DEBIT_NOTE         = 'NDE';
-    case ELECTRONIC_TRANSPORT_DOCUMENT = 'DTE';
-    case ELECTRONIC_RETURN_NOTE        = 'DVE';
-    case ELECTRONIC_ENTRY_NOTE         = 'NLE';
+    case Invoice          = 'FTE';
+    case InvoiceReceipt   = 'FRE';
+    case SalesReceipt     = 'TVE';
+    case Receipt          = 'RCE';
+    case CreditNote       = 'NCE';
+    case DebitNote        = 'NDE';
+    case Transport        = 'DTE';
+    case ReturnNote       = 'DVE';
+    case RegistrationNote = 'NLE';
+
+    public function code(): int
+    {
+        return match ($this) {
+            self::Invoice          => 1,
+            self::InvoiceReceipt   => 2,
+            self::SalesReceipt     => 3,
+            self::Receipt          => 4,
+            self::CreditNote       => 5,
+            self::DebitNote        => 6,
+            self::Transport        => 7,
+            self::ReturnNote       => 8,
+            self::RegistrationNote => 9,
+        };
+    }
+
+    public function xmlElement(): string
+    {
+        return $this->name;
+    }
 }

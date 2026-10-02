@@ -1,0 +1,3896 @@
+{
+  "count": 249,
+  "published_country_rows": [
+    {
+      "codigo": "CV",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CAPE VERDE",
+      "pais": "CV",
+      "zona": ""
+    },
+    {
+      "codigo": "AD",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ANDORRA",
+      "pais": "AD",
+      "zona": ""
+    },
+    {
+      "codigo": "AE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "UNITED ARAB EMIRATES",
+      "pais": "AE",
+      "zona": ""
+    },
+    {
+      "codigo": "AF",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "AFGHANISTAN",
+      "pais": "AF",
+      "zona": ""
+    },
+    {
+      "codigo": "AG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ANTIGUA AND BARBUDA",
+      "pais": "AG",
+      "zona": ""
+    },
+    {
+      "codigo": "AI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ANGUILLA",
+      "pais": "AI",
+      "zona": ""
+    },
+    {
+      "codigo": "AL",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ALBANIA",
+      "pais": "AL",
+      "zona": ""
+    },
+    {
+      "codigo": "AM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ARMENIA",
+      "pais": "AM",
+      "zona": ""
+    },
+    {
+      "codigo": "AN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NETHERLANDS ANTILLES",
+      "pais": "AN",
+      "zona": ""
+    },
+    {
+      "codigo": "AO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ANGOLA",
+      "pais": "AO",
+      "zona": ""
+    },
+    {
+      "codigo": "AQ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ANTARCTICA",
+      "pais": "AQ",
+      "zona": ""
+    },
+    {
+      "codigo": "AR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ARGENTINA",
+      "pais": "AR",
+      "zona": ""
+    },
+    {
+      "codigo": "AS",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "AMERICAN SAMOA",
+      "pais": "AS",
+      "zona": ""
+    },
+    {
+      "codigo": "AT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "AUSTRIA",
+      "pais": "AT",
+      "zona": ""
+    },
+    {
+      "codigo": "AU",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "AUSTRALIA",
+      "pais": "AU",
+      "zona": ""
+    },
+    {
+      "codigo": "AW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ARUBA",
+      "pais": "AW",
+      "zona": ""
+    },
+    {
+      "codigo": "AZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "AZERBAIJAN",
+      "pais": "AZ",
+      "zona": ""
+    },
+    {
+      "codigo": "BA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BOSNIA AND HERZEGOVINA",
+      "pais": "BA",
+      "zona": ""
+    },
+    {
+      "codigo": "BB",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BARBADOS",
+      "pais": "BB",
+      "zona": ""
+    },
+    {
+      "codigo": "BD",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BANGLADESH",
+      "pais": "BD",
+      "zona": ""
+    },
+    {
+      "codigo": "BE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BELGIUM",
+      "pais": "BE",
+      "zona": ""
+    },
+    {
+      "codigo": "BF",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BURKINA FASO",
+      "pais": "BF",
+      "zona": ""
+    },
+    {
+      "codigo": "BG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BULGARIA",
+      "pais": "BG",
+      "zona": ""
+    },
+    {
+      "codigo": "BH",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BAHRAIN",
+      "pais": "BH",
+      "zona": ""
+    },
+    {
+      "codigo": "BI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BURUNDI",
+      "pais": "BI",
+      "zona": ""
+    },
+    {
+      "codigo": "BJ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BENIN",
+      "pais": "BJ",
+      "zona": ""
+    },
+    {
+      "codigo": "BL",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAINT BARTHELEMY",
+      "pais": "BL",
+      "zona": ""
+    },
+    {
+      "codigo": "BM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BERMUDA",
+      "pais": "BM",
+      "zona": ""
+    },
+    {
+      "codigo": "BN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BRUNEI",
+      "pais": "BN",
+      "zona": ""
+    },
+    {
+      "codigo": "BO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BOLIVIA",
+      "pais": "BO",
+      "zona": ""
+    },
+    {
+      "codigo": "BR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BRAZIL",
+      "pais": "BR",
+      "zona": ""
+    },
+    {
+      "codigo": "BS",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BAHAMAS",
+      "pais": "BS",
+      "zona": ""
+    },
+    {
+      "codigo": "BT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BHUTAN",
+      "pais": "BT",
+      "zona": ""
+    },
+    {
+      "codigo": "BW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BOTSWANA",
+      "pais": "BW",
+      "zona": ""
+    },
+    {
+      "codigo": "BY",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BELARUS",
+      "pais": "BY",
+      "zona": ""
+    },
+    {
+      "codigo": "BZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BELIZE",
+      "pais": "BZ",
+      "zona": ""
+    },
+    {
+      "codigo": "CA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CANADA",
+      "pais": "CA",
+      "zona": ""
+    },
+    {
+      "codigo": "CC",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "COCOS ISLANDS",
+      "pais": "CC",
+      "zona": ""
+    },
+    {
+      "codigo": "CD",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "DEMOCRATIC REPUBLIC OF THE CONGO",
+      "pais": "CD",
+      "zona": ""
+    },
+    {
+      "codigo": "CF",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CENTRAL AFRICAN REPUBLIC",
+      "pais": "CF",
+      "zona": ""
+    },
+    {
+      "codigo": "CG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "REPUBLIC OF THE CONGO",
+      "pais": "CG",
+      "zona": ""
+    },
+    {
+      "codigo": "CH",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SWITZERLAND",
+      "pais": "CH",
+      "zona": ""
+    },
+    {
+      "codigo": "CI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "IVORY COAST",
+      "pais": "CI",
+      "zona": ""
+    },
+    {
+      "codigo": "CK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "COOK ISLANDS",
+      "pais": "CK",
+      "zona": ""
+    },
+    {
+      "codigo": "CL",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CHILE",
+      "pais": "CL",
+      "zona": ""
+    },
+    {
+      "codigo": "CM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CAMEROON",
+      "pais": "CM",
+      "zona": ""
+    },
+    {
+      "codigo": "CN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CHINA",
+      "pais": "CN",
+      "zona": ""
+    },
+    {
+      "codigo": "CO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "COLOMBIA",
+      "pais": "CO",
+      "zona": ""
+    },
+    {
+      "codigo": "CR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "COSTA RICA",
+      "pais": "CR",
+      "zona": ""
+    },
+    {
+      "codigo": "CU",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CUBA",
+      "pais": "CU",
+      "zona": ""
+    },
+    {
+      "codigo": "CW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CURACAO",
+      "pais": "CW",
+      "zona": ""
+    },
+    {
+      "codigo": "CX",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CHRISTMAS ISLAND",
+      "pais": "CX",
+      "zona": ""
+    },
+    {
+      "codigo": "CY",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CYPRUS",
+      "pais": "CY",
+      "zona": ""
+    },
+    {
+      "codigo": "CZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CZECH REPUBLIC",
+      "pais": "CZ",
+      "zona": ""
+    },
+    {
+      "codigo": "DE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GERMANY",
+      "pais": "DE",
+      "zona": ""
+    },
+    {
+      "codigo": "DJ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "DJIBOUTI",
+      "pais": "DJ",
+      "zona": ""
+    },
+    {
+      "codigo": "DK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "DENMARK",
+      "pais": "DK",
+      "zona": ""
+    },
+    {
+      "codigo": "DM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "DOMINICA",
+      "pais": "DM",
+      "zona": ""
+    },
+    {
+      "codigo": "DO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "DOMINICAN REPUBLIC",
+      "pais": "DO",
+      "zona": ""
+    },
+    {
+      "codigo": "DZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ALGERIA",
+      "pais": "DZ",
+      "zona": ""
+    },
+    {
+      "codigo": "EC",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ECUADOR",
+      "pais": "EC",
+      "zona": ""
+    },
+    {
+      "codigo": "EE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ESTONIA",
+      "pais": "EE",
+      "zona": ""
+    },
+    {
+      "codigo": "EG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "EGYPT",
+      "pais": "EG",
+      "zona": ""
+    },
+    {
+      "codigo": "EH",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "WESTERN SAHARA",
+      "pais": "EH",
+      "zona": ""
+    },
+    {
+      "codigo": "ER",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ERITREA",
+      "pais": "ER",
+      "zona": ""
+    },
+    {
+      "codigo": "ES",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SPAIN",
+      "pais": "ES",
+      "zona": ""
+    },
+    {
+      "codigo": "ET",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ETHIOPIA",
+      "pais": "ET",
+      "zona": ""
+    },
+    {
+      "codigo": "FI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "FINLAND",
+      "pais": "FI",
+      "zona": ""
+    },
+    {
+      "codigo": "FJ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "FIJI",
+      "pais": "FJ",
+      "zona": ""
+    },
+    {
+      "codigo": "FK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "FALKLAND ISLANDS",
+      "pais": "FK",
+      "zona": ""
+    },
+    {
+      "codigo": "FM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MICRONESIA",
+      "pais": "FM",
+      "zona": ""
+    },
+    {
+      "codigo": "FO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "FAROE ISLANDS",
+      "pais": "FO",
+      "zona": ""
+    },
+    {
+      "codigo": "FR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "FRANCE",
+      "pais": "FR",
+      "zona": ""
+    },
+    {
+      "codigo": "GA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GABON",
+      "pais": "GA",
+      "zona": ""
+    },
+    {
+      "codigo": "GB",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "UNITED KINGDOM",
+      "pais": "GB",
+      "zona": ""
+    },
+    {
+      "codigo": "GD",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GRENADA",
+      "pais": "GD",
+      "zona": ""
+    },
+    {
+      "codigo": "GE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GEORGIA",
+      "pais": "GE",
+      "zona": ""
+    },
+    {
+      "codigo": "GG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GUERNSEY",
+      "pais": "GG",
+      "zona": ""
+    },
+    {
+      "codigo": "GH",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GHANA",
+      "pais": "GH",
+      "zona": ""
+    },
+    {
+      "codigo": "GI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GIBRALTAR",
+      "pais": "GI",
+      "zona": ""
+    },
+    {
+      "codigo": "GL",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GREENLAND",
+      "pais": "GL",
+      "zona": ""
+    },
+    {
+      "codigo": "GM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GAMBIA",
+      "pais": "GM",
+      "zona": ""
+    },
+    {
+      "codigo": "GN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GUINEA",
+      "pais": "GN",
+      "zona": ""
+    },
+    {
+      "codigo": "GQ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "EQUATORIAL GUINEA",
+      "pais": "GQ",
+      "zona": ""
+    },
+    {
+      "codigo": "GR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GREECE",
+      "pais": "GR",
+      "zona": ""
+    },
+    {
+      "codigo": "GT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GUATEMALA",
+      "pais": "GT",
+      "zona": ""
+    },
+    {
+      "codigo": "GU",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GUAM",
+      "pais": "GU",
+      "zona": ""
+    },
+    {
+      "codigo": "GW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GUINEA-BISSAU",
+      "pais": "GW",
+      "zona": ""
+    },
+    {
+      "codigo": "GY",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "GUYANA",
+      "pais": "GY",
+      "zona": ""
+    },
+    {
+      "codigo": "HK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "HONG KONG",
+      "pais": "HK",
+      "zona": ""
+    },
+    {
+      "codigo": "HN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "HONDURAS",
+      "pais": "HN",
+      "zona": ""
+    },
+    {
+      "codigo": "HR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CROATIA",
+      "pais": "HR",
+      "zona": ""
+    },
+    {
+      "codigo": "HT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "HAITI",
+      "pais": "HT",
+      "zona": ""
+    },
+    {
+      "codigo": "HU",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "HUNGARY",
+      "pais": "HU",
+      "zona": ""
+    },
+    {
+      "codigo": "ID",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "INDONESIA",
+      "pais": "ID",
+      "zona": ""
+    },
+    {
+      "codigo": "IE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "IRELAND",
+      "pais": "IE",
+      "zona": ""
+    },
+    {
+      "codigo": "IL",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ISRAEL",
+      "pais": "IL",
+      "zona": ""
+    },
+    {
+      "codigo": "IM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ISLE OF MAN",
+      "pais": "IM",
+      "zona": ""
+    },
+    {
+      "codigo": "IN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "INDIA",
+      "pais": "IN",
+      "zona": ""
+    },
+    {
+      "codigo": "IO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BRITISH INDIAN OCEAN TERRITORY",
+      "pais": "IO",
+      "zona": ""
+    },
+    {
+      "codigo": "IQ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "IRAQ",
+      "pais": "IQ",
+      "zona": ""
+    },
+    {
+      "codigo": "IR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "IRAN",
+      "pais": "IR",
+      "zona": ""
+    },
+    {
+      "codigo": "IS",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ICELAND",
+      "pais": "IS",
+      "zona": ""
+    },
+    {
+      "codigo": "IT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ITALY",
+      "pais": "IT",
+      "zona": ""
+    },
+    {
+      "codigo": "JE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "JERSEY",
+      "pais": "JE",
+      "zona": ""
+    },
+    {
+      "codigo": "JM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "JAMAICA",
+      "pais": "JM",
+      "zona": ""
+    },
+    {
+      "codigo": "JO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "JORDAN",
+      "pais": "JO",
+      "zona": ""
+    },
+    {
+      "codigo": "JP",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "JAPAN",
+      "pais": "JP",
+      "zona": ""
+    },
+    {
+      "codigo": "KE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "KENYA",
+      "pais": "KE",
+      "zona": ""
+    },
+    {
+      "codigo": "KG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "KYRGYZSTAN",
+      "pais": "KG",
+      "zona": ""
+    },
+    {
+      "codigo": "KH",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CAMBODIA",
+      "pais": "KH",
+      "zona": ""
+    },
+    {
+      "codigo": "KI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "KIRIBATI",
+      "pais": "KI",
+      "zona": ""
+    },
+    {
+      "codigo": "KM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "COMOROS",
+      "pais": "KM",
+      "zona": ""
+    },
+    {
+      "codigo": "KN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAINT KITTS AND NEVIS",
+      "pais": "KN",
+      "zona": ""
+    },
+    {
+      "codigo": "KP",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NORTH KOREA",
+      "pais": "KP",
+      "zona": ""
+    },
+    {
+      "codigo": "KR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SOUTH KOREA",
+      "pais": "KR",
+      "zona": ""
+    },
+    {
+      "codigo": "KW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "KUWAIT",
+      "pais": "KW",
+      "zona": ""
+    },
+    {
+      "codigo": "KY",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CAYMAN ISLANDS",
+      "pais": "KY",
+      "zona": ""
+    },
+    {
+      "codigo": "KZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "KAZAKHSTAN",
+      "pais": "KZ",
+      "zona": ""
+    },
+    {
+      "codigo": "LA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "LAOS",
+      "pais": "LA",
+      "zona": ""
+    },
+    {
+      "codigo": "LB",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "LEBANON",
+      "pais": "LB",
+      "zona": ""
+    },
+    {
+      "codigo": "LC",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAINT LUCIA",
+      "pais": "LC",
+      "zona": ""
+    },
+    {
+      "codigo": "LI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "LIECHTENSTEIN",
+      "pais": "LI",
+      "zona": ""
+    },
+    {
+      "codigo": "LK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SRI LANKA",
+      "pais": "LK",
+      "zona": ""
+    },
+    {
+      "codigo": "LR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "LIBERIA",
+      "pais": "LR",
+      "zona": ""
+    },
+    {
+      "codigo": "LS",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "LESOTHO",
+      "pais": "LS",
+      "zona": ""
+    },
+    {
+      "codigo": "LT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "LITHUANIA",
+      "pais": "LT",
+      "zona": ""
+    },
+    {
+      "codigo": "LU",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "LUXEMBOURG",
+      "pais": "LU",
+      "zona": ""
+    },
+    {
+      "codigo": "LV",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "LATVIA",
+      "pais": "LV",
+      "zona": ""
+    },
+    {
+      "codigo": "LY",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "LIBYA",
+      "pais": "LY",
+      "zona": ""
+    },
+    {
+      "codigo": "MA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MOROCCO",
+      "pais": "MA",
+      "zona": ""
+    },
+    {
+      "codigo": "MC",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MONACO",
+      "pais": "MC",
+      "zona": ""
+    },
+    {
+      "codigo": "MD",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MOLDOVA",
+      "pais": "MD",
+      "zona": ""
+    },
+    {
+      "codigo": "ME",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MONTENEGRO",
+      "pais": "ME",
+      "zona": ""
+    },
+    {
+      "codigo": "MF",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAINT MARTIN",
+      "pais": "MF",
+      "zona": ""
+    },
+    {
+      "codigo": "MG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MADAGASCAR",
+      "pais": "MG",
+      "zona": ""
+    },
+    {
+      "codigo": "MH",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MARSHALL ISLANDS",
+      "pais": "MH",
+      "zona": ""
+    },
+    {
+      "codigo": "MK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MACEDONIA",
+      "pais": "MK",
+      "zona": ""
+    },
+    {
+      "codigo": "ML",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MALI",
+      "pais": "ML",
+      "zona": ""
+    },
+    {
+      "codigo": "MM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MYANMAR",
+      "pais": "MM",
+      "zona": ""
+    },
+    {
+      "codigo": "MN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MONGOLIA",
+      "pais": "MN",
+      "zona": ""
+    },
+    {
+      "codigo": "MO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MACAU",
+      "pais": "MO",
+      "zona": ""
+    },
+    {
+      "codigo": "MP",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NORTHERN MARIANA ISLANDS",
+      "pais": "MP",
+      "zona": ""
+    },
+    {
+      "codigo": "MR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MAURITANIA",
+      "pais": "MR",
+      "zona": ""
+    },
+    {
+      "codigo": "MS",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MONTSERRAT",
+      "pais": "MS",
+      "zona": ""
+    },
+    {
+      "codigo": "MT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MALTA",
+      "pais": "MT",
+      "zona": ""
+    },
+    {
+      "codigo": "MU",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MAURITIUS",
+      "pais": "MU",
+      "zona": ""
+    },
+    {
+      "codigo": "MV",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MALDIVES",
+      "pais": "MV",
+      "zona": ""
+    },
+    {
+      "codigo": "MW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MALAWI",
+      "pais": "MW",
+      "zona": ""
+    },
+    {
+      "codigo": "MX",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MEXICO",
+      "pais": "MX",
+      "zona": ""
+    },
+    {
+      "codigo": "MY",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MALAYSIA",
+      "pais": "MY",
+      "zona": ""
+    },
+    {
+      "codigo": "MZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MOZAMBIQUE",
+      "pais": "MZ",
+      "zona": ""
+    },
+    {
+      "codigo": "NA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NAMIBIA",
+      "pais": "NA",
+      "zona": ""
+    },
+    {
+      "codigo": "NC",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NEW CALEDONIA",
+      "pais": "NC",
+      "zona": ""
+    },
+    {
+      "codigo": "NE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NIGER",
+      "pais": "NE",
+      "zona": ""
+    },
+    {
+      "codigo": "NG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NIGERIA",
+      "pais": "NG",
+      "zona": ""
+    },
+    {
+      "codigo": "NI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NICARAGUA",
+      "pais": "NI",
+      "zona": ""
+    },
+    {
+      "codigo": "NL",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NETHERLANDS",
+      "pais": "NL",
+      "zona": ""
+    },
+    {
+      "codigo": "NO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NORWAY",
+      "pais": "NO",
+      "zona": ""
+    },
+    {
+      "codigo": "NP",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NEPAL",
+      "pais": "NP",
+      "zona": ""
+    },
+    {
+      "codigo": "NR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NAURU",
+      "pais": "NR",
+      "zona": ""
+    },
+    {
+      "codigo": "NU",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NIUE",
+      "pais": "NU",
+      "zona": ""
+    },
+    {
+      "codigo": "NZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "NEW ZEALAND",
+      "pais": "NZ",
+      "zona": ""
+    },
+    {
+      "codigo": "OM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "OMAN",
+      "pais": "OM",
+      "zona": ""
+    },
+    {
+      "codigo": "PA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PANAMA",
+      "pais": "PA",
+      "zona": ""
+    },
+    {
+      "codigo": "PE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PERU",
+      "pais": "PE",
+      "zona": ""
+    },
+    {
+      "codigo": "PF",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "FRENCH POLYNESIA",
+      "pais": "PF",
+      "zona": ""
+    },
+    {
+      "codigo": "PG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PAPUA NEW GUINEA",
+      "pais": "PG",
+      "zona": ""
+    },
+    {
+      "codigo": "PH",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PHILIPPINES",
+      "pais": "PH",
+      "zona": ""
+    },
+    {
+      "codigo": "PK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PAKISTAN",
+      "pais": "PK",
+      "zona": ""
+    },
+    {
+      "codigo": "PL",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "POLAND",
+      "pais": "PL",
+      "zona": ""
+    },
+    {
+      "codigo": "PM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAINT PIERRE AND MIQUELON",
+      "pais": "PM",
+      "zona": ""
+    },
+    {
+      "codigo": "PN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PITCAIRN",
+      "pais": "PN",
+      "zona": ""
+    },
+    {
+      "codigo": "PR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PUERTO RICO",
+      "pais": "PR",
+      "zona": ""
+    },
+    {
+      "codigo": "PS",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PALESTINE",
+      "pais": "PS",
+      "zona": ""
+    },
+    {
+      "codigo": "PT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PORTUGAL",
+      "pais": "PT",
+      "zona": ""
+    },
+    {
+      "codigo": "PW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PALAU",
+      "pais": "PW",
+      "zona": ""
+    },
+    {
+      "codigo": "PY",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "PARAGUAY",
+      "pais": "PY",
+      "zona": ""
+    },
+    {
+      "codigo": "QA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "QATAR",
+      "pais": "QA",
+      "zona": ""
+    },
+    {
+      "codigo": "RE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "REUNION",
+      "pais": "RE",
+      "zona": ""
+    },
+    {
+      "codigo": "RO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ROMANIA",
+      "pais": "RO",
+      "zona": ""
+    },
+    {
+      "codigo": "RS",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SERBIA",
+      "pais": "RS",
+      "zona": ""
+    },
+    {
+      "codigo": "RU",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "RUSSIA",
+      "pais": "RU",
+      "zona": ""
+    },
+    {
+      "codigo": "RW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "RWANDA",
+      "pais": "RW",
+      "zona": ""
+    },
+    {
+      "codigo": "SA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAUDI ARABIA",
+      "pais": "SA",
+      "zona": ""
+    },
+    {
+      "codigo": "SB",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SOLOMON ISLANDS",
+      "pais": "SB",
+      "zona": ""
+    },
+    {
+      "codigo": "SC",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SEYCHELLES",
+      "pais": "SC",
+      "zona": ""
+    },
+    {
+      "codigo": "SD",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SUDAN",
+      "pais": "SD",
+      "zona": ""
+    },
+    {
+      "codigo": "SE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SWEDEN",
+      "pais": "SE",
+      "zona": ""
+    },
+    {
+      "codigo": "SG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SINGAPORE",
+      "pais": "SG",
+      "zona": ""
+    },
+    {
+      "codigo": "SH",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAINT HELENA",
+      "pais": "SH",
+      "zona": ""
+    },
+    {
+      "codigo": "SI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SLOVENIA",
+      "pais": "SI",
+      "zona": ""
+    },
+    {
+      "codigo": "SJ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SVALBARD AND JAN MAYEN",
+      "pais": "SJ",
+      "zona": ""
+    },
+    {
+      "codigo": "SK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SLOVAKIA",
+      "pais": "SK",
+      "zona": ""
+    },
+    {
+      "codigo": "SL",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SIERRA LEONE",
+      "pais": "SL",
+      "zona": ""
+    },
+    {
+      "codigo": "SM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAN MARINO",
+      "pais": "SM",
+      "zona": ""
+    },
+    {
+      "codigo": "SN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SENEGAL",
+      "pais": "SN",
+      "zona": ""
+    },
+    {
+      "codigo": "SO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SOMALIA",
+      "pais": "SO",
+      "zona": ""
+    },
+    {
+      "codigo": "SR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SURINAME",
+      "pais": "SR",
+      "zona": ""
+    },
+    {
+      "codigo": "SS",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SOUTH SUDAN",
+      "pais": "SS",
+      "zona": ""
+    },
+    {
+      "codigo": "ST",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAO TOME AND PRINCIPE",
+      "pais": "ST",
+      "zona": ""
+    },
+    {
+      "codigo": "SV",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "EL SALVADOR",
+      "pais": "SV",
+      "zona": ""
+    },
+    {
+      "codigo": "SX",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SINT MAARTEN",
+      "pais": "SX",
+      "zona": ""
+    },
+    {
+      "codigo": "SY",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SYRIA",
+      "pais": "SY",
+      "zona": ""
+    },
+    {
+      "codigo": "SZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SWAZILAND",
+      "pais": "SZ",
+      "zona": ""
+    },
+    {
+      "codigo": "TC",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TURKS AND CAICOS ISLANDS",
+      "pais": "TC",
+      "zona": ""
+    },
+    {
+      "codigo": "TD",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "CHAD",
+      "pais": "TD",
+      "zona": ""
+    },
+    {
+      "codigo": "TG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TOGO",
+      "pais": "TG",
+      "zona": ""
+    },
+    {
+      "codigo": "TH",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "THAILAND",
+      "pais": "TH",
+      "zona": ""
+    },
+    {
+      "codigo": "TJ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TAJIKISTAN",
+      "pais": "TJ",
+      "zona": ""
+    },
+    {
+      "codigo": "TK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TOKELAU",
+      "pais": "TK",
+      "zona": ""
+    },
+    {
+      "codigo": "TL",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "EAST TIMOR",
+      "pais": "TL",
+      "zona": ""
+    },
+    {
+      "codigo": "TM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TURKMENISTAN",
+      "pais": "TM",
+      "zona": ""
+    },
+    {
+      "codigo": "TN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TUNISIA",
+      "pais": "TN",
+      "zona": ""
+    },
+    {
+      "codigo": "TO",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TONGA",
+      "pais": "TO",
+      "zona": ""
+    },
+    {
+      "codigo": "TR",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TURKEY",
+      "pais": "TR",
+      "zona": ""
+    },
+    {
+      "codigo": "TT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TRINIDAD AND TOBAGO",
+      "pais": "TT",
+      "zona": ""
+    },
+    {
+      "codigo": "TV",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TUVALU",
+      "pais": "TV",
+      "zona": ""
+    },
+    {
+      "codigo": "TW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TAIWAN",
+      "pais": "TW",
+      "zona": ""
+    },
+    {
+      "codigo": "TZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "TANZANIA",
+      "pais": "TZ",
+      "zona": ""
+    },
+    {
+      "codigo": "UA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "UKRAINE",
+      "pais": "UA",
+      "zona": ""
+    },
+    {
+      "codigo": "UG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "UGANDA",
+      "pais": "UG",
+      "zona": ""
+    },
+    {
+      "codigo": "US",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "UNITED STATES",
+      "pais": "US",
+      "zona": ""
+    },
+    {
+      "codigo": "UY",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "URUGUAY",
+      "pais": "UY",
+      "zona": ""
+    },
+    {
+      "codigo": "UZ",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "UZBEKISTAN",
+      "pais": "UZ",
+      "zona": ""
+    },
+    {
+      "codigo": "VA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "VATICAN",
+      "pais": "VA",
+      "zona": ""
+    },
+    {
+      "codigo": "VC",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAINT VINCENT AND THE GRENADINES",
+      "pais": "VC",
+      "zona": ""
+    },
+    {
+      "codigo": "VE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "VENEZUELA",
+      "pais": "VE",
+      "zona": ""
+    },
+    {
+      "codigo": "VG",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "BRITISH VIRGIN ISLANDS",
+      "pais": "VG",
+      "zona": ""
+    },
+    {
+      "codigo": "VI",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "U.S. VIRGIN ISLANDS",
+      "pais": "VI",
+      "zona": ""
+    },
+    {
+      "codigo": "VN",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "VIETNAM",
+      "pais": "VN",
+      "zona": ""
+    },
+    {
+      "codigo": "VU",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "VANUATU",
+      "pais": "VU",
+      "zona": ""
+    },
+    {
+      "codigo": "WF",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "WALLIS AND FUTUNA",
+      "pais": "WF",
+      "zona": ""
+    },
+    {
+      "codigo": "WS",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SAMOA",
+      "pais": "WS",
+      "zona": ""
+    },
+    {
+      "codigo": "XK",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "KOSOVO",
+      "pais": "XK",
+      "zona": ""
+    },
+    {
+      "codigo": "YE",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "YEMEN",
+      "pais": "YE",
+      "zona": ""
+    },
+    {
+      "codigo": "YT",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "MAYOTTE",
+      "pais": "YT",
+      "zona": ""
+    },
+    {
+      "codigo": "ZA",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "SOUTH AFRICA",
+      "pais": "ZA",
+      "zona": ""
+    },
+    {
+      "codigo": "ZM",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ZAMBIA",
+      "pais": "ZM",
+      "zona": ""
+    },
+    {
+      "codigo": "ZW",
+      "concelho": "",
+      "freguesia": "",
+      "ilha": "",
+      "lugar": "",
+      "nivel": 1,
+      "nome": "ZIMBABWE",
+      "pais": "ZW",
+      "zona": ""
+    }
+  ],
+  "records": [
+    {
+      "code": "AD",
+      "name": "ANDORRA",
+      "published_name": "ANDORRA"
+    },
+    {
+      "code": "AE",
+      "name": "UNITED ARAB EMIRATES",
+      "published_name": "UNITED ARAB EMIRATES"
+    },
+    {
+      "code": "AF",
+      "name": "AFGHANISTAN",
+      "published_name": "AFGHANISTAN"
+    },
+    {
+      "code": "AG",
+      "name": "ANTIGUA AND BARBUDA",
+      "published_name": "ANTIGUA AND BARBUDA"
+    },
+    {
+      "code": "AI",
+      "name": "ANGUILLA",
+      "published_name": "ANGUILLA"
+    },
+    {
+      "code": "AL",
+      "name": "ALBANIA",
+      "published_name": "ALBANIA"
+    },
+    {
+      "code": "AM",
+      "name": "ARMENIA",
+      "published_name": "ARMENIA"
+    },
+    {
+      "code": "AO",
+      "name": "ANGOLA",
+      "published_name": "ANGOLA"
+    },
+    {
+      "code": "AQ",
+      "name": "ANTARCTICA",
+      "published_name": "ANTARCTICA"
+    },
+    {
+      "code": "AR",
+      "name": "ARGENTINA",
+      "published_name": "ARGENTINA"
+    },
+    {
+      "code": "AS",
+      "name": "AMERICAN SAMOA",
+      "published_name": "AMERICAN SAMOA"
+    },
+    {
+      "code": "AT",
+      "name": "AUSTRIA",
+      "published_name": "AUSTRIA"
+    },
+    {
+      "code": "AU",
+      "name": "AUSTRALIA",
+      "published_name": "AUSTRALIA"
+    },
+    {
+      "code": "AW",
+      "name": "ARUBA",
+      "published_name": "ARUBA"
+    },
+    {
+      "code": "AX",
+      "name": "ÅLAND ISLANDS"
+    },
+    {
+      "code": "AZ",
+      "name": "AZERBAIJAN",
+      "published_name": "AZERBAIJAN"
+    },
+    {
+      "code": "BA",
+      "name": "BOSNIA AND HERZEGOVINA",
+      "published_name": "BOSNIA AND HERZEGOVINA"
+    },
+    {
+      "code": "BB",
+      "name": "BARBADOS",
+      "published_name": "BARBADOS"
+    },
+    {
+      "code": "BD",
+      "name": "BANGLADESH",
+      "published_name": "BANGLADESH"
+    },
+    {
+      "code": "BE",
+      "name": "BELGIUM",
+      "published_name": "BELGIUM"
+    },
+    {
+      "code": "BF",
+      "name": "BURKINA FASO",
+      "published_name": "BURKINA FASO"
+    },
+    {
+      "code": "BG",
+      "name": "BULGARIA",
+      "published_name": "BULGARIA"
+    },
+    {
+      "code": "BH",
+      "name": "BAHRAIN",
+      "published_name": "BAHRAIN"
+    },
+    {
+      "code": "BI",
+      "name": "BURUNDI",
+      "published_name": "BURUNDI"
+    },
+    {
+      "code": "BJ",
+      "name": "BENIN",
+      "published_name": "BENIN"
+    },
+    {
+      "code": "BL",
+      "name": "SAINT BARTHÉLEMY",
+      "published_name": "SAINT BARTHELEMY"
+    },
+    {
+      "code": "BM",
+      "name": "BERMUDA",
+      "published_name": "BERMUDA"
+    },
+    {
+      "code": "BN",
+      "name": "BRUNEI DARUSSALAM",
+      "published_name": "BRUNEI"
+    },
+    {
+      "code": "BO",
+      "name": "BOLIVIA (PLURINATIONAL STATE OF)",
+      "published_name": "BOLIVIA"
+    },
+    {
+      "code": "BQ",
+      "name": "BONAIRE, SINT EUSTATIUS AND SABA"
+    },
+    {
+      "code": "BR",
+      "name": "BRAZIL",
+      "published_name": "BRAZIL"
+    },
+    {
+      "code": "BS",
+      "name": "BAHAMAS",
+      "published_name": "BAHAMAS"
+    },
+    {
+      "code": "BT",
+      "name": "BHUTAN",
+      "published_name": "BHUTAN"
+    },
+    {
+      "code": "BV",
+      "name": "BOUVET ISLAND"
+    },
+    {
+      "code": "BW",
+      "name": "BOTSWANA",
+      "published_name": "BOTSWANA"
+    },
+    {
+      "code": "BY",
+      "name": "BELARUS",
+      "published_name": "BELARUS"
+    },
+    {
+      "code": "BZ",
+      "name": "BELIZE",
+      "published_name": "BELIZE"
+    },
+    {
+      "code": "CA",
+      "name": "CANADA",
+      "published_name": "CANADA"
+    },
+    {
+      "code": "CC",
+      "name": "COCOS (KEELING) ISLANDS",
+      "published_name": "COCOS ISLANDS"
+    },
+    {
+      "code": "CD",
+      "name": "CONGO, DEMOCRATIC REPUBLIC OF",
+      "published_name": "DEMOCRATIC REPUBLIC OF THE CONGO"
+    },
+    {
+      "code": "CF",
+      "name": "CENTRAL AFRICAN REPUBLIC",
+      "published_name": "CENTRAL AFRICAN REPUBLIC"
+    },
+    {
+      "code": "CG",
+      "name": "CONGO",
+      "published_name": "REPUBLIC OF THE CONGO"
+    },
+    {
+      "code": "CH",
+      "name": "SWITZERLAND",
+      "published_name": "SWITZERLAND"
+    },
+    {
+      "code": "CI",
+      "name": "COTE D'IVOIRE",
+      "published_name": "IVORY COAST"
+    },
+    {
+      "code": "CK",
+      "name": "COOK ISLANDS",
+      "published_name": "COOK ISLANDS"
+    },
+    {
+      "code": "CL",
+      "name": "CHILE",
+      "published_name": "CHILE"
+    },
+    {
+      "code": "CM",
+      "name": "CAMEROON",
+      "published_name": "CAMEROON"
+    },
+    {
+      "code": "CN",
+      "name": "CHINA",
+      "published_name": "CHINA"
+    },
+    {
+      "code": "CO",
+      "name": "COLOMBIA",
+      "published_name": "COLOMBIA"
+    },
+    {
+      "code": "CR",
+      "name": "COSTA RICA",
+      "published_name": "COSTA RICA"
+    },
+    {
+      "code": "CU",
+      "name": "CUBA",
+      "published_name": "CUBA"
+    },
+    {
+      "code": "CV",
+      "name": "CABO VERDE",
+      "published_name": "CAPE VERDE"
+    },
+    {
+      "code": "CW",
+      "name": "CURAÇAO",
+      "published_name": "CURACAO"
+    },
+    {
+      "code": "CX",
+      "name": "CHRISTMAS ISLAND",
+      "published_name": "CHRISTMAS ISLAND"
+    },
+    {
+      "code": "CY",
+      "name": "CYPRUS",
+      "published_name": "CYPRUS"
+    },
+    {
+      "code": "CZ",
+      "name": "CZECHIA",
+      "published_name": "CZECH REPUBLIC"
+    },
+    {
+      "code": "DE",
+      "name": "GERMANY",
+      "published_name": "GERMANY"
+    },
+    {
+      "code": "DJ",
+      "name": "DJIBOUTI",
+      "published_name": "DJIBOUTI"
+    },
+    {
+      "code": "DK",
+      "name": "DENMARK",
+      "published_name": "DENMARK"
+    },
+    {
+      "code": "DM",
+      "name": "DOMINICA",
+      "published_name": "DOMINICA"
+    },
+    {
+      "code": "DO",
+      "name": "DOMINICAN REPUBLIC",
+      "published_name": "DOMINICAN REPUBLIC"
+    },
+    {
+      "code": "DZ",
+      "name": "ALGERIA",
+      "published_name": "ALGERIA"
+    },
+    {
+      "code": "EC",
+      "name": "ECUADOR",
+      "published_name": "ECUADOR"
+    },
+    {
+      "code": "EE",
+      "name": "ESTONIA",
+      "published_name": "ESTONIA"
+    },
+    {
+      "code": "EG",
+      "name": "EGYPT",
+      "published_name": "EGYPT"
+    },
+    {
+      "code": "EH",
+      "name": "WESTERN SAHARA",
+      "published_name": "WESTERN SAHARA"
+    },
+    {
+      "code": "ER",
+      "name": "ERITREA",
+      "published_name": "ERITREA"
+    },
+    {
+      "code": "ES",
+      "name": "SPAIN",
+      "published_name": "SPAIN"
+    },
+    {
+      "code": "ET",
+      "name": "ETHIOPIA",
+      "published_name": "ETHIOPIA"
+    },
+    {
+      "code": "FI",
+      "name": "FINLAND",
+      "published_name": "FINLAND"
+    },
+    {
+      "code": "FJ",
+      "name": "FIJI",
+      "published_name": "FIJI"
+    },
+    {
+      "code": "FK",
+      "name": "FALKLAND ISLANDS (MALVINAS)",
+      "published_name": "FALKLAND ISLANDS"
+    },
+    {
+      "code": "FM",
+      "name": "MICRONESIA (FEDERATED STATES OF)",
+      "published_name": "MICRONESIA"
+    },
+    {
+      "code": "FO",
+      "name": "FAROE ISLANDS",
+      "published_name": "FAROE ISLANDS"
+    },
+    {
+      "code": "FR",
+      "name": "FRANCE",
+      "published_name": "FRANCE"
+    },
+    {
+      "code": "GA",
+      "name": "GABON",
+      "published_name": "GABON"
+    },
+    {
+      "code": "GB",
+      "name": "UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND",
+      "published_name": "UNITED KINGDOM"
+    },
+    {
+      "code": "GD",
+      "name": "GRENADA",
+      "published_name": "GRENADA"
+    },
+    {
+      "code": "GE",
+      "name": "GEORGIA",
+      "published_name": "GEORGIA"
+    },
+    {
+      "code": "GF",
+      "name": "FRENCH GUIANA"
+    },
+    {
+      "code": "GG",
+      "name": "GUERNSEY",
+      "published_name": "GUERNSEY"
+    },
+    {
+      "code": "GH",
+      "name": "GHANA",
+      "published_name": "GHANA"
+    },
+    {
+      "code": "GI",
+      "name": "GIBRALTAR",
+      "published_name": "GIBRALTAR"
+    },
+    {
+      "code": "GL",
+      "name": "GREENLAND",
+      "published_name": "GREENLAND"
+    },
+    {
+      "code": "GM",
+      "name": "GAMBIA",
+      "published_name": "GAMBIA"
+    },
+    {
+      "code": "GN",
+      "name": "GUINEA",
+      "published_name": "GUINEA"
+    },
+    {
+      "code": "GP",
+      "name": "GUADELOUPE"
+    },
+    {
+      "code": "GQ",
+      "name": "EQUATORIAL GUINEA",
+      "published_name": "EQUATORIAL GUINEA"
+    },
+    {
+      "code": "GR",
+      "name": "GREECE",
+      "published_name": "GREECE"
+    },
+    {
+      "code": "GS",
+      "name": "SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS"
+    },
+    {
+      "code": "GT",
+      "name": "GUATEMALA",
+      "published_name": "GUATEMALA"
+    },
+    {
+      "code": "GU",
+      "name": "GUAM",
+      "published_name": "GUAM"
+    },
+    {
+      "code": "GW",
+      "name": "GUINEA-BISSAU",
+      "published_name": "GUINEA-BISSAU"
+    },
+    {
+      "code": "GY",
+      "name": "GUYANA",
+      "published_name": "GUYANA"
+    },
+    {
+      "code": "HK",
+      "name": "HONG KONG",
+      "published_name": "HONG KONG"
+    },
+    {
+      "code": "HM",
+      "name": "HEARD ISLAND AND MCDONALD ISLANDS"
+    },
+    {
+      "code": "HN",
+      "name": "HONDURAS",
+      "published_name": "HONDURAS"
+    },
+    {
+      "code": "HR",
+      "name": "CROATIA",
+      "published_name": "CROATIA"
+    },
+    {
+      "code": "HT",
+      "name": "HAITI",
+      "published_name": "HAITI"
+    },
+    {
+      "code": "HU",
+      "name": "HUNGARY",
+      "published_name": "HUNGARY"
+    },
+    {
+      "code": "ID",
+      "name": "INDONESIA",
+      "published_name": "INDONESIA"
+    },
+    {
+      "code": "IE",
+      "name": "IRELAND",
+      "published_name": "IRELAND"
+    },
+    {
+      "code": "IL",
+      "name": "ISRAEL",
+      "published_name": "ISRAEL"
+    },
+    {
+      "code": "IM",
+      "name": "ISLE OF MAN",
+      "published_name": "ISLE OF MAN"
+    },
+    {
+      "code": "IN",
+      "name": "INDIA",
+      "published_name": "INDIA"
+    },
+    {
+      "code": "IO",
+      "name": "BRITISH INDIAN OCEAN TERRITORY",
+      "published_name": "BRITISH INDIAN OCEAN TERRITORY"
+    },
+    {
+      "code": "IQ",
+      "name": "IRAQ",
+      "published_name": "IRAQ"
+    },
+    {
+      "code": "IR",
+      "name": "IRAN (ISLAMIC REPUBLIC OF)",
+      "published_name": "IRAN"
+    },
+    {
+      "code": "IS",
+      "name": "ICELAND",
+      "published_name": "ICELAND"
+    },
+    {
+      "code": "IT",
+      "name": "ITALY",
+      "published_name": "ITALY"
+    },
+    {
+      "code": "JE",
+      "name": "JERSEY",
+      "published_name": "JERSEY"
+    },
+    {
+      "code": "JM",
+      "name": "JAMAICA",
+      "published_name": "JAMAICA"
+    },
+    {
+      "code": "JO",
+      "name": "JORDAN",
+      "published_name": "JORDAN"
+    },
+    {
+      "code": "JP",
+      "name": "JAPAN",
+      "published_name": "JAPAN"
+    },
+    {
+      "code": "KE",
+      "name": "KENYA",
+      "published_name": "KENYA"
+    },
+    {
+      "code": "KG",
+      "name": "KYRGYZSTAN",
+      "published_name": "KYRGYZSTAN"
+    },
+    {
+      "code": "KH",
+      "name": "CAMBODIA",
+      "published_name": "CAMBODIA"
+    },
+    {
+      "code": "KI",
+      "name": "KIRIBATI",
+      "published_name": "KIRIBATI"
+    },
+    {
+      "code": "KM",
+      "name": "COMOROS",
+      "published_name": "COMOROS"
+    },
+    {
+      "code": "KN",
+      "name": "SAINT KITTS AND NEVIS",
+      "published_name": "SAINT KITTS AND NEVIS"
+    },
+    {
+      "code": "KP",
+      "name": "KOREA (DEMOCRATIC PEOPLE'S REPUBLIC OF)",
+      "published_name": "NORTH KOREA"
+    },
+    {
+      "code": "KR",
+      "name": "KOREA, REPUBLIC OF",
+      "published_name": "SOUTH KOREA"
+    },
+    {
+      "code": "KW",
+      "name": "KUWAIT",
+      "published_name": "KUWAIT"
+    },
+    {
+      "code": "KY",
+      "name": "CAYMAN ISLANDS",
+      "published_name": "CAYMAN ISLANDS"
+    },
+    {
+      "code": "KZ",
+      "name": "KAZAKHSTAN",
+      "published_name": "KAZAKHSTAN"
+    },
+    {
+      "code": "LA",
+      "name": "LAO PEOPLE'S DEMOCRATIC REPUBLIC",
+      "published_name": "LAOS"
+    },
+    {
+      "code": "LB",
+      "name": "LEBANON",
+      "published_name": "LEBANON"
+    },
+    {
+      "code": "LC",
+      "name": "SAINT LUCIA",
+      "published_name": "SAINT LUCIA"
+    },
+    {
+      "code": "LI",
+      "name": "LIECHTENSTEIN",
+      "published_name": "LIECHTENSTEIN"
+    },
+    {
+      "code": "LK",
+      "name": "SRI LANKA",
+      "published_name": "SRI LANKA"
+    },
+    {
+      "code": "LR",
+      "name": "LIBERIA",
+      "published_name": "LIBERIA"
+    },
+    {
+      "code": "LS",
+      "name": "LESOTHO",
+      "published_name": "LESOTHO"
+    },
+    {
+      "code": "LT",
+      "name": "LITHUANIA",
+      "published_name": "LITHUANIA"
+    },
+    {
+      "code": "LU",
+      "name": "LUXEMBOURG",
+      "published_name": "LUXEMBOURG"
+    },
+    {
+      "code": "LV",
+      "name": "LATVIA",
+      "published_name": "LATVIA"
+    },
+    {
+      "code": "LY",
+      "name": "LIBYA",
+      "published_name": "LIBYA"
+    },
+    {
+      "code": "MA",
+      "name": "MOROCCO",
+      "published_name": "MOROCCO"
+    },
+    {
+      "code": "MC",
+      "name": "MONACO",
+      "published_name": "MONACO"
+    },
+    {
+      "code": "MD",
+      "name": "MOLDOVA, REPUBLIC OF",
+      "published_name": "MOLDOVA"
+    },
+    {
+      "code": "ME",
+      "name": "MONTENEGRO",
+      "published_name": "MONTENEGRO"
+    },
+    {
+      "code": "MF",
+      "name": "SAINT MARTIN (FRENCH PART)",
+      "published_name": "SAINT MARTIN"
+    },
+    {
+      "code": "MG",
+      "name": "MADAGASCAR",
+      "published_name": "MADAGASCAR"
+    },
+    {
+      "code": "MH",
+      "name": "MARSHALL ISLANDS",
+      "published_name": "MARSHALL ISLANDS"
+    },
+    {
+      "code": "MK",
+      "name": "NORTH MACEDONIA",
+      "published_name": "MACEDONIA"
+    },
+    {
+      "code": "ML",
+      "name": "MALI",
+      "published_name": "MALI"
+    },
+    {
+      "code": "MM",
+      "name": "MYANMAR",
+      "published_name": "MYANMAR"
+    },
+    {
+      "code": "MN",
+      "name": "MONGOLIA",
+      "published_name": "MONGOLIA"
+    },
+    {
+      "code": "MO",
+      "name": "MACAO",
+      "published_name": "MACAU"
+    },
+    {
+      "code": "MP",
+      "name": "NORTHERN MARIANA ISLANDS",
+      "published_name": "NORTHERN MARIANA ISLANDS"
+    },
+    {
+      "code": "MQ",
+      "name": "MARTINIQUE"
+    },
+    {
+      "code": "MR",
+      "name": "MAURITANIA",
+      "published_name": "MAURITANIA"
+    },
+    {
+      "code": "MS",
+      "name": "MONTSERRAT",
+      "published_name": "MONTSERRAT"
+    },
+    {
+      "code": "MT",
+      "name": "MALTA",
+      "published_name": "MALTA"
+    },
+    {
+      "code": "MU",
+      "name": "MAURITIUS",
+      "published_name": "MAURITIUS"
+    },
+    {
+      "code": "MV",
+      "name": "MALDIVES",
+      "published_name": "MALDIVES"
+    },
+    {
+      "code": "MW",
+      "name": "MALAWI",
+      "published_name": "MALAWI"
+    },
+    {
+      "code": "MX",
+      "name": "MEXICO",
+      "published_name": "MEXICO"
+    },
+    {
+      "code": "MY",
+      "name": "MALAYSIA",
+      "published_name": "MALAYSIA"
+    },
+    {
+      "code": "MZ",
+      "name": "MOZAMBIQUE",
+      "published_name": "MOZAMBIQUE"
+    },
+    {
+      "code": "NA",
+      "name": "NAMIBIA",
+      "published_name": "NAMIBIA"
+    },
+    {
+      "code": "NC",
+      "name": "NEW CALEDONIA",
+      "published_name": "NEW CALEDONIA"
+    },
+    {
+      "code": "NE",
+      "name": "NIGER",
+      "published_name": "NIGER"
+    },
+    {
+      "code": "NF",
+      "name": "NORFOLK ISLAND"
+    },
+    {
+      "code": "NG",
+      "name": "NIGERIA",
+      "published_name": "NIGERIA"
+    },
+    {
+      "code": "NI",
+      "name": "NICARAGUA",
+      "published_name": "NICARAGUA"
+    },
+    {
+      "code": "NL",
+      "name": "NETHERLANDS",
+      "published_name": "NETHERLANDS"
+    },
+    {
+      "code": "NO",
+      "name": "NORWAY",
+      "published_name": "NORWAY"
+    },
+    {
+      "code": "NP",
+      "name": "NEPAL",
+      "published_name": "NEPAL"
+    },
+    {
+      "code": "NR",
+      "name": "NAURU",
+      "published_name": "NAURU"
+    },
+    {
+      "code": "NU",
+      "name": "NIUE",
+      "published_name": "NIUE"
+    },
+    {
+      "code": "NZ",
+      "name": "NEW ZEALAND",
+      "published_name": "NEW ZEALAND"
+    },
+    {
+      "code": "OM",
+      "name": "OMAN",
+      "published_name": "OMAN"
+    },
+    {
+      "code": "PA",
+      "name": "PANAMA",
+      "published_name": "PANAMA"
+    },
+    {
+      "code": "PE",
+      "name": "PERU",
+      "published_name": "PERU"
+    },
+    {
+      "code": "PF",
+      "name": "FRENCH POLYNESIA",
+      "published_name": "FRENCH POLYNESIA"
+    },
+    {
+      "code": "PG",
+      "name": "PAPUA NEW GUINEA",
+      "published_name": "PAPUA NEW GUINEA"
+    },
+    {
+      "code": "PH",
+      "name": "PHILIPPINES",
+      "published_name": "PHILIPPINES"
+    },
+    {
+      "code": "PK",
+      "name": "PAKISTAN",
+      "published_name": "PAKISTAN"
+    },
+    {
+      "code": "PL",
+      "name": "POLAND",
+      "published_name": "POLAND"
+    },
+    {
+      "code": "PM",
+      "name": "SAINT PIERRE AND MIQUELON",
+      "published_name": "SAINT PIERRE AND MIQUELON"
+    },
+    {
+      "code": "PN",
+      "name": "PITCAIRN",
+      "published_name": "PITCAIRN"
+    },
+    {
+      "code": "PR",
+      "name": "PUERTO RICO",
+      "published_name": "PUERTO RICO"
+    },
+    {
+      "code": "PS",
+      "name": "PALESTINE, STATE OF",
+      "published_name": "PALESTINE"
+    },
+    {
+      "code": "PT",
+      "name": "PORTUGAL",
+      "published_name": "PORTUGAL"
+    },
+    {
+      "code": "PW",
+      "name": "PALAU",
+      "published_name": "PALAU"
+    },
+    {
+      "code": "PY",
+      "name": "PARAGUAY",
+      "published_name": "PARAGUAY"
+    },
+    {
+      "code": "QA",
+      "name": "QATAR",
+      "published_name": "QATAR"
+    },
+    {
+      "code": "RE",
+      "name": "REUNION",
+      "published_name": "REUNION"
+    },
+    {
+      "code": "RO",
+      "name": "ROMANIA",
+      "published_name": "ROMANIA"
+    },
+    {
+      "code": "RS",
+      "name": "SERBIA",
+      "published_name": "SERBIA"
+    },
+    {
+      "code": "RU",
+      "name": "RUSSIAN FEDERATION",
+      "published_name": "RUSSIA"
+    },
+    {
+      "code": "RW",
+      "name": "RWANDA",
+      "published_name": "RWANDA"
+    },
+    {
+      "code": "SA",
+      "name": "SAUDI ARABIA",
+      "published_name": "SAUDI ARABIA"
+    },
+    {
+      "code": "SB",
+      "name": "SOLOMON ISLANDS",
+      "published_name": "SOLOMON ISLANDS"
+    },
+    {
+      "code": "SC",
+      "name": "SEYCHELLES",
+      "published_name": "SEYCHELLES"
+    },
+    {
+      "code": "SD",
+      "name": "SUDAN",
+      "published_name": "SUDAN"
+    },
+    {
+      "code": "SE",
+      "name": "SWEDEN",
+      "published_name": "SWEDEN"
+    },
+    {
+      "code": "SG",
+      "name": "SINGAPORE",
+      "published_name": "SINGAPORE"
+    },
+    {
+      "code": "SH",
+      "name": "SAINT HELENA, ASCENSION AND TRISTAN DA CUNHA",
+      "published_name": "SAINT HELENA"
+    },
+    {
+      "code": "SI",
+      "name": "SLOVENIA",
+      "published_name": "SLOVENIA"
+    },
+    {
+      "code": "SJ",
+      "name": "SVALBARD AND JAN MAYEN",
+      "published_name": "SVALBARD AND JAN MAYEN"
+    },
+    {
+      "code": "SK",
+      "name": "SLOVAKIA",
+      "published_name": "SLOVAKIA"
+    },
+    {
+      "code": "SL",
+      "name": "SIERRA LEONE",
+      "published_name": "SIERRA LEONE"
+    },
+    {
+      "code": "SM",
+      "name": "SAN MARINO",
+      "published_name": "SAN MARINO"
+    },
+    {
+      "code": "SN",
+      "name": "SENEGAL",
+      "published_name": "SENEGAL"
+    },
+    {
+      "code": "SO",
+      "name": "SOMALIA",
+      "published_name": "SOMALIA"
+    },
+    {
+      "code": "SR",
+      "name": "SURINAME",
+      "published_name": "SURINAME"
+    },
+    {
+      "code": "SS",
+      "name": "SOUTH SUDAN",
+      "published_name": "SOUTH SUDAN"
+    },
+    {
+      "code": "ST",
+      "name": "SAO TOME AND PRINCIPE",
+      "published_name": "SAO TOME AND PRINCIPE"
+    },
+    {
+      "code": "SV",
+      "name": "EL SALVADOR",
+      "published_name": "EL SALVADOR"
+    },
+    {
+      "code": "SX",
+      "name": "SINT MAARTEN (DUTCH PART)",
+      "published_name": "SINT MAARTEN"
+    },
+    {
+      "code": "SY",
+      "name": "SYRIAN ARAB REPUBLIC",
+      "published_name": "SYRIA"
+    },
+    {
+      "code": "SZ",
+      "name": "ESWATINI",
+      "published_name": "SWAZILAND"
+    },
+    {
+      "code": "TC",
+      "name": "TURKS AND CAICOS ISLANDS",
+      "published_name": "TURKS AND CAICOS ISLANDS"
+    },
+    {
+      "code": "TD",
+      "name": "CHAD",
+      "published_name": "CHAD"
+    },
+    {
+      "code": "TF",
+      "name": "FRENCH SOUTHERN TERRITORIES"
+    },
+    {
+      "code": "TG",
+      "name": "TOGO",
+      "published_name": "TOGO"
+    },
+    {
+      "code": "TH",
+      "name": "THAILAND",
+      "published_name": "THAILAND"
+    },
+    {
+      "code": "TJ",
+      "name": "TAJIKISTAN",
+      "published_name": "TAJIKISTAN"
+    },
+    {
+      "code": "TK",
+      "name": "TOKELAU",
+      "published_name": "TOKELAU"
+    },
+    {
+      "code": "TL",
+      "name": "TIMOR-LESTE",
+      "published_name": "EAST TIMOR"
+    },
+    {
+      "code": "TM",
+      "name": "TURKMENISTAN",
+      "published_name": "TURKMENISTAN"
+    },
+    {
+      "code": "TN",
+      "name": "TUNISIA",
+      "published_name": "TUNISIA"
+    },
+    {
+      "code": "TO",
+      "name": "TONGA",
+      "published_name": "TONGA"
+    },
+    {
+      "code": "TR",
+      "name": "TURKEY",
+      "published_name": "TURKEY"
+    },
+    {
+      "code": "TT",
+      "name": "TRINIDAD AND TOBAGO",
+      "published_name": "TRINIDAD AND TOBAGO"
+    },
+    {
+      "code": "TV",
+      "name": "TUVALU",
+      "published_name": "TUVALU"
+    },
+    {
+      "code": "TW",
+      "name": "TAIWAN, PROVINCE OF CHINA",
+      "published_name": "TAIWAN"
+    },
+    {
+      "code": "TZ",
+      "name": "TANZANIA, UNITED REPUBLIC OF",
+      "published_name": "TANZANIA"
+    },
+    {
+      "code": "UA",
+      "name": "UKRAINE",
+      "published_name": "UKRAINE"
+    },
+    {
+      "code": "UG",
+      "name": "UGANDA",
+      "published_name": "UGANDA"
+    },
+    {
+      "code": "UM",
+      "name": "UNITED STATES MINOR OUTLYING ISLANDS"
+    },
+    {
+      "code": "US",
+      "name": "UNITED STATES OF AMERICA",
+      "published_name": "UNITED STATES"
+    },
+    {
+      "code": "UY",
+      "name": "URUGUAY",
+      "published_name": "URUGUAY"
+    },
+    {
+      "code": "UZ",
+      "name": "UZBEKISTAN",
+      "published_name": "UZBEKISTAN"
+    },
+    {
+      "code": "VA",
+      "name": "HOLY SEE",
+      "published_name": "VATICAN"
+    },
+    {
+      "code": "VC",
+      "name": "SAINT VINCENT AND THE GRENADINES",
+      "published_name": "SAINT VINCENT AND THE GRENADINES"
+    },
+    {
+      "code": "VE",
+      "name": "VENEZUELA (BOLIVARIAN REPUBLIC OF)",
+      "published_name": "VENEZUELA"
+    },
+    {
+      "code": "VG",
+      "name": "VIRGIN ISLANDS, BRITISH",
+      "published_name": "BRITISH VIRGIN ISLANDS"
+    },
+    {
+      "code": "VI",
+      "name": "VIRGIN ISLANDS, U.S.",
+      "published_name": "U.S. VIRGIN ISLANDS"
+    },
+    {
+      "code": "VN",
+      "name": "VIET NAM",
+      "published_name": "VIETNAM"
+    },
+    {
+      "code": "VU",
+      "name": "VANUATU",
+      "published_name": "VANUATU"
+    },
+    {
+      "code": "WF",
+      "name": "WALLIS AND FUTUNA",
+      "published_name": "WALLIS AND FUTUNA"
+    },
+    {
+      "code": "WS",
+      "name": "SAMOA",
+      "published_name": "SAMOA"
+    },
+    {
+      "code": "YE",
+      "name": "YEMEN",
+      "published_name": "YEMEN"
+    },
+    {
+      "code": "YT",
+      "name": "MAYOTTE",
+      "published_name": "MAYOTTE"
+    },
+    {
+      "code": "ZA",
+      "name": "SOUTH AFRICA",
+      "published_name": "SOUTH AFRICA"
+    },
+    {
+      "code": "ZM",
+      "name": "ZAMBIA",
+      "published_name": "ZAMBIA"
+    },
+    {
+      "code": "ZW",
+      "name": "ZIMBABWE",
+      "published_name": "ZIMBABWE"
+    }
+  ],
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "xsd/efatura/2024-05-27/common/ISO_ISOTwo-letterCountryCode_SecondEdition2006.xsd",
+      "sha256": "18e89626bee20422a9eaef80e4547893283ebe337ae9b7e6c00c49c5ab20d18c"
+    },
+    {
+      "path": "catalogs/source/codigo-paises-lugares-cv.xlsx",
+      "sha256": "82422c6d3533a325265ede53e9dfaf1469e329306afc6909f1d9f99c913e00a2"
+    },
+    {
+      "path": "catalogs/source/2024-05-27-XML-XSD.zip",
+      "sha256": "1ec1b89aab234e5da75c280eaa30346f23340515f557a392efe01f2493638d3c"
+    }
+  ]
+}
