@@ -8,11 +8,6 @@ use Akira\Efatura\Data\EventNumberRangeData;
 use Akira\Efatura\Data\FiscalDocumentData;
 use Akira\Efatura\Data\QuantityData;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 dataset('ascii punctuation between Z and a', ['[', '\\', ']', '^', '`']);
 

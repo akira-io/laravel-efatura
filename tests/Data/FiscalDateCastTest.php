@@ -10,7 +10,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 
 final class CustomFormatFiscalDateData extends Data
 {
@@ -21,7 +20,6 @@ final class CustomFormatFiscalDateData extends Data
 }
 
 it('preserves fiscal wall-clock fields across a host DST gap', function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     $originalTimezone = date_default_timezone_get();
 
     try {
@@ -44,14 +42,11 @@ it('preserves fiscal wall-clock fields across a host DST gap', function (): void
             ->and($event->toArray()['issueDateTime'])->toBe('2026-03-29T02:30:00')
             ->and($event->issueDateTime->timezoneName)->toBe('Atlantic/Cape_Verde');
     } finally {
-        CarbonImmutable::setTestNow();
         date_default_timezone_set($originalTimezone);
     }
 });
 
 it('parses a validated custom fiscal date format', function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-
     $date = CustomFormatFiscalDateData::from(['date' => '29/03/2026'])->date;
 
     expect($date->format('Y-m-d'))->toBe('2026-03-29')
@@ -59,7 +54,6 @@ it('parses a validated custom fiscal date format', function (): void {
 });
 
 it('reports a fiscal date cast failure at its full path', function (mixed $date): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     $payments    = array_fill(0, 4, ['paymentMeansCode' => '10', 'paymentDate' => '2026-10-02']);
     $payments[3] = ['paymentMeansCode' => '10', 'paymentDate' => $date];
 
@@ -75,8 +69,6 @@ it('reports a fiscal date cast failure at its full path', function (mixed $date)
 ]);
 
 it('reports a top-level fiscal date cast failure at its own field', function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-
     expect(fn (): CustomFormatFiscalDateData => CustomFormatFiscalDateData::from(['date' => '31/02/2026']))
         ->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['date' => ['The date must use a valid fiscal date or time.']]);

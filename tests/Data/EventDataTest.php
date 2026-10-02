@@ -4,11 +4,6 @@ declare(strict_types=1);
 use Akira\Efatura\Data\EventData;
 use Akira\Efatura\Enums\EventType;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 it('validates cancellation and unused number event payload choices', function (): void {
     $common = ['emitterTaxId' => ['value' => '100200300', 'countryCode' => 'CV'], 'issueDateTime' => '2026-10-02T12:00:00', 'issueReasonDescription' => 'Document cancelled by emitter'];

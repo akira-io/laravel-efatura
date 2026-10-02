@@ -8,11 +8,6 @@ use Akira\Efatura\Money\FiscalMoney;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Brick\Math\RoundingMode;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 function verifiesTotals(array $lines, TotalsData $totals): void
 {

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 use Akira\Efatura\Data\ElectronicInvoiceData;
 use Illuminate\Support\Str;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 
 it('runs the published quick start as a canonical exact value invoice', function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     $readme   = file_get_contents(__DIR__ . '/../../README.md');
     $example  = Str::of($readme)->after('## Quick Start')->after('```php')->before('```')->toString();
     $document = null;

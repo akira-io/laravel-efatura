@@ -26,11 +26,6 @@ use Akira\Efatura\Money\FiscalMoney;
 use Brick\Math\BigDecimal;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 it('models the full item and line graph with exact money and immutable arrays', function (): void {
     $line = LineItemData::from([

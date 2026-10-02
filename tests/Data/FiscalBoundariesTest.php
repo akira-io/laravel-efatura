@@ -28,11 +28,6 @@ use Brick\Money\Context\CustomContext;
 use Brick\Money\Money;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 it('rejects pretyped invalid money in every owning field through construction', function (string $class, array $payload, string $field): void {
     foreach (['from', 'validateAndCreate'] as $method) {

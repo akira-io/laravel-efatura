@@ -12,14 +12,8 @@ use Akira\Efatura\Tests\Support\BuilderFixtures as B;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 beforeEach(fn () => CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00'));
-afterEach(fn () => CarbonImmutable::setTestNow());
 it('validates document graphs assembled from data objects', function (): void {
     $payload = F::payload();
     $graph   = ['header' => DocumentHeaderData::from($payload['header']), 'emitter' => PartyData::from($payload['emitter']), 'receiver' => PartyData::from($payload['receiver']), 'lines' => [], 'totals' => F::totals()];

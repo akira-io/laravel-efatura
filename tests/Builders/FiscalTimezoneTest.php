@@ -22,10 +22,8 @@ use Carbon\FactoryImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Validation\ValidationException;
 use Psr\Clock\ClockInterface;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 
 beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     $this->originalTimezone = date_default_timezone_get();
     config(['app.timezone' => 'UTC']);
     date_default_timezone_set('UTC');
@@ -33,7 +31,6 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CarbonImmutable::setTestNow();
     date_default_timezone_set($this->originalTimezone);
 });
 

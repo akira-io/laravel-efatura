@@ -8,11 +8,6 @@ use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\Money\FiscalMoney;
 use Brick\Money\Money;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 it('accepts every official alternative currency the XSD enumerates', function (string $currency): void {
     $amount = PayableAlternativeAmountData::from(['value' => '1.5', 'currencyCode' => $currency, 'exchangeRate' => '150']);

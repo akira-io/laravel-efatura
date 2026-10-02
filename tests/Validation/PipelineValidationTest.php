@@ -12,14 +12,10 @@ use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator as LaravelValidator;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 
 beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
 });
-
-afterEach(fn () => CarbonImmutable::setTestNow());
 
 function pipelineErrorsOf(Closure $creation): array
 {

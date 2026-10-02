@@ -16,14 +16,10 @@ use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 
 beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
 });
-
-afterEach(fn () => CarbonImmutable::setTestNow());
 
 it('accepts the fixture inside the online window of the fiscal clock', function (): void {
     expect(ElectronicInvoiceData::from(F::payload()))->toBeInstanceOf(ElectronicInvoiceData::class);

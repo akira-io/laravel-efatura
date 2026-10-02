@@ -11,7 +11,6 @@ use Brick\Money\Money;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 
 it('reports each fiscal number failure with its own message', function (mixed $value, FiscalNumber $rule, ?string $message): void {
     $errors = Validator::make(['value' => $value], ['value' => [$rule]])->errors()->get('value');
@@ -47,7 +46,6 @@ it('rejects an impossible rule definition as a programming error', function (Clo
 ]);
 
 it('reports an excess line amount precision at its full path', function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
     $lines             = array_fill(0, 4, F::linePayload());
     $lines[3]['price'] = '1.123456';
@@ -56,6 +54,4 @@ it('reports an excess line amount precision at its full path', function (): void
         ->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['lines.3.price' => ['Value exceeds the allowed decimal precision.']]);
         });
-
-    CarbonImmutable::setTestNow();
 });

@@ -6,12 +6,7 @@ use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Casts\MoneyCast;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\TotalsData;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 use Spatie\LaravelData\Support\DataConfig;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 it('casts and transforms CVE amounts through one attribute', function (): void {
     $property = resolve(DataConfig::class)->getDataClass(TotalsData::class)->properties['payableAmount'];

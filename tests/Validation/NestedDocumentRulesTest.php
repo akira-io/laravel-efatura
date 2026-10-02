@@ -7,13 +7,10 @@ use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 
 beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
 });
-afterEach(fn () => CarbonImmutable::setTestNow());
 it('resolves conditional fields relative to their nested owning data', function (): void {
     $payload = F::payload(['receiver' => ['reference' => 'EP'],
         'lines'                       => [F::linePayload(['taxes' => [['taxTypeCode' => 'NA', 'taxExemptionReasonCode' => '1']],

@@ -8,11 +8,6 @@ use Akira\Efatura\Data\StandardIdentificationData;
 use Akira\Efatura\Enums\TaxType;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 function choiceErrorsOf(Closure $creation): array
 {

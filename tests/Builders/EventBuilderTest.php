@@ -10,13 +10,10 @@ use Akira\Efatura\Enums\EventType;
 use Akira\Efatura\Facades\Efatura;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 
 beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
 });
-afterEach(fn () => CarbonImmutable::setTestNow());
 
 it('builds isolated cancellation and unused number events with explicit context and date overrides', function (): void {
     config()->set('efatura.emitter.tax_id', '100200300');

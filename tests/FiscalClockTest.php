@@ -9,9 +9,6 @@ use Akira\Efatura\Enums\EventType;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Psr\Clock\ClockInterface;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-afterEach(fn () => CarbonImmutable::setTestNow());
 
 it('binds a shared PSR clock in the fiscal timezone', function (): void {
     $clock = resolve(ClockInterface::class);
@@ -27,7 +24,6 @@ it('reports the frozen instant as Cabo Verde wall clock time', function (): void
 });
 
 it('stamps builders from the injected clock, also on scoped managers', function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-10-03 00:30:00', 'UTC'));
     $scoped = resolve(EfaturaManager::class)->withConfig(resolve(LoadEfaturaConfig::class)());
 

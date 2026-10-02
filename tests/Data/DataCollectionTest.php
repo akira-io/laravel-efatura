@@ -6,11 +6,6 @@ use Akira\Efatura\Data\DocumentFooterData;
 use Akira\Efatura\Data\ExtraFieldData;
 use Akira\Efatura\Data\TransportRouteData;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 it('creates nested data lists from arrays', function (): void {
     $footer = DocumentFooterData::from(['extraFields' => [['name' => 'CustomerTag', 'value' => 'blue']]]);

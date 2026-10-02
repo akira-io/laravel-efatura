@@ -17,13 +17,10 @@ use Akira\Efatura\Tests\Support\BuilderFixtures as B;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 
 beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
     CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
 });
-afterEach(fn () => CarbonImmutable::setTestNow());
 
 it('validates the complete reason compatibility matrix', function (string $class, array $allowed): void {
     foreach (IssueReason::cases() as $reason) {

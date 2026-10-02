@@ -15,14 +15,8 @@ use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 beforeEach(fn () => CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00'));
-afterEach(fn () => CarbonImmutable::setTestNow());
 it('constructs all nine concrete fiscal document graphs', function (string $class, string $type, array $changes, array $remove): void {
     $payload = F::payload($changes);
     foreach ($remove as $key) {

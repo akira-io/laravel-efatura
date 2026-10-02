@@ -13,13 +13,8 @@ use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\LaravelDataServiceProvider;
 use Spatie\LaravelData\Support\DataConfig;
 use Spatie\LaravelData\Support\Transformation\TransformationContext;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 final class FiscalValuesData extends Data
 {

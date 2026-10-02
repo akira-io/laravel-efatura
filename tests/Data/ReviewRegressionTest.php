@@ -22,11 +22,6 @@ use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Brick\Math\BigDecimal;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-
-beforeEach(function (): void {
-    $this->app->register(LaravelDataServiceProvider::class);
-});
 
 it('preserves explicitly permitted empty extension text', function (string $value): void {
     expect(new ExtraFieldData('CustomFlag', $value)->value)->toBe($value);
@@ -90,8 +85,6 @@ it('restricts emitter tax country while permitting foreign parties in other role
             expect($validationException->errors())->toHaveKey('emitter.taxId.countryCode');
         }
     }
-
-    CarbonImmutable::setTestNow();
 });
 
 it('compares fiscal periods as calendar dates regardless of hidden time and timezone', function (): void {
