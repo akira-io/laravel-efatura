@@ -5,7 +5,9 @@ declare(strict_types=1);
 use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\EventData;
+use Akira\Efatura\Data\PaymentsData;
 use Carbon\CarbonImmutable;
+use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\LaravelDataServiceProvider;
@@ -54,4 +56,29 @@ it('parses a validated custom fiscal date format', function (): void {
 
     expect($date->format('Y-m-d'))->toBe('2026-03-29')
         ->and($date->timezoneName)->toBe('Atlantic/Cape_Verde');
+});
+
+it('reports a fiscal date cast failure at its full path', function (mixed $date): void {
+    $this->app->register(LaravelDataServiceProvider::class);
+    $payments    = array_fill(0, 4, ['paymentMeansCode' => '10', 'paymentDate' => '2026-10-02']);
+    $payments[3] = ['paymentMeansCode' => '10', 'paymentDate' => $date];
+
+    expect(fn (): PaymentsData => PaymentsData::from(['payments' => $payments]))
+        ->toThrow(function (ValidationException $exception): void {
+            expect($exception->errors())->toBe(['payments.3.paymentDate' => ['The payments.3.payment date must use a valid fiscal date or time.']]);
+        });
+})->with([
+    'overflowing day' => ['2026-02-30'],
+    'trailing text'   => ['2026-10-02x'],
+    'not a string'    => [20261002],
+    'before earliest' => ['2020-12-31'],
+]);
+
+it('reports a top-level fiscal date cast failure at its own field', function (): void {
+    $this->app->register(LaravelDataServiceProvider::class);
+
+    expect(fn (): CustomFormatFiscalDateData => CustomFormatFiscalDateData::from(['date' => '31/02/2026']))
+        ->toThrow(function (ValidationException $exception): void {
+            expect($exception->errors())->toBe(['date' => ['The date must use a valid fiscal date or time.']]);
+        });
 });
