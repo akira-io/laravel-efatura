@@ -44,7 +44,7 @@ final class EventData extends Data
             'issueDateTime'          => ['required', new FiscalDate(Fiscal::DATE_TIME_FORMAT)],
             'issueReasonDescription' => ['required', ...FiscalRules::text(10, 500)],
             'iuds'                   => ['array', 'list', 'required_if:eventTypeCode,FDC', 'prohibited_if:eventTypeCode,UDN'],
-            'iuds.*'                 => ['required', 'string', 'distinct:strict', 'regex:/\ACV[0-9][0-9]{2}(?:0[1-9]|1[012])(?:0[1-9]|[12][0-9]|3[01])[1-9][0-9]{35}\z/'],
+            'iuds.*'                 => ['required', 'distinct:strict', ...FiscalRules::iud()],
             'numberRange'            => ['nullable', 'required_if:eventTypeCode,UDN', 'prohibited_if:eventTypeCode,FDC'],
             'emission'               => ['nullable'],
         ];

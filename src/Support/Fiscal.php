@@ -21,4 +21,6 @@ final class Fiscal
     public const string TIME_FORMAT = 'H:i:s';
 
     public const string DATE_TIME_FORMAT = 'Y-m-d\TH:i:s';
+
+    public const string XML_NAMESPACE = 'urn:cv:efatura:xsd:v1.0';
 }

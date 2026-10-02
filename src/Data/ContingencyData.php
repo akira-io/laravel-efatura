@@ -40,7 +40,7 @@ final class ContingencyData extends Data
 
         return [
             'issueDate'         => ['required', new FiscalDate],
-            'ledCode'           => ['required', 'integer', 'between:1,99999'],
+            'ledCode'           => ['required', ...FiscalRules::ledCode()],
             'iuc'               => ['nullable', 'regex:/\A[0-9]{4}\/[0-9]+\z/'],
             'issueTime'         => ['nullable', new FiscalDate(Fiscal::TIME_FORMAT)],
             'reasonDescription' => ['nullable', 'required_if:' . $field('reasonTypeCode') . ',0', ...FiscalRules::text(10, 500)],

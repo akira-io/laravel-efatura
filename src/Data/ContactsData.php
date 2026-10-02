@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Support\FiscalRules;
 use Spatie\LaravelData\Data;
 
 final class ContactsData extends Data
@@ -32,11 +33,11 @@ final class ContactsData extends Data
     public static function rules(): array
     {
         return [
-            'telephone'   => ['nullable', 'regex:/\A[0-9]{7,20}\z/'],
-            'mobilephone' => ['nullable', 'regex:/\A[0-9]{7,20}\z/'],
-            'telefax'     => ['nullable', 'regex:/\A[0-9]{7,20}\z/'],
+            'telephone'   => ['nullable', ...FiscalRules::phone()],
+            'mobilephone' => ['nullable', ...FiscalRules::phone()],
+            'telefax'     => ['nullable', ...FiscalRules::phone()],
             'email'       => ['nullable', 'max:256', 'regex:/\A\w+(?:[-._]\w+)*@\w+(?:[-._]\w+)*\.\w+(?:\.\w+)*\z/u'],
-            'website'     => ['nullable', 'max:256', 'regex:~\A(?:https?://)?[aA-zZ0-9_-]+(?:\.[aA-zZ0-9_-]+)*(?::[0-9]+)?(?:/[-._aA-zZ0-9]+)*(?:\?(?:[aA-zZ0-9_-]+=[+%aA-zZ0-9_-]*)(?:&[aA-zZ0-9_-]+=[+%aA-zZ0-9_-]*)*)?(?:\#[^\s]*)?\z~u'],
+            'website'     => ['nullable', ...FiscalRules::website()],
         ];
     }
 }

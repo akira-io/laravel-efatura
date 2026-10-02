@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Rules\UnreservedFiscalField;
+use Akira\Efatura\Support\Fiscal;
 use Spatie\LaravelData\Data;
 
 final class ExtraFieldData extends Data
@@ -28,7 +29,7 @@ final class ExtraFieldData extends Data
         return [
             'name'      => ['required', 'regex:/\A[\p{L}_][\p{L}\p{N}_.-]*\z/u', new UnreservedFiscalField],
             'value'     => ['present', 'string'],
-            'namespace' => ['nullable', 'regex:/\A[a-zA-Z][a-zA-Z0-9+.-]*:[^\s]+\z/', 'not_in:urn:cv:efatura:xsd:v1.0'],
+            'namespace' => ['nullable', 'regex:/\A[a-zA-Z][a-zA-Z0-9+.-]*:[^\s]+\z/', 'not_in:' . Fiscal::XML_NAMESPACE],
         ];
     }
 }

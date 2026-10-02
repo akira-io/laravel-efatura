@@ -39,9 +39,9 @@ final class DocumentHeaderData extends Data
         return [
             'issueDate'           => ['required', new FiscalDate],
             'issueTime'           => ['required', new FiscalDate(Fiscal::TIME_FORMAT)],
-            'ledCode'             => ['required', 'integer', 'between:1,99999'],
-            'serie'               => ['nullable', 'string', 'max:20', 'regex:/\A[aA-zZ0-9]+(?:[_-][aA-zZ0-9]+)*\z/'],
-            'documentNumber'      => ['nullable', 'integer', 'between:1,999999999'],
+            'ledCode'             => ['required', ...FiscalRules::ledCode()],
+            'serie'               => ['nullable', ...FiscalRules::series()],
+            'documentNumber'      => ['nullable', ...FiscalRules::documentNumber()],
             'innerDocumentNumber' => ['nullable', ...FiscalRules::code()],
             'selfBilling'         => ['nullable'],
         ];

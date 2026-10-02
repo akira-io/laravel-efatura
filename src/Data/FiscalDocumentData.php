@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FiscalRules;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
@@ -27,6 +28,6 @@ final class FiscalDocumentData extends Data
      */
     public static function rules(): array
     {
-        return ['value' => ['required', 'regex:/\A(?:CV[0-9][0-9]{2}(?:0[1-9]|1[012])(?:0[1-9]|[12][0-9]|3[01])[1-9][0-9]{35}|[1-9]\/[0-9]{4}\/[aA-zZ0-9]+(?:[_-][aA-zZ0-9]+)*\/[0-9]{1,9})\z/']];
+        return ['value' => ['required', ...FiscalRules::fiscalDocumentReference()]];
     }
 }

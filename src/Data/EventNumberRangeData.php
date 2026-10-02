@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Support\FiscalRules;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -32,10 +33,10 @@ final class EventNumberRangeData extends Data
         $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
 
         return [
-            'ledCode'             => ['required', 'integer', 'between:1,99999'],
-            'serie'               => ['required', 'string', 'max:20', 'regex:/\A[aA-zZ0-9]+(?:[_-][aA-zZ0-9]+)*\z/'],
-            'documentNumberStart' => ['required', 'integer', 'between:1,999999999'],
-            'documentNumberEnd'   => ['required', 'integer', 'between:1,999999999', 'gte:' . $field('documentNumberStart')],
+            'ledCode'             => ['required', ...FiscalRules::ledCode()],
+            'serie'               => ['required', ...FiscalRules::series()],
+            'documentNumberStart' => ['required', ...FiscalRules::documentNumber()],
+            'documentNumberEnd'   => ['required', ...FiscalRules::documentNumber(), 'gte:' . $field('documentNumberStart')],
             'year'                => ['nullable', 'integer', 'between:2021,2099'],
         ];
     }
