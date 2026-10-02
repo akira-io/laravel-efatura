@@ -87,12 +87,18 @@ it('transforms constructed carbon instances in Cape Verde time', function (): vo
 });
 
 it('converts the contingency issuance instant to Cape Verde time', function (string $method): void {
-    $moment      = CarbonImmutable::parse('2026-10-03 00:30', 'UTC');
-    $contingency = ContingencyData::$method(['issueDate' => $moment, 'issueTime' => $moment, 'reasonTypeCode' => ContingencyReason::Other, 'ledCode' => 1, 'reasonDescription' => 'Network outage at the store']);
+    $moment  = CarbonImmutable::parse('2026-10-03 00:30', 'UTC');
+    $payload = ['issueDate' => $moment, 'issueTime' => $moment, 'reasonTypeCode' => ContingencyReason::Other, 'ledCode' => 1, 'reasonDescription' => 'Network outage at the store'];
 
-    expect($contingency->toArray())->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00'])
-        ->and(new ContingencyData($moment, ContingencyReason::Other, 1, issueTime: $moment)->toArray())->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00']);
+    expect(ContingencyData::$method($payload)->toArray())->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00']);
 })->with(['from', 'validateAndCreate']);
+
+it('transforms a constructed contingency instant in Cape Verde time', function (): void {
+    $moment = CarbonImmutable::parse('2026-10-03 00:30', 'UTC');
+
+    expect(new ContingencyData($moment, ContingencyReason::Other, 1, issueTime: $moment)->toArray())
+        ->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00']);
+});
 
 it('keeps calendar date fields as given on a UTC host', function (): void {
     $calendarDay = CarbonImmutable::parse('2026-10-02');
@@ -100,7 +106,9 @@ it('keeps calendar date fields as given on a UTC host', function (): void {
     $delivery    = DeliveryData::from(['deliveryDate' => Date::parse('2026-10-02'), 'address' => ['countryCode' => 'PT', 'addressDetail' => 'Lisbon']]);
     $duration    = new DurationData($calendarDay, CarbonImmutable::parse('09:00:00'));
 
-    expect(ReceiptInvoiceData::from(F::payload(['payments' => ['payments' => [$payment]]]))->toArray()['payments']['payments'][0]['paymentDate'])->toBe('2026-10-02')
+    $invoice = ReceiptInvoiceData::from(F::payload(['payments' => ['payments' => [$payment]]]));
+
+    expect($invoice->toArray()['payments']['payments'][0]['paymentDate'])->toBe('2026-10-02')
         ->and($delivery->toArray()['deliveryDate'])->toBe('2026-10-02')
         ->and($delivery->deliveryDate->timezoneName)->toBe('Atlantic/Cape_Verde')
         ->and($duration->toArray())->toMatchArray(['startDate' => '2026-10-02', 'startTime' => '09:00:00']);
