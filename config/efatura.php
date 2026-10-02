@@ -29,8 +29,7 @@ return [
     | are nullable strings. No field is copied from the transmitter.
     | A CV address needs country_code, address_detail and an official
     | address_code. Contacts need email and telephone or mobile. LED is a
-    | decimal string (1..99999). An explicit builder emitter replaces all
-    | defaults and clears LED; supply emitter($party, $led) or ledCode() after.
+    | decimal string (1..99999).
     |
     */
     'emitter' => [
