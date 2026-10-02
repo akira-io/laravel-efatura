@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Contracts\Clock;
 use Akira\Efatura\Data\AddressData;
 use Akira\Efatura\Data\ContactsData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
@@ -14,11 +15,33 @@ use Akira\Efatura\Facades\Efatura;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
+use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 
 beforeEach(function (): void {
     $this->app->register(LaravelDataServiceProvider::class);
+    $this->app->instance(Clock::class, new class implements Clock
+    {
+        public function now(): CarbonImmutable
+        {
+            return new CarbonImmutable('2026-10-02T12:00:00-01:00');
+        }
+    });
+});
+
+afterEach(function (): void {
+    $this->app->forgetInstance(Clock::class);
+});
+
+it('uses a fixed fiscal clock for the fixture regardless of the process date', function (): void {
+    try {
+        CarbonImmutable::setTestNow('2026-10-04T12:00:00-01:00');
+
+        expect(ElectronicInvoiceData::from(F::payload()))->toBeInstanceOf(ElectronicInvoiceData::class);
+    } finally {
+        CarbonImmutable::setTestNow();
+    }
 });
 
 function expectFiscalGateField(Closure $callback, string $field): void

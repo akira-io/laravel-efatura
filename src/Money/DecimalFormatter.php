@@ -13,8 +13,12 @@ use Illuminate\Support\Str;
 
 final class DecimalFormatter
 {
-    public static function parse(int|string|BigDecimal $value, ?int $maxScale = null): BigDecimal
+    public static function parse(int|float|string|BigDecimal $value, ?int $maxScale = null): BigDecimal
     {
+        if (\is_float($value)) {
+            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.invalid_decimal'));
+        }
+
         self::checkScale($maxScale);
 
         if (\is_string($value) && ! Str::isMatch('/^-?[0-9]+(?:\.[0-9]+)?$/D', $value)) {

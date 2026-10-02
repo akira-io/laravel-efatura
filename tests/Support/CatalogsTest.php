@@ -6,6 +6,23 @@ use Akira\Efatura\Exceptions\CatalogException;
 use Akira\Efatura\Support\Catalogs;
 use Illuminate\Filesystem\Filesystem;
 
+function catalogResourceFilesystem(?string $contents): Filesystem
+{
+    return new class ($contents) extends Filesystem
+    {
+        public function __construct(private readonly ?string $contents) {}
+
+        public function get($path, $lock = false): string
+        {
+            if ($this->contents === null) {
+                throw new RuntimeException('Catalog resource is unreadable');
+            }
+
+            return $this->contents;
+        }
+    };
+}
+
 it('contains every published row and preserves source checksums', function (): void {
     $catalogs = new Catalogs;
     $official = json_decode(file_get_contents(dirname(__DIR__, 2) . '/resources/official-artifacts.json'), true, 512, JSON_THROW_ON_ERROR);
@@ -81,13 +98,9 @@ it('does not let callers mutate cached catalog values', function (): void {
 it('rejects unknown or malformed catalog resources', function (): void {
     expect(fn (): array => new Catalogs()->records('unknown'))->toThrow(CatalogException::class);
 
-    $filesystem = Mockery::mock(Filesystem::class);
-    $filesystem->shouldReceive('get')->once()->andReturn('{invalid');
-    expect(fn (): array => new Catalogs($filesystem)->records('units'))->toThrow(CatalogException::class);
+    expect(fn (): array => new Catalogs(catalogResourceFilesystem('{invalid'))->records('units'))->toThrow(CatalogException::class);
 
-    $filesystem = Mockery::mock(Filesystem::class);
-    $filesystem->shouldReceive('get')->once()->andReturn('{"schema_version":1,"records":null}');
-    expect(fn (): array => new Catalogs($filesystem)->records('units'))->toThrow(CatalogException::class);
+    expect(fn (): array => new Catalogs(catalogResourceFilesystem('{"schema_version":1,"records":null}'))->records('units'))->toThrow(CatalogException::class);
 
     foreach ([
         '{"schema_version":1,"count":1,"records":[null],"sources":[]}',
@@ -95,12 +108,8 @@ it('rejects unknown or malformed catalog resources', function (): void {
         '{"schema_version":1,"count":0,"records":[],"sources":[null]}',
         '{"schema_version":1,"count":1,"records":[],"sources":[]}',
     ] as $invalid) {
-        $filesystem = Mockery::mock(Filesystem::class);
-        $filesystem->shouldReceive('get')->once()->andReturn($invalid);
-        expect(fn (): array => new Catalogs($filesystem)->records('units'))->toThrow(CatalogException::class);
+        expect(fn (): array => new Catalogs(catalogResourceFilesystem($invalid))->records('units'))->toThrow(CatalogException::class);
     }
 
-    $filesystem = Mockery::mock(Filesystem::class);
-    $filesystem->shouldReceive('get')->once()->andThrow(RuntimeException::class);
-    expect(fn (): array => new Catalogs($filesystem)->records('units'))->toThrow(CatalogException::class);
+    expect(fn (): array => new Catalogs(catalogResourceFilesystem(null))->records('units'))->toThrow(CatalogException::class);
 });

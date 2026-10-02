@@ -56,7 +56,6 @@ it('builds every canonical document graph without adding forbidden sections', fu
     }
 
     if ($type === DocumentType::SalesReceipt) {
-        // TVE has no reference section; use a new draft with precisely its fields.
         $draft = Efatura::invoice()->type($type)->emitter(B::emitter(), 1)->line(F::line())->totals(F::totals())->payments(PaymentsData::from(F::payments()));
     }
 

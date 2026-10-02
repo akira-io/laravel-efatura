@@ -13,23 +13,27 @@ use Illuminate\Support\Str;
 
 final class FiscalMoney
 {
-    public static function cve(int|string|Money $amount): Money
+    public static function cve(int|float|string|Money $amount): Money
     {
         return self::of($amount, 'CVE');
     }
 
-    public static function of(int|string|Money $amount, string $currency): Money
+    public static function of(int|float|string|Money $amount, string $currency): Money
     {
         return self::create($amount, $currency, 2, true);
     }
 
-    public static function exact(int|string|Money $amount, string $currency, int $scale = 5): Money
+    public static function exact(int|float|string|Money $amount, string $currency, int $scale = 5): Money
     {
         return self::create($amount, $currency, $scale, false);
     }
 
-    private static function create(int|string|Money $amount, string $currency, int $scale, bool $round): Money
+    private static function create(int|float|string|Money $amount, string $currency, int $scale, bool $round): Money
     {
+        if (\is_float($amount)) {
+            throw new EfaturaValidationException('amount', __('efatura::efatura.validation.invalid_money'));
+        }
+
         if (! Str::isMatch('/^[A-Z]{3}$/D', $currency)) {
             throw new EfaturaValidationException('currency', __('efatura::efatura.validation.invalid_currency'));
         }
