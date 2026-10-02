@@ -7,6 +7,7 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\ReceiptType;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\Validation\ListType;
 
 final class ReceiptData extends InvoiceData
 {
@@ -18,16 +19,14 @@ final class ReceiptData extends InvoiceData
         public readonly PartyData $emitter,
         public readonly PartyData $receiver,
         public readonly ReceiptType $receiptTypeCode,
-        #[DataCollectionOf(ReferenceData::class)]
+        #[DataCollectionOf(ReferenceData::class), ListType]
         public readonly array $references,
         public readonly PaymentsData $payments,
         public readonly ?PartyData $paymentParty = null,
         public readonly ?RentReceiptData $rentReceipt = null,
         public readonly ?EmissionContextData $emission = null,
         public readonly ?DocumentFooterData $footer = null,
-    ) {
-        $this->validateDocument();
-    }
+    ) {}
 
     public function type(): DocumentType
     {

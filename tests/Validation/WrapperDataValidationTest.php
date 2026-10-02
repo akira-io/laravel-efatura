@@ -18,9 +18,15 @@ beforeEach(function (): void {
 
 beforeEach(fn () => CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00'));
 afterEach(fn () => CarbonImmutable::setTestNow());
-it('validates directly constructed document graphs', function (): void {
+it('validates document graphs assembled from data objects', function (): void {
     $payload = F::payload();
-    expect(fn (): ElectronicInvoiceData => new ElectronicInvoiceData(DocumentHeaderData::from($payload['header']), PartyData::from($payload['emitter']), PartyData::from($payload['receiver']), [], F::totals()))->toThrow(ValidationException::class);
+    $graph   = ['header' => DocumentHeaderData::from($payload['header']), 'emitter' => PartyData::from($payload['emitter']), 'receiver' => PartyData::from($payload['receiver']), 'lines' => [], 'totals' => F::totals()];
+
+    expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($graph))
+        ->toThrow(function (ValidationException $exception): void {
+            expect($exception->errors())->toHaveKey('lines');
+        })
+        ->and(ElectronicInvoiceData::from([...$graph, 'lines' => [F::line()]])->lines)->toHaveCount(1);
 });
 it('enforces rent receipt requirements without invoice sections', function (): void {
     $payload = F::payload(['receiptTypeCode' => '4', 'references' => F::references(), 'payments' => F::payments()]);

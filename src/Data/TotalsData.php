@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\CveAmount;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Money\Money;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
-use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Attributes\Validation\ListType;
 
-final class TotalsData extends Data
+final class TotalsData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     /**
      * @param list<PayableAlternativeAmountData> $payableAlternativeAmounts
      */
@@ -37,27 +34,19 @@ final class TotalsData extends Data
         #[CveAmount]
         public readonly ?Money $payableRoundingAmount = null,
         public readonly ?DiscountData $discount = null,
-        #[DataCollectionOf(PayableAlternativeAmountData::class)]
+        #[DataCollectionOf(PayableAlternativeAmountData::class), ListType]
         public readonly array $payableAlternativeAmounts = [],
-    ) {
-        $this->validateFiscalFields(self::rules());
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
     public static function rules(): array
     {
         return [
-            'priceExtensionTotalAmount' => ['required', FiscalNumber::amount(Fiscal::CURRENCY)],
-            'netTotalAmount'            => ['required', FiscalNumber::amount(Fiscal::CURRENCY)],
-            'taxTotalAmount'            => ['required', FiscalNumber::amount(Fiscal::CURRENCY)],
-            'payableAmount'             => ['required', FiscalNumber::amount(Fiscal::CURRENCY)],
-            'chargeTotalAmount'         => ['nullable', FiscalNumber::amount(Fiscal::CURRENCY)],
-            'discountTotalAmount'       => ['nullable', FiscalNumber::amount(Fiscal::CURRENCY)],
-            'withholdingTaxTotalAmount' => ['nullable', FiscalNumber::amount(Fiscal::CURRENCY)],
-            'payableRoundingAmount'     => ['nullable', FiscalNumber::signedAmount(Fiscal::CURRENCY)],
-            'payableAlternativeAmounts' => ['array', 'list'],
+            ...collect(['priceExtensionTotalAmount', 'netTotalAmount', 'taxTotalAmount', 'payableAmount', 'chargeTotalAmount', 'discountTotalAmount', 'withholdingTaxTotalAmount'])
+                ->mapWithKeys(static fn (string $field): array => [$field => [FiscalNumber::amount(Fiscal::CURRENCY)]])->all(),
+            'payableRoundingAmount' => [FiscalNumber::signedAmount(Fiscal::CURRENCY)],
         ];
     }
 }

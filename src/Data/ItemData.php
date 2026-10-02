@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\FiscalRules;
-use Illuminate\Support\Facades\Validator;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
-use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Attributes\Validation\ListType;
 
-final class ItemData extends Data
+final class ItemData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     /**
      * @param list<ExtraPropertyData> $extraProperties
      */
@@ -27,25 +23,22 @@ final class ItemData extends Data
         public readonly ?string $modelName = null,
         public readonly ?StandardIdentificationData $standardIdentification = null,
         public readonly ?bool $hazardousRiskIndicator = null,
-        #[DataCollectionOf(ExtraPropertyData::class)]
+        #[DataCollectionOf(ExtraPropertyData::class), ListType]
         public readonly array $extraProperties = [],
-    ) {
-        $this->validateFiscalFields(self::rules());
-        Validator::make(['packQuantity' => ['value' => $packQuantity?->value]], ['packQuantity.value' => ['nullable', FiscalNumber::positive()]])->validate();
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
     public static function rules(): array
     {
         return [
-            'description'           => ['required', ...FiscalRules::text(1, 300)],
-            'emitterIdentification' => ['required', ...FiscalRules::code()],
-            'name'                  => ['nullable', ...FiscalRules::text(3, 150)],
-            'brandName'             => ['nullable', ...FiscalRules::text(3, 150)],
-            'modelName'             => ['nullable', ...FiscalRules::text(3, 150)],
-            'extraProperties'       => ['array', 'list'],
+            'description'           => FiscalRules::text(1, 300),
+            'emitterIdentification' => FiscalRules::code(),
+            'name'                  => FiscalRules::text(3, 150),
+            'brandName'             => FiscalRules::text(3, 150),
+            'modelName'             => FiscalRules::text(3, 150),
+            'packQuantity.value'    => [FiscalNumber::positive()],
         ];
     }
 }

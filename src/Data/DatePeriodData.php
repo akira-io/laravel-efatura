@@ -4,36 +4,30 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\FiscalDateFormat;
+use Akira\Efatura\Rules\ChronologicalOrder;
 use Akira\Efatura\Rules\FiscalDate;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Validator;
-use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class DatePeriodData extends Data
+final class DatePeriodData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     public function __construct(
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly CarbonImmutable $startDate,
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly CarbonImmutable $endDate,
-    ) {
-        $this->validateFiscalFields(self::rules());
-        Validator::make([
-            'startDate' => $startDate->format(Fiscal::DATE_FORMAT),
-            'endDate'   => $endDate->format(Fiscal::DATE_FORMAT),
-        ], ['endDate' => ['after_or_equal:startDate']])->validate();
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(): array
+    public static function rules(ValidationContext $context): array
     {
-        return ['startDate' => ['required', new FiscalDate], 'endDate' => ['required', new FiscalDate]];
+        return [
+            'startDate' => [new FiscalDate],
+            'endDate'   => [new FiscalDate, ChronologicalOrder::between($context, ['startDate' => Fiscal::DATE_FORMAT], ['endDate' => Fiscal::DATE_FORMAT])],
+        ];
     }
 }

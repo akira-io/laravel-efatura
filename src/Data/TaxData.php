@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\CveAmount;
 use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Enums\StampTaxCode;
@@ -12,20 +11,19 @@ use Akira\Efatura\Enums\TaxType;
 use Akira\Efatura\Money\BigDecimalCast;
 use Akira\Efatura\Money\BigDecimalTransformer;
 use Akira\Efatura\Rules\FiscalNumber;
+use Akira\Efatura\Rules\NotBlank;
 use Akira\Efatura\Rules\OfficialCode;
+use Akira\Efatura\Support\Catalogs;
+use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
-use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
-use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class TaxData extends Data
+final class TaxData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     public function __construct(
         public readonly TaxType $taxTypeCode,
         #[WithCast(BigDecimalCast::class, 3)]
@@ -37,24 +35,19 @@ final class TaxData extends Data
         public readonly ?StampTaxCode $stampTaxCode = null,
         #[CveAmount]
         public readonly ?Money $taxTotal = null,
-    ) {
-        $this->validateFiscalFields(self::rules());
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(?ValidationContext $context = null): array
+    public static function rules(ValidationContext $context, Catalogs $catalogs): array
     {
-        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
-
         return [
-            'taxTypeCode'            => ['required', Rule::enum(TaxType::class)],
-            'taxPercentage'          => ['nullable', 'required_without_all:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), 'prohibits:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), FiscalNumber::positive(3, '100')],
-            'taxAmount'              => ['nullable', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxExemptionReasonCode'), FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
-            'taxExemptionReasonCode' => ['nullable', 'required_if:' . $field('taxTypeCode') . ',NA', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxAmount'), new OfficialCode(Catalog::TaxExemptionReasons)],
-            'stampTaxCode'           => ['nullable', 'required_if:' . $field('taxTypeCode') . ',IS', Rule::enum(StampTaxCode::class)],
-            'taxTotal'               => ['nullable', FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
+            'taxPercentage'          => ['required_without_all:' . FieldPath::list($context, 'taxAmount', 'taxExemptionReasonCode'), 'prohibits:' . FieldPath::list($context, 'taxAmount', 'taxExemptionReasonCode'), FiscalNumber::positive(3, '100')],
+            'taxAmount'              => ['prohibits:' . FieldPath::list($context, 'taxPercentage', 'taxExemptionReasonCode'), FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
+            'taxExemptionReasonCode' => [new NotBlank, 'required_if:' . FieldPath::of($context, 'taxTypeCode') . ',NA', 'prohibits:' . FieldPath::list($context, 'taxPercentage', 'taxAmount'), new OfficialCode(Catalog::TaxExemptionReasons, $catalogs)],
+            'stampTaxCode'           => ['required_if:' . FieldPath::of($context, 'taxTypeCode') . ',IS'],
+            'taxTotal'               => [FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
         ];
     }
 }

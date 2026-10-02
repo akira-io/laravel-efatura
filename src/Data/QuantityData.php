@@ -4,41 +4,38 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Money\BigDecimalCast;
 use Akira\Efatura\Money\BigDecimalTransformer;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
+use Akira\Efatura\Support\Catalogs;
+use Akira\Efatura\Support\ValidationPayload;
 use Brick\Math\BigDecimal;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
-use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class QuantityData extends Data
+final class QuantityData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     public function __construct(
         #[WithCast(BigDecimalCast::class)]
         #[WithTransformer(BigDecimalTransformer::class)]
         public readonly BigDecimal $value,
         public readonly string $unitCode,
         public readonly bool $isStandardUnitCode = false,
-    ) {
-        $rules = self::rules();
-        if ($isStandardUnitCode) {
-            $rules['unitCode'][] = new OfficialCode(Catalog::Units);
-        }
-
-        $this->validateFiscalFields($rules);
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(): array
+    public static function rules(ValidationContext $context, Catalogs $catalogs): array
     {
-        return ['value' => ['required', FiscalNumber::nonNegative()], 'unitCode' => ['required', 'regex:/\A[A-Za-z0-9]{1,10}\z/']];
+        $unitCode = ['regex:/\A[A-Za-z0-9]{1,10}\z/'];
+
+        return [
+            'value'    => [FiscalNumber::nonNegative()],
+            'unitCode' => ValidationPayload::isTrue($context, 'isStandardUnitCode') ? [...$unitCode, new OfficialCode(Catalog::Units, $catalogs)] : $unitCode,
+        ];
     }
 }

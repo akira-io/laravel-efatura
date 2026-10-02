@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\CveAmount;
 use Akira\Efatura\Rules\FiscalNumber;
+use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Brick\Money\Money;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
-use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class ReferenceData extends Data
+final class ReferenceData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     /**
      * @param list<TaxData> $taxes
      */
@@ -26,24 +25,19 @@ final class ReferenceData extends Data
         public readonly ?string $innerDocumentNumber = null,
         #[CveAmount]
         public readonly ?Money $paymentAmount = null,
-        #[DataCollectionOf(TaxData::class)]
+        #[DataCollectionOf(TaxData::class), ListType, Max(2)]
         public readonly array $taxes = [],
-    ) {
-        $this->validateFiscalFields(self::rules());
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(?ValidationContext $context = null): array
+    public static function rules(ValidationContext $context): array
     {
-        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
-
         return [
-            'fiscalDocument'      => ['required_without_all:' . $field('paymentAmount') . ',' . $field('taxes')],
-            'innerDocumentNumber' => ['nullable', ...FiscalRules::code()],
-            'paymentAmount'       => ['nullable', FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
-            'taxes'               => ['array', 'list', 'max:2'],
+            'fiscalDocument'      => ['required_without_all:' . FieldPath::list($context, 'paymentAmount', 'taxes')],
+            'innerDocumentNumber' => FiscalRules::code(),
+            'paymentAmount'       => [FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
         ];
     }
 }

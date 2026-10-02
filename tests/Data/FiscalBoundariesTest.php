@@ -54,11 +54,11 @@ it('rejects pretyped invalid money in every owning field through construction', 
 ]);
 
 it('rejects wrong typed currency and bounds on discounts and alternate amounts', function (): void {
-    expect(fn (): DiscountData => new DiscountData(FiscalMoney::cve('1')))->toThrow(ValidationException::class)
-        ->and(fn (): DiscountData => new DiscountData(FiscalMoney::of('1', 'EUR'), DiscountValueType::Amount))->toThrow(ValidationException::class)
-        ->and(fn (): PayableAlternativeAmountData => new PayableAlternativeAmountData(FiscalMoney::of('1', 'EUR'), 'EUR', BigDecimal::of('0')))->toThrow(ValidationException::class)
-        ->and(fn (): PayableAlternativeAmountData => new PayableAlternativeAmountData(FiscalMoney::of('1', 'EUR'), 'EUR', BigDecimal::of('1.123456')))->toThrow(ValidationException::class)
-        ->and(fn (): PayableAlternativeAmountData => new PayableAlternativeAmountData(FiscalMoney::of('1', 'IDR'), 'IDR', BigDecimal::of('1')))->toThrow(ValidationException::class);
+    expect(fn (): DiscountData => DiscountData::from(['value' => FiscalMoney::cve('1')]))->toThrow(ValidationException::class)
+        ->and(fn (): DiscountData => DiscountData::from(['value' => FiscalMoney::of('1', 'EUR'), 'valueType' => DiscountValueType::Amount]))->toThrow(ValidationException::class)
+        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => FiscalMoney::of('1', 'EUR'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('0')]))->toThrow(ValidationException::class)
+        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => FiscalMoney::of('1', 'EUR'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('1.123456')]))->toThrow(ValidationException::class)
+        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => FiscalMoney::of('1', 'IDR'), 'currencyCode' => 'IDR', 'exchangeRate' => BigDecimal::of('1')]))->toThrow(ValidationException::class);
     foreach (['from', 'validateAndCreate'] as $method) {
         expect(DiscountData::$method(['value' => '1.23456', 'valueType' => 'A'])->toArray()['value'])->toBe('1.23456')
             ->and(DiscountData::$method(['value' => '15.12345'])->toArray()['value'])->toBe('15.12345');
@@ -70,19 +70,19 @@ it('validates exemption catalog and tax boundaries independently of reconciliati
     expect((new TaxData(TaxType::StampTax, taxAmount: FiscalMoney::exact('0.00001', 'CVE'), stampTaxCode: StampTaxCode::Contracts))->stampTaxCode)->toBe(StampTaxCode::Contracts);
     expect(TaxData::validateAndCreate(['taxTypeCode' => 'IS', 'taxAmount' => '1', 'stampTaxCode' => 1])->stampTaxCode)->toBe(StampTaxCode::CreditOperations);
     foreach (['0', '-1', '100.001'] as $percentage) {
-        expect(fn (): TaxData => new TaxData(TaxType::ValueAddedTax, taxPercentage: BigDecimal::of($percentage)))->toThrow(ValidationException::class);
+        expect(fn (): TaxData => TaxData::from(['taxTypeCode' => TaxType::ValueAddedTax, 'taxPercentage' => BigDecimal::of($percentage)]))->toThrow(ValidationException::class);
     }
 
-    expect(fn (): TaxData => new TaxData(TaxType::NotApplicable, taxExemptionReasonCode: 'unknown'))->toThrow(ValidationException::class)
+    expect(fn (): TaxData => TaxData::from(['taxTypeCode' => TaxType::NotApplicable, 'taxExemptionReasonCode' => 'unknown']))->toThrow(ValidationException::class)
         ->and(fn (): TaxData => TaxData::validateAndCreate(['taxTypeCode' => 'IS', 'taxAmount' => '1', 'stampTaxCode' => 10]))->toThrow(ValidationException::class);
 });
 
-it('rejects mutable or untyped values inside constructor arrays', function (): void {
-    expect(fn (): ItemData => new ItemData('Item', 'SKU', extraProperties: [new stdClass]))->toThrow(ValidationException::class)
-        ->and(fn (): PaymentsData => new PaymentsData(payments: [new stdClass]))->toThrow(ValidationException::class)
-        ->and(fn (): ReferenceData => new ReferenceData(taxes: [new stdClass]))->toThrow(ValidationException::class);
+it('rejects mutable or untyped values inside data lists', function (): void {
+    expect(fn (): ItemData => ItemData::from(['description' => 'Item', 'emitterIdentification' => 'SKU', 'extraProperties' => [new stdClass]]))->toThrow(ValidationException::class)
+        ->and(fn (): PaymentsData => PaymentsData::from(['payments' => [new stdClass]]))->toThrow(ValidationException::class)
+        ->and(fn (): ReferenceData => ReferenceData::from(['taxes' => [new stdClass]]))->toThrow(ValidationException::class);
     $tax = new TaxData(TaxType::ValueAddedTax, taxPercentage: BigDecimal::of('15'));
-    expect(fn (): ReferenceData => new ReferenceData(taxes: [$tax, $tax, $tax]))->toThrow(ValidationException::class);
+    expect(fn (): ReferenceData => ReferenceData::from(['taxes' => [$tax, $tax, $tax]]))->toThrow(ValidationException::class);
     expect((new ReferenceData(taxes: [$tax]))->taxes)->toHaveCount(1);
 });
 
@@ -90,12 +90,12 @@ it('accepts the official IUD shape and checks the optional old document flag', f
     $iud = 'CV1261002123456789' . str_repeat('0', 27);
     expect((new FiscalDocumentData($iud, false))->value)->toBe($iud)
         ->and((new FiscalDocumentData($iud))->isOldDocument)->toBeNull();
-    expect(fn (): FiscalDocumentData => new FiscalDocumentData($iud, true))->toThrow(ValidationException::class);
+    expect(fn (): FiscalDocumentData => FiscalDocumentData::from(['value' => $iud, 'isOldDocument' => true]))->toThrow(ValidationException::class);
 });
 
 it('validates direct immutable dates and exact time formats', function (): void {
     $address = new AddressData('PT', 'Example address');
-    expect(fn (): DeliveryData => new DeliveryData(CarbonImmutable::parse('2020-12-31'), $address))->toThrow(ValidationException::class);
+    expect(fn (): DeliveryData => DeliveryData::from(['deliveryDate' => CarbonImmutable::parse('2020-12-31'), 'address' => $address]))->toThrow(ValidationException::class);
     expect(DatePeriodData::validateAndCreate(['startDate' => '2021-01-01', 'endDate' => '2021-01-01'])->toArray()['endDate'])->toBe('2021-01-01');
     expect(fn (): DurationData => DurationData::from(['startDate' => '2026-01-01', 'startTime' => '24:01:00']))->toThrow(ValidationException::class)
         ->and(fn (): DurationData => DurationData::from(['startDate' => '2026-01-01', 'startTime' => '09:00:00', 'endDate' => '2026-01-01', 'endTime' => '08:59:59']))->toThrow(ValidationException::class);
@@ -105,11 +105,11 @@ it('validates direct immutable dates and exact time formats', function (): void 
 it('keeps extension content as text and reserves official element names', function (): void {
     expect((new ExtraFieldData('CustomNote', '<child>text</child>', 'urn:example:custom'))->value)->toBe('<child>text</child>');
     foreach (['RappelPeriod', 'taxId', 'AddressDetail', 'Quantity', 'SelfBilling', 'TaxPercentage'] as $name) {
-        expect(fn (): ExtraFieldData => new ExtraFieldData($name, 'value'))->toThrow(ValidationException::class);
+        expect(fn (): ExtraFieldData => ExtraFieldData::from(['name' => $name, 'value' => 'value']))->toThrow(ValidationException::class);
     }
 
-    expect(fn (): ExtraFieldData => new ExtraFieldData('CustomNote', 'value', 'urn:cv:efatura:xsd:v1.0'))->toThrow(ValidationException::class)
-        ->and(fn (): ExtraFieldData => new ExtraFieldData('invalid:name', 'value'))->toThrow(ValidationException::class);
+    expect(fn (): ExtraFieldData => ExtraFieldData::from(['name' => 'CustomNote', 'value' => 'value', 'namespace' => 'urn:cv:efatura:xsd:v1.0']))->toThrow(ValidationException::class)
+        ->and(fn (): ExtraFieldData => ExtraFieldData::from(['name' => 'invalid:name', 'value' => 'value']))->toThrow(ValidationException::class);
 });
 
 it('accepts a cataloged CV address and rejects coercion at cast boundaries', function (): void {

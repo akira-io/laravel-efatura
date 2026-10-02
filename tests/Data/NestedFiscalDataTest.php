@@ -48,8 +48,8 @@ it('models the full item and line graph with exact money and immutable arrays', 
     expect($line->toArray()['price'])->toBe('1.23456')
         ->and($line->item->extraProperties[0])->toBeInstanceOf(ExtraPropertyData::class)
         ->and(fn (): ExtraPropertyData => $line->item->extraProperties[] = new ExtraPropertyData('Size', 'Large'))->toThrow(Error::class);
-    expect(fn (): StandardIdentificationData => new StandardIdentificationData)->toThrow(ValidationException::class)
-        ->and(fn (): StandardIdentificationData => new StandardIdentificationData(gtin: 'A', ean: 'B'))->toThrow(ValidationException::class);
+    expect(fn (): StandardIdentificationData => StandardIdentificationData::from([]))->toThrow(ValidationException::class)
+        ->and(fn (): StandardIdentificationData => StandardIdentificationData::from(['gtin' => 'A', 'ean' => 'B']))->toThrow(ValidationException::class);
 });
 
 it('models every total independently without premature reconciliation', function (): void {
@@ -62,7 +62,7 @@ it('models every total independently without premature reconciliation', function
     expect($totals->toArray()['payableRoundingAmount'])->toBe('-0.00345')
         ->and($totals->payableAlternativeAmounts[0]->value->getCurrency()->getCurrencyCode())->toBe('EUR');
     expect(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => '1', 'currencyCode' => 'IdR', 'exchangeRate' => '1']))->toThrow(ValidationException::class)
-        ->and(fn (): PayableAlternativeAmountData => new PayableAlternativeAmountData(FiscalMoney::of('1', 'USD'), 'EUR', BigDecimal::of('1')))->toThrow(ValidationException::class);
+        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => FiscalMoney::of('1', 'USD'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('1')]))->toThrow(ValidationException::class);
 });
 
 it('models bank account choices and separates invoice terms from payments', function (): void {
@@ -72,18 +72,18 @@ it('models bank account choices and separates invoice terms from payments', func
     $actual  = PaymentsData::from(['payments' => [['paymentMeansCode' => '10', 'paymentReference' => 'R1', 'paymentDate' => '2026-10-02', 'paymentAmount' => '1.23456']]]);
     expect($invoice->paymentTerms->note)->toBe('Payment within thirty days')
         ->and($actual->toArray()['payments'][0]['paymentDate'])->toBe('2026-10-02');
-    expect(fn (): PayeeFinancialAccountData => new PayeeFinancialAccountData('Account Holder'))->toThrow(ValidationException::class)
-        ->and(fn (): PayeeFinancialAccountData => new PayeeFinancialAccountData('Account Holder', '1234', '123456789012345678901'))->toThrow(ValidationException::class)
-        ->and(fn (): PaymentsData => new PaymentsData(paymentTerms: $terms, payments: [new PaymentData]))->toThrow(ValidationException::class)
-        ->and(fn (): PaymentData => new PaymentData(paymentAmount: FiscalMoney::cve('0')))->toThrow(ValidationException::class);
+    expect(fn (): PayeeFinancialAccountData => PayeeFinancialAccountData::from(['name' => 'Account Holder']))->toThrow(ValidationException::class)
+        ->and(fn (): PayeeFinancialAccountData => PayeeFinancialAccountData::from(['name' => 'Account Holder', 'accountNumber' => '1234', 'nib' => '123456789012345678901']))->toThrow(ValidationException::class)
+        ->and(fn (): PaymentsData => PaymentsData::from(['paymentTerms' => $terms, 'payments' => [new PaymentData]]))->toThrow(ValidationException::class)
+        ->and(fn (): PaymentData => PaymentData::from(['paymentAmount' => FiscalMoney::cve('0')]))->toThrow(ValidationException::class);
 });
 
 it('keeps fiscal reference format and old document indication consistent', function (): void {
     $old       = new FiscalDocumentData('1/2020/ABC/123', true);
     $reference = new ReferenceData(fiscalDocument: $old);
     expect($reference->fiscalDocument->value)->toBe('1/2020/ABC/123');
-    expect(fn (): FiscalDocumentData => new FiscalDocumentData('1/2020/ABC/123', false))->toThrow(ValidationException::class)
-        ->and(fn (): ReferenceData => new ReferenceData(innerDocumentNumber: 'internal'))->toThrow(ValidationException::class);
+    expect(fn (): FiscalDocumentData => FiscalDocumentData::from(['value' => '1/2020/ABC/123', 'isOldDocument' => false]))->toThrow(ValidationException::class)
+        ->and(fn (): ReferenceData => ReferenceData::from(['innerDocumentNumber' => 'internal']))->toThrow(ValidationException::class);
 });
 
 it('validates strict immutable dates and paired chronological transport duration', function (): void {
@@ -100,7 +100,7 @@ it('validates strict immutable dates and paired chronological transport duration
         ->and(fn (): DatePeriodData => DatePeriodData::from(['startDate' => '2020-12-31', 'endDate' => '2026-03-01']))->toThrow(ValidationException::class)
         ->and(fn (): DatePeriodData => DatePeriodData::from(['startDate' => '2026-03-02', 'endDate' => '2026-03-01']))->toThrow(ValidationException::class)
         ->and(fn (): DurationData => DurationData::from(['startDate' => '2026-10-02', 'startTime' => '09:00:00', 'endDate' => '2026-10-03']))->toThrow(ValidationException::class)
-        ->and(fn (): TransportRouteData => new TransportRouteData([]))->toThrow(ValidationException::class);
+        ->and(fn (): TransportRouteData => TransportRouteData::from(['locations' => []]))->toThrow(ValidationException::class);
 });
 
 it('models rent self billing contingency and custom values explicitly', function (): void {
@@ -112,6 +112,6 @@ it('models rent self billing contingency and custom values explicitly', function
         ->and($contingency->toArray()['issueTime'])->toBe('09:00:00')
         ->and((new ExtraFieldData('CustomerTag', 'value'))->value)->toBe('value');
     expect(fn (): ContingencyData => ContingencyData::from(['issueDate' => '2026-10-02', 'reasonTypeCode' => '0', 'ledCode' => 1]))->toThrow(ValidationException::class)
-        ->and(fn (): ExtraFieldData => new ExtraFieldData('PayableAmount', '1'))->toThrow(ValidationException::class)
-        ->and(fn (): SelfBillingData => new SelfBillingData('invalid', '1234'))->toThrow(ValidationException::class);
+        ->and(fn (): ExtraFieldData => ExtraFieldData::from(['name' => 'PayableAmount', 'value' => '1']))->toThrow(ValidationException::class)
+        ->and(fn (): SelfBillingData => SelfBillingData::from(['authorizationId' => 'invalid', 'authorizationCode' => '1234']))->toThrow(ValidationException::class);
 });

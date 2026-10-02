@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Rules\ValidTaxId;
-use Spatie\LaravelData\Data;
+use Akira\Efatura\Support\Catalogs;
+use Akira\Efatura\Support\ValidationPayload;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class TaxIdData extends Data
+final class TaxIdData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     public function __construct(
         public readonly string $value,
         public readonly string $countryCode,
-    ) {
-        $this->validateFiscalFields(['value' => ['required', new ValidTaxId($countryCode)], ...self::rules()]);
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(): array
+    public static function rules(ValidationContext $context, Catalogs $catalogs): array
     {
-        return ['countryCode' => ['required', new OfficialCode(Catalog::Countries)]];
+        return [
+            'value'       => [new ValidTaxId(ValidationPayload::string($context, 'countryCode'))],
+            'countryCode' => [new OfficialCode(Catalog::Countries, $catalogs)],
+        ];
     }
 }

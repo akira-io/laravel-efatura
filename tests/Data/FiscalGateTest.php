@@ -88,24 +88,23 @@ it('round trips a representative complete fiscal document', function (): void {
     expect(ElectronicInvoiceData::validateAndCreate($document->toArray())->toArray())->toBe($document->toArray());
 });
 
-it('requires an emitter address in direct and document validation', function (): void {
+it('requires an emitter address in document and builder validation', function (): void {
     $emitter = new PartyData(new TaxIdData('100200300', 'CV'), 'Emitter', contacts: new ContactsData(telephone: '1234567', email: 'emitter@example.cv'));
-    expectFiscalGateField(fn () => $emitter->validateEmitter(), 'address');
 
     $payload = F::payload(['emitter' => [...F::payload()['emitter'], 'address' => null]]);
     foreach (['from', 'validateAndCreate'] as $method) {
-        expectFiscalGateField(fn (): ElectronicInvoiceData => ElectronicInvoiceData::$method($payload), 'address');
+        expectFiscalGateField(fn (): ElectronicInvoiceData => ElectronicInvoiceData::$method($payload), 'emitter.address');
     }
 
     $valid = ElectronicInvoiceData::from(F::payload());
-    expectFiscalGateField(fn (): ElectronicInvoiceData => new ElectronicInvoiceData($valid->header, $emitter, $valid->receiver, $valid->lines, $valid->totals), 'address');
-    expectFiscalGateField(fn () => Efatura::invoice()->emitter($emitter, 1)->receiver($valid->receiver)->line($valid->lines[0])->totals($valid->totals)->validate(), 'address');
+    expectFiscalGateField(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from(['header' => $valid->header, 'emitter' => $emitter, 'receiver' => $valid->receiver, 'lines' => $valid->lines, 'totals' => $valid->totals]), 'emitter.address');
+    expectFiscalGateField(fn () => Efatura::invoice()->emitter($emitter, 1)->receiver($valid->receiver)->line($valid->lines[0])->totals($valid->totals)->validate(), 'emitter.address');
 });
 
 it('requires a CV emitter address while keeping a foreign receiver address valid', function (): void {
     $foreign = new AddressData('PT', 'Rua Principal 12');
     $emitter = new PartyData(new TaxIdData('100200300', 'CV'), 'Emitter', $foreign, new ContactsData(telephone: '1234567', email: 'emitter@example.cv'));
-    expectFiscalGateField(fn () => $emitter->validateEmitter(), 'address.countryCode');
+    expectFiscalGateField(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from(F::payload(['emitter' => $emitter])), 'emitter.address.countryCode');
 
     $receiver = PartyData::from(['taxId' => ['value' => 'ABC12345', 'countryCode' => 'PT'], 'name' => 'Receiver', 'address' => ['countryCode' => 'PT', 'addressDetail' => 'Rua Principal 12']]);
     expect($receiver->address->countryCode)->toBe('PT');

@@ -4,52 +4,42 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Enums\ContingencyReason;
 use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Support\Fiscal;
-use Illuminate\Support\Facades\Validator;
+use Akira\Efatura\Support\ValidationPayload;
 use Illuminate\Validation\Rule;
-use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class EmissionContextData extends Data
+final class EmissionContextData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     public function __construct(
         public readonly EmissionMode $issueMode = EmissionMode::Online,
         public readonly ?ContingencyData $contingency = null,
         public readonly ?TaxIdData $transmitterTaxId = null,
         public readonly ?SoftwareData $software = null,
-    ) {
-        $this->validateFiscalFields(self::rules());
-        $this->validateFiscalFields(['contingency' => [
-            Rule::requiredIf($issueMode !== EmissionMode::Online),
-            Rule::prohibitedIf($issueMode === EmissionMode::Online),
-        ]]);
-        if ($transmitterTaxId instanceof TaxIdData) {
-            Validator::make(['countryCode' => $transmitterTaxId->countryCode], ['countryCode' => ['required', 'in:' . Fiscal::COUNTRY]])->validate();
-        }
-
-        if ($contingency instanceof ContingencyData) {
-            Validator::make([
-                'iuc'            => $contingency->iuc, 'issueTime' => $contingency->issueTime,
-                'reasonTypeCode' => $contingency->reasonTypeCode->value,
-            ], [
-                'iuc'            => [Rule::requiredIf($issueMode === EmissionMode::Off)],
-                'issueTime'      => [Rule::requiredIf($issueMode === EmissionMode::Offline)],
-                'reasonTypeCode' => [Rule::in($issueMode === EmissionMode::Offline ? ['0', '1', '4', '5'] : ['0', '2', '3'])],
-            ])->validate();
-        }
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(): array
+    public static function rules(ValidationContext $context): array
     {
+        $mode  = ValidationPayload::enum($context, 'issueMode', EmissionMode::class, EmissionMode::Online);
+        $rules = [
+            'contingency'                  => [Rule::requiredIf($mode !== EmissionMode::Online), Rule::prohibitedIf($mode === EmissionMode::Online)],
+            'transmitterTaxId.countryCode' => ['in:' . Fiscal::COUNTRY],
+        ];
+
+        if (! $mode instanceof EmissionMode || ! \is_array(ValidationPayload::value($context, 'contingency'))) {
+            return $rules;
+        }
+
         return [
-            'contingency'      => ['nullable'],
-            'transmitterTaxId' => ['nullable'], 'software' => ['nullable'],
+            ...$rules,
+            'contingency.iuc'            => [Rule::requiredIf($mode === EmissionMode::Off)],
+            'contingency.issueTime'      => [Rule::requiredIf($mode === EmissionMode::Offline)],
+            'contingency.reasonTypeCode' => [Rule::enum(ContingencyReason::class)->only(ContingencyReason::allowedFor($mode))],
         ];
     }
 }

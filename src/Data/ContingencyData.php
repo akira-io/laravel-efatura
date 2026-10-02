@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\FiscalDateFormat;
 use Akira\Efatura\Enums\ContingencyReason;
 use Akira\Efatura\Rules\FiscalDate;
+use Akira\Efatura\Rules\NotBlank;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
+use Akira\Efatura\Support\ValidationPayload;
 use Carbon\CarbonImmutable;
-use Spatie\LaravelData\Data;
+use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class ContingencyData extends Data
+final class ContingencyData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     public function __construct(
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly CarbonImmutable $issueDate,
@@ -27,23 +26,21 @@ final class ContingencyData extends Data
         #[FiscalDateFormat(Fiscal::TIME_FORMAT)]
         public readonly ?CarbonImmutable $issueTime = null,
         public readonly ?string $reasonDescription = null,
-    ) {
-        $this->validateFiscalFields(self::rules());
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(?ValidationContext $context = null): array
+    public static function rules(ValidationContext $context): array
     {
-        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+        $reason = ValidationPayload::enum($context, 'reasonTypeCode', ContingencyReason::class);
 
         return [
-            'issueDate'         => ['required', new FiscalDate],
-            'ledCode'           => ['required', ...FiscalRules::ledCode()],
-            'iuc'               => ['nullable', 'regex:/\A[0-9]{4}\/[0-9]+\z/'],
-            'issueTime'         => ['nullable', new FiscalDate(Fiscal::TIME_FORMAT)],
-            'reasonDescription' => ['nullable', 'required_if:' . $field('reasonTypeCode') . ',0', ...FiscalRules::text(10, 500)],
+            'issueDate'         => [new FiscalDate],
+            'ledCode'           => FiscalRules::ledCode(),
+            'iuc'               => [new NotBlank, 'regex:/\A[0-9]{4}\/[0-9]+\z/'],
+            'issueTime'         => [new FiscalDate(Fiscal::TIME_FORMAT)],
+            'reasonDescription' => [Rule::requiredIf($reason === ContingencyReason::Other), ...FiscalRules::text(10, 500)],
         ];
     }
 }

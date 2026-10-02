@@ -4,18 +4,14 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\FiscalDateFormat;
 use Akira\Efatura\Rules\FiscalDate;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Carbon\CarbonImmutable;
-use Spatie\LaravelData\Data;
 
-final class DocumentHeaderData extends Data
+final class DocumentHeaderData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     public function __construct(
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly CarbonImmutable $issueDate,
@@ -27,23 +23,20 @@ final class DocumentHeaderData extends Data
         public readonly ?string $innerDocumentNumber = null,
         public readonly ?bool $isIsolatedAct = null,
         public readonly ?SelfBillingData $selfBilling = null,
-    ) {
-        $this->validateFiscalFields(self::rules());
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
     public static function rules(): array
     {
         return [
-            'issueDate'           => ['required', new FiscalDate],
-            'issueTime'           => ['required', new FiscalDate(Fiscal::TIME_FORMAT)],
-            'ledCode'             => ['required', ...FiscalRules::ledCode()],
-            'serie'               => ['nullable', ...FiscalRules::series()],
-            'documentNumber'      => ['nullable', ...FiscalRules::documentNumber()],
-            'innerDocumentNumber' => ['nullable', ...FiscalRules::code()],
-            'selfBilling'         => ['nullable'],
+            'issueDate'           => [new FiscalDate],
+            'issueTime'           => [new FiscalDate(Fiscal::TIME_FORMAT)],
+            'ledCode'             => FiscalRules::ledCode(),
+            'serie'               => FiscalRules::series(),
+            'documentNumber'      => FiscalRules::documentNumber(),
+            'innerDocumentNumber' => FiscalRules::code(),
         ];
     }
 }

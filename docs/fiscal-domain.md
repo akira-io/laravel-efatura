@@ -1,6 +1,6 @@
 # Fiscal domain validation
 
-Use the concrete Data class matching the document: `ElectronicInvoiceData` (FTE), `ReceiptInvoiceData` (FRE), `SalesReceiptData` (TVE), `ReceiptData` (RCE), `CreditNoteData` (NCE), `DebitNoteData` (NDE), `TransportDocumentData` (DTE), `ReturnNoteData` (DVE), or `RegistrationNoteData` (NLE). All extend the abstract `InvoiceData` contract and expose `type(): DocumentType`. Constructors, `from()` and `validateAndCreate()` run the same domain checks. Payload properties are readonly; nested values have their own validation.
+Use the concrete Data class matching the document: `ElectronicInvoiceData` (FTE), `ReceiptInvoiceData` (FRE), `SalesReceiptData` (TVE), `ReceiptData` (RCE), `CreditNoteData` (NCE), `DebitNoteData` (NDE), `TransportDocumentData` (DTE), `ReturnNoteData` (DVE), or `RegistrationNoteData` (NLE). All extend the abstract `InvoiceData` contract and expose `type(): DocumentType`. `from()` and `validateAndCreate()` run the same domain checks, validating the whole graph once; direct construction with `new` does not validate. Payload properties are readonly; nested values have their own validation.
 
 ## Staged payloads
 

@@ -25,9 +25,15 @@ with the registered integer LED. Partial configuration can boot, but builders
 validate the chosen profile. Explicit emitter replacement clears the prior LED;
 pass it in the same call or set it afterward.
 
-Constructors and Spatie factories validate immediately. Builders defer draft
-validation to `validate()`, but the typed Data passed into setters is already
-validated when constructed. A builder defaults issue date/time from the package
+`from()` and `validateAndCreate()` validate the whole graph once, through
+Spatie's validation pipeline, and report each failure at its full path, such as
+`lines.2.taxes.0.taxTypeCode` or `emitter.contacts.email`. Direct construction
+with `new` no longer validates: build Data from arrays with `from()` when the
+input is untrusted. `PartyData::validateEmitter()` and
+`ContactsData::validateEmitter()` are gone; the emitter rules now belong to the
+document and report under `emitter.*`. `OfficialCode` takes the `Catalogs`
+service as its second argument. Builders defer draft validation to `validate()`,
+which validates the assembled document, including Data passed into setters. A builder defaults issue date/time from the package
 clock, while direct DTO construction requires them explicitly. Successful
 validation yields staged fiscal data: sequence/IUD allocation, completed XML
 envelope preparation, signing, transmission and authority acceptance are later

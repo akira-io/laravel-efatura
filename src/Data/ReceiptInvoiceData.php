@@ -7,8 +7,12 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Data\Attributes\FiscalDateFormat;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FiscalRules;
 use Carbon\CarbonImmutable;
+use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Min;
 
 final class ReceiptInvoiceData extends InvoiceData
 {
@@ -20,7 +24,7 @@ final class ReceiptInvoiceData extends InvoiceData
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
         public readonly PartyData $receiver,
-        #[DataCollectionOf(LineItemData::class)]
+        #[DataCollectionOf(LineItemData::class), ListType, Min(1)]
         public readonly array $lines,
         public readonly TotalsData $totals,
         public readonly PaymentsData $payments,
@@ -28,17 +32,24 @@ final class ReceiptInvoiceData extends InvoiceData
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly ?CarbonImmutable $taxPointDate = null,
         public readonly ?PartyData $paymentParty = null,
-        #[DataCollectionOf(ReferenceData::class)]
+        #[DataCollectionOf(ReferenceData::class), ListType]
         public readonly array $references = [],
         public readonly ?DeliveryData $delivery = null,
         public readonly ?EmissionContextData $emission = null,
         public readonly ?DocumentFooterData $footer = null,
-    ) {
-        $this->validateDocument();
-    }
+    ) {}
 
     public function type(): DocumentType
     {
         return DocumentType::InvoiceReceipt;
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    #[Override]
+    protected static function documentRules(): array
+    {
+        return ['orderReference' => FiscalRules::code()];
     }
 }

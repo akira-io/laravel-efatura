@@ -4,50 +4,30 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\PartyReference;
-use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\FiscalRules;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class PartyData extends Data
+final class PartyData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     public function __construct(
         public readonly ?TaxIdData $taxId = null,
         public readonly ?string $name = null,
         public readonly ?AddressData $address = null,
         public readonly ?ContactsData $contacts = null,
         public readonly ?PartyReference $reference = null,
-    ) {
-        $this->validateFiscalFields(self::rules());
-    }
-
-    public function validateEmitter(): void
-    {
-        $this->validateFiscalFields(['taxId' => ['required'], 'address' => ['required'], 'contacts' => ['required'], 'reference' => ['prohibited']]);
-        Validator::make(
-            ['taxId' => ['countryCode' => $this->taxId?->countryCode], 'address' => ['countryCode' => $this->address?->countryCode]],
-            ['taxId.countryCode' => ['required', 'in:' . Fiscal::COUNTRY], 'address.countryCode' => ['required', 'in:' . Fiscal::COUNTRY]],
-        )->validate();
-        $this->contacts?->validateEmitter();
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(?ValidationContext $context = null): array
+    public static function rules(ValidationContext $context): array
     {
-        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
-
         return [
-            'taxId'     => ['required_without:' . $field('reference')],
-            'name'      => ['nullable', 'required_without:' . $field('reference'), ...FiscalRules::text(3, 150)],
-            'reference' => ['nullable', Rule::enum(PartyReference::class), 'prohibits:' . $field('taxId') . ',' . $field('name') . ',' . $field('address') . ',' . $field('contacts')],
+            'taxId'     => ['required_without:' . FieldPath::of($context, 'reference')],
+            'name'      => ['required_without:' . FieldPath::of($context, 'reference'), ...FiscalRules::text(3, 150)],
+            'reference' => ['prohibits:' . FieldPath::list($context, 'taxId', 'name', 'address', 'contacts')],
         ];
     }
 }

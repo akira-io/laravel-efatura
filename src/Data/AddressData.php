@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\Catalog;
+use Akira\Efatura\Rules\NotBlank;
 use Akira\Efatura\Rules\OfficialCode;
+use Akira\Efatura\Support\Catalogs;
+use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
-use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class AddressData extends Data
+final class AddressData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     public function __construct(
         public readonly string $countryCode,
         public readonly string $addressDetail,
@@ -29,23 +28,19 @@ final class AddressData extends Data
         public readonly ?string $buildingFloor = null,
         public readonly ?string $postalCode = null,
         public readonly ?string $addressCode = null,
-    ) {
-        $this->validateFiscalFields(self::rules());
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(?ValidationContext $context = null): array
+    public static function rules(ValidationContext $context, Catalogs $catalogs): array
     {
-        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
-
         return [
-            'countryCode'   => ['required', new OfficialCode(Catalog::Countries)],
-            'addressDetail' => ['required', ...FiscalRules::text(1, 100)],
-            'addressCode'   => ['nullable', 'required_if:' . $field('countryCode') . ',' . Fiscal::COUNTRY, 'regex:/\ACV[0-9]{18}\z/', new OfficialCode(Catalog::Locations)],
+            'countryCode'   => [new OfficialCode(Catalog::Countries, $catalogs)],
+            'addressDetail' => FiscalRules::text(1, 100),
+            'addressCode'   => [new NotBlank, 'required_if:' . FieldPath::of($context, 'countryCode') . ',' . Fiscal::COUNTRY, 'regex:/\ACV[0-9]{18}\z/', new OfficialCode(Catalog::Locations, $catalogs)],
             ...collect(['state', 'city', 'region', 'street', 'streetDetail', 'buildingName', 'buildingNumber', 'buildingFloor', 'postalCode'])
-                ->mapWithKeys(static fn (string $field): array => [$field => ['nullable', ...FiscalRules::text(1, 100)]])->all(),
+                ->mapWithKeys(static fn (string $field): array => [$field => FiscalRules::text(1, 100)])->all(),
         ];
     }
 }

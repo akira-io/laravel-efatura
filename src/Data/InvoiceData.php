@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Actions\ValidateDocumentCompatibilityAction;
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\DocumentType;
-use Akira\Efatura\Support\FiscalRules;
-use Illuminate\Support\Arr;
-use Illuminate\Validation\ValidationException;
+use Akira\Efatura\Rules\ForeignDocumentField;
+use Akira\Efatura\Support\FieldPath;
+use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\ValidationPayload;
+use Illuminate\Contracts\Support\Arrayable;
 use Override;
-use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\DataConfig;
+use Spatie\LaravelData\Support\DataProperty;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-abstract class InvoiceData extends Data
+abstract class InvoiceData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     abstract public DocumentHeaderData $header { get; }
 
     abstract public PartyData $emitter { get; }
@@ -27,54 +28,76 @@ abstract class InvoiceData extends Data
 
     abstract public function type(): DocumentType;
 
-    /** @param array<string, mixed> $properties
-     * @return array<string, mixed>
-     */
     #[Override]
-    final public static function prepareForPipeline(array $properties): array
+    final public static function from(mixed ...$payloads): static
     {
-        foreach (['lines', 'totals', 'references', 'payments', 'paymentParty', 'delivery', 'dueDate', 'taxPointDate', 'orderReference',
-            'issueReasonCode', 'issueReasonDescription', 'rappelPeriod', 'receiptTypeCode', 'rentReceipt', 'receiverTypeCode',
-            'transportDocumentTypeCode', 'transportServiceProvider', 'transportRoute'] as $field) {
-            if (! property_exists(static::class, $field) && Arr::has($properties, $field)) {
-                throw ValidationException::withMessages([$field => __('efatura::efatura.validation.document_field_forbidden')]);
-            }
-        }
+        $document = parent::from(...$payloads);
+        resolve(ValidateDocumentCompatibilityAction::class)->handle($document);
 
-        static::validate($properties);
-
-        return $properties;
+        return $document;
     }
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @param Arrayable<array-key, mixed>|array<array-key, mixed> $payload
      */
-    final public static function rules(): array
+    #[Override]
+    final public static function validateAndCreate(Arrayable|array $payload): static
     {
-        return ['receiver' => [\in_array(static::class, [SalesReceiptData::class, ReturnNoteData::class, TransportDocumentData::class], true) ? 'nullable' : 'required'], 'emission' => ['nullable'], 'footer' => ['nullable'],
-            'payments'     => [\in_array(static::class, [ReceiptInvoiceData::class, SalesReceiptData::class, ReceiptData::class], true) ? 'required' : 'nullable'], 'paymentParty' => ['nullable'], 'delivery' => ['nullable'], 'rappelPeriod' => ['nullable'], 'rentReceipt' => ['nullable']];
+        return self::from($payload);
     }
 
-    protected function validateDocument(): void
+    /**
+     * @return array<string, list<mixed>>
+     */
+    final public static function rules(ValidationContext $context, DataConfig $config): array
     {
-        $rules = [];
-        if (property_exists($this, 'lines')) {
-            $rules['lines'] = ['required', 'array', 'list', 'min:1'];
+        return [...self::emitterRules($context), ...self::foreignFieldRules($context, $config), ...static::documentRules()];
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    protected static function documentRules(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    private static function emitterRules(ValidationContext $context): array
+    {
+        $rules = [
+            'emitter.taxId'               => ['required'],
+            'emitter.address'             => ['required'],
+            'emitter.contacts'            => ['required'],
+            'emitter.reference'           => ['prohibited'],
+            'emitter.taxId.countryCode'   => ['in:' . Fiscal::COUNTRY],
+            'emitter.address.countryCode' => ['in:' . Fiscal::COUNTRY],
+        ];
+
+        if (! \is_array(ValidationPayload::value($context, 'emitter.contacts'))) {
+            return $rules;
         }
 
-        if (property_exists($this, 'references')) {
-            $rules['references'] = ['array', 'list'];
-        }
+        return [
+            ...$rules,
+            'emitter.contacts.email'     => ['required'],
+            'emitter.contacts.telephone' => ['required_without:' . FieldPath::of($context, 'emitter.contacts.mobilephone')],
+        ];
+    }
 
-        if (property_exists($this, 'orderReference')) {
-            $rules['orderReference'] = ['nullable', ...FiscalRules::code()];
-        }
+    /**
+     * @return array<string, list<mixed>>
+     */
+    private static function foreignFieldRules(ValidationContext $context, DataConfig $config): array
+    {
+        $fields = $config->getDataClass(static::class)->properties
+            ->map(static fn (DataProperty $property): string => $property->inputMappedName ?? $property->name);
 
-        if (property_exists($this, 'issueReasonDescription')) {
-            $rules['issueReasonDescription'] = ['nullable', ...FiscalRules::text(10, 500)];
-        }
-
-        $this->validateFiscalFields($rules);
-        resolve(ValidateDocumentCompatibilityAction::class)->handle($this);
+        return collect(\is_array($context->payload) ? array_keys($context->payload) : [])
+            ->diff($fields)
+            ->mapWithKeys(static fn (int|string $field): array => [(string) $field => [new ForeignDocumentField]])
+            ->all();
     }
 }

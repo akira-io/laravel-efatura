@@ -61,37 +61,52 @@ final readonly class FiscalNumber implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        $failure = $this->failure($value);
+
+        if ($failure !== null) {
+            $fail('efatura::efatura.validation.' . $failure)->translate();
+        }
+    }
+
+    private function failure(mixed $value): ?string
+    {
+        if ($this->currency !== null) {
+            return $this->moneyFailure($value);
+        }
+
+        return $this->decimalFailure($value);
+    }
+
+    private function moneyFailure(mixed $value): ?string
+    {
         if ($value instanceof Money) {
-            if ($this->currency === null || $value->getCurrency()->getCurrencyCode() !== $this->currency) {
-                $fail('efatura::efatura.validation.currency_mismatch')->translate();
+            return $value->getCurrency()->getCurrencyCode() === $this->currency ? $this->decimalFailure($value->getAmount()) : 'currency_mismatch';
+        }
 
-                return;
-            }
+        if ($value instanceof BigDecimal) {
+            return 'invalid_money';
+        }
 
-            $value = $value->getAmount();
-        } elseif ($value instanceof BigDecimal && $this->currency !== null) {
-            $fail('efatura::efatura.validation.invalid_money')->translate();
+        return \is_int($value) || \is_string($value) ? $this->decimalFailure($value) : 'invalid_money_input';
+    }
 
-            return;
+    private function decimalFailure(mixed $value): ?string
+    {
+        if ($value instanceof Money) {
+            return 'currency_mismatch';
         }
 
         if (! DecimalFormatter::isPlainDecimal($value)) {
-            $fail('efatura::efatura.validation.invalid_decimal')->translate();
-
-            return;
+            return 'invalid_decimal';
         }
 
         $decimal = BigDecimal::of($value);
 
         if (! DecimalFormatter::fitsScale($decimal, $this->scale)) {
-            $fail('efatura::efatura.validation.decimal_scale_exceeded')->translate();
-
-            return;
+            return 'decimal_scale_exceeded';
         }
 
-        if (! $this->withinBounds($decimal)) {
-            $fail('efatura::efatura.validation.number_bounds')->translate();
-        }
+        return $this->withinBounds($decimal) ? null : 'number_bounds';
     }
 
     private function withinBounds(BigDecimal $decimal): bool

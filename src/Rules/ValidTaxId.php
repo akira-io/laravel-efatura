@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 final readonly class ValidTaxId implements ValidationRule
 {
-    public function __construct(private string $countryCode) {}
+    public function __construct(private ?string $countryCode) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {

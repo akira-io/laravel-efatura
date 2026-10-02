@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Akira\Efatura\Data\AddressData;
 use Akira\Efatura\Data\ContactsData;
 use Akira\Efatura\Data\DatePeriodData;
+use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\ExtraFieldData;
 use Akira\Efatura\Data\ExtraPropertyData;
 use Akira\Efatura\Data\ItemData;
@@ -17,6 +18,7 @@ use Akira\Efatura\Data\StandardIdentificationData;
 use Akira\Efatura\Data\TaxIdData;
 use Akira\Efatura\Enums\LineType;
 use Akira\Efatura\Enums\PartyReference;
+use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Brick\Math\BigDecimal;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
@@ -35,7 +37,6 @@ it('preserves explicitly permitted empty extension text', function (string $valu
 
 it('still requires valid extension names when their text is empty', function (): void {
     foreach (['', '   ', "\t\n"] as $name) {
-        expect(fn (): ExtraFieldData => new ExtraFieldData($name, ''))->toThrow(ValidationException::class);
         foreach (['from', 'validateAndCreate'] as $method) {
             expect(fn (): ExtraFieldData => ExtraFieldData::$method(['name' => $name, 'value' => '']))->toThrow(ValidationException::class);
         }
@@ -44,7 +45,6 @@ it('still requires valid extension names when their text is empty', function ():
 
 it('requires nonempty clean text for item properties', function (): void {
     foreach (['', '   ', "\t\n"] as $value) {
-        expect(fn (): ExtraPropertyData => new ExtraPropertyData('CustomFlag', $value))->toThrow(ValidationException::class);
         foreach (['from', 'validateAndCreate'] as $method) {
             expect(fn (): ExtraPropertyData => ExtraPropertyData::$method(['name' => 'CustomFlag', 'value' => $value]))->toThrow(ValidationException::class);
         }
@@ -54,7 +54,6 @@ it('requires nonempty clean text for item properties', function (): void {
 it('rejects supplied empty optional strings without discarding them', function (string $class, array $payload, string $field): void {
     foreach (['', '   ', "\t\n"] as $empty) {
         $input = [...$payload, $field => $empty];
-        expect(fn (): object => new $class(...$input))->toThrow(ValidationException::class);
         foreach (['from', 'validateAndCreate'] as $method) {
             expect(fn () => $class::$method($input))->toThrow(ValidationException::class);
         }
@@ -77,15 +76,22 @@ it('rejects supplied empty optional strings without discarding them', function (
 ]);
 
 it('restricts emitter tax country while permitting foreign parties in other roles', function (): void {
-    $payload = ['taxId' => new TaxIdData('ABC12345', 'PT'), 'name' => 'Foreign Company', 'contacts' => new ContactsData(telephone: '1234567', email: 'a@example.com')];
-    $party   = new PartyData(...$payload);
-    expect($party->taxId->countryCode)->toBe('PT')
-        ->and(fn () => $party->validateEmitter())->toThrow(ValidationException::class);
+    CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
+    $foreign = ['taxId' => new TaxIdData('ABC12345', 'PT'), 'name' => 'Foreign Company', 'contacts' => new ContactsData(telephone: '1234567', email: 'a@example.com')];
+    $emitter = [...$foreign, 'address' => ['countryCode' => 'CV', 'addressDetail' => 'Praia office', 'addressCode' => 'CV111111111011110101']];
     foreach (['from', 'validateAndCreate'] as $method) {
-        $input   = [...$payload, 'taxId' => $payload['taxId']->toArray(), 'contacts' => $payload['contacts']->toArray()];
-        $foreign = PartyData::$method($input);
-        expect(fn () => $foreign->validateEmitter())->toThrow(ValidationException::class);
+        expect(PartyData::$method($foreign)->taxId->countryCode)->toBe('PT')
+            ->and(ElectronicInvoiceData::$method(F::payload(['receiver' => $foreign]))->receiver?->taxId?->countryCode)->toBe('PT');
+
+        try {
+            ElectronicInvoiceData::$method(F::payload(['emitter' => $emitter]));
+            test()->fail('Expected a ValidationException.');
+        } catch (ValidationException $validationException) {
+            expect($validationException->errors())->toHaveKey('emitter.taxId.countryCode');
+        }
     }
+
+    CarbonImmutable::setTestNow();
 });
 
 it('compares fiscal periods as calendar dates regardless of hidden time and timezone', function (): void {
@@ -95,15 +101,10 @@ it('compares fiscal periods as calendar dates regardless of hidden time and time
         expect(DatePeriodData::$method($payload)->toArray()['endDate'])->toBe('2026-10-02');
         expect(fn (): DatePeriodData => DatePeriodData::$method(['startDate' => '2026-10-03', 'endDate' => '2026-10-02']))->toThrow(ValidationException::class);
     }
-
-    expect(fn (): DatePeriodData => new DatePeriodData(CarbonImmutable::parse('2026-10-03'), CarbonImmutable::parse('2026-10-02')))->toThrow(ValidationException::class);
 });
 
 it('requires positive quantities in line and item pack fields', function (): void {
     $quantity = new QuantityData(BigDecimal::of('0'), 'C62');
-    $item     = new ItemData('Item', 'SKU');
-    expect(fn (): LineItemData => new LineItemData($quantity, $item))->toThrow(ValidationException::class)
-        ->and(fn (): ItemData => new ItemData('Item', 'SKU', packQuantity: $quantity))->toThrow(ValidationException::class);
     foreach (['from', 'validateAndCreate'] as $method) {
         foreach ([$quantity, ['value' => '0', 'unitCode' => 'C62']] as $input) {
             expect(fn (): LineItemData => LineItemData::$method(['quantity' => $input, 'item' => ['description' => 'Item', 'emitterIdentification' => 'SKU']]))->toThrow(ValidationException::class)
@@ -119,7 +120,6 @@ it('requires a charge line reference without checking cross line existence', fun
     $quantity = new QuantityData(BigDecimal::of('1'), 'C62');
     $item     = new ItemData('Item', 'SKU');
     $payload  = ['quantity' => $quantity, 'item' => $item, 'lineTypeCode' => LineType::Charge];
-    expect(fn (): LineItemData => new LineItemData(...$payload))->toThrow(ValidationException::class);
     foreach (['from', 'validateAndCreate'] as $method) {
         $input = [...$payload, 'quantity' => $quantity->toArray(), 'item' => ['description' => 'Item', 'emitterIdentification' => 'SKU']];
         expect(fn (): LineItemData => LineItemData::$method($input))->toThrow(ValidationException::class);

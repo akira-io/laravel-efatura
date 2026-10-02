@@ -35,7 +35,6 @@ final readonly class ValidateDocumentCompatibilityAction
 
     public function handle(InvoiceData $document): void
     {
-        $document->emitter->validateEmitter();
         $this->dates->handle($document->header, $document->emission->issueMode ?? EmissionMode::Online);
         Validator::make(['receiverReference' => $document->receiver?->reference?->value], ['receiverReference' => ['nullable', Rule::in([PartyReference::Emitter->value])]])->validate();
         if ($document->header->selfBilling instanceof SelfBillingData) {

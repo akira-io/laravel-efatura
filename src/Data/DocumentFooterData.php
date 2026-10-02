@@ -4,27 +4,26 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Support\FiscalRules;
-use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\Validation\ListType;
 
-final class DocumentFooterData extends Data
+final class DocumentFooterData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     /**
      * @param list<ExtraFieldData> $extraFields
      */
-    public function __construct(public readonly ?string $note = null, public readonly array $extraFields = [])
-    {
-        $this->validateFiscalFields(self::rules());
-    }
+    public function __construct(
+        public readonly ?string $note = null,
+        #[DataCollectionOf(ExtraFieldData::class), ListType]
+        public readonly array $extraFields = [],
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
     public static function rules(): array
     {
-        return ['note' => ['nullable', ...FiscalRules::text(10, 500)], 'extraFields' => ['array', 'list']];
+        return ['note' => FiscalRules::text(10, 500)];
     }
 }

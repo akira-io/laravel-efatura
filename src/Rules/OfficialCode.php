@@ -11,11 +11,11 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 final readonly class OfficialCode implements ValidationRule
 {
-    public function __construct(private Catalog $catalog) {}
+    public function __construct(private Catalog $catalog, private Catalogs $catalogs) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! \is_string($value) || resolve(Catalogs::class)->find($this->catalog, $value) === null) {
+        if (! \is_string($value) || $this->catalogs->find($this->catalog, $value) === null) {
             $fail('efatura::efatura.validation.official_code')->translate();
         }
     }

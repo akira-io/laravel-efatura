@@ -7,12 +7,13 @@ use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Rules\UnreservedFiscalField;
 use Akira\Efatura\Rules\ValidTaxId;
+use Akira\Efatura\Support\Catalogs;
 use Illuminate\Support\Facades\Validator;
 
 it('rejects unknown and incorrectly cased official codes', function (): void {
-    expect(Validator::make(['code' => 'CV'], ['code' => [new OfficialCode(Catalog::Countries)]])->passes())->toBeTrue()
-        ->and(Validator::make(['code' => 'cv'], ['code' => [new OfficialCode(Catalog::Countries)]])->fails())->toBeTrue()
-        ->and(Validator::make(['code' => 1], ['code' => [new OfficialCode(Catalog::Countries)]])->fails())->toBeTrue();
+    expect(Validator::make(['code' => 'CV'], ['code' => [new OfficialCode(Catalog::Countries, resolve(Catalogs::class))]])->passes())->toBeTrue()
+        ->and(Validator::make(['code' => 'cv'], ['code' => [new OfficialCode(Catalog::Countries, resolve(Catalogs::class))]])->fails())->toBeTrue()
+        ->and(Validator::make(['code' => 1], ['code' => [new OfficialCode(Catalog::Countries, resolve(Catalogs::class))]])->fails())->toBeTrue();
 });
 
 it('rejects unsupported rule input types', function (): void {

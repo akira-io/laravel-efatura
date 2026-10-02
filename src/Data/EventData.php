@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\FiscalDateFormat;
 use Akira\Efatura\Enums\EventType;
 use Akira\Efatura\Rules\FiscalDate;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
+use Akira\Efatura\Support\ValidationPayload;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Validator;
-use Spatie\LaravelData\Data;
+use Illuminate\Validation\Rule;
+use Spatie\LaravelData\Attributes\Validation\RequiredIf;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class EventData extends Data
+final class EventData extends FiscalData
 {
-    use ValidatesFiscalFields;
-
     /**
      * @param list<string> $iuds
      */
@@ -27,26 +26,26 @@ final class EventData extends Data
         #[FiscalDateFormat(Fiscal::DATE_TIME_FORMAT)]
         public readonly CarbonImmutable $issueDateTime,
         public readonly string $issueReasonDescription,
+        #[RequiredIf('eventTypeCode', EventType::FiscalDocumentCancellation)]
         public readonly array $iuds = [],
         public readonly ?EventNumberRangeData $numberRange = null,
         public readonly ?EmissionContextData $emission = null,
-    ) {
-        $this->validateFiscalFields(self::rules());
-        Validator::make(['countryCode' => $emitterTaxId->countryCode, 'issueDate' => $issueDateTime->format(Fiscal::DATE_FORMAT)], ['countryCode' => ['required', 'in:' . Fiscal::COUNTRY], 'issueDate' => [new FiscalDate]])->validate();
-    }
+    ) {}
 
     /**
-     * @return array<string, array<int, mixed>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(): array
+    public static function rules(ValidationContext $context): array
     {
+        $type = ValidationPayload::enum($context, 'eventTypeCode', EventType::class);
+
         return [
-            'issueDateTime'          => ['required', new FiscalDate(Fiscal::DATE_TIME_FORMAT)],
-            'issueReasonDescription' => ['required', ...FiscalRules::text(10, 500)],
-            'iuds'                   => ['array', 'list', 'required_if:eventTypeCode,FDC', 'prohibited_if:eventTypeCode,UDN'],
-            'iuds.*'                 => ['required', 'distinct:strict', ...FiscalRules::iud()],
-            'numberRange'            => ['nullable', 'required_if:eventTypeCode,UDN', 'prohibited_if:eventTypeCode,FDC'],
-            'emission'               => ['nullable'],
+            'emitterTaxId.countryCode' => ['in:' . Fiscal::COUNTRY],
+            'issueDateTime'            => [new FiscalDate(Fiscal::DATE_TIME_FORMAT), 'after_or_equal:' . Fiscal::EARLIEST_DATE],
+            'issueReasonDescription'   => FiscalRules::text(10, 500),
+            'iuds'                     => ['list', Rule::prohibitedIf($type === EventType::UnusedDocumentNumber)],
+            'iuds.*'                   => ['required', 'distinct:strict', ...FiscalRules::iud()],
+            'numberRange'              => [Rule::requiredIf($type === EventType::UnusedDocumentNumber), Rule::prohibitedIf($type === EventType::FiscalDocumentCancellation)],
         ];
     }
 }
