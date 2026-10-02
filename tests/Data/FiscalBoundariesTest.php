@@ -11,6 +11,7 @@ use Akira\Efatura\Data\DurationData;
 use Akira\Efatura\Data\ExtraFieldData;
 use Akira\Efatura\Data\FiscalDocumentData;
 use Akira\Efatura\Data\ItemData;
+use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\PaymentsData;
 use Akira\Efatura\Data\ReferenceData;
 use Akira\Efatura\Data\TaxData;
@@ -18,6 +19,7 @@ use Akira\Efatura\Enums\ContingencyReason;
 use Akira\Efatura\Enums\StampTaxCode;
 use Akira\Efatura\Enums\TaxType;
 use Akira\Efatura\Money\FiscalMoney;
+use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Akira\Efatura\Tests\Support\FiscalValueFixtures;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
@@ -87,6 +89,13 @@ it('limits reference taxes to two entries', function (): void {
     $payload = ['taxes' => [$tax, $tax, $tax]];
 
     expect(fn (): ReferenceData => ReferenceData::from($payload))->toFailValidationOn('taxes', 'The taxes field must not have more than 2 items.');
+});
+
+it('limits line taxes to two entries', function (): void {
+    $tax     = ['taxTypeCode' => 'IVA', 'taxPercentage' => '15'];
+    $payload = F::linePayload(['taxes' => [$tax, $tax, $tax]]);
+
+    expect(fn (): LineItemData => LineItemData::from($payload))->toFailValidationOn('taxes', 'The taxes field must not have more than 2 items.');
 });
 
 it('accepts a reference with a single tax', function (): void {
