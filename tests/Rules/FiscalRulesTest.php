@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
+use Akira\Efatura\Rules\UnreservedFiscalField;
 use Akira\Efatura\Rules\ValidTaxId;
 use Illuminate\Support\Facades\Validator;
 
@@ -31,3 +32,13 @@ it('resolves package rule errors through the published translation namespace', f
     expect($validator->fails())->toBeTrue()
         ->and($validator->errors()->first('taxId'))->toBe('The tax id must be a valid tax identifier for its country.');
 });
+
+it('rejects a non-string extra field name with its own message', function (mixed $name, string $message): void {
+    $validator = Validator::make(['name' => $name], ['name' => [new UnreservedFiscalField]]);
+
+    expect($validator->errors()->get('name'))->toBe([$message]);
+})->with([
+    'integer'  => [12, 'The name must be a text field name.'],
+    'array'    => [['IssueDate'], 'The name must be a text field name.'],
+    'reserved' => ['IssueDate', 'The name is reserved for an official fiscal field.'],
+]);

@@ -8,6 +8,7 @@ return [
         'issue_date_window'         => 'The issue date and time are outside the permitted emission window.',
         'reconciliation'            => 'The supplied amount cannot be reconciled with the fiscal evidence.',
         'reserved_field'            => 'The :attribute is reserved for an official fiscal field.',
+        'field_name'                => 'The :attribute must be a text field name.',
         'data_instances'            => 'The :attribute must contain the expected immutable data values.',
         'fiscal_date'               => 'The :attribute must use a valid fiscal date or time.',
         'official_code'             => 'The :attribute must be a code in the official catalog.',

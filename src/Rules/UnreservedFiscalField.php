@@ -175,7 +175,13 @@ final readonly class UnreservedFiscalField implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! \is_string($value) || \in_array(Str::lower($value), self::NAMES, true)) {
+        if (! \is_string($value)) {
+            $fail('efatura::efatura.validation.field_name')->translate();
+
+            return;
+        }
+
+        if (\in_array(Str::lower($value), self::NAMES, true)) {
             $fail('efatura::efatura.validation.reserved_field')->translate();
         }
     }
