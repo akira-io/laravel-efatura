@@ -16,11 +16,11 @@ final class ReturnNoteData extends InvoiceData
     public function __construct(
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
-        public readonly PartyData $receiver,
         public readonly array $lines,
         public readonly TotalsData $totals,
         public readonly IssueReason $issueReasonCode,
         public readonly array $references,
+        public readonly ?PartyData $receiver = null,
         public readonly ?string $issueReasonDescription = null,
         public readonly ?EmissionContextData $emission = null,
         public readonly ?DocumentFooterData $footer = null,

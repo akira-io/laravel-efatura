@@ -52,7 +52,7 @@ abstract class InvoiceData extends Data
      */
     final public static function rules(): array
     {
-        return ['receiver' => [\in_array(static::class, [SalesReceiptData::class, TransportDocumentData::class], true) ? 'nullable' : 'required'], 'emission' => ['nullable'], 'footer' => ['nullable'],
+        return ['receiver' => [\in_array(static::class, [SalesReceiptData::class, ReturnNoteData::class, TransportDocumentData::class], true) ? 'nullable' : 'required'], 'emission' => ['nullable'], 'footer' => ['nullable'],
             'payments'     => [\in_array(static::class, [ReceiptInvoiceData::class, SalesReceiptData::class, ReceiptData::class], true) ? 'required' : 'nullable'], 'paymentParty' => ['nullable'], 'delivery' => ['nullable'], 'rappelPeriod' => ['nullable'], 'rentReceipt' => ['nullable']];
     }
 

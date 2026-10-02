@@ -64,6 +64,11 @@ final readonly class ValidateDocumentCompatibilityAction
 
         if ($document instanceof TransportDocumentData) {
             Validator::make(['receiver' => $document->receiver], ['receiver' => [Rule::requiredIf($document->receiverTypeCode !== TransportReceiverType::Undetermined), Rule::prohibitedIf($document->receiverTypeCode === TransportReceiverType::Undetermined)]])->validate();
+            if ($document->receiverTypeCode === TransportReceiverType::Taxpayer) {
+                $receiver = $document->receiver?->reference === PartyReference::Emitter ? $document->emitter : $document->receiver;
+                Validator::make(['receiver' => ['taxId' => ['countryCode' => $receiver?->taxId?->countryCode]]], ['receiver.taxId.countryCode' => ['required', 'in:CV']])->validate();
+            }
+
             if ($document->transportServiceProvider->reference === PartyReference::Receiver) {
                 Validator::make(['receiver' => $document->receiver], ['receiver' => ['required']])->validate();
             }
