@@ -2,49 +2,41 @@
 
 declare(strict_types=1);
 
-use Akira\Efatura\Configuration\LoadEfaturaConfig;
-use Akira\Efatura\Efatura;
 use Akira\Efatura\EfaturaManager;
-use Illuminate\Config\Repository;
+use Akira\Efatura\Tests\Support\ConfigFixtures;
 
-it('isolates each scoped manager and its fluent entry from the singleton', function (): void {
-    $singleton   = resolve(EfaturaManager::class);
-    $default     = $singleton->config();
-    $firstConfig = (new LoadEfaturaConfig(new Repository([
-        'efatura'     => ['emitter' => ['name' => 'First emitter'], 'storage' => ['disk' => 'first-disk']],
-        'filesystems' => ['default' => 'host-disk'],
-        'cache'       => ['default' => 'host-cache'],
-        'database'    => ['default' => 'host-database'],
-        'queue'       => ['default' => 'host-queue'],
-    ])))();
-    $secondConfig = (new LoadEfaturaConfig(new Repository([
-        'efatura'     => ['emitter' => ['name' => 'Second emitter'], 'storage' => ['disk' => 'second-disk']],
-        'filesystems' => ['default' => 'host-disk'],
-        'cache'       => ['default' => 'host-cache'],
-        'database'    => ['default' => 'host-database'],
-        'queue'       => ['default' => 'host-queue'],
-    ])))();
+beforeEach(function (): void {
+    $this->singleton    = resolve(EfaturaManager::class);
+    $this->default      = $this->singleton->config();
+    $this->firstConfig  = ConfigFixtures::load(['emitter' => ['name' => 'First emitter'], 'storage' => ['disk' => 'first-disk']]);
+    $this->secondConfig = ConfigFixtures::load(['emitter' => ['name' => 'Second emitter'], 'storage' => ['disk' => 'second-disk']]);
+});
 
-    $first  = $singleton->withConfig($firstConfig);
-    $second = $singleton->withConfig($secondConfig);
+it('isolates each scoped manager from the singleton', function (): void {
+    $first  = $this->singleton->withConfig($this->firstConfig);
+    $second = $this->singleton->withConfig($this->secondConfig);
 
-    expect($first)->not->toBe($singleton)
-        ->and($second)->not->toBe($singleton)
+    expect($first)->not->toBe($this->singleton)
+        ->and($second)->not->toBe($this->singleton)
         ->and($first)->not->toBe($second)
-        ->and($first->config())->toBe($firstConfig)
-        ->and($second->config())->toBe($secondConfig)
-        ->and($singleton->config())->toBe($default)
+        ->and($first->config())->toBe($this->firstConfig)
+        ->and($second->config())->toBe($this->secondConfig)
+        ->and($this->singleton->config())->toBe($this->default)
         ->and($first->config()->emitter->name)->toBe('First emitter')
         ->and($second->config()->emitter->name)->toBe('Second emitter')
         ->and($first->config()->storage->disk)->toBe('first-disk')
         ->and($second->config()->storage->disk)->toBe('second-disk')
-        ->and($singleton->config()->emitter)->toBeNull()
-        ->and($singleton->config()->storage->disk)->toBe($default->storage->disk)
-        ->and(resolve(EfaturaManager::class))->toBe($singleton);
+        ->and($this->singleton->config()->emitter)->toBeNull()
+        ->and($this->singleton->config()->storage->disk)->toBe($this->default->storage->disk)
+        ->and(resolve(EfaturaManager::class))->toBe($this->singleton);
+});
 
-    expect($first->efatura())->toBeInstanceOf(Efatura::class)
-        ->and($first->efatura())->toBe($first->efatura())
+it('gives each scoped manager its own memoized fluent entry bound to its configuration', function (): void {
+    $first  = $this->singleton->withConfig($this->firstConfig);
+    $second = $this->singleton->withConfig($this->secondConfig);
+
+    expect($first->efatura())->toBe($first->efatura())
         ->and($second->efatura())->not->toBe($first->efatura())
-        ->and($first->efatura()->config())->toBe($firstConfig)
-        ->and($second->efatura()->config())->toBe($secondConfig);
+        ->and($first->efatura()->config())->toBe($this->firstConfig)
+        ->and($second->efatura()->config())->toBe($this->secondConfig);
 });

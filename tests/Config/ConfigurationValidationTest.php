@@ -11,14 +11,14 @@ it('rejects invalid configuration with stable safe field errors', function (stri
     $repository = resolve('config');
     $repository->set($field, $configured);
 
-    try {
-        (new LoadEfaturaConfig($repository))();
-        test()->fail('Invalid configuration was accepted.');
-    } catch (ConfigurationException $configurationException) {
-        expect($configurationException->errorCode)->toBe($errorCode)
-            ->and($configurationException->field)->toBe($field)
-            ->and($configurationException->getMessage())->toBe($errorCode . ': ' . $field);
-    }
+    $loader = new LoadEfaturaConfig($repository);
+
+    expect(fn (): EfaturaConfig => $loader())
+        ->toThrow(function (ConfigurationException $configurationException) use ($field, $errorCode): void {
+            expect($configurationException->errorCode)->toBe($errorCode)
+                ->and($configurationException->field)->toBe($field)
+                ->and($configurationException->getMessage())->toBe($errorCode . ': ' . $field);
+        });
 })->with([
     ['efatura.environment', 'UNKNOWN', 'configuration.invalid_environment'],
     ['efatura.environment', 99, 'configuration.invalid_environment'],
@@ -74,22 +74,28 @@ it('rejects invalid configuration with stable safe field errors', function (stri
     ['efatura', ['list-entry'], 'configuration.invalid_type'],
 ]);
 
-it('validates host defaults only when inherited', function (): void {
-    $repository = new Repository(['filesystems' => ['default' => false], 'queue' => ['default' => 'sync']]);
+it('rejects an invalid inherited host default', function (): void {
+    $loader = new LoadEfaturaConfig(new Repository(['filesystems' => ['default' => false], 'queue' => ['default' => 'sync']]));
 
-    expect(fn (): EfaturaConfig => (new LoadEfaturaConfig($repository))())
+    expect(fn (): EfaturaConfig => $loader())
         ->toThrow(ConfigurationException::class, 'configuration.invalid_type: filesystems.default');
+});
 
+it('ignores an invalid host default that every package setting overrides', function (): void {
+    $repository = new Repository(['filesystems' => ['default' => false], 'queue' => ['default' => 'sync']]);
     $repository->set('efatura', [
         'storage' => ['disk' => 'local'], 'certificates' => ['disk' => 'private'],
         'cache'   => ['store' => 'array'], 'database' => ['connection' => 'sqlite'],
         'queue'   => ['connection' => 'sync'],
     ]);
+
     expect((new LoadEfaturaConfig($repository))()->storage->disk)->toBe('local');
 });
 
 it('rejects missing required host defaults with their original field path', function (): void {
-    expect(fn (): EfaturaConfig => (new LoadEfaturaConfig(new Repository))())
+    $loader = new LoadEfaturaConfig(new Repository);
+
+    expect(fn (): EfaturaConfig => $loader())
         ->toThrow(ConfigurationException::class, 'configuration.invalid_type: queue.default');
 });
 
