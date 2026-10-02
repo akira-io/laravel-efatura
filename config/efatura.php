@@ -8,12 +8,13 @@ return [
     | Fiscal Environment
     |--------------------------------------------------------------------------
     |
-    | Accepts TEST (3), HOMOLOGATION (2), or PRODUCTION (1), as a name, code,
-    | or Environment enum. TEST is the safe default. Changing the environment
-    | selects the official repository code; it never changes client URLs.
+    | Accepts test (3), homologation (2), or production (1), as a name in any
+    | letter case, a code, or an Environment enum. test is the safe default.
+    | Changing the environment selects the official repository code; it never
+    | changes client URLs.
     |
     */
-    'environment' => env('EFATURA_ENVIRONMENT', 'TEST'),
+    'environment' => env('EFATURA_ENVIRONMENT', 'test'),
 
     /*
     |--------------------------------------------------------------------------

@@ -18,7 +18,7 @@ it('loads the immutable configuration once when first resolved', function (): vo
     config()->set('efatura.emitter.name', 'Second emitter');
 
     expect($first)->toBe(resolve(EfaturaConfig::class))
-        ->and($first->environment->environment)->toBe(Environment::HOMOLOGATION)
+        ->and($first->environment->environment)->toBe(Environment::Homologation)
         ->and($first->emitter->name)->toBe('First emitter');
 });
 

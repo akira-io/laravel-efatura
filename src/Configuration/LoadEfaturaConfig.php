@@ -36,7 +36,7 @@ final readonly class LoadEfaturaConfig
                 new OAuthConfig($this->string('efatura.transmitter.oauth.client_id'), $this->string('efatura.transmitter.oauth.client_secret', secret: true)),
             ),
             software: new SoftwareConfig($this->string('efatura.software.code'), $this->string('efatura.software.name'), $this->string('efatura.software.version')),
-            environment: new EnvironmentConfig($this->environment($this->repository->get('efatura.environment', Environment::TEST))),
+            environment: new EnvironmentConfig($this->environment($this->repository->get('efatura.environment', Environment::Test))),
             certificates: new CertificateConfig(
                 $this->inherit('efatura.certificates.disk', 'filesystems.default'),
                 $this->relativePath('efatura.certificates.certificate_path'),

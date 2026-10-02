@@ -108,6 +108,10 @@ says otherwise. Properties that hold a code from an official table, such as
 `ledCode`, `addressCode`, `countryCode`, `unitCode` or `TaxData::$stampTaxCode`,
 keep their names.
 
+`Environment::fromName()` and `EFATURA_ENVIRONMENT` accept a name in any letter
+case, so `test`, `TEST` and `Test` all select `Environment::Test`; the codes
+`1`, `2` and `3` still work. The published config defaults to `test`.
+
 | Before | After |
 | --- | --- |
 | `Data\InvoiceData` | `Data\DocumentData` |
@@ -127,3 +131,4 @@ keep their names.
 | `RentReceiptData::$rentPurposeTypeCode` | `RentReceiptData::$rentPurpose` (key `rentPurposeTypeCode`) |
 | `RentReceiptData::$contractTypeCode` | `RentReceiptData::$contractType` (key `contractTypeCode`) |
 | `RentReceiptData::$rentTypeCode` | `RentReceiptData::$rentType` (key `rentTypeCode`) |
+| `Environment::PRODUCTION`, `::HOMOLOGATION`, `::TEST` | `Environment::Production`, `::Homologation`, `::Test` |

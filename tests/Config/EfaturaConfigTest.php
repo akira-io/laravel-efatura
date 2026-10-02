@@ -26,7 +26,7 @@ function loadEfaturaConfig(array $overrides = []): EfaturaConfig
 it('resolves minimal host defaults without optional identities or secrets', function (): void {
     $config = loadEfaturaConfig();
 
-    expect($config->environment->environment)->toBe(Environment::TEST)
+    expect($config->environment->environment)->toBe(Environment::Test)
         ->and($config->environment->repositoryCode())->toBe(3)
         ->and($config->emitter)->toBeNull()
         ->and($config->transmitter->taxId)->toBeNull()
@@ -164,7 +164,7 @@ it('normalizes configured identities infrastructure and client overrides', funct
 
 it('accepts official environment names codes and enum cases', function (mixed $environment, int $code): void {
     expect(loadEfaturaConfig(['environment' => $environment])->environment->repositoryCode())->toBe($code);
-})->with([[Environment::HOMOLOGATION, 2], ['homologation', 2], [1, 1], ['1', 1], ['2', 2], ['3', 3]]);
+})->with([[Environment::Homologation, 2], ['homologation', 2], [1, 1], ['1', 1], ['2', 2], ['3', 3]]);
 
 it('trims ASCII edge whitespace while preserving non-breaking spaces and secrets', function (): void {
     $nonBreaking = "\u{00A0}name\u{00A0}";

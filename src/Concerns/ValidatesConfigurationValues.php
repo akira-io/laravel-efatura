@@ -81,12 +81,12 @@ trait ValidatesConfigurationValues
         }
 
         if (\is_string($value)) {
-            $normalized = strtoupper(Str::trim($value, " \n\r\t\v\0"));
+            $normalized = Str::trim($value, " \n\r\t\v\0");
 
             return Environment::fromName($normalized) ?? match ($normalized) {
-                '1'     => Environment::PRODUCTION,
-                '2'     => Environment::HOMOLOGATION,
-                '3'     => Environment::TEST,
+                '1'     => Environment::Production,
+                '2'     => Environment::Homologation,
+                '3'     => Environment::Test,
                 default => throw new ConfigurationException('configuration.invalid_environment', 'efatura.environment'),
             };
         }
