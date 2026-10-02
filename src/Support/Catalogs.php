@@ -24,16 +24,6 @@ final class Catalogs
     ) {}
 
     /**
-     * @return array<string, int>
-     */
-    public function counts(): array
-    {
-        return collect(Catalog::cases())
-            ->mapWithKeys(fn (Catalog $catalog): array => [$catalog->value => \count($this->load($catalog))])
-            ->all();
-    }
-
-    /**
      * @return list<array<array-key, mixed>>
      */
     public function records(Catalog $catalog): array

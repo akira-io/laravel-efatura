@@ -17,7 +17,9 @@ afterEach(function (): void {
 });
 
 it('contains every published row', function (): void {
-    expect(resolve(Catalogs::class)->counts())->toBe([
+    $catalogs = resolve(Catalogs::class);
+
+    expect(collect(Catalog::cases())->mapWithKeys(fn (Catalog $catalog): array => [$catalog->value => count($catalogs->records($catalog))])->all())->toBe([
         'units'                 => 2133,
         'countries'             => 249,
         'locations'             => 4211,
