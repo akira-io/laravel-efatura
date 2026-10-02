@@ -26,7 +26,8 @@
         "illuminate/support": "^13.0",
         "illuminate/validation": "^13.0",
         "spatie/laravel-data": "^4.19",
-        "brick/money": "^0.11.0"
+        "brick/money": "^0.11.0",
+        "psr/clock": "^1.0"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.3",
