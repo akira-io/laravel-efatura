@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Akira\Efatura\Money;
+namespace Akira\Efatura\Casts;
 
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
+use Akira\Efatura\Money\FiscalMoney;
 use Akira\Efatura\Support\FieldPath;
+use Akira\Efatura\Transformers\MoneyTransformer;
 use Brick\Money\Currency;
 use Brick\Money\Money;
 use Illuminate\Validation\ValidationException;

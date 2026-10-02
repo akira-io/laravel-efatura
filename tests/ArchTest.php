@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Filesystem\Filesystem;
+use Spatie\LaravelData\Casts\Cast;
+use Spatie\LaravelData\Transformers\Transformer;
 
 arch('it will not use debugging functions')
     ->expect(['dd', 'dump', 'ray', 'ad', 'dieAndDump'])
@@ -11,6 +13,19 @@ arch('it will not use debugging functions')
 arch('runtime configuration never reads environment variables')
     ->expect('Akira\Efatura')
     ->not->toUse('env');
+
+arch('data casts live in the Casts namespace')
+    ->expect('Akira\Efatura\Casts')
+    ->toImplement(Cast::class);
+
+arch('data transformers live in the Transformers namespace')
+    ->expect('Akira\Efatura\Transformers')
+    ->toImplement(Transformer::class);
+
+arch('money keeps only value objects and services')
+    ->expect('Akira\Efatura\Money')
+    ->not->toImplement(Cast::class)
+    ->not->toImplement(Transformer::class);
 
 arch('configuration values are immutable')
     ->expect('Akira\Efatura\Configuration')

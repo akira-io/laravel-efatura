@@ -141,3 +141,10 @@ case, so `test`, `TEST` and `Test` all select `Environment::Test`; the codes
 | `RentReceiptData::$contractTypeCode` | `RentReceiptData::$contractType` (key `contractTypeCode`) |
 | `RentReceiptData::$rentTypeCode` | `RentReceiptData::$rentType` (key `rentTypeCode`) |
 | `Environment::PRODUCTION`, `::HOMOLOGATION`, `::TEST` | `Environment::Production`, `::Homologation`, `::Test` |
+| `Money\MoneyCast`, `Money\BigDecimalCast`, `Money\ForeignMoneyCast`, `Money\DiscountValueCast` | `Casts\MoneyCast`, `Casts\BigDecimalCast`, `Casts\ForeignMoneyCast`, `Casts\DiscountValueCast` |
+| `Money\MoneyTransformer`, `Money\BigDecimalTransformer`, `Money\DiscountValueTransformer` | `Transformers\MoneyTransformer`, `Transformers\BigDecimalTransformer`, `Transformers\DiscountValueTransformer` |
+
+Laravel Data casts live in `Akira\Efatura\Casts` and transformers in
+`Akira\Efatura\Transformers`. `Akira\Efatura\Money` keeps the money value
+objects and services: `FiscalMoney`, `DecimalFormatter`, `CatalogCurrency` and
+`TotalsAccumulator`.

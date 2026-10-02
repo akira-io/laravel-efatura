@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Akira\Efatura\Money;
+namespace Akira\Efatura\Transformers;
 
+use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Illuminate\Validation\ValidationException;

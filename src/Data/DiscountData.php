@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Casts\DiscountValueCast;
 use Akira\Efatura\Enums\DiscountValueType;
-use Akira\Efatura\Money\DiscountValueCast;
-use Akira\Efatura\Money\DiscountValueTransformer;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
+use Akira\Efatura\Transformers\DiscountValueTransformer;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 use Spatie\LaravelData\Attributes\WithCast;

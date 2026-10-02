@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Casts\BigDecimalCast;
 use Akira\Efatura\Enums\Catalog;
-use Akira\Efatura\Money\BigDecimalCast;
-use Akira\Efatura\Money\BigDecimalTransformer;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Support\Catalogs;
 use Akira\Efatura\Support\ValidationPayload;
+use Akira\Efatura\Transformers\BigDecimalTransformer;
 use Brick\Math\BigDecimal;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Akira\Efatura\Money;
+namespace Akira\Efatura\Casts;
 
 use Akira\Efatura\Enums\DiscountValueType;
 use Akira\Efatura\Support\Fiscal;

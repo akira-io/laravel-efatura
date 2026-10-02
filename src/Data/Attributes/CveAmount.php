@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data\Attributes;
 
-use Akira\Efatura\Money\MoneyCast;
+use Akira\Efatura\Casts\MoneyCast;
 use Akira\Efatura\Support\Fiscal;
 use Attribute;
 use Spatie\LaravelData\Attributes\WithCastAndTransformer;

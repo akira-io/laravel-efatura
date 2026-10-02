@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Akira\Efatura\Money\BigDecimalCast;
-use Akira\Efatura\Money\BigDecimalTransformer;
-use Akira\Efatura\Money\MoneyCast;
-use Akira\Efatura\Money\MoneyTransformer;
+use Akira\Efatura\Casts\BigDecimalCast;
+use Akira\Efatura\Casts\MoneyCast;
+use Akira\Efatura\Transformers\BigDecimalTransformer;
+use Akira\Efatura\Transformers\MoneyTransformer;
 use Brick\Math\BigDecimal;
 use Brick\Money\Context\CustomContext;
 use Brick\Money\Money;

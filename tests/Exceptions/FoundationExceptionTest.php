@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Casts\MoneyCast;
 use Akira\Efatura\Exceptions\CatalogException;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Exceptions\DefinitionException;
@@ -11,7 +12,6 @@ use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Exceptions\ResourceException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Money\FiscalMoney;
-use Akira\Efatura\Money\MoneyCast;
 use Akira\Efatura\Support\OfficialArtifacts;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;

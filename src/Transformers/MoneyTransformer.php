@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Akira\Efatura\Money;
+namespace Akira\Efatura\Transformers;
 
+use Akira\Efatura\Money\DecimalFormatter;
 use Brick\Money\Money;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Support\DataProperty;

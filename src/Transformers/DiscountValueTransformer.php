@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Akira\Efatura\Money;
+namespace Akira\Efatura\Transformers;
 
 use Akira\Efatura\Support\Fiscal;
 use Brick\Money\Money;

@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Casts\FiscalDateCast;
+use Akira\Efatura\Casts\MoneyCast;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\TotalsData;
-use Akira\Efatura\Money\MoneyCast;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 use Spatie\LaravelData\Support\DataConfig;
 
