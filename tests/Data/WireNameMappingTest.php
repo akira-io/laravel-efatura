@@ -33,8 +33,12 @@ it('hydrates the number range series from serie and writes it back as serie', fu
 });
 
 it('reports an invalid series under serie', function (): void {
-    expect(fn (): DocumentHeaderData => DocumentHeaderData::from(['issueDate' => '2026-10-02', 'issueTime' => '09:00:00', 'ledCode' => 1, 'serie' => 'bad space']))
-        ->toThrow(fn (ValidationException $exception): mixed => expect($exception->errors())->toHaveKey('serie')->not->toHaveKey('series'));
+    $payload = ['issueDate' => '2026-10-02', 'issueTime' => '09:00:00', 'ledCode' => 1, 'serie' => 'bad space'];
+
+    expect(fn (): DocumentHeaderData => DocumentHeaderData::from($payload))
+        ->toThrow(function (ValidationException $exception): void {
+            expect($exception->errors())->toBe(['serie' => ['The serie field format is invalid.']]);
+        });
 });
 
 it('hydrates a nested enum property from its XML code name and writes it back under that name', function (): void {
@@ -54,6 +58,10 @@ it('hydrates a document enum property from its XML code name and writes it back 
 });
 
 it('reports an invalid document enum value under its XML code name', function (): void {
-    expect(fn (): ReceiptData => ReceiptData::from(F::receiptPayload('9')))
-        ->toThrow(fn (ValidationException $exception): mixed => expect($exception->errors())->toHaveKey('receiptTypeCode')->not->toHaveKey('receiptType'));
+    $payload = F::receiptPayload('9');
+
+    expect(fn (): ReceiptData => ReceiptData::from($payload))
+        ->toThrow(function (ValidationException $exception): void {
+            expect($exception->errors())->toBe(['receiptTypeCode' => ['The selected receipt type code is invalid.']]);
+        });
 });

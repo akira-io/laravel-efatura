@@ -1,24 +1,51 @@
 <?php
 
 declare(strict_types=1);
+
 use Akira\Efatura\Data\EventData;
 use Akira\Efatura\Enums\EventType;
-use Illuminate\Validation\ValidationException;
+use Akira\Efatura\Tests\Support\EventFixtures as E;
 
-it('validates cancellation and unused number event payload choices', function (): void {
-    $common = ['emitterTaxId' => ['value' => '100200300', 'countryCode' => 'CV'], 'issueDateTime' => '2026-10-02T12:00:00', 'issueReasonDescription' => 'Document cancelled by emitter'];
-    $id     = 'CV1261002100200300' . str_repeat('0', 27);
-    expect(EventData::from([...$common, 'eventTypeCode' => 'FDC', 'iuds' => [$id]])->eventType)->toBe(EventType::FiscalDocumentCancellation);
-    $event = EventData::validateAndCreate([...$common, 'eventTypeCode' => 'UDN', 'numberRange' => ['ledCode' => 1, 'serie' => 'A', 'documentTypeCode' => 'FTE', 'documentNumberStart' => 1, 'documentNumberEnd' => 3]]);
-    expect($event->numberRange->documentNumberEnd)->toBe(3);
-});
-it('rejects missing conflicting and reversed event targets', function (array $changes): void {
-    $payload = ['emitterTaxId' => ['value' => '100200300', 'countryCode' => 'CV'], 'issueDateTime' => '2026-10-02T12:00:00', 'issueReasonDescription' => 'Document cancelled by emitter', 'eventTypeCode' => 'FDC'];
-    foreach (['from', 'validateAndCreate'] as $factory) {
-        expect(fn (): EventData => EventData::$factory(array_replace($payload, $changes)))->toThrow(ValidationException::class);
-    }
-})->with([[[]], [['iuds' => ['bad']]],
-    [['eventTypeCode' => 'UDN', 'numberRange' => ['ledCode' => 1, 'serie' => 'A', 'documentTypeCode' => 'FTE', 'documentNumberStart' => 3, 'documentNumberEnd' => 1]]],
-    [['eventTypeCode' => 'UDN', 'iuds' => ['CV1261002100200300' . str_repeat('0', 27)]]],
-    [['eventTypeCode' => 'FDC', 'numberRange' => ['ledCode' => 1, 'serie' => 'A', 'documentTypeCode' => 'FTE', 'documentNumberStart' => 1, 'documentNumberEnd' => 2]]],
-]);
+dataset('factories', ['from' => ['from'], 'validateAndCreate' => ['validateAndCreate']]);
+
+it('creates a cancellation event targeting document identifiers', function (string $method): void {
+    $payload = E::payload(['iuds' => [E::iud()]]);
+
+    $event = EventData::$method($payload);
+
+    expect($event->eventType)->toBe(EventType::FiscalDocumentCancellation)
+        ->and($event->iuds)->toBe([E::iud()]);
+})->with('factories');
+
+it('creates an unused number event targeting a number range', function (string $method): void {
+    $payload = E::payload(['eventTypeCode' => 'UDN', 'numberRange' => E::numberRange(1, 3)]);
+
+    $event = EventData::$method($payload);
+
+    expect($event->numberRange?->documentNumberStart)->toBe(1)
+        ->and($event->numberRange?->documentNumberEnd)->toBe(3);
+})->with('factories');
+
+it('rejects missing malformed conflicting and reversed event targets', function (array $changes, string $field, string $message, string $method): void {
+    $payload = E::payload($changes);
+
+    expect(fn (): EventData => EventData::$method($payload))->toFailValidationOn($field, $message);
+})->with(fn (): array => [
+    'cancellation without identifiers' => [[], 'iuds', 'The iuds field is required when event type code is FDC.'],
+    'malformed identifier'             => [['iuds' => ['bad']], 'iuds.0', 'The iuds.0 field format is invalid.'],
+    'reversed number range'            => [
+        ['eventTypeCode' => 'UDN', 'numberRange' => E::numberRange(3, 1)],
+        'numberRange.documentNumberEnd',
+        'The number range.document number end field must be greater than or equal to 3.',
+    ],
+    'unused number event with identifiers' => [
+        ['eventTypeCode' => 'UDN', 'numberRange' => E::numberRange(1, 2), 'iuds' => [E::iud()]],
+        'iuds',
+        'The iuds field is prohibited.',
+    ],
+    'cancellation with a number range' => [
+        ['eventTypeCode' => 'FDC', 'iuds' => [E::iud()], 'numberRange' => E::numberRange(1, 2)],
+        'numberRange',
+        'The number range field is prohibited.',
+    ],
+])->with('factories');
