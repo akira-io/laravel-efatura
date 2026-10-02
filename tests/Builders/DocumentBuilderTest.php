@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
+use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
-use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\PartyData;
 use Akira\Efatura\EfaturaManager;
 use Akira\Efatura\Enums\DocumentType;
@@ -82,7 +82,7 @@ it('defers incomplete defaults until validation and keeps the LED when the emitt
     config()->set('efatura.emitter', ['tax_id' => '100200300', 'led' => '11', 'address' => ['country_code' => 'CV']]);
     $manager = resolve(EfaturaManager::class)->withConfig(resolve(LoadEfaturaConfig::class)());
     $draft   = $manager->invoice()->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals());
-    expect(fn (): InvoiceData => $draft->build())->toThrow(ValidationException::class)
+    expect(fn (): DocumentData => $draft->build())->toThrow(ValidationException::class)
         ->and($draft->emitter(B::emitter())->build()->header->ledCode)->toBe(11)
         ->and($draft->ledCode(22)->emitter(B::emitter())->build()->header->ledCode)->toBe(22)
         ->and($draft->emitter(B::emitter())->ledCode(33)->build()->header->ledCode)->toBe(33)
@@ -93,7 +93,7 @@ it('rehydrates a document issued days ago but refuses to issue it through the bu
     $header = ['issueDate' => '2026-09-29', 'issueTime' => '12:00:00', 'ledCode' => 1];
 
     expect(ElectronicInvoiceData::from(F::payload(['header' => $header]))->header->issueDate->format('Y-m-d'))->toBe('2026-09-29')
-        ->and(fn (): InvoiceData => B::issuance($header)->build())->toThrow(function (ValidationException $exception): void {
+        ->and(fn (): DocumentData => B::issuance($header)->build())->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
         });
 });

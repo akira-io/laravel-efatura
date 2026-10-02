@@ -18,7 +18,7 @@ use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class ReceiptInvoiceData extends InvoiceData implements HasTaxPointDate, HasTotals, SettlesOnIssue
+final class ReceiptInvoiceData extends DocumentData implements HasTaxPointDate, HasTotals, SettlesOnIssue
 {
     /**
      * @param list<LineItemData>  $lines

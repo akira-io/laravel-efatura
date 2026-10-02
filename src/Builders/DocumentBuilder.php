@@ -9,11 +9,11 @@ use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\EmitterConfig;
 use Akira\Efatura\Data\DatePeriodData;
 use Akira\Efatura\Data\DeliveryData;
+use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\DocumentFooterData;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\EmissionContextData;
 use Akira\Efatura\Data\FiscalData;
-use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\PartyData;
 use Akira\Efatura\Data\PaymentsData;
@@ -32,7 +32,7 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Psr\Clock\ClockInterface;
 
-final class InvoiceBuilder
+final class DocumentBuilder
 {
     private DocumentType $documentType = DocumentType::Invoice;
 
@@ -204,7 +204,7 @@ final class InvoiceBuilder
         return $this->section('transportRoute', $route);
     }
 
-    public function build(): InvoiceData
+    public function build(): DocumentData
     {
         $document = $this->documentType->dataClass()::from([
             'emitter' => $this->emitter instanceof EmitterConfig ? $this->emitter->partyPayload() : $this->emitter,

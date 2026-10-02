@@ -1,9 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
-use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\PartyData;
 use Akira\Efatura\Data\ReceiptData;
 use Akira\Efatura\Data\TransportDocumentData;
@@ -57,7 +57,7 @@ it('enforces inclusive online date windows in Cabo Verde time at issuance', func
     if ($valid) {
         expect($draft->build()->header->issueDate->format('Y-m-d'))->toBe($date);
     } else {
-        expect(fn (): InvoiceData => $draft->build())->toThrow(function (ValidationException $exception): void {
+        expect(fn (): DocumentData => $draft->build())->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
         });
     }

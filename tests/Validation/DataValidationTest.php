@@ -3,8 +3,8 @@
 declare(strict_types=1);
 use Akira\Efatura\Data\CreditNoteData;
 use Akira\Efatura\Data\DebitNoteData;
+use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
-use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\ReceiptData;
 use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\RegistrationNoteData;
@@ -31,7 +31,7 @@ it('constructs all nine concrete fiscal document graphs', function (string $clas
 
     foreach (['from', 'validateAndCreate'] as $factory) {
         $document = $class::$factory($payload);
-        expect($document)->toBeInstanceOf(InvoiceData::class)->and($document->type())->toBe(DocumentType::from($type))->and($document->header->documentNumber)->toBeNull();
+        expect($document)->toBeInstanceOf(DocumentData::class)->and($document->type())->toBe(DocumentType::from($type))->and($document->header->documentNumber)->toBeNull();
     }
 })->with([
     'invoice'         => [ElectronicInvoiceData::class, 'FTE', [], []],

@@ -1,6 +1,6 @@
 # Builders and emitter configuration
 
-`Efatura::invoice()` returns a new mutable `InvoiceBuilder`, defaulting to
+`Efatura::invoice()` returns a new mutable `DocumentBuilder`, defaulting to
 `DocumentType::Invoice`. `Efatura::event()` returns a new `EventBuilder`; select
 its event type explicitly. The facade, `EfaturaManager`, and its `efatura()`
 entry point expose the same methods. Each `build()` returns a fresh canonical
@@ -47,7 +47,7 @@ writes its Cabo Verde date and time, so `00:30 UTC` on 3 October becomes issue
 date 2 October at `23:30:00`. `dueDate()` and `taxPointDate()` take a calendar
 date: they write the Carbon's own `Y-m-d`, with no timezone shift. `header()` replaces
 all header fields, including LED and dates. No numbering fields are generated.
-`InvoiceBuilder::build()` also checks the emission window against the same
+`DocumentBuilder::build()` also checks the emission window against the same
 clock and reports `header.issueDate` when the issue date and time fall outside it.
 Transmission software and transmitter configuration remain separate: only an
 explicit `emission()` sets transmission context at this stage. Credentials never

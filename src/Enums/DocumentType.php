@@ -6,8 +6,8 @@ namespace Akira\Efatura\Enums;
 
 use Akira\Efatura\Data\CreditNoteData;
 use Akira\Efatura\Data\DebitNoteData;
+use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
-use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\ReceiptData;
 use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\RegistrationNoteData;
@@ -43,7 +43,7 @@ enum DocumentType: string
     }
 
     /**
-     * @param class-string<InvoiceData> $dataClass
+     * @param class-string<DocumentData> $dataClass
      */
     public static function fromDataClass(string $dataClass): self
     {
@@ -51,7 +51,7 @@ enum DocumentType: string
     }
 
     /**
-     * @return class-string<InvoiceData>
+     * @return class-string<DocumentData>
      */
     public function dataClass(): string
     {

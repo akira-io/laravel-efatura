@@ -7,7 +7,7 @@ namespace Akira\Efatura\Actions;
 use Akira\Efatura\Data\Contracts\HasTaxPointDate;
 use Akira\Efatura\Data\Contracts\HasTotals;
 use Akira\Efatura\Data\Contracts\SettlesOnIssue;
-use Akira\Efatura\Data\InvoiceData;
+use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\PaymentData;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
@@ -17,7 +17,7 @@ final readonly class ValidateDocumentCompatibilityAction
 {
     public function __construct(private VerifyDocumentTotalsAction $totals) {}
 
-    public function handle(InvoiceData $document): void
+    public function handle(DocumentData $document): void
     {
         if ($document instanceof HasTotals) {
             $this->totals->handle($document->lines, $document->totals);

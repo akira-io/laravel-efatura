@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Tests\Support;
 
-use Akira\Efatura\Builders\InvoiceBuilder;
+use Akira\Efatura\Builders\DocumentBuilder;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\PartyData;
 use Akira\Efatura\Facades\Efatura;
@@ -17,7 +17,7 @@ final class BuilderFixtures
             'address' => ['countryCode' => 'CV', 'addressDetail' => 'Praia office', 'addressCode' => 'CV111111111011110101']]);
     }
 
-    public static function issuance(array $header): InvoiceBuilder
+    public static function issuance(array $header): DocumentBuilder
     {
         return Efatura::invoice()->emitter(self::emitter(), 1)->header(DocumentHeaderData::from($header))
             ->receiver(PartyData::from(DocumentFixtures::payload()['receiver']))

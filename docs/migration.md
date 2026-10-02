@@ -2,7 +2,7 @@
 
 Replace the old generic invoice and `{invoice: ...}` wrapper with a canonical
 concrete document such as `ElectronicInvoiceData`, or use `Efatura::invoice()`
-with `DocumentType::Invoice`. `InvoiceData` is now an abstract contract. The nine
+with `DocumentType::Invoice`. `InvoiceData` is now the abstract `DocumentData` contract. The nine
 document classes own their official fields; receipts have no lines or totals,
 and transport documents have no totals. See the [field graph](fiscal-domain.md).
 
@@ -46,7 +46,7 @@ operations. There is no `issue()` operation in this API.
 
 The emission window (online: 24 hours before to one hour after the clock;
 contingency: seven days before) is checked only when a document is issued
-through `InvoiceBuilder::build()`. `from()` and `validateAndCreate()` no
+through `DocumentBuilder::build()`. `from()` and `validateAndCreate()` no
 longer reject a document because of its age, so an issued document can be
 rehydrated from storage. Code that relied on `from()` to enforce the window
 must issue through the builder or call `ValidateIssueDateAction` itself.
@@ -60,7 +60,7 @@ of the payload and report at full paths: duplicate line identifiers under
 `payments`, `paymentDate`, `receiverReference`) are gone. Allowed issue
 reasons per document come from `IssueReason::allowedFor(DocumentType)`.
 
-Issuance Carbon values are instants. `InvoiceBuilder::issuedAt()`,
+Issuance Carbon values are instants. `DocumentBuilder::issuedAt()`,
 `EventBuilder::issuedAt()`, the builder clock, `DocumentHeaderData::$issueDate`
 and `$issueTime`, `ContingencyData::$issueDate` and `$issueTime`, and
 `EventData::$issueDateTime` convert any `CarbonInterface`
@@ -76,7 +76,7 @@ error. Configured emitter and transmitter tax IDs follow the document pattern
 `[1-9][0-9]{8}`, so a NIF starting with 0 now fails loading.
 
 `DocumentType::dataClass()` names the concrete Data class of each document
-type, and `DocumentType::fromDataClass()` resolves the reverse. `InvoiceData`
+type, and `DocumentType::fromDataClass()` resolves the reverse. `DocumentData`
 derives `type()` and the static `documentType()` from that mapping, so both
 are final: a document class outside the nine official ones has no type.
 
@@ -89,13 +89,23 @@ reaches document validation and fails at its `emitter.*` path.
 
 Builders keep the Data, enums and dates passed to their setters and assemble
 the document once, in `build()`. `Builders\Concerns\HasDocumentSections`
-is folded into `InvoiceBuilder`, and every builder setter returns `static`.
+is folded into `DocumentBuilder`, and every builder setter returns `static`.
 Data given to `from()`, `validateAndCreate()` or a builder contributes its
 values: `only()`, `except()`, `include()` and `exclude()` on that Data no longer
 remove fields from the input, and `FiscalData::toPayload()` returns the same
 values as an array.
 
-The terminal builder method is now `build()`: `InvoiceBuilder::validate()` and
+The terminal builder method is now `build()`: `DocumentBuilder::validate()` and
 `EventBuilder::validate()` are renamed, with the same return types and the
-same validation. `InvoiceBuilder::build()` still checks the emission window
+same validation. `DocumentBuilder::build()` still checks the emission window
 against the builder's clock.
+
+## Renamed symbols
+
+PHP names describe the domain concept; wire names (input keys, `toArray()`
+output and XML elements) are unchanged unless the table says otherwise.
+
+| Before | After |
+| --- | --- |
+| `Data\InvoiceData` | `Data\DocumentData` |
+| `Builders\InvoiceBuilder` | `Builders\DocumentBuilder` (`Efatura::invoice()` keeps its name) |

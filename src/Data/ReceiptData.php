@@ -13,7 +13,7 @@ use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class ReceiptData extends InvoiceData
+final class ReceiptData extends DocumentData
 {
     /**
      * @param list<ReferenceData> $references

@@ -6,11 +6,11 @@ use Akira\Efatura\Data\CreditNoteData;
 use Akira\Efatura\Data\DatePeriodData;
 use Akira\Efatura\Data\DebitNoteData;
 use Akira\Efatura\Data\DeliveryData;
+use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\DocumentFooterData;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\EmissionContextData;
-use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\PartyData;
 use Akira\Efatura\Data\PaymentsData;
 use Akira\Efatura\Data\ReceiptData;
@@ -106,7 +106,7 @@ it('preserves explicit header context footer and invoice optional fields', funct
         ->and($document->delivery->address->addressDetail)->toBe('Lisbon')->and($document->emission->software->code)->toBe('APP')
         ->and($document->footer->extraFields[0]->value)->toBe('Ready');
     $draft->type(DocumentType::Receipt);
-    expect(fn (): InvoiceData => $draft->build())->toThrow(ValidationException::class);
+    expect(fn (): DocumentData => $draft->build())->toThrow(ValidationException::class);
 });
 
 it('supports rent payment parties and credit note periods', function (): void {

@@ -18,7 +18,7 @@ use Spatie\LaravelData\Support\DataConfig;
 use Spatie\LaravelData\Support\DataProperty;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-abstract class InvoiceData extends FiscalData
+abstract class DocumentData extends FiscalData
 {
     abstract public DocumentHeaderData $header { get; }
 

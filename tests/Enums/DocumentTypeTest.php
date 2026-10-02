@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Akira\Efatura\Data\CreditNoteData;
 use Akira\Efatura\Data\DebitNoteData;
+use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
-use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\ReceiptData;
 use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\RegistrationNoteData;
@@ -58,5 +58,5 @@ it('maps each document type to its data class and back', function (DocumentType 
 ]);
 
 it('rejects a class that is not a document', function (): void {
-    expect(fn (): DocumentType => DocumentType::fromDataClass(InvoiceData::class))->toThrow(ItemNotFoundException::class);
+    expect(fn (): DocumentType => DocumentType::fromDataClass(DocumentData::class))->toThrow(ItemNotFoundException::class);
 });

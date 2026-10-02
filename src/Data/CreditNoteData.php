@@ -13,7 +13,7 @@ use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class CreditNoteData extends InvoiceData implements HasTotals
+final class CreditNoteData extends DocumentData implements HasTotals
 {
     /**
      * @param list<LineItemData>  $lines

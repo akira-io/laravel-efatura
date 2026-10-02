@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Akira\Efatura;
 
+use Akira\Efatura\Builders\DocumentBuilder;
 use Akira\Efatura\Builders\EventBuilder;
-use Akira\Efatura\Builders\InvoiceBuilder;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Psr\Clock\ClockInterface;
 
@@ -18,9 +18,9 @@ final readonly class Efatura
         return $this->config;
     }
 
-    public function invoice(): InvoiceBuilder
+    public function invoice(): DocumentBuilder
     {
-        return new InvoiceBuilder($this->config, $this->clock);
+        return new DocumentBuilder($this->config, $this->clock);
     }
 
     public function event(): EventBuilder

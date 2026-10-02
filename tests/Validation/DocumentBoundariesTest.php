@@ -3,11 +3,11 @@
 declare(strict_types=1);
 use Akira\Efatura\Data\CreditNoteData;
 use Akira\Efatura\Data\DebitNoteData;
+use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\DocumentFooterData;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\EmissionContextData;
-use Akira\Efatura\Data\InvoiceData;
 use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\ReturnNoteData;
 use Akira\Efatura\Data\SalesReceiptData;
@@ -76,7 +76,7 @@ it('uses an injected clock and inclusive seven day contingency floor at issuance
     $emission = EmissionContextData::from(['issueMode' => 2, 'contingency' => ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1, 'reasonTypeCode' => '4']]);
     $header   = ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1];
     expect(B::issuance($header)->emission($emission)->build()->header->issueDate->format('Y-m-d'))->toBe('2026-10-02');
-    expect(fn (): InvoiceData => B::issuance([...$header, 'issueTime' => '11:59:59'])->emission($emission)->build())
+    expect(fn (): DocumentData => B::issuance([...$header, 'issueTime' => '11:59:59'])->emission($emission)->build())
         ->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
         });

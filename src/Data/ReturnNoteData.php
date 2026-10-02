@@ -16,7 +16,7 @@ use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class ReturnNoteData extends InvoiceData implements HasTotals
+final class ReturnNoteData extends DocumentData implements HasTotals
 {
     /**
      * @param list<LineItemData>  $lines
