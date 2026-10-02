@@ -6,45 +6,21 @@ use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\EfaturaManager;
 use Akira\Efatura\Tests\Support\InstallCommandFixture;
-use Dotenv\Dotenv;
-use Dotenv\Repository\Adapter\ArrayAdapter;
-use Dotenv\Repository\RepositoryBuilder;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Env;
 use Illuminate\Support\Str;
 
 use function Pest\Laravel\artisan;
 
 beforeEach(function (): void {
-    $GLOBALS['efaturaInstallFixture'] = null;
-    $GLOBALS['efaturaInstallFixture'] = new InstallCommandFixture(new Filesystem);
+    $this->fixture = new InstallCommandFixture(new Filesystem);
+    $this->files   = $this->fixture->files;
 });
 
 afterEach(function (): void {
-    $GLOBALS['efaturaInstallFixture']?->tearDown();
+    $this->fixture->tearDown();
 });
-
-function installFixture(): InstallCommandFixture
-{
-    return $GLOBALS['efaturaInstallFixture'];
-}
-
-function testFiles(): Filesystem
-{
-    return installFixture()->files;
-}
-
-function efaturaEnvDefaults(): array
-{
-    return installFixture()->envDefaults();
-}
-
-function envContent(array $variables): string
-{
-    return installFixture()->envContent($variables);
-}
 
 it('declares its signature and description with Laravel command attributes', function (): void {
     $command = new ReflectionClass(InstallCommand::class);
@@ -56,55 +32,44 @@ it('declares its signature and description with Laravel command attributes', fun
 });
 
 it('runs without interaction when all variables exist', function (): void {
-    $envPath    = base_path('.env');
-    $configPath = config_path('efatura.php');
+    $envPath = base_path('.env');
 
-    testFiles()->put($envPath, envContent(efaturaEnvDefaults()));
-    testFiles()->put($configPath, '');
-    testFiles()->ensureDirectoryExists(base_path('vendor/akira/laravel-pdf-invoice'));
-    testFiles()->ensureDirectoryExists(base_path('vendor/akira/laravel-qrcode'));
-
-    artisan('efatura:install')->assertExitCode(0);
+    $this->files->put($envPath, $this->fixture->envContent($this->fixture->envDefaults()));
+    $this->files->put(config_path('efatura.php'), '');
+    $this->files->ensureDirectoryExists(base_path('vendor/akira/laravel-pdf-invoice'));
+    $this->files->ensureDirectoryExists(base_path('vendor/akira/laravel-qrcode'));
 
     artisan('efatura:install')
-        ->expectsOutputToContain(trans('efatura::efatura.install.config_exists'))
-        ->expectsOutputToContain(trans('efatura::efatura.install.completed'))
-        ->doesntExpectOutputToContain(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_TAX_ID']))
-        ->doesntExpectOutputToContain(trans('efatura::efatura.install.optional_packages_notice', ['packages' => 'akira/laravel-pdf-invoice, akira/laravel-qrcode']))
+        ->expectsOutputToContain('Config file already exists. Skipped publishing.')
+        ->expectsOutputToContain('akira/efatura installation complete.')
+        ->doesntExpectOutputToContain('Add EFATURA_TRANSMITTER_TAX_ID to .env?')
+        ->doesntExpectOutputToContain('Optional PDF/QR packages not detected')
         ->assertExitCode(0);
 
-    expect(testFiles()->get($envPath))->toBe(envContent(efaturaEnvDefaults()));
+    expect($this->files->get($envPath))->toBe($this->fixture->envContent($this->fixture->envDefaults()));
 });
 
 it('publishes config when missing', function (): void {
-    $envPath    = base_path('.env');
-    $configPath = config_path('efatura.php');
-
-    testFiles()->put($envPath, envContent(efaturaEnvDefaults()));
+    $this->files->put(base_path('.env'), $this->fixture->envContent($this->fixture->envDefaults()));
 
     artisan('efatura:install')
-        ->expectsOutputToContain(trans('efatura::efatura.install.config_published'))
+        ->expectsOutputToContain('Config file published.')
         ->assertExitCode(0);
 
-    expect(testFiles()->exists($configPath))->toBeTrue();
+    expect($this->files->get(config_path('efatura.php')))->toBe($this->files->get(dirname(__DIR__, 2) . '/config/efatura.php'));
 });
 
 it('appends missing env variables when confirmed', function (): void {
-    $envPath    = base_path('.env');
-    $configPath = config_path('efatura.php');
+    $envPath = base_path('.env');
 
-    testFiles()->put($envPath, "APP_ENV=testing\n");
-    testFiles()->put($configPath, '');
+    $this->files->put($envPath, "APP_ENV=testing\n");
+    $this->files->put(config_path('efatura.php'), '');
 
-    artisan('efatura:install')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_TAX_ID']), 'yes')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_EMITTER_LED']), 'yes')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'yes')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_MIDDLEWARE_BASE_URL']), 'yes')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_ENVIRONMENT']), 'yes')
+    $this->fixture->confirmEveryVariable(artisan('efatura:install'))
+        ->expectsOutputToContain('Added EFATURA_ENVIRONMENT to .env.')
         ->assertExitCode(0);
 
-    $contents = testFiles()->get($envPath);
+    $contents = $this->files->get($envPath);
 
     expect($contents)->toContain('# akira/efatura')
         ->and($contents)->toContain('EFATURA_TRANSMITTER_TAX_ID=')
@@ -115,131 +80,98 @@ it('appends missing env variables when confirmed', function (): void {
 });
 
 it('skips env variable insertion when declined', function (): void {
-    $envPath    = base_path('.env');
-    $configPath = config_path('efatura.php');
-
-    $defaults = efaturaEnvDefaults();
+    $envPath  = base_path('.env');
+    $defaults = $this->fixture->envDefaults();
     unset($defaults['EFATURA_TRANSMITTER_KEY']);
 
-    testFiles()->put($envPath, envContent($defaults));
-    testFiles()->put($configPath, '');
+    $this->files->put($envPath, $this->fixture->envContent($defaults));
+    $this->files->put(config_path('efatura.php'), '');
 
     artisan('efatura:install')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'no')
-        ->expectsOutputToContain(trans('efatura::efatura.install.env_skipped', ['key' => 'EFATURA_TRANSMITTER_KEY']))
-        ->doesntExpectOutputToContain(trans('efatura::efatura.install.env_added', ['key' => 'EFATURA_TRANSMITTER_KEY']))
+        ->expectsConfirmation('Add EFATURA_TRANSMITTER_KEY to .env?', 'no')
+        ->expectsOutputToContain('Skipped EFATURA_TRANSMITTER_KEY.')
+        ->doesntExpectOutputToContain('Added EFATURA_TRANSMITTER_KEY to .env.')
         ->assertExitCode(0);
 
-    $contents = testFiles()->get($envPath);
-
-    expect($contents)->not->toContain('EFATURA_TRANSMITTER_KEY=');
+    expect($this->files->get($envPath))->not->toContain('EFATURA_TRANSMITTER_KEY=');
 });
 
 it('is idempotent when run twice', function (): void {
-    $envPath    = base_path('.env');
-    $configPath = config_path('efatura.php');
+    $envPath = base_path('.env');
 
-    testFiles()->put($envPath, "APP_ENV=testing\n");
-    testFiles()->put($configPath, '');
+    $this->files->put($envPath, "APP_ENV=testing\n");
+    $this->files->put(config_path('efatura.php'), '');
 
-    artisan('efatura:install')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_TAX_ID']), 'yes')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_EMITTER_LED']), 'yes')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_KEY']), 'yes')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_MIDDLEWARE_BASE_URL']), 'yes')
-        ->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_ENVIRONMENT']), 'yes')
-        ->assertExitCode(0);
+    $this->fixture->confirmEveryVariable(artisan('efatura:install'))->assertExitCode(0);
 
-    $first = testFiles()->get($envPath);
+    $first = $this->files->get($envPath);
 
     artisan('efatura:install')
-        ->doesntExpectOutputToContain(trans('efatura::efatura.install.env_add_confirm', ['key' => 'EFATURA_TRANSMITTER_TAX_ID']))
+        ->doesntExpectOutputToContain('Add EFATURA_TRANSMITTER_TAX_ID to .env?')
         ->assertExitCode(0);
 
-    $second = testFiles()->get($envPath);
-
-    expect($second)->toBe($first);
+    expect($this->files->get($envPath))->toBe($first);
 });
 
 it('handles missing env file', function (): void {
-    $configPath = config_path('efatura.php');
-
-    testFiles()->put($configPath, '');
+    $this->files->put(config_path('efatura.php'), '');
 
     artisan('efatura:install')
-        ->expectsOutputToContain(trans('efatura::efatura.install.env_missing'))
+        ->expectsOutputToContain('.env file not found. Skipped environment updates.')
         ->assertExitCode(0);
 });
 
 it('notifies when optional packages are missing', function (): void {
-    $envPath    = base_path('.env');
-    $configPath = config_path('efatura.php');
-
-    testFiles()->put($envPath, envContent(efaturaEnvDefaults()));
-    testFiles()->put($configPath, '');
+    $this->files->put(base_path('.env'), $this->fixture->envContent($this->fixture->envDefaults()));
+    $this->files->put(config_path('efatura.php'), '');
 
     artisan('efatura:install')
-        ->expectsOutputToContain(trans('efatura::efatura.install.optional_packages_notice', ['packages' => 'akira/laravel-pdf-invoice, akira/laravel-qrcode']))
+        ->expectsOutputToContain('Optional PDF/QR packages not detected: akira/laravel-pdf-invoice, akira/laravel-qrcode. PDF and QR generation are optional.')
         ->assertExitCode(0);
 });
 
 it('does not notify when optional packages are present', function (): void {
-    $envPath    = base_path('.env');
-    $configPath = config_path('efatura.php');
-
-    testFiles()->put($envPath, envContent(efaturaEnvDefaults()));
-    testFiles()->put($configPath, '');
-    testFiles()->ensureDirectoryExists(base_path('vendor/akira/laravel-pdf-invoice'));
-    testFiles()->ensureDirectoryExists(base_path('vendor/akira/laravel-qrcode'));
+    $this->files->put(base_path('.env'), $this->fixture->envContent($this->fixture->envDefaults()));
+    $this->files->put(config_path('efatura.php'), '');
+    $this->files->ensureDirectoryExists(base_path('vendor/akira/laravel-pdf-invoice'));
+    $this->files->ensureDirectoryExists(base_path('vendor/akira/laravel-qrcode'));
 
     artisan('efatura:install')
-        ->doesntExpectOutputToContain(trans('efatura::efatura.install.optional_packages_notice', ['packages' => 'akira/laravel-pdf-invoice, akira/laravel-qrcode']))
+        ->doesntExpectOutputToContain('Optional PDF/QR packages not detected')
         ->assertExitCode(0);
 });
 
-it('resolves the manager from the installed environment and published config', function (): void {
-    testFiles()->put(base_path('.env'), "APP_ENV=testing\n");
-    $command = artisan('efatura:install');
-    foreach (collect(efaturaEnvDefaults())->keys() as $key) {
-        $command->expectsConfirmation(trans('efatura::efatura.install.env_add_confirm', ['key' => $key]), 'yes');
-    }
+it('resolves the manager without identities from the freshly installed environment', function (): void {
+    $this->files->put(base_path('.env'), "APP_ENV=testing\n");
+    $this->fixture->confirmEveryVariable(artisan('efatura:install'))->assertExitCode(0)->run();
 
-    $command->assertExitCode(0)->run();
+    $this->fixture->loadInstalledEnvironment();
+    $config = resolve(EfaturaManager::class)->config();
 
-    $property    = new ReflectionProperty(Env::class, 'repository');
-    $original    = $property->getValue();
-    $environment = RepositoryBuilder::createWithNoAdapters()->addAdapter(ArrayAdapter::class)->make();
-    $property->setValue(null, $environment);
+    expect($this->files->get(base_path('.env')))->toContain('EFATURA_TRANSMITTER_TAX_ID=null')
+        ->and($this->files->get(base_path('.env')))->toContain('EFATURA_EMITTER_LED=null')
+        ->and($config)->toBe(resolve(EfaturaConfig::class))
+        ->and($config->emitter)->toBeNull()
+        ->and($config->transmitter->taxId)->toBeNull()
+        ->and($config->transmitter->middlewareKey)->toBeNull()
+        ->and($config->transmitter->oauth->clientSecret)->toBeNull()
+        ->and($config->environment->repositoryCode())->toBe(3)
+        ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443');
+});
 
-    try {
-        Dotenv::create($environment, base_path())->load();
-        config()->set('efatura', require config_path('efatura.php'));
-        $config = resolve(EfaturaManager::class)->config();
+it('resolves configured identities once the installed environment is filled in', function (): void {
+    $envPath = base_path('.env');
+    $this->files->put($envPath, "APP_ENV=testing\n");
+    $this->fixture->confirmEveryVariable(artisan('efatura:install'))->assertExitCode(0)->run();
+    $this->files->put($envPath, Str::replace(
+        ['EFATURA_TRANSMITTER_TAX_ID=null', 'EFATURA_EMITTER_LED=null'],
+        ['EFATURA_TRANSMITTER_TAX_ID=123456789', 'EFATURA_EMITTER_LED=123'],
+        $this->files->get($envPath),
+    ));
 
-        expect($config)->toBe(resolve(EfaturaConfig::class))
-            ->and($config->emitter)->toBeNull()
-            ->and($config->transmitter->taxId)->toBeNull()
-            ->and($config->transmitter->middlewareKey)->toBeNull()
-            ->and($config->transmitter->oauth->clientSecret)->toBeNull()
-            ->and($config->environment->repositoryCode())->toBe(3)
-            ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443');
+    $this->fixture->loadInstalledEnvironment();
+    $configured = resolve(EfaturaManager::class)->config();
 
-        $contents = testFiles()->get(base_path('.env'));
-        expect($contents)->toContain('EFATURA_TRANSMITTER_TAX_ID=null', 'EFATURA_EMITTER_LED=null');
-        testFiles()->put(base_path('.env'), Str::replace(
-            ['EFATURA_TRANSMITTER_TAX_ID=null', 'EFATURA_EMITTER_LED=null'],
-            ['EFATURA_TRANSMITTER_TAX_ID=123456789', 'EFATURA_EMITTER_LED=123'],
-            $contents,
-        ));
-        Dotenv::create($environment, base_path())->load();
-        config()->set('efatura', require config_path('efatura.php'));
-        app()->forgetInstance(EfaturaConfig::class);
-        app()->forgetInstance(EfaturaManager::class);
-
-        $configured = resolve(EfaturaManager::class)->config();
-        expect($configured->transmitter->taxId)->toBe('123456789')
-            ->and($configured->emitter->led)->toBe(123);
-    } finally {
-        $property->setValue(null, $original);
-    }
+    expect($configured->transmitter->taxId)->toBe('123456789')
+        ->and($configured->emitter->led)->toBe(123);
 });
