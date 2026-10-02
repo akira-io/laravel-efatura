@@ -208,3 +208,25 @@ it('observes repository overrides before loading and keeps resolved graphs immut
         $original->http->defaults->timeoutSeconds = 99;
     })->toThrow(Error::class);
 });
+
+it('maps the configured emitter onto the fiscal party payload field by field', function (): void {
+    $emitter = loadEfaturaConfig(['emitter' => [
+        'tax_id'   => '100200300', 'name' => 'Fiscal party',
+        'address'  => ['country_code' => 'CV', 'address_detail' => 'Praia office', 'building_floor' => '2'],
+        'contacts' => ['email' => 'fiscal@example.test', 'mobile' => '9900000'],
+    ]])->emitter;
+
+    expect($emitter->partyPayload())->toBe([
+        'taxId'    => ['value' => '100200300', 'countryCode' => 'CV'],
+        'name'     => 'Fiscal party',
+        'address'  => ['countryCode' => 'CV', 'addressDetail' => 'Praia office', 'buildingFloor' => '2'],
+        'contacts' => ['email' => 'fiscal@example.test', 'telephone' => null, 'mobilephone' => '9900000', 'telefax' => null, 'website' => null],
+    ]);
+});
+
+it('leaves the address out of a configured emitter that has none', function (): void {
+    $emitter = loadEfaturaConfig(['emitter' => ['contacts' => ['email' => 'fiscal@example.test']]])->emitter;
+
+    expect($emitter->partyPayload()['address'])->toBeNull()
+        ->and($emitter->taxIdPayload())->toBe(['value' => null, 'countryCode' => 'CV']);
+});

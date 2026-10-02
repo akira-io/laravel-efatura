@@ -79,3 +79,10 @@ error. Configured emitter and transmitter tax IDs follow the document pattern
 type, and `DocumentType::fromDataClass()` resolves the reverse. `InvoiceData`
 derives `type()` and the static `documentType()` from that mapping, so both
 are final: a document class outside the nine official ones has no type.
+
+`Builders\ConfiguredEmitter` is gone. The configuration maps itself onto the
+fiscal payload field by field: `EmitterConfig::partyPayload()` and
+`EmitterConfig::taxIdPayload()`, built from `AddressConfig::addressPayload()`
+and `ContactsConfig::contactsPayload()` (where `mobile` becomes
+`mobilephone`). They return input arrays, not Data, so a partial profile still
+reaches document validation and fails at its `emitter.*` path.

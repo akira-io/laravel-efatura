@@ -46,7 +46,7 @@ final class InvoiceBuilder
     {
         $now             = Fiscal::local(CarbonImmutable::instance($clock->now()));
         $this->issueDate = new ValidateIssueDateAction($clock);
-        $this->draft     = ['emitter' => ConfiguredEmitter::party($config->emitter)];
+        $this->draft     = ['emitter' => $config->emitter?->partyPayload()];
         $this->header    = ['issueDate' => $now->format(Fiscal::DATE_FORMAT), 'issueTime' => $now->format(Fiscal::TIME_FORMAT), 'ledCode' => $config->emitter?->led];
     }
 
