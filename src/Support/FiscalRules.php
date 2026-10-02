@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Support;
 
 use Akira\Efatura\Rules\NotBlank;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class FiscalRules
 {
@@ -87,5 +88,20 @@ final class FiscalRules
 
         return ['string', new NotBlank, 'max:256', 'regex:~\A(?:https?://)?' . $token . '+(?:\.' . $token . '+)*(?::[0-9]+)?(?:/[-._A-Za-z0-9]+)*'
             . '(?:\?(?:' . $token . '+=[+%A-Za-z0-9_-]*)(?:&' . $token . '+=[+%A-Za-z0-9_-]*)*)?(?:\#[^\s]*)?\z~u'];
+    }
+
+    /**
+     * @param  array<string, list<mixed>> $choices
+     * @return array<string, list<mixed>>
+     */
+    public static function exactlyOneOf(ValidationContext $context, array $choices): array
+    {
+        $fields = array_keys($choices);
+
+        return collect($choices)->map(static function (array $rules, string $field) use ($context, $fields): array {
+            $others = FieldPath::list($context, ...array_values(array_diff($fields, [$field])));
+
+            return ['required_without_all:' . $others, 'prohibits:' . $others, ...$rules];
+        })->all();
     }
 }

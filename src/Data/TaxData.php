@@ -14,10 +14,12 @@ use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\NotBlank;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Support\Catalogs;
-use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FiscalRules;
+use Akira\Efatura\Support\ValidationPayload;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
+use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
@@ -42,12 +44,16 @@ final class TaxData extends FiscalData
      */
     public static function rules(ValidationContext $context, Catalogs $catalogs): array
     {
+        $type = ValidationPayload::enum($context, 'taxTypeCode', TaxType::class);
+
         return [
-            'taxPercentage'          => ['required_without_all:' . FieldPath::list($context, 'taxAmount', 'taxExemptionReasonCode'), 'prohibits:' . FieldPath::list($context, 'taxAmount', 'taxExemptionReasonCode'), FiscalNumber::positive(3, '100')],
-            'taxAmount'              => ['prohibits:' . FieldPath::list($context, 'taxPercentage', 'taxExemptionReasonCode'), FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
-            'taxExemptionReasonCode' => [new NotBlank, 'required_if:' . FieldPath::of($context, 'taxTypeCode') . ',NA', 'prohibits:' . FieldPath::list($context, 'taxPercentage', 'taxAmount'), new OfficialCode(Catalog::TaxExemptionReasons, $catalogs)],
-            'stampTaxCode'           => ['required_if:' . FieldPath::of($context, 'taxTypeCode') . ',IS'],
-            'taxTotal'               => [FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
+            ...FiscalRules::exactlyOneOf($context, [
+                'taxPercentage'          => [FiscalNumber::positive(3, '100')],
+                'taxAmount'              => [FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
+                'taxExemptionReasonCode' => [new NotBlank, Rule::requiredIf($type === TaxType::NotApplicable), new OfficialCode(Catalog::TaxExemptionReasons, $catalogs)],
+            ]),
+            'stampTaxCode' => [Rule::requiredIf($type === TaxType::StampTax)],
+            'taxTotal'     => [FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
         ];
     }
 }
