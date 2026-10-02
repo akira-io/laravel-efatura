@@ -11,7 +11,7 @@ enum LineType: string
     case Deduction   = 'D';
     case Information = 'I';
 
-    public function sign(): int
+    public function netSign(): int
     {
         return match ($this) {
             self::Normal, self::Charge => 1,
@@ -20,7 +20,7 @@ enum LineType: string
         };
     }
 
-    public function participatesInTotals(): bool
+    public function participatesInNetTotals(): bool
     {
         return $this !== self::Information;
     }
