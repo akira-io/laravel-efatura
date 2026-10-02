@@ -76,7 +76,10 @@ The builder snapshots the package clock (Atlantic/Cape_Verde) when created; use
 `issuedAt(CarbonInterface $dateTime)` (converted to Cabo Verde time) or `header(DocumentHeaderData $header)` for
 explicit dates. Decimal strings avoid float rounding. A configured complete emitter
 can replace the explicit `emitter()` call. See [builders and configuration](docs/builders.md)
-and the [migration guide](docs/migration.md).
+and the [migration guide](docs/migration.md). Payload keys keep the official XML names
+(`serie`, `taxTypeCode`, `lineTypeCode`); the Data properties that read them are
+named after their concept (`$header->series`, `$tax->taxType`, `$line->lineType`),
+as listed in the [renamed symbols](docs/migration.md#renamed-symbols) table.
 
 ## Documentation
 
