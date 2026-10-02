@@ -32,6 +32,11 @@ Publish the package configuration and prepare the required environment keys:
 php artisan efatura:install
 ```
 
+The command offers `EFATURA_TRANSMITTER_TAX_ID`, `EFATURA_EMITTER_LED`,
+`EFATURA_TRANSMITTER_KEY`, `EFATURA_MIDDLEWARE_BASE_URL` and `EFATURA_ENVIRONMENT`,
+and never overwrites an existing key. The remaining `EFATURA_EMITTER_*` keys are
+optional; `config/efatura.php` lists them.
+
 ## Quick Start
 
 ```php

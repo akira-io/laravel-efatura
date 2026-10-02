@@ -148,3 +148,7 @@ Laravel Data casts live in `Akira\Efatura\Casts` and transformers in
 `Akira\Efatura\Transformers`. `Akira\Efatura\Money` keeps the money value
 objects and services: `FiscalMoney`, `DecimalFormatter`, `CatalogCurrency` and
 `TotalsAccumulator`.
+
+`efatura:install` takes its description from the `#[Description]` attribute.
+The `install.command_description` translation key is gone, along with the
+validation, invoice, config and general keys that nothing in the package used.

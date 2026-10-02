@@ -9,6 +9,7 @@ use Akira\Efatura\Tests\Support\InstallCommandFixture;
 use Dotenv\Dotenv;
 use Dotenv\Repository\Adapter\ArrayAdapter;
 use Dotenv\Repository\RepositoryBuilder;
+use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Env;
@@ -45,14 +46,13 @@ function envContent(array $variables): string
     return installFixture()->envContent($variables);
 }
 
-it('uses the Laravel 13 command signature attribute', function (): void {
-    $attributes = new ReflectionClass(InstallCommand::class)
-        ->getAttributes(Signature::class);
+it('declares its signature and description with Laravel command attributes', function (): void {
+    $command = new ReflectionClass(InstallCommand::class);
 
-    expect($attributes)->toHaveCount(1)
-        ->and($attributes[0]->newInstance()->signature)->toBe('efatura:install')
-        ->and(resolve(InstallCommand::class)->getDescription())
-        ->toBe('Install akira/efatura configuration');
+    expect($command->getAttributes(Signature::class)[0]->newInstance()->signature)->toBe('efatura:install')
+        ->and($command->getAttributes(Description::class)[0]->newInstance()->description)->toBe('Install akira/efatura configuration')
+        ->and($command->getConstructor()?->getDeclaringClass()->getName())->not->toBe(InstallCommand::class)
+        ->and(resolve(InstallCommand::class)->getDescription())->toBe('Install akira/efatura configuration');
 });
 
 it('runs without interaction when all variables exist', function (): void {

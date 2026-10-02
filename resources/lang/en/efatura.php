@@ -23,7 +23,6 @@ return [
         'invalid_money_input'      => 'Money must be an integer, decimal string, or Money value.',
     ],
     'install' => [
-        'command_description'      => 'Install akira/efatura configuration',
         'completed'                => 'akira/efatura installation complete.',
         'config_exists'            => 'Config file already exists. Skipped publishing.',
         'config_published'         => 'Config file published.',
