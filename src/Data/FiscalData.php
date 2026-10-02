@@ -38,8 +38,20 @@ abstract class FiscalData extends Data
         return array_map(self::normalized(...), $properties);
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
+    final public function toPayload(): array
+    {
+        return (clone $this)->setDataContext(null)->toArray();
+    }
+
     private static function normalized(mixed $value): mixed
     {
+        if ($value instanceof self) {
+            return $value->toPayload();
+        }
+
         if ($value instanceof Data) {
             return $value->toArray();
         }

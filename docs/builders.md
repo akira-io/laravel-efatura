@@ -11,9 +11,12 @@ Invoice setters are `type`, `emitter`, `ledCode`, `header`, `issuedAt`, `receive
 `line`, `totals`, `reference`, `emission`, and `footer`. Header and footer Data
 expose every official common field, including series, supplied document number,
 self-billing authorization, note, and extra fields. `line` and `reference` append;
-other setters replace their entire value. Supplied Data is snapshotted when set,
-including its current array representation. Subsequent presentation mutations to
-the source Data or returned document do not change the builder's draft.
+other setters replace their entire value. The builder keeps the Data, enums and
+dates you pass and assembles the document from them when you validate, so the
+whole graph is validated once, at its full paths. Data contributes its values:
+presentation partials such as `only()` or `except()` on the source Data, before
+or after it is set, do not change the document. Dates are kept as immutable
+copies.
 
 Document-specific setters accept their canonical Data, enum, date or scalar:
 

@@ -5,81 +5,98 @@ declare(strict_types=1);
 namespace Akira\Efatura\Builders;
 
 use Akira\Efatura\Configuration\EfaturaConfig;
+use Akira\Efatura\Configuration\EmitterConfig;
 use Akira\Efatura\Data\EmissionContextData;
 use Akira\Efatura\Data\EventData;
 use Akira\Efatura\Data\EventNumberRangeData;
 use Akira\Efatura\Data\TaxIdData;
 use Akira\Efatura\Enums\EventType;
-use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Psr\Clock\ClockInterface;
 
 final class EventBuilder
 {
-    /** @var array<string, mixed> */
-    private array $draft;
+    private ?EventType $type = null;
+
+    private TaxIdData|EmitterConfig|null $emitter;
+
+    private CarbonImmutable $issuedAt;
+
+    private ?string $reason = null;
 
     /** @var list<string> */
     private array $iuds = [];
 
+    private ?EventNumberRangeData $numberRange = null;
+
+    private ?EmissionContextData $emission = null;
+
     public function __construct(EfaturaConfig $config, ClockInterface $clock)
     {
-        $this->draft = ['emitterTaxId' => $config->emitter?->taxIdPayload(), 'issueDateTime' => Fiscal::local(CarbonImmutable::instance($clock->now()))->format(Fiscal::DATE_TIME_FORMAT)];
+        $this->emitter  = $config->emitter;
+        $this->issuedAt = CarbonImmutable::instance($clock->now());
     }
 
-    public function type(EventType $type): self
+    public function type(EventType $type): static
     {
-        $this->draft['eventTypeCode'] = $type->value;
+        $this->type = $type;
 
         return $this;
     }
 
-    public function emitter(TaxIdData $emitter): self
+    public function emitter(TaxIdData $emitter): static
     {
-        $this->draft['emitterTaxId'] = $emitter->toArray();
+        $this->emitter = $emitter;
 
         return $this;
     }
 
-    public function issuedAt(CarbonInterface $dateTime): self
+    public function issuedAt(CarbonInterface $dateTime): static
     {
-        $this->draft['issueDateTime'] = Fiscal::local($dateTime)->format(Fiscal::DATE_TIME_FORMAT);
+        $this->issuedAt = $dateTime->toImmutable();
 
         return $this;
     }
 
-    public function reason(string $description): self
+    public function reason(string $description): static
     {
-        $this->draft['issueReasonDescription'] = $description;
+        $this->reason = $description;
 
         return $this;
     }
 
-    public function iud(string $iud): self
+    public function iud(string $iud): static
     {
-        $this->iuds[]        = $iud;
-        $this->draft['iuds'] = $this->iuds;
+        $this->iuds[] = $iud;
 
         return $this;
     }
 
-    public function numberRange(EventNumberRangeData $range): self
+    public function numberRange(EventNumberRangeData $range): static
     {
-        $this->draft['numberRange'] = $range->toArray();
+        $this->numberRange = $range;
 
         return $this;
     }
 
-    public function emission(EmissionContextData $emission): self
+    public function emission(EmissionContextData $emission): static
     {
-        $this->draft['emission'] = $emission->toArray();
+        $this->emission = $emission;
 
         return $this;
     }
 
     public function validate(): EventData
     {
-        return EventData::validateAndCreate($this->draft);
+        return EventData::from([
+            'eventTypeCode'          => $this->type,
+            'emitterTaxId'           => $this->emitter instanceof EmitterConfig ? $this->emitter->taxIdPayload() : $this->emitter,
+            'issueDateTime'          => $this->issuedAt,
+            'issueReasonDescription' => $this->reason,
+            'iuds'                   => $this->iuds,
+            'numberRange'            => $this->numberRange,
+            'emission'               => $this->emission,
+        ]);
     }
 }

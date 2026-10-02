@@ -12,6 +12,7 @@ use Akira\Efatura\Facades\Efatura;
 use Akira\Efatura\Tests\Support\BuilderFixtures as B;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 
@@ -95,4 +96,19 @@ it('rehydrates a document issued days ago but refuses to issue it through the bu
         ->and(fn (): InvoiceData => B::issuance($header)->validate())->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
         });
+});
+
+it('assembles supplied data by value and ignores its presentation partials', function (): void {
+    $receiver = PartyData::from(F::payload()['receiver'])->except('taxId');
+    $line     = F::line()->except('taxes');
+    $dueDate  = Date::parse('2026-10-31');
+    $draft    = Efatura::invoice()->emitter(B::emitter(), 1)->receiver($receiver)->line($line)->totals(F::totals())->dueDate($dueDate);
+    $dueDate->addDay();
+    $document = $draft->validate();
+
+    expect($document->receiver->taxId->value)->toBe(F::payload()['receiver']['taxId']['value'])
+        ->and($document->lines[0]->taxes)->toHaveCount(1)
+        ->and($document->toArray()['dueDate'])->toBe('2026-10-31')
+        ->and($receiver->toArray())->not->toHaveKey('taxId')
+        ->and(F::totals()->toPayload())->toBe(F::totals()->toArray());
 });

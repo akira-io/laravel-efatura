@@ -86,3 +86,11 @@ fiscal payload field by field: `EmitterConfig::partyPayload()` and
 and `ContactsConfig::contactsPayload()` (where `mobile` becomes
 `mobilephone`). They return input arrays, not Data, so a partial profile still
 reaches document validation and fails at its `emitter.*` path.
+
+Builders keep the Data, enums and dates passed to their setters and assemble
+the document once, when it is validated. `Builders\Concerns\HasDocumentSections`
+is folded into `InvoiceBuilder`, and every builder setter returns `static`.
+Data given to `from()`, `validateAndCreate()` or a builder contributes its
+values: `only()`, `except()`, `include()` and `exclude()` on that Data no longer
+remove fields from the input, and `FiscalData::toPayload()` returns the same
+values as an array.
