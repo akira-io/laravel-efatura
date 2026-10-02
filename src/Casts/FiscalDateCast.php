@@ -28,11 +28,9 @@ final readonly class FiscalDateCast implements Cast
 
         Validator::make([$property->name => $value], [$property->name => ['required', 'string', new FiscalDate($this->format)]])->validate();
 
+        /** @var CarbonImmutable $date */
         $date = CarbonImmutable::createFromFormat('!' . $this->format, $value, 'Atlantic/Cape_Verde');
-        if (! $date instanceof CarbonImmutable) {
-            throw ValidationException::withMessages([$property->name => __('efatura::efatura.validation.fiscal_date')]);
-        }
 
-        return $date;
+        return $date->toImmutable();
     }
 }

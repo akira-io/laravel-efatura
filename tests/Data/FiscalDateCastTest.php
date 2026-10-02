@@ -2,10 +2,21 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\EventData;
 use Carbon\CarbonImmutable;
+use Spatie\LaravelData\Attributes\WithCast;
+use Spatie\LaravelData\Data;
 use Spatie\LaravelData\LaravelDataServiceProvider;
+
+final class CustomFormatFiscalDateData extends Data
+{
+    public function __construct(
+        #[WithCast(FiscalDateCast::class, 'd/m/Y')]
+        public readonly CarbonImmutable $date,
+    ) {}
+}
 
 it('preserves fiscal wall-clock fields across a host DST gap', function (): void {
     $this->app->register(LaravelDataServiceProvider::class);
@@ -27,10 +38,20 @@ it('preserves fiscal wall-clock fields across a host DST gap', function (): void
         expect($header->toArray())->toMatchArray(['issueDate' => '2026-03-29', 'issueTime' => '02:30:00'])
             ->and($header->issueDate->timezoneName)->toBe('Atlantic/Cape_Verde')
             ->and($header->issueTime->timezoneName)->toBe('Atlantic/Cape_Verde')
+            ->and($header->issueTime->format('Y-m-d'))->toBe('1970-01-01')
             ->and($event->toArray()['issueDateTime'])->toBe('2026-03-29T02:30:00')
             ->and($event->issueDateTime->timezoneName)->toBe('Atlantic/Cape_Verde');
     } finally {
         CarbonImmutable::setTestNow();
         date_default_timezone_set($originalTimezone);
     }
+});
+
+it('parses a validated custom fiscal date format', function (): void {
+    $this->app->register(LaravelDataServiceProvider::class);
+
+    $date = CustomFormatFiscalDateData::from(['date' => '29/03/2026'])->date;
+
+    expect($date->format('Y-m-d'))->toBe('2026-03-29')
+        ->and($date->timezoneName)->toBe('Atlantic/Cape_Verde');
 });
