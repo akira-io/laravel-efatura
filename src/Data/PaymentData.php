@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Money\MoneyCast;
 use Akira\Efatura\Money\MoneyTransformer;
 use Akira\Efatura\Rules\FiscalDate;
@@ -44,7 +45,7 @@ final class PaymentData extends Data
     public static function rules(): array
     {
         return [
-            'paymentMeansCode' => ['nullable', new OfficialCode('payment_means')],
+            'paymentMeansCode' => ['nullable', new OfficialCode(Catalog::PaymentMeans)],
             'paymentReference' => ['nullable', ...FiscalRules::code()],
             'paymentDate'      => ['nullable', new FiscalDate],
             'paymentAmount'    => ['nullable', new FiscalNumber(positive: true, currency: Fiscal::CURRENCY)],

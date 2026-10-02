@@ -7,6 +7,7 @@ namespace Akira\Efatura;
 use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
+use Akira\Efatura\Support\Catalogs;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\FactoryImmutable;
 use Illuminate\Foundation\Application;
@@ -28,6 +29,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             return $loader();
         });
         $this->app->singleton(EfaturaManager::class);
+        $this->app->singleton(Catalogs::class);
         $this->app->singleton(ClockInterface::class, fn (): ClockInterface => new FactoryImmutable(['timezone' => Fiscal::TIMEZONE]));
     }
 

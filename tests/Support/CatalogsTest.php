@@ -2,29 +2,22 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Exceptions\CatalogException;
 use Akira\Efatura\Support\Catalogs;
 use Illuminate\Filesystem\Filesystem;
 
-function catalogResourceFilesystem(?string $contents): Filesystem
-{
-    return new class ($contents) extends Filesystem
-    {
-        public function __construct(private readonly ?string $contents) {}
+beforeEach(function (): void {
+    $this->catalogDirectory = sys_get_temp_dir() . '/efatura-catalogs-' . bin2hex(random_bytes(6));
+    new Filesystem()->ensureDirectoryExists($this->catalogDirectory);
+});
 
-        public function get($path, $lock = false): string
-        {
-            if ($this->contents === null) {
-                throw new RuntimeException('Catalog resource is unreadable');
-            }
-
-            return $this->contents;
-        }
-    };
-}
+afterEach(function (): void {
+    new Filesystem()->deleteDirectory($this->catalogDirectory);
+});
 
 it('contains every published row and preserves source checksums', function (): void {
-    $catalogs = new Catalogs;
+    $catalogs = resolve(Catalogs::class);
     $official = json_decode(file_get_contents(dirname(__DIR__, 2) . '/resources/official-artifacts.json'), true, 512, JSON_THROW_ON_ERROR);
 
     expect($catalogs->counts())->toBe([
@@ -36,80 +29,100 @@ it('contains every published row and preserves source checksums', function (): v
         'tax_exemption_reasons' => 21,
     ]);
 
-    foreach (['units', 'countries', 'locations', 'currencies', 'payment_means', 'tax_exemption_reasons'] as $name) {
-        foreach ($catalogs->sources($name) as $source) {
-            expect(hash_file('sha256', dirname(__DIR__, 2) . '/resources/' . $source['path']))->toBe($source['sha256']);
-            expect($source['sha256'])->toBe($official['files'][$source['path']]['sha256']);
+    foreach (Catalog::cases() as $catalog) {
+        foreach ($catalogs->sources($catalog) as $source) {
+            expect(hash_file('sha256', dirname(__DIR__, 2) . '/resources/' . $source['path']))->toBe($source['sha256'])
+                ->and($source['sha256'])->toBe($official['files'][$source['path']]['sha256']);
         }
     }
 });
 
-it('preserves source codes, names, and case-sensitive lookups', function (): void {
-    $catalogs = new Catalogs;
+it('finds official codes by catalog with case-sensitive lookups', function (Catalog $catalog, string $code, string $field, mixed $expected): void {
+    expect(resolve(Catalogs::class)->find($catalog, $code)[$field])->toBe($expected);
+})->with([
+    'numeric unit'         => [Catalog::Units, '05', 'code', '05'],
+    'named unit'           => [Catalog::Units, 'KGM', 'name', 'kilogram'],
+    'country'              => [Catalog::Countries, 'CV', 'code', 'CV'],
+    'island'               => [Catalog::Locations, 'CV1', 'nome', 'SANTO ANTÃO'],
+    'deep location'        => [Catalog::Locations, 'CV111111111011110101', 'nivel', 6],
+    'payment mean'         => [Catalog::PaymentMeans, '1', 'code', '1'],
+    'tax exemption reason' => [Catalog::TaxExemptionReasons, '21', 'code', '21'],
+    'schema currency IdR'  => [Catalog::Currencies, 'IdR', 'code', 'IdR'],
+    'fiscal currency'      => [Catalog::Currencies, 'CVE', 'code', 'CVE'],
+    'precious metal'       => [Catalog::Currencies, 'XAU', 'code', 'XAU'],
+    'no currency code'     => [Catalog::Currencies, 'XXX', 'code', 'XXX'],
+]);
 
-    expect($catalogs->unit('05')['code'])->toBe('05')
-        ->and($catalogs->unit('KGM')['name'])->toBe('kilogram')
-        ->and($catalogs->unit('kgm'))->toBeNull()
-        ->and($catalogs->country('CV')['code'])->toBe('CV')
-        ->and($catalogs->country('AN'))->toBeNull()
-        ->and($catalogs->country('XK'))->toBeNull()
-        ->and($catalogs->country('cv'))->toBeNull()
-        ->and($catalogs->location('CV1')['nome'])->toBe('SANTO ANTÃO')
-        ->and($catalogs->location('CV'))->toBeNull()
-        ->and($catalogs->location('AN'))->toBeNull()
-        ->and($catalogs->location('cv1'))->toBeNull()
-        ->and($catalogs->paymentMean('1')['code'])->toBe('1')
-        ->and($catalogs->paymentMean('01'))->toBeNull()
-        ->and($catalogs->taxExemptionReason('21')['code'])->toBe('21')
-        ->and($catalogs->taxExemptionReason('022'))->toBeNull();
-});
+it('returns null for unknown, miscased or non fiscal location codes', function (Catalog $catalog, string $code): void {
+    expect(resolve(Catalogs::class)->find($catalog, $code))->toBeNull();
+})->with([
+    [Catalog::Units, 'kgm'],
+    [Catalog::Countries, 'AN'],
+    [Catalog::Countries, 'XK'],
+    [Catalog::Countries, 'cv'],
+    [Catalog::Locations, 'CV'],
+    [Catalog::Locations, 'AN'],
+    [Catalog::Locations, 'XK'],
+    [Catalog::Locations, 'cv1'],
+    [Catalog::PaymentMeans, '01'],
+    [Catalog::TaxExemptionReasons, '022'],
+    [Catalog::Currencies, 'IDR'],
+    [Catalog::Currencies, 'idr'],
+    [Catalog::Currencies, 'ZZZ'],
+]);
 
-it('keeps schema currency codes exactly, including the IdR anomaly and special codes', function (): void {
-    $catalogs = new Catalogs;
-
-    expect($catalogs->currency('IdR')['code'])->toBe('IdR')
-        ->and($catalogs->currency('IDR'))->toBeNull()
-        ->and($catalogs->currency('idr'))->toBeNull()
-        ->and($catalogs->currency('CVE')['code'])->toBe('CVE')
-        ->and($catalogs->currency('XAU')['code'])->toBe('XAU')
-        ->and($catalogs->currency('XXX')['code'])->toBe('XXX')
-        ->and($catalogs->currency('ZZZ'))->toBeNull();
-});
-
-it('keeps all country rows for audit but accepts only CV descendants as locations', function (): void {
-    $catalogs = new Catalogs;
-    $rows     = collect($catalogs->records('locations'));
+it('keeps all country rows of the location catalog for audit', function (): void {
+    $rows = collect(resolve(Catalogs::class)->records(Catalog::Locations));
 
     expect($rows->count())->toBe(4211)
         ->and($rows->where('nivel', 1)->count())->toBe(240)
-        ->and($rows->where('nivel', '>', 1)->count())->toBe(3971)
-        ->and($catalogs->location('CV111111111011110101')['nivel'])->toBe(6)
-        ->and($catalogs->location('XK'))->toBeNull();
+        ->and($rows->where('nivel', '>', 1)->count())->toBe(3971);
 });
 
 it('does not let callers mutate cached catalog values', function (): void {
-    $catalogs     = new Catalogs;
-    $unit         = $catalogs->unit('KGM');
+    $catalogs     = resolve(Catalogs::class);
+    $unit         = $catalogs->find(Catalog::Units, 'KGM');
     $unit['name'] = 'changed';
 
-    expect($catalogs->unit('KGM')['name'])->toBe('kilogram');
+    expect($catalogs->find(Catalog::Units, 'KGM')['name'])->toBe('kilogram');
 });
 
-it('rejects unknown or malformed catalog resources', function (): void {
-    expect(fn (): array => new Catalogs()->records('unknown'))->toThrow(CatalogException::class);
-
-    expect(fn (): array => new Catalogs(catalogResourceFilesystem('{invalid'))->records('units'))->toThrow(CatalogException::class);
-
-    expect(fn (): array => new Catalogs(catalogResourceFilesystem('{"schema_version":1,"records":null}'))->records('units'))->toThrow(CatalogException::class);
-
-    foreach ([
-        '{"schema_version":1,"count":1,"records":[null],"sources":[]}',
-        '{"schema_version":1,"count":1,"records":[["a"]],"sources":[]}',
-        '{"schema_version":1,"count":0,"records":[],"sources":[null]}',
-        '{"schema_version":1,"count":1,"records":[],"sources":[]}',
-    ] as $invalid) {
-        expect(fn (): array => new Catalogs(catalogResourceFilesystem($invalid))->records('units'))->toThrow(CatalogException::class);
-    }
-
-    expect(fn (): array => new Catalogs(catalogResourceFilesystem(null))->records('units'))->toThrow(CatalogException::class);
+it('is a container singleton', function (): void {
+    expect(resolve(Catalogs::class))->toBe(resolve(Catalogs::class));
 });
+
+it('reads each catalog file once', function (): void {
+    $filesystem = new Filesystem;
+    $path       = $this->catalogDirectory . '/units.json';
+    $filesystem->copy(dirname(__DIR__, 2) . '/resources/catalogs/units.json', $path);
+    $catalogs = new Catalogs($filesystem, $this->catalogDirectory);
+
+    $first = $catalogs->find(Catalog::Units, 'KGM');
+    $filesystem->delete($path);
+
+    expect($catalogs->find(Catalog::Units, 'MTR')['code'])->toBe('MTR')
+        ->and($first['code'])->toBe('KGM');
+});
+
+it('rejects missing catalog resources', function (): void {
+    expect(fn (): ?array => new Catalogs(new Filesystem, $this->catalogDirectory)->find(Catalog::Units, 'KGM'))
+        ->toThrow(CatalogException::class, 'catalogs.missing_or_unreadable');
+});
+
+it('rejects malformed catalog resources', function (string $contents): void {
+    new Filesystem()->put($this->catalogDirectory . '/units.json', $contents);
+
+    expect(fn (): ?array => new Catalogs(new Filesystem, $this->catalogDirectory)->find(Catalog::Units, 'KGM'))
+        ->toThrow(CatalogException::class, 'catalogs.invalid');
+})->with([
+    'invalid json'        => '{invalid',
+    'scalar document'     => '1',
+    'missing count'       => '{"schema_version":1,"records":[],"sources":[]}',
+    'unknown schema'      => '{"schema_version":2,"count":0,"records":[],"sources":[]}',
+    'null records'        => '{"schema_version":1,"count":0,"records":null,"sources":[]}',
+    'null record'         => '{"schema_version":1,"count":1,"records":[null],"sources":[]}',
+    'record without code' => '{"schema_version":1,"count":1,"records":[["a"]],"sources":[]}',
+    'duplicate code'      => '{"schema_version":1,"count":2,"records":[{"code":"A"},{"code":"A"}],"sources":[]}',
+    'null source'         => '{"schema_version":1,"count":0,"records":[],"sources":[null]}',
+    'count mismatch'      => '{"schema_version":1,"count":1,"records":[],"sources":[]}',
+]);

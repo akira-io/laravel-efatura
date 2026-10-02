@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Rules\ValidTaxId;
 use Illuminate\Support\Facades\Validator;
 
 it('rejects unknown and incorrectly cased official codes', function (): void {
-    expect(Validator::make(['code' => 'CV'], ['code' => [new OfficialCode('countries')]])->passes())->toBeTrue()
-        ->and(Validator::make(['code' => 'cv'], ['code' => [new OfficialCode('countries')]])->fails())->toBeTrue()
-        ->and(Validator::make(['code' => 1], ['code' => [new OfficialCode('countries')]])->fails())->toBeTrue();
+    expect(Validator::make(['code' => 'CV'], ['code' => [new OfficialCode(Catalog::Countries)]])->passes())->toBeTrue()
+        ->and(Validator::make(['code' => 'cv'], ['code' => [new OfficialCode(Catalog::Countries)]])->fails())->toBeTrue()
+        ->and(Validator::make(['code' => 1], ['code' => [new OfficialCode(Catalog::Countries)]])->fails())->toBeTrue();
 });
 
-it('rejects unsupported rule input types and unknown catalog selections', function (): void {
-    expect(Validator::make(['code' => 'CV'], ['code' => [new OfficialCode('unknown')]])->fails())->toBeTrue()
-        ->and(Validator::make(['value' => 1.2], ['value' => [new FiscalNumber]])->fails())->toBeTrue()
+it('rejects unsupported rule input types', function (): void {
+    expect(Validator::make(['value' => 1.2], ['value' => [new FiscalNumber]])->fails())->toBeTrue()
         ->and(Validator::make(['value' => '1e3'], ['value' => [new FiscalNumber]])->fails())->toBeTrue()
         ->and(Validator::make(['value' => 12], ['value' => [new ValidTaxId('CV')]])->fails())->toBeTrue();
 });

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Money\BigDecimalCast;
 use Akira\Efatura\Money\BigDecimalTransformer;
 use Akira\Efatura\Money\ForeignMoneyCast;
@@ -40,7 +41,7 @@ final class PayableAlternativeAmountData extends Data
     public static function rules(): array
     {
         return [
-            'currencyCode' => ['required', new OfficialCode('currencies')],
+            'currencyCode' => ['required', new OfficialCode(Catalog::Currencies)],
             'exchangeRate' => ['required', new FiscalNumber(positive: true)],
         ];
     }

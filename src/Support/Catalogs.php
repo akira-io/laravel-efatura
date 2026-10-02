@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Support;
 
+use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Exceptions\CatalogException;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use JsonException;
 use Throwable;
@@ -15,163 +15,123 @@ use const JSON_THROW_ON_ERROR;
 
 final class Catalogs
 {
-    private const array NAMES = [
-        'units', 'countries', 'locations', 'currencies', 'payment_means', 'tax_exemption_reasons',
-    ];
-
-    /** @var array<string, array{count: int, sources: list<array{path: string, sha256: string}>, records: list<array<string, mixed>>}> */
+    /** @var array<string, array{count: int, sources: list<array{path: string, sha256: string}>, records: array<array-key, array<array-key, mixed>>}> */
     private array $loaded = [];
 
-    public function __construct(private readonly ?Filesystem $filesystem = null) {}
+    public function __construct(
+        private readonly Filesystem $filesystem,
+        private readonly string $directory = __DIR__ . '/../../resources/catalogs',
+    ) {}
 
     /**
      * @return array<string, int>
      */
     public function counts(): array
     {
-        return collect(self::NAMES)
-            ->mapWithKeys(fn (string $name): array => [$name => $this->load($name)['count']])
+        return collect(Catalog::cases())
+            ->mapWithKeys(fn (Catalog $catalog): array => [$catalog->value => $this->load($catalog)['count']])
             ->all();
     }
 
     /**
      * @return list<array{path: string, sha256: string}>
      */
-    public function sources(string $catalog): array
+    public function sources(Catalog $catalog): array
     {
         return $this->load($catalog)['sources'];
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array<array-key, mixed>>
      */
-    public function records(string $catalog): array
+    public function records(Catalog $catalog): array
     {
-        return $this->load($catalog)['records'];
+        return array_values($this->load($catalog)['records']);
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array<array-key, mixed>|null
      */
-    public function unit(string $code): ?array
+    public function find(Catalog $catalog, string $code): ?array
     {
-        return $this->find('units', $code);
+        $record = $this->load($catalog)['records'][$code] ?? null;
+
+        return $record !== null && $this->accepts($catalog, $code, $record) ? $record : null;
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @param array<array-key, mixed> $record
      */
-    public function country(string $code): ?array
+    private function accepts(Catalog $catalog, string $code, array $record): bool
     {
-        return $this->find('countries', $code);
+        return $catalog !== Catalog::Locations || ($record['nivel'] > 1 && Str::startsWith($code, Fiscal::COUNTRY));
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array{count: int, sources: list<array{path: string, sha256: string}>, records: array<array-key, array<array-key, mixed>>}
      */
-    public function location(string $code): ?array
+    private function load(Catalog $catalog): array
     {
-        $row = $this->find('locations', $code, 'codigo');
-
-        return $row !== null && $row['nivel'] > 1 && Str::startsWith($code, Fiscal::COUNTRY) ? $row : null;
+        return $this->loaded[$catalog->value] ??= $this->read($catalog);
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array{count: int, sources: list<array{path: string, sha256: string}>, records: array<array-key, array<array-key, mixed>>}
      */
-    public function currency(string $code): ?array
+    private function read(Catalog $catalog): array
     {
-        return $this->find('currencies', $code);
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function paymentMean(string $code): ?array
-    {
-        return $this->find('payment_means', $code);
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function taxExemptionReason(string $code): ?array
-    {
-        return $this->find('tax_exemption_reasons', $code);
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    private function find(string $catalog, string $code, string $field = 'code'): ?array
-    {
-        return Arr::first($this->records($catalog), static fn (array $record): bool => $record[$field] === $code);
-    }
-
-    /**
-     * @return array{count: int, sources: list<array{path: string, sha256: string}>, records: list<array<string, mixed>>}
-     */
-    private function load(string $catalog): array
-    {
-        if (! \in_array($catalog, self::NAMES, true)) {
-            throw new CatalogException('catalogs.unknown', 'lookup');
-        }
-
-        if (isset($this->loaded[$catalog])) {
-            return $this->loaded[$catalog];
-        }
-
-        $path = \dirname(__DIR__, 2) . \sprintf('/resources/catalogs/%s.json', $catalog);
-
         try {
-            $json = ($this->filesystem ?? new Filesystem)->get($path);
+            $document = $this->filesystem->json($this->directory . '/' . $catalog->value . '.json', JSON_THROW_ON_ERROR);
         } catch (Throwable $throwable) {
-            throw new CatalogException('catalogs.missing_or_unreadable', 'load', $throwable);
+            throw new CatalogException($throwable instanceof JsonException ? 'catalogs.invalid' : 'catalogs.missing_or_unreadable', 'load', $throwable);
         }
 
-        try {
-            $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $jsonException) {
-            throw new CatalogException('catalogs.invalid', 'load', $jsonException);
-        }
+        throw_unless(
+            ($document['schema_version'] ?? null) === 1 && \is_int($document['count'] ?? null)
+                && \is_array($document['records'] ?? null) && \is_array($document['sources'] ?? null),
+            CatalogException::class,
+            'catalogs.invalid',
+            'load',
+        );
 
-        if (! \is_array($data) || ($data['schema_version'] ?? null) !== 1
-            || ! \is_int($data['count'] ?? null) || ! \is_array($data['records'] ?? null)
-            || ! \is_array($data['sources'] ?? null)) {
-            throw new CatalogException('catalogs.invalid', 'load');
-        }
+        $records = collect($document['records'])
+            ->map(fn (mixed $record): array => $this->record($record, $catalog->codeField()))
+            ->keyBy($catalog->codeField());
 
-        $records = [];
-        foreach ($data['records'] as $record) {
-            if (! \is_array($record)) {
-                throw new CatalogException('catalogs.invalid', 'load');
-            }
+        throw_unless(
+            $records->count() === $document['count'] && \count($document['records']) === $document['count'],
+            CatalogException::class,
+            'catalogs.invalid',
+            'load',
+        );
 
-            $fields = [];
-            foreach ($record as $field => $value) {
-                if (! \is_string($field)) {
-                    throw new CatalogException('catalogs.invalid', 'load');
-                }
+        return [
+            'count'   => $document['count'],
+            'records' => $records->all(),
+            'sources' => array_map($this->source(...), array_values($document['sources'])),
+        ];
+    }
 
-                $fields[$field] = $value;
-            }
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function record(mixed $record, string $codeField): array
+    {
+        throw_unless(\is_array($record) && \is_string($record[$codeField] ?? null), CatalogException::class, 'catalogs.invalid', 'load');
 
-            $records[] = $fields;
-        }
+        return $record;
+    }
 
-        $sources = [];
-        foreach ($data['sources'] as $source) {
-            if (! \is_array($source) || ! \is_string($source['path'] ?? null) || ! \is_string($source['sha256'] ?? null)) {
-                throw new CatalogException('catalogs.invalid', 'load');
-            }
+    /**
+     * @return array{path: string, sha256: string}
+     */
+    private function source(mixed $source): array
+    {
+        $path = \is_array($source) ? ($source['path'] ?? null) : null;
+        $hash = \is_array($source) ? ($source['sha256'] ?? null) : null;
 
-            $sources[] = ['path' => $source['path'], 'sha256' => $source['sha256']];
-        }
+        throw_unless(\is_string($path) && \is_string($hash), CatalogException::class, 'catalogs.invalid', 'load');
 
-        if ($data['count'] !== \count($records)) {
-            throw new CatalogException('catalogs.invalid', 'load');
-        }
-
-        return $this->loaded[$catalog] = ['count' => $data['count'], 'records' => $records, 'sources' => $sources];
+        return ['path' => $path, 'sha256' => $hash];
     }
 }

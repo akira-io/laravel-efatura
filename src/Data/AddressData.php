@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
@@ -40,9 +41,9 @@ final class AddressData extends Data
         $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
 
         return [
-            'countryCode'   => ['required', new OfficialCode('countries')],
+            'countryCode'   => ['required', new OfficialCode(Catalog::Countries)],
             'addressDetail' => ['required', ...FiscalRules::text(1, 100)],
-            'addressCode'   => ['nullable', 'required_if:' . $field('countryCode') . ',' . Fiscal::COUNTRY, 'regex:/\ACV[0-9]{18}\z/', new OfficialCode('locations')],
+            'addressCode'   => ['nullable', 'required_if:' . $field('countryCode') . ',' . Fiscal::COUNTRY, 'regex:/\ACV[0-9]{18}\z/', new OfficialCode(Catalog::Locations)],
             ...collect(['state', 'city', 'region', 'street', 'streetDetail', 'buildingName', 'buildingNumber', 'buildingFloor', 'postalCode'])
                 ->mapWithKeys(static fn (string $field): array => [$field => ['nullable', ...FiscalRules::text(1, 100)]])->all(),
         ];

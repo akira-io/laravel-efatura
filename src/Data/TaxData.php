@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Enums\StampTaxCode;
 use Akira\Efatura\Enums\TaxType;
 use Akira\Efatura\Money\BigDecimalCast;
@@ -54,7 +55,7 @@ final class TaxData extends Data
             'taxTypeCode'            => ['required', Rule::enum(TaxType::class)],
             'taxPercentage'          => ['nullable', 'required_without_all:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), 'prohibits:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(3, true, '100')],
             'taxAmount'              => ['nullable', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(positive: true, currency: Fiscal::CURRENCY)],
-            'taxExemptionReasonCode' => ['nullable', 'required_if:' . $field('taxTypeCode') . ',NA', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxAmount'), new OfficialCode('tax_exemption_reasons')],
+            'taxExemptionReasonCode' => ['nullable', 'required_if:' . $field('taxTypeCode') . ',NA', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxAmount'), new OfficialCode(Catalog::TaxExemptionReasons)],
             'stampTaxCode'           => ['nullable', 'required_if:' . $field('taxTypeCode') . ',IS', Rule::enum(StampTaxCode::class)],
             'taxTotal'               => ['nullable', new FiscalNumber(positive: true, currency: Fiscal::CURRENCY)],
         ];

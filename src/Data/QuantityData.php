@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Money\BigDecimalCast;
 use Akira\Efatura\Money\BigDecimalTransformer;
 use Akira\Efatura\Rules\FiscalNumber;
@@ -27,7 +28,7 @@ final class QuantityData extends Data
     ) {
         $rules = self::rules();
         if ($isStandardUnitCode) {
-            $rules['unitCode'][] = new OfficialCode('units');
+            $rules['unitCode'][] = new OfficialCode(Catalog::Units);
         }
 
         $this->validateFiscalFields($rules);
