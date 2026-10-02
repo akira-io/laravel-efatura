@@ -6,10 +6,10 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\CveAmount;
-use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Money\Money;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 
 final class TotalsData extends Data
@@ -37,11 +37,10 @@ final class TotalsData extends Data
         #[CveAmount]
         public readonly ?Money $payableRoundingAmount = null,
         public readonly ?DiscountData $discount = null,
+        #[DataCollectionOf(PayableAlternativeAmountData::class)]
         public readonly array $payableAlternativeAmounts = [],
     ) {
-        $rules                                = self::rules();
-        $rules['payableAlternativeAmounts'][] = new DataInstances(PayableAlternativeAmountData::class);
-        $this->validateFiscalFields($rules);
+        $this->validateFiscalFields(self::rules());
     }
 
     /**

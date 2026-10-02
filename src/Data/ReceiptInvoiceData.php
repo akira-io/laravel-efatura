@@ -8,6 +8,7 @@ use Akira\Efatura\Data\Attributes\FiscalDateFormat;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 
 final class ReceiptInvoiceData extends InvoiceData
 {
@@ -19,6 +20,7 @@ final class ReceiptInvoiceData extends InvoiceData
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
         public readonly PartyData $receiver,
+        #[DataCollectionOf(LineItemData::class)]
         public readonly array $lines,
         public readonly TotalsData $totals,
         public readonly PaymentsData $payments,
@@ -26,6 +28,7 @@ final class ReceiptInvoiceData extends InvoiceData
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly ?CarbonImmutable $taxPointDate = null,
         public readonly ?PartyData $paymentParty = null,
+        #[DataCollectionOf(ReferenceData::class)]
         public readonly array $references = [],
         public readonly ?DeliveryData $delivery = null,
         public readonly ?EmissionContextData $emission = null,

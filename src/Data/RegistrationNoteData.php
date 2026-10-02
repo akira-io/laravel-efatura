@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Enums\DocumentType;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 
 final class RegistrationNoteData extends InvoiceData
 {
@@ -16,9 +17,11 @@ final class RegistrationNoteData extends InvoiceData
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
         public readonly PartyData $receiver,
+        #[DataCollectionOf(LineItemData::class)]
         public readonly array $lines,
         public readonly TotalsData $totals,
         public readonly ?PartyData $paymentParty = null,
+        #[DataCollectionOf(ReferenceData::class)]
         public readonly array $references = [],
         public readonly ?PaymentsData $payments = null,
         public readonly ?EmissionContextData $emission = null,

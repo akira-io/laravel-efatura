@@ -7,7 +7,6 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Actions\ValidateDocumentCompatibilityAction;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\DocumentType;
-use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Support\FiscalRules;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
@@ -60,11 +59,11 @@ abstract class InvoiceData extends Data
     {
         $rules = [];
         if (property_exists($this, 'lines')) {
-            $rules['lines'] = ['required', 'array', 'list', 'min:1', new DataInstances(LineItemData::class)];
+            $rules['lines'] = ['required', 'array', 'list', 'min:1'];
         }
 
         if (property_exists($this, 'references')) {
-            $rules['references'] = ['array', 'list', new DataInstances(ReferenceData::class)];
+            $rules['references'] = ['array', 'list'];
         }
 
         if (property_exists($this, 'orderReference')) {

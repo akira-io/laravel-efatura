@@ -7,6 +7,7 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\TransportDocumentType;
 use Akira\Efatura\Enums\TransportReceiverType;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 
 final class TransportDocumentData extends InvoiceData
 {
@@ -19,10 +20,12 @@ final class TransportDocumentData extends InvoiceData
         public readonly PartyData $emitter,
         public readonly TransportDocumentType $transportDocumentTypeCode,
         public readonly PartyData $transportServiceProvider,
+        #[DataCollectionOf(LineItemData::class)]
         public readonly array $lines,
         public readonly TransportRouteData $transportRoute,
         public readonly ?TransportReceiverType $receiverTypeCode = null,
         public readonly ?PartyData $receiver = null,
+        #[DataCollectionOf(ReferenceData::class)]
         public readonly array $references = [],
         public readonly ?EmissionContextData $emission = null,
         public readonly ?DocumentFooterData $footer = null,

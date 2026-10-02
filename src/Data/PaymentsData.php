@@ -6,10 +6,10 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\FiscalDateFormat;
-use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Rules\FiscalDate;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -24,13 +24,12 @@ final class PaymentsData extends Data
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly ?CarbonImmutable $paymentDueDate = null,
         public readonly ?PaymentTermsData $paymentTerms = null,
+        #[DataCollectionOf(PayeeFinancialAccountData::class)]
         public readonly array $payeeFinancialAccounts = [],
+        #[DataCollectionOf(PaymentData::class)]
         public readonly array $payments = [],
     ) {
-        $rules                             = self::rules();
-        $rules['payeeFinancialAccounts'][] = new DataInstances(PayeeFinancialAccountData::class);
-        $rules['payments'][]               = new DataInstances(PaymentData::class);
-        $this->validateFiscalFields($rules);
+        $this->validateFiscalFields(self::rules());
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\ReceiptType;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 
 final class ReceiptData extends InvoiceData
 {
@@ -17,6 +18,7 @@ final class ReceiptData extends InvoiceData
         public readonly PartyData $emitter,
         public readonly PartyData $receiver,
         public readonly ReceiptType $receiptTypeCode,
+        #[DataCollectionOf(ReferenceData::class)]
         public readonly array $references,
         public readonly PaymentsData $payments,
         public readonly ?PartyData $paymentParty = null,

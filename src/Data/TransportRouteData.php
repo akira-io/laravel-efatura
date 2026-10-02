@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
-use Akira\Efatura\Rules\DataInstances;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 
 final class TransportRouteData extends Data
@@ -16,11 +16,10 @@ final class TransportRouteData extends Data
      * @param list<TransportLocationData> $locations
      */
     public function __construct(
+        #[DataCollectionOf(TransportLocationData::class)]
         public readonly array $locations,
     ) {
-        $rules                = self::rules();
-        $rules['locations'][] = new DataInstances(TransportLocationData::class);
-        $this->validateFiscalFields($rules);
+        $this->validateFiscalFields(self::rules());
     }
 
     /**

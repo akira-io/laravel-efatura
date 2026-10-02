@@ -6,11 +6,11 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Data\Attributes\CveAmount;
-use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Brick\Money\Money;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -26,11 +26,10 @@ final class ReferenceData extends Data
         public readonly ?string $innerDocumentNumber = null,
         #[CveAmount]
         public readonly ?Money $paymentAmount = null,
+        #[DataCollectionOf(TaxData::class)]
         public readonly array $taxes = [],
     ) {
-        $rules            = self::rules();
-        $rules['taxes'][] = new DataInstances(TaxData::class);
-        $this->validateFiscalFields($rules);
+        $this->validateFiscalFields(self::rules());
     }
 
     /**
