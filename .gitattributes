@@ -28,6 +28,8 @@
 /psalm.xml.dist export-ignore
 /testbench.yaml export-ignore
 /workbench export-ignore
+/tools export-ignore
+/resources/catalogs/source export-ignore
 /art export-ignore
 # Preserve official downloads and extracted bytes, including upstream whitespace.
 /resources/catalogs/source/** -text -whitespace
