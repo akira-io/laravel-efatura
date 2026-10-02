@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 
 function composerMetadata(): array
 {
-    return json_decode((string) file_get_contents(__DIR__ . '/../composer.json'), true, 512, JSON_THROW_ON_ERROR);
+    return (new Filesystem)->json(__DIR__ . '/../composer.json', JSON_THROW_ON_ERROR);
 }
 
 it('declares the runtime platform and imported Laravel components', function (): void {
@@ -53,7 +54,7 @@ it('runs the clear script as a registered Testbench command', function (): void 
 });
 
 it('accepts the official DFA acronym in package tooling', function (): void {
-    $peck = json_decode((string) file_get_contents(__DIR__ . '/../peck.json'), true, 512, JSON_THROW_ON_ERROR);
+    $peck = (new Filesystem)->json(__DIR__ . '/../peck.json', JSON_THROW_ON_ERROR);
 
     expect($peck['ignore']['words'])->toContain('dfa');
 });

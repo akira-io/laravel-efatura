@@ -22,7 +22,7 @@ final class ValidationFixtures
 
     public static function invoicePayload(array $overrides = []): array
     {
-        return array_replace_recursive([
+        return collect([
             'type'      => DocumentType::ELECTRONIC_INVOICE,
             'issueDate' => '2026-02-08',
             'emitter'   => [
@@ -53,6 +53,6 @@ final class ValidationFixtures
                 'taxTotal'   => 150.0,
                 'grandTotal' => 1150.0,
             ],
-        ], $overrides);
+        ])->replaceRecursive($overrides)->all();
     }
 }

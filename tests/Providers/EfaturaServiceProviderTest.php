@@ -6,6 +6,7 @@ use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\EfaturaManager;
 use Akira\Efatura\EfaturaServiceProvider;
 use Akira\Efatura\Enums\Environment;
+use Illuminate\Filesystem\Filesystem;
 
 it('loads the immutable configuration once when first resolved', function (): void {
     config()->set('efatura.environment', 'HOMOLOGATION');
@@ -29,7 +30,7 @@ it('shares one manager with the resolved configuration', function (): void {
 });
 
 it('declares the provider metadata and registers without absent views', function (): void {
-    $composer = json_decode((string) file_get_contents(__DIR__ . '/../../composer.json'), true, 512, JSON_THROW_ON_ERROR);
+    $composer = (new Filesystem)->json(__DIR__ . '/../../composer.json', JSON_THROW_ON_ERROR);
 
     expect($composer['extra']['laravel']['providers'])->toContain(EfaturaServiceProvider::class)
         ->and(app()->getLoadedProviders())->toHaveKey(EfaturaServiceProvider::class)

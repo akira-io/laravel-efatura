@@ -7,6 +7,7 @@ namespace Akira\Efatura\Commands;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\confirm;
@@ -76,7 +77,7 @@ final class InstallCommand extends Command
         ];
 
         $appendLines     = [];
-        $shouldAddHeader = ! str_contains($contents, '# akira/efatura');
+        $shouldAddHeader = ! Str::contains($contents, '# akira/efatura');
 
         foreach ($variables as $key => $value) {
             if ($this->environmentVariableExists($contents, $key)) {
@@ -102,7 +103,7 @@ final class InstallCommand extends Command
 
         if ($appendLines !== []) {
             $prefix = Str::endsWith($contents, PHP_EOL) ? '' : PHP_EOL;
-            $filesystem->append($envPath, $prefix . implode(PHP_EOL, $appendLines) . PHP_EOL);
+            $filesystem->append($envPath, $prefix . Arr::join($appendLines, PHP_EOL) . PHP_EOL);
         }
     }
 
@@ -122,13 +123,13 @@ final class InstallCommand extends Command
             return;
         }
 
-        $packages = implode(', ', $missing);
+        $packages = Arr::join($missing, ', ');
 
         info(__('efatura.install.optional_packages_notice', ['packages' => $packages]));
     }
 
     private function environmentVariableExists(string $contents, string $key): bool
     {
-        return preg_match('/^' . preg_quote($key, '/') . '=/m', $contents) === 1;
+        return Str::isMatch('/^' . preg_quote($key, '/') . '=/m', $contents);
     }
 }

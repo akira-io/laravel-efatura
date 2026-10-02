@@ -12,6 +12,7 @@ use Rector\Renaming\Rector\Name\RenameClassRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
 use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
+use RectorLaravel\Rector\ArrayDimFetch\EnvVariableToEnvHelperRector;
 use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
@@ -22,7 +23,8 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         LocallyCalledStaticMethodToNonStaticRector::class,
-        RenameClassRector::class => [
+        EnvVariableToEnvHelperRector::class => [__DIR__ . '/tests/Providers/CachedConfigurationTest.php'],
+        RenameClassRector::class            => [
             'Illuminate\Validation\Validator',
             __DIR__ . '/src/Data',
         ],
