@@ -2,28 +2,22 @@
     "preset": "laravel",
     "ignore": {
         "words": [
-            "php",
             "efatura",
-            "bun",
             "commitlint",
             "filesystem",
-            "nif",
             "dfa",
             "bcv",
             "homologation",
             "xsd",
             "retryable",
-            "sha256",
             "mobilephone",
             "telefax",
             "iuc",
             "gtin",
             "ean",
             "pharmacode",
-            "serie",
             "iuds",
-            "multimodal",
-            "sha"
+            "multimodal"
         ],
         "paths": [
             "resources/catalogs/source",
