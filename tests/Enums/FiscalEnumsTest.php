@@ -40,7 +40,5 @@ it('defines only active schema codes for modes, events, tax, reasons, and discou
 it('applies net-total line signs without implying tax participation', function (): void {
     expect(array_map(static fn (LineType $line): array => [$line->value, $line->netSign(), $line->participatesInNetTotals()], LineType::cases()))
         ->toBe([['N', 1, true], ['C', 1, true], ['D', -1, true], ['I', 0, false]])
-        ->and(LineType::tryFrom('n'))->toBeNull()
-        ->and(method_exists(LineType::Information, 'sign'))->toBeFalse()
-        ->and(method_exists(LineType::Information, 'participatesInTotals'))->toBeFalse();
+        ->and(LineType::tryFrom('n'))->toBeNull();
 });

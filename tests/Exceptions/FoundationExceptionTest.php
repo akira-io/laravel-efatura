@@ -47,16 +47,16 @@ it('reports definition errors through the package base without translation', fun
 ]);
 
 it('provides a typed safe artifact failure for unknown profiles', function (): void {
-    try {
-        resolve(OfficialArtifacts::class)->xsdEntry('untrusted-profile-secret');
-        test()->fail('Unknown profile was accepted.');
-    } catch (OfficialArtifactException $officialArtifactException) {
-        expect($officialArtifactException)->toBeInstanceOf(EfaturaException::class)
-            ->and($officialArtifactException->errorCode)->toBe('artifacts.unknown_profile')
-            ->and($officialArtifactException->context)->toBe(['operation' => 'xsd_entry'])
-            ->and($officialArtifactException->field)->toBeNull()
-            ->and($officialArtifactException->getMessage())->not->toContain('untrusted-profile-secret');
-    }
+    $artifacts = resolve(OfficialArtifacts::class);
+
+    expect(fn (): string => $artifacts->xsdEntry('untrusted-profile-secret'))
+        ->toThrow(function (OfficialArtifactException $exception): void {
+            expect($exception)->toBeInstanceOf(EfaturaException::class)
+                ->and($exception->errorCode)->toBe('artifacts.unknown_profile')
+                ->and($exception->context)->toBe(['operation' => 'xsd_entry'])
+                ->and($exception->field)->toBeNull()
+                ->and($exception->getMessage())->not->toContain('untrusted-profile-secret');
+        });
 });
 
 it('shares one packaged resource failure shape across catalogs and artifacts', function (string $exceptionClass): void {

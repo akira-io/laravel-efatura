@@ -36,12 +36,6 @@ it('includes all official document types', function (): void {
     ]);
 });
 
-it('marks supported document types', function (): void {
-    foreach (DocumentType::cases() as $type) {
-        expect($type)->toBeInstanceOf(DocumentType::class);
-    }
-});
-
 it('maps each document type to its data class and back', function (DocumentType $type, string $dataClass): void {
     expect($type->dataClass())->toBe($dataClass)
         ->and(DocumentType::fromDataClass($dataClass))->toBe($type)
