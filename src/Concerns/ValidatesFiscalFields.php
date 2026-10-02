@@ -16,7 +16,7 @@ trait ValidatesFiscalFields
     {
         $values = collect(get_object_vars($this))->map(static fn (mixed $value): mixed => $value instanceof BackedEnum ? $value->value : $value)->all();
         foreach ($values as $attribute => $value) {
-            if (\is_string($value)) {
+            if (\is_string($value) && collect($rules[$attribute] ?? [])->containsStrict('nullable')) {
                 $rules[$attribute][] = 'required';
             }
         }

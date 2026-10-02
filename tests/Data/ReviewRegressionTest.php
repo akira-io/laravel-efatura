@@ -6,6 +6,7 @@ use Akira\Efatura\Data\AddressData;
 use Akira\Efatura\Data\ContactsData;
 use Akira\Efatura\Data\DatePeriodData;
 use Akira\Efatura\Data\ExtraFieldData;
+use Akira\Efatura\Data\ExtraPropertyData;
 use Akira\Efatura\Data\ItemData;
 use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\PartyData;
@@ -23,6 +24,29 @@ use Spatie\LaravelData\LaravelDataServiceProvider;
 
 beforeEach(function (): void {
     $this->app->register(LaravelDataServiceProvider::class);
+});
+
+it('preserves explicitly permitted empty extension text', function (string $value): void {
+    expect(new ExtraFieldData('CustomFlag', $value)->value)->toBe($value);
+    foreach (['from', 'validateAndCreate'] as $method) {
+        expect(ExtraFieldData::$method(['name' => 'CustomFlag', 'value' => $value])->toArray()['value'])->toBe($value);
+    }
+})->with(['', '   ', "\t\n"]);
+
+it('still requires valid extension names when their text is empty', function (): void {
+    foreach (['', '   ', "\t\n"] as $name) {
+        expect(fn (): ExtraFieldData => new ExtraFieldData($name, ''))->toThrow(ValidationException::class);
+        foreach (['from', 'validateAndCreate'] as $method) {
+            expect(fn (): ExtraFieldData => ExtraFieldData::$method(['name' => $name, 'value' => '']))->toThrow(ValidationException::class);
+        }
+    }
+});
+
+it('retains the explicit nonempty item property value contract', function (): void {
+    expect(fn (): ExtraPropertyData => new ExtraPropertyData('CustomFlag', ''))->toThrow(ValidationException::class);
+    foreach (['from', 'validateAndCreate'] as $method) {
+        expect(fn (): ExtraPropertyData => ExtraPropertyData::$method(['name' => 'CustomFlag', 'value' => '']))->toThrow(ValidationException::class);
+    }
 });
 
 it('rejects supplied empty optional strings without discarding them', function (string $class, array $payload, string $field): void {
