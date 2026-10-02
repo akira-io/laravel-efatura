@@ -15,7 +15,8 @@ use Spatie\LaravelData\Support\DataProperty;
 
 final readonly class DiscountValueCast implements Cast
 {
-    /** @param array<string, mixed> $properties
+    /**
+     * @param array<string, mixed>  $properties
      * @param CreationContext<Data> $context
      */
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): Money|BigDecimal

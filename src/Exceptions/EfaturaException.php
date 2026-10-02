@@ -10,7 +10,7 @@ use Throwable;
 abstract class EfaturaException extends RuntimeException
 {
     /**
-     * @param array<string, bool|int|string|null> $context safe diagnostic metadata, never raw input or credentials
+     * @param array<string, bool|int|string|null> $context
      */
     public function __construct(
         public readonly string $errorCode,
