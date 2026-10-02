@@ -27,6 +27,6 @@ final readonly class ForeignMoneyCast implements Cast
             throw ValidationException::withMessages([FieldPath::of($context, 'currencyCode') => __('efatura::efatura.validation.invalid_currency')]);
         }
 
-        return new MoneyCast($currency, Fiscal::AMOUNT_SCALE, false)->cast($property, $value, $properties, $context);
+        return new MoneyCast(CatalogCurrency::of($currency), Fiscal::AMOUNT_SCALE, false)->cast($property, $value, $properties, $context);
     }
 }

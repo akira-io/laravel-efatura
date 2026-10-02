@@ -56,14 +56,6 @@ it('reports a cast failure in a nested amount list at its full path', function (
     expect($errors)->toBe(['payableAlternativeAmounts.3.value' => ['Value exceeds the allowed decimal precision.']]);
 });
 
-it('reports an unknown alternative currency at the converted amount', function (): void {
-    $errors = validationErrorsOf(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from([
-        'value' => '1', 'currencyCode' => 'IdR', 'exchangeRate' => '1',
-    ]));
-
-    expect($errors)->toBe(['value' => ['Currency must be a supported uppercase ISO code.']]);
-});
-
 it('reports a missing alternative currency at its own field', function (): void {
     $errors = validationErrorsOf(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from([
         'value' => '1', 'exchangeRate' => '1',

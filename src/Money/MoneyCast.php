@@ -7,6 +7,7 @@ namespace Akira\Efatura\Money;
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Support\FieldPath;
+use Brick\Money\Currency;
 use Brick\Money\Money;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Casts\Cast;
@@ -19,7 +20,7 @@ use Spatie\LaravelData\Transformers\Transformer;
 final readonly class MoneyCast implements Cast, Transformer
 {
     public function __construct(
-        private string $currency,
+        private string|Currency $currency,
         private int $scale = 2,
         private bool $round = true,
     ) {

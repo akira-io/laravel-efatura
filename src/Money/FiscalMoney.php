@@ -10,6 +10,7 @@ use Akira\Efatura\Support\Fiscal;
 use Brick\Math\Exception\MathException;
 use Brick\Math\RoundingMode;
 use Brick\Money\Context\CustomContext;
+use Brick\Money\Currency;
 use Brick\Money\Exception\MoneyException;
 use Brick\Money\Money;
 use Illuminate\Support\Str;
@@ -21,17 +22,17 @@ final class FiscalMoney
         return self::of($amount, Fiscal::CURRENCY, $field);
     }
 
-    public static function of(int|float|string|Money $amount, string $currency, string $field = 'amount'): Money
+    public static function of(int|float|string|Money $amount, string|Currency $currency, string $field = 'amount'): Money
     {
         return self::create($amount, $currency, 2, true, $field);
     }
 
-    public static function exact(int|float|string|Money $amount, string $currency, int $scale = Fiscal::AMOUNT_SCALE, string $field = 'amount'): Money
+    public static function exact(int|float|string|Money $amount, string|Currency $currency, int $scale = Fiscal::AMOUNT_SCALE, string $field = 'amount'): Money
     {
         return self::create($amount, $currency, $scale, false, $field);
     }
 
-    private static function create(int|float|string|Money $amount, string $currency, int $scale, bool $round, string $field): Money
+    private static function create(int|float|string|Money $amount, string|Currency $currency, int $scale, bool $round, string $field): Money
     {
         if ($scale < 0 || $scale > Fiscal::AMOUNT_SCALE) {
             throw DefinitionException::moneyScale($scale, Fiscal::AMOUNT_SCALE);
@@ -41,11 +42,12 @@ final class FiscalMoney
             throw EfaturaValidationException::invalidMoney($field);
         }
 
-        if (! Str::isMatch('/^[A-Z]{3}$/D', $currency)) {
+        if (\is_string($currency) && ! Str::isMatch('/^[A-Z]{3}$/D', $currency)) {
             throw EfaturaValidationException::invalidCurrency($field);
         }
 
-        if ($amount instanceof Money && $amount->getCurrency()->getCurrencyCode() !== $currency) {
+        $code = $currency instanceof Currency ? $currency->getCurrencyCode() : $currency;
+        if ($amount instanceof Money && $amount->getCurrency()->getCurrencyCode() !== $code) {
             throw EfaturaValidationException::currencyMismatch($field);
         }
 

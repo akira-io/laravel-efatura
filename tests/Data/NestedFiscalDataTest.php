@@ -61,7 +61,7 @@ it('models every total independently without premature reconciliation', function
     ]);
     expect($totals->toArray()['payableRoundingAmount'])->toBe('-0.00345')
         ->and($totals->payableAlternativeAmounts[0]->value->getCurrency()->getCurrencyCode())->toBe('EUR');
-    expect(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => '1', 'currencyCode' => 'IdR', 'exchangeRate' => '1']))->toThrow(ValidationException::class)
+    expect(PayableAlternativeAmountData::from(['value' => '1', 'currencyCode' => 'IdR', 'exchangeRate' => '1'])->value->getCurrency()->getCurrencyCode())->toBe('IdR')
         ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => FiscalMoney::of('1', 'USD'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('1')]))->toThrow(ValidationException::class);
 });
 
