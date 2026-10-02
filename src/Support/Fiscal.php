@@ -22,5 +22,7 @@ final class Fiscal
 
     public const string DATE_TIME_FORMAT = 'Y-m-d\TH:i:s';
 
+    public const string SALES_RECEIPT_IDENTIFIED_RECEIVER_AMOUNT = '20000';
+
     public const string XML_NAMESPACE = 'urn:cv:efatura:xsd:v1.0';
 }

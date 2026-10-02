@@ -6,11 +6,13 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Actions\ValidateDocumentCompatibilityAction;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Enums\PartyReference;
 use Akira\Efatura\Rules\ForeignDocumentField;
 use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Validation\Rule;
 use Override;
 use Spatie\LaravelData\Support\DataConfig;
 use Spatie\LaravelData\Support\DataProperty;
@@ -51,15 +53,51 @@ abstract class InvoiceData extends FiscalData
      */
     final public static function rules(ValidationContext $context, DataConfig $config): array
     {
-        return [...self::emitterRules($context), ...self::foreignFieldRules($context, $config), ...static::documentRules()];
+        return self::mergedRules(
+            self::emitterRules($context),
+            self::receiverRules($context),
+            self::foreignFieldRules($context, $config),
+            static::documentRules($context),
+        );
     }
 
     /**
      * @return array<string, list<mixed>>
      */
-    protected static function documentRules(): array
+    protected static function documentRules(ValidationContext $context): array
     {
         return [];
+    }
+
+    /**
+     * @param  array<string, list<mixed>> ...$ruleSets
+     * @return array<string, list<mixed>>
+     */
+    private static function mergedRules(array ...$ruleSets): array
+    {
+        $merged = [];
+        foreach ($ruleSets as $ruleSet) {
+            foreach ($ruleSet as $field => $rules) {
+                $merged[$field] = [...$merged[$field] ?? [], ...$rules];
+            }
+        }
+
+        return $merged;
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    private static function receiverRules(ValidationContext $context): array
+    {
+        $rules     = ['receiver' => [Rule::requiredIf(\is_array(ValidationPayload::value($context, 'header.selfBilling')))]];
+        $reference = ValidationPayload::value($context, 'receiver.reference');
+
+        if ($reference === null || $reference === PartyReference::Emitter->value) {
+            return $rules;
+        }
+
+        return [...$rules, 'receiver.reference' => [Rule::in([PartyReference::Emitter->value])]];
     }
 
     /**

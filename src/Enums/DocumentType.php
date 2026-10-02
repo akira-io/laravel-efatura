@@ -31,6 +31,16 @@ enum DocumentType: string
         };
     }
 
+    public function requiresLinePricing(): bool
+    {
+        return $this !== self::Transport;
+    }
+
+    public function requiresLineTaxes(): bool
+    {
+        return ! \in_array($this, [self::CreditNote, self::ReturnNote, self::Transport], true);
+    }
+
     public function xmlElement(): string
     {
         return $this->name;

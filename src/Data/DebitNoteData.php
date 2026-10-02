@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Data\Contracts\HasTotals;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\IssueReason;
+use Akira\Efatura\Support\DocumentRules;
+use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Min;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class DebitNoteData extends InvoiceData
+final class DebitNoteData extends InvoiceData implements HasTotals
 {
     /**
      * @param list<LineItemData>  $lines
@@ -33,5 +37,18 @@ final class DebitNoteData extends InvoiceData
     public function type(): DocumentType
     {
         return DocumentType::DebitNote;
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    #[Override]
+    protected static function documentRules(ValidationContext $context): array
+    {
+        return [
+            ...DocumentRules::lines($context, DocumentType::DebitNote),
+            'references'      => DocumentRules::requiredList(),
+            'issueReasonCode' => DocumentRules::issueReason(DocumentType::DebitNote),
+        ];
     }
 }

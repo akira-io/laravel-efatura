@@ -5,11 +5,18 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Enums\PartyReference;
 use Akira\Efatura\Enums\TransportDocumentType;
 use Akira\Efatura\Enums\TransportReceiverType;
+use Akira\Efatura\Support\DocumentRules;
+use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\ValidationPayload;
+use Illuminate\Validation\Rule;
+use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Min;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class TransportDocumentData extends InvoiceData
 {
@@ -36,5 +43,27 @@ final class TransportDocumentData extends InvoiceData
     public function type(): DocumentType
     {
         return DocumentType::Transport;
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    #[Override]
+    protected static function documentRules(ValidationContext $context): array
+    {
+        $receiverType       = ValidationPayload::enum($context, 'receiverTypeCode', TransportReceiverType::class);
+        $undetermined       = $receiverType === TransportReceiverType::Undetermined;
+        $providerIsReceiver = ValidationPayload::string($context, 'transportServiceProvider.reference') === PartyReference::Receiver->value;
+        $rules              = [
+            ...DocumentRules::lines($context, DocumentType::Transport),
+            'receiver' => [Rule::requiredIf(! $undetermined || $providerIsReceiver), Rule::prohibitedIf($undetermined)],
+        ];
+
+        if ($receiverType !== TransportReceiverType::Taxpayer || ! \is_array(ValidationPayload::value($context, 'receiver'))
+            || ValidationPayload::string($context, 'receiver.reference') === PartyReference::Emitter->value) {
+            return $rules;
+        }
+
+        return [...$rules, 'receiver.taxId.countryCode' => ['required', 'in:' . Fiscal::COUNTRY]];
     }
 }

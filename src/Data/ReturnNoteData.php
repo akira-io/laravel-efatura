@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Data\Contracts\HasTotals;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\IssueReason;
+use Akira\Efatura\Support\DocumentRules;
 use Akira\Efatura\Support\FiscalRules;
+use Akira\Efatura\Support\ValidationPayload;
+use Illuminate\Validation\Rule;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Min;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class ReturnNoteData extends InvoiceData
+final class ReturnNoteData extends InvoiceData implements HasTotals
 {
     /**
      * @param list<LineItemData>  $lines
@@ -42,8 +47,15 @@ final class ReturnNoteData extends InvoiceData
      * @return array<string, list<mixed>>
      */
     #[Override]
-    protected static function documentRules(): array
+    protected static function documentRules(ValidationContext $context): array
     {
-        return ['issueReasonDescription' => FiscalRules::text(10, 500)];
+        $other = ValidationPayload::enum($context, 'issueReasonCode', IssueReason::class) === IssueReason::Other;
+
+        return [
+            ...DocumentRules::lines($context, DocumentType::ReturnNote),
+            'references'             => DocumentRules::requiredList(),
+            'issueReasonCode'        => DocumentRules::issueReason(DocumentType::ReturnNote),
+            'issueReasonDescription' => [Rule::requiredIf($other), ...FiscalRules::text(10, 500)],
+        ];
     }
 }

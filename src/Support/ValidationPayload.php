@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Support;
 
+use Akira\Efatura\Money\DecimalFormatter;
 use BackedEnum;
+use Brick\Math\BigDecimal;
+use Brick\Money\Money;
 use Illuminate\Support\Arr;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -36,6 +39,17 @@ final class ValidationPayload
         $value = self::value($context, $field);
 
         return \is_string($value) ? $value : null;
+    }
+
+    public static function decimal(ValidationContext $context, string $field): ?BigDecimal
+    {
+        $value = self::value($context, $field);
+
+        if ($value instanceof Money) {
+            return $value->getAmount();
+        }
+
+        return DecimalFormatter::isPlainDecimal($value) ? BigDecimal::of($value) : null;
     }
 
     public static function isTrue(ValidationContext $context, string $field): bool

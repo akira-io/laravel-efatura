@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Attributes\FiscalDateFormat;
+use Akira\Efatura\Data\Contracts\HasTaxPointDate;
+use Akira\Efatura\Data\Contracts\HasTotals;
+use Akira\Efatura\Data\Contracts\SettlesOnIssue;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Support\DocumentRules;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Carbon\CarbonImmutable;
@@ -13,8 +17,9 @@ use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
 use Spatie\LaravelData\Attributes\Validation\Min;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class ReceiptInvoiceData extends InvoiceData
+final class ReceiptInvoiceData extends InvoiceData implements HasTaxPointDate, HasTotals, SettlesOnIssue
 {
     /**
      * @param list<LineItemData>  $lines
@@ -48,8 +53,12 @@ final class ReceiptInvoiceData extends InvoiceData
      * @return array<string, list<mixed>>
      */
     #[Override]
-    protected static function documentRules(): array
+    protected static function documentRules(ValidationContext $context): array
     {
-        return ['orderReference' => FiscalRules::code()];
+        return [
+            ...DocumentRules::lines($context, DocumentType::InvoiceReceipt),
+            ...DocumentRules::settledPayments($context),
+            'orderReference' => FiscalRules::code(),
+        ];
     }
 }

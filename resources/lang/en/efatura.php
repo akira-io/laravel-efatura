@@ -7,6 +7,8 @@ return [
         'document_field_forbidden'  => 'This field does not belong to this fiscal document type.',
         'issue_date_window'         => 'The issue date and time are outside the permitted emission window.',
         'reconciliation'            => 'The supplied amount cannot be reconciled with the fiscal evidence.',
+        'tax_point_after_issue'     => 'The tax point date cannot be later than the issue date.',
+        'payment_not_on_issue_day'  => 'The payment date must be the issue date.',
         'reserved_field'            => 'The :attribute is reserved for an official fiscal field.',
         'field_name'                => 'The :attribute must be a text field name.',
         'fiscal_date'               => 'The :attribute must use a valid fiscal date or time.',

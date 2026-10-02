@@ -50,3 +50,12 @@ through `InvoiceBuilder::validate()`. `from()` and `validateAndCreate()` no
 longer reject a document because of its age, so an issued document can be
 rehydrated from storage. Code that relied on `from()` to enforce the window
 must issue through the builder or call `ValidateIssueDateAction` itself.
+
+Document compatibility rules now run in the same validation pass as the rest
+of the payload and report at full paths: duplicate line identifiers under
+`lines.N.id`, missing line prices or taxes under `lines.N.price` and
+`lines.N.taxes`, settled-payment conflicts under `payments.payments` and
+`payments.paymentDueDate`, and an invoice receipt payment date under
+`payments.payments.N.paymentDate`. The previous bare keys (`ids.N`, `price`,
+`payments`, `paymentDate`, `receiverReference`) are gone. Allowed issue
+reasons per document come from `IssueReason::allowedFor(DocumentType)`.
