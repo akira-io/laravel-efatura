@@ -14,8 +14,11 @@ use Spatie\LaravelData\Casts\Cast;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Creation\CreationContext;
 use Spatie\LaravelData\Support\DataProperty;
+use Spatie\LaravelData\Support\Transformation\TransformationContext;
+use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
+use Spatie\LaravelData\Transformers\Transformer;
 
-final readonly class FiscalDateCast implements Cast
+final readonly class FiscalDateCast implements Cast, Transformer
 {
     public function __construct(private string $format = Fiscal::DATE_FORMAT) {}
 
@@ -36,6 +39,11 @@ final readonly class FiscalDateCast implements Cast
         }
 
         return $date;
+    }
+
+    public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
+    {
+        return new DateTimeInterfaceTransformer($this->format, '')->transform($property, $value, $context);
     }
 
     private function parse(string $value): ?CarbonImmutable

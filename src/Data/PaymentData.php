@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Data\Attributes\CveAmount;
+use Akira\Efatura\Data\Attributes\FiscalDateFormat;
 use Akira\Efatura\Enums\Catalog;
-use Akira\Efatura\Money\MoneyCast;
-use Akira\Efatura\Money\MoneyTransformer;
 use Akira\Efatura\Rules\FiscalDate;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
@@ -16,10 +15,7 @@ use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Brick\Money\Money;
 use Carbon\CarbonImmutable;
-use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
 
 final class PaymentData extends Data
 {
@@ -28,11 +24,9 @@ final class PaymentData extends Data
     public function __construct(
         public readonly ?string $paymentMeansCode = null,
         public readonly ?string $paymentReference = null,
-        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
+        #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly ?CarbonImmutable $paymentDate = null,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $paymentAmount = null,
         public readonly ?PayeeFinancialAccountData $payeeFinancialAccount = null,
     ) {

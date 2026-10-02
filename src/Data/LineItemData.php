@@ -5,17 +5,14 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Data\Attributes\CveAmount;
 use Akira\Efatura\Enums\LineType;
-use Akira\Efatura\Money\MoneyCast;
-use Akira\Efatura\Money\MoneyTransformer;
 use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Brick\Money\Money;
 use Illuminate\Support\Facades\Validator;
-use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -33,15 +30,12 @@ final class LineItemData extends Data
         public readonly ?string $id = null,
         public readonly ?string $lineReferenceId = null,
         public readonly ?int $orderLineReference = null,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $price = null,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $priceExtension = null,
         public readonly ?DiscountData $discount = null,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $netTotal = null,
         public readonly array $taxes = [],
     ) {

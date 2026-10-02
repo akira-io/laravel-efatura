@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Data\Attributes\FiscalDateFormat;
 use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Rules\FiscalDate;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
-use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
-use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
 
 final class PaymentsData extends Data
 {
@@ -24,8 +21,7 @@ final class PaymentsData extends Data
      * @param list<PaymentData> $payments
      */
     public function __construct(
-        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
+        #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly ?CarbonImmutable $paymentDueDate = null,
         public readonly ?PaymentTermsData $paymentTerms = null,
         public readonly array $payeeFinancialAccounts = [],

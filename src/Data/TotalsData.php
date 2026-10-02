@@ -5,14 +5,11 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
-use Akira\Efatura\Money\MoneyCast;
-use Akira\Efatura\Money\MoneyTransformer;
+use Akira\Efatura\Data\Attributes\CveAmount;
 use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Money\Money;
-use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 
 final class TotalsData extends Data
@@ -23,29 +20,21 @@ final class TotalsData extends Data
      * @param list<PayableAlternativeAmountData> $payableAlternativeAmounts
      */
     public function __construct(
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly Money $priceExtensionTotalAmount,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly Money $netTotalAmount,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly Money $taxTotalAmount,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly Money $payableAmount,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $chargeTotalAmount = null,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $discountTotalAmount = null,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $withholdingTaxTotalAmount = null,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $payableRoundingAmount = null,
         public readonly ?DiscountData $discount = null,
         public readonly array $payableAlternativeAmounts = [],

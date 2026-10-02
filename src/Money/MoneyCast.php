@@ -13,8 +13,10 @@ use Spatie\LaravelData\Casts\Cast;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Creation\CreationContext;
 use Spatie\LaravelData\Support\DataProperty;
+use Spatie\LaravelData\Support\Transformation\TransformationContext;
+use Spatie\LaravelData\Transformers\Transformer;
 
-final readonly class MoneyCast implements Cast
+final readonly class MoneyCast implements Cast, Transformer
 {
     public function __construct(
         private string $currency,
@@ -45,5 +47,10 @@ final readonly class MoneyCast implements Cast
         } catch (EfaturaValidationException $efaturaValidationException) {
             throw ValidationException::withMessages([$path => $efaturaValidationException->getMessage()]);
         }
+    }
+
+    public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
+    {
+        return new MoneyTransformer($this->scale, $this->round)->transform($property, $value, $context);
     }
 }

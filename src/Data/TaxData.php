@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Data\Attributes\CveAmount;
 use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Enums\StampTaxCode;
 use Akira\Efatura\Enums\TaxType;
 use Akira\Efatura\Money\BigDecimalCast;
 use Akira\Efatura\Money\BigDecimalTransformer;
-use Akira\Efatura\Money\MoneyCast;
-use Akira\Efatura\Money\MoneyTransformer;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Support\Fiscal;
@@ -32,13 +31,11 @@ final class TaxData extends Data
         #[WithCast(BigDecimalCast::class, 3)]
         #[WithTransformer(BigDecimalTransformer::class, 3)]
         public readonly ?BigDecimal $taxPercentage = null,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $taxAmount = null,
         public readonly ?string $taxExemptionReasonCode = null,
         public readonly ?StampTaxCode $stampTaxCode = null,
-        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[CveAmount]
         public readonly ?Money $taxTotal = null,
     ) {
         $this->validateFiscalFields(self::rules());
