@@ -45,50 +45,67 @@ it('accepts insignificant decimal zeros without losing exact precision boundarie
         ->and(DecimalFormatter::decimal(BigDecimal::of('10.00000'), 2))->toBe('10')
         ->and(DecimalFormatter::decimal(BigDecimal::of('0.00000'), 2))->toBe('0')
         ->and(DecimalFormatter::money(FiscalMoney::exact('1.23000', 'CVE'), 2, false))->toBe('1.23');
-    expect(fn (): string => DecimalFormatter::decimal(BigDecimal::of('1.23400'), 2))
-        ->toThrow(EfaturaValidationException::class);
 });
 
-it('rejects malformed amount text and unknown or mismatched currencies', function (string $amount, string $currency): void {
-    expect(fn (): Money => FiscalMoney::of($amount, $currency))
-        ->toThrow(EfaturaValidationException::class);
+it('rejects a significant trailing digit beyond the requested decimal scale', function (): void {
+    $value = BigDecimal::of('1.23400');
+
+    expect(fn (): string => DecimalFormatter::decimal($value, 2))
+        ->toFailValidationOn('amount', 'Value exceeds the allowed decimal precision.');
+});
+
+it('rejects malformed amount text and unknown or badly cased currencies', function (string $amount, string $currency, string $message): void {
+    expect(fn (): Money => FiscalMoney::of($amount, $currency))->toFailValidationOn('amount', $message);
 })->with([
-    ['NaN', 'CVE'],
-    ['1e3', 'CVE'],
-    ['1,000.00', 'CVE'],
-    ['1.00', 'NOPE'],
-    ['1.00', 'ZZZ'],
-    ['1.00', 'IdR'],
+    'not a number'         => ['NaN', 'CVE', 'Value must be a plain decimal number.'],
+    'scientific notation'  => ['1e3', 'CVE', 'Value must be a plain decimal number.'],
+    'thousands separator'  => ['1,000.00', 'CVE', 'Value must be a plain decimal number.'],
+    'four letter currency' => ['1.00', 'NOPE', 'Currency must be a supported uppercase ISO code.'],
+    'unknown currency'     => ['1.00', 'ZZZ', 'Money amount or currency is invalid.'],
+    'mixed case currency'  => ['1.00', 'IdR', 'Currency must be a supported uppercase ISO code.'],
 ]);
 
 it('rejects a Money value with a different requested currency', function (): void {
     $source = Money::of('1.00', 'USD');
 
     expect(fn (): Money => FiscalMoney::cve($source))
-        ->toThrow(EfaturaValidationException::class);
+        ->toFailValidationOn('amount', 'Money currency does not match the requested currency.');
 });
 
-it('rejects source precision beyond the owning field scale', function (): void {
+it('rejects exact source precision beyond the owning field scale', function (): void {
     expect(fn (): Money => FiscalMoney::exact('1.234567', 'CVE', 5))
-        ->toThrow(EfaturaValidationException::class)
-        ->and(fn (): string => DecimalFormatter::decimal(BigDecimal::of('1.2345'), 3))
-        ->toThrow(EfaturaValidationException::class);
+        ->toFailValidationOn('amount', 'Value exceeds the allowed decimal precision.');
+});
+
+it('rejects a decimal beyond the owning field scale', function (): void {
+    $value = BigDecimal::of('1.2345');
+
+    expect(fn (): string => DecimalFormatter::decimal($value, 3))
+        ->toFailValidationOn('amount', 'Value exceeds the allowed decimal precision.');
 });
 
 it('does not accept a rounded Money cast with a non-fiscal scale', function (): void {
     expect(fn (): MoneyCast => new MoneyCast('CVE', 3, true))
-        ->toThrow(DefinitionException::class);
+        ->toThrow(DefinitionException::class, 'Rounded fiscal Money uses two decimal places, 3 given.');
 });
 
-it('rejects invalid precision policies and strict serialization that would lose digits', function (): void {
+it('rejects a Money scale above the five decimal XSD scale', function (): void {
+    expect(fn (): Money => FiscalMoney::exact('1', 'CVE', 6))
+        ->toThrow(DefinitionException::class, 'Money scale must be between 0 and 5, 6 given.');
+});
+
+it('rejects strict serialization that would lose digits', function (): void {
     $source = Money::of('1.23456', 'CVE', new CustomContext(5));
 
-    expect(fn (): Money => FiscalMoney::exact('1', 'CVE', 6))
-        ->toThrow(DefinitionException::class)
-        ->and(fn (): string => DecimalFormatter::money($source, 2, false))
-        ->toThrow(EfaturaValidationException::class)
-        ->and(fn (): string => DecimalFormatter::decimal(BigDecimal::one(), -1))
-        ->toThrow(DefinitionException::class);
+    expect(fn (): string => DecimalFormatter::money($source, 2, false))
+        ->toFailValidationOn('amount', 'Value exceeds the allowed decimal precision.');
+});
+
+it('rejects a negative decimal scale', function (): void {
+    $value = BigDecimal::one();
+
+    expect(fn (): string => DecimalFormatter::decimal($value, -1))
+        ->toThrow(DefinitionException::class, 'Decimal scale must not be negative, -1 given.');
 });
 
 it('reports programmatic failures at the field the caller names', function (Closure $call, string $errorCode): void {

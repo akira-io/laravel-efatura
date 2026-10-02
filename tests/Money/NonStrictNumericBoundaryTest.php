@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 
-it('rejects float amounts before a non-strict caller can coerce them', function (float $amount): void {
-    $caller = require __DIR__ . '/../Fixtures/NonStrictNumericCaller.inc';
+it('rejects float amounts before a non-strict caller can coerce them', function (string $entry, array $arguments, string $message, float $amount): void {
+    $call = (require __DIR__ . '/../Fixtures/NonStrictNumericCaller.inc')[$entry];
 
-    expect(fn (): Money => $caller['cve']($amount))->toThrow(EfaturaValidationException::class)
-        ->and(fn (): Money => $caller['of']($amount, 'USD'))->toThrow(EfaturaValidationException::class)
-        ->and(fn (): Money => $caller['exact']($amount))->toThrow(EfaturaValidationException::class)
-        ->and(fn (): BigDecimal => $caller['parse']($amount))->toThrow(EfaturaValidationException::class);
-})->with([1.99, 2.0]);
+    expect(fn (): Money|BigDecimal => $call($amount, ...$arguments))->toFailValidationOn('amount', $message);
+})->with([
+    'cve'   => ['cve', [], 'Money amount or currency is invalid.'],
+    'of'    => ['of', ['USD'], 'Money amount or currency is invalid.'],
+    'exact' => ['exact', [], 'Money amount or currency is invalid.'],
+    'parse' => ['parse', [], 'Value must be a plain decimal number.'],
+])->with([1.99, 2.0]);
 
 it('retains exact accepted inputs from a non-strict caller', function (): void {
     $caller = require __DIR__ . '/../Fixtures/NonStrictNumericCaller.inc';

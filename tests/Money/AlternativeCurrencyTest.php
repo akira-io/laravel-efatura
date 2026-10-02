@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Data\PayableAlternativeAmountData;
-use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\Money\FiscalMoney;
 use Brick\Money\Money;
@@ -17,7 +16,9 @@ it('accepts every official alternative currency the XSD enumerates', function (s
 })->with(['EUR', 'IdR', 'XAG', 'XAU', 'XBA', 'XBB', 'XBC', 'XBD', 'XDR', 'XPD', 'XPT', 'XSU', 'XTS', 'XUA', 'XXX']);
 
 it('rejects a currency outside the official enumeration', function (string $currency): void {
-    expect(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => '1', 'currencyCode' => $currency, 'exchangeRate' => '150']))
+    $payload = ['value' => '1', 'currencyCode' => $currency, 'exchangeRate' => '150'];
+
+    expect(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from($payload))
         ->toThrow(function (ValidationException $exception): void {
             expect($exception->errors())->toBe(['currencyCode' => ['The currency code must be a code in the official catalog.']]);
         });
@@ -36,6 +37,9 @@ it('resolves ISO currencies through Brick and other catalog codes as custom curr
 });
 
 it('rejects money in another currency than the resolved catalog currency', function (): void {
-    expect(fn (): Money => FiscalMoney::exact(FiscalMoney::of('1', 'USD'), CatalogCurrency::of('XDR')))
-        ->toThrow(EfaturaValidationException::class, 'Money currency does not match the requested currency.');
+    $dollars = FiscalMoney::of('1', 'USD');
+    $sdr     = CatalogCurrency::of('XDR');
+
+    expect(fn (): Money => FiscalMoney::exact($dollars, $sdr))
+        ->toFailValidationOn('amount', 'Money currency does not match the requested currency.');
 });

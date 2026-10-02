@@ -3,36 +3,16 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Casts\BigDecimalCast;
-use Akira\Efatura\Casts\MoneyCast;
+use Akira\Efatura\Tests\Fixtures\FiscalValuesData;
 use Akira\Efatura\Transformers\BigDecimalTransformer;
 use Akira\Efatura\Transformers\MoneyTransformer;
 use Brick\Math\BigDecimal;
 use Brick\Money\Context\CustomContext;
 use Brick\Money\Money;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Attributes\WithTransformer;
-use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\DataConfig;
 use Spatie\LaravelData\Support\Transformation\TransformationContext;
-
-final class FiscalValuesData extends Data
-{
-    public function __construct(
-        #[WithCast(MoneyCast::class, 'CVE')]
-        #[WithTransformer(MoneyTransformer::class)]
-        public readonly Money $payable,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
-        public readonly Money $unitPrice,
-        #[WithCast(BigDecimalCast::class, 5)]
-        #[WithTransformer(BigDecimalTransformer::class, 5)]
-        public readonly BigDecimal $exchangeRate,
-        #[WithCast(BigDecimalCast::class, 3)]
-        #[WithTransformer(BigDecimalTransformer::class, 3)]
-        public readonly BigDecimal $taxPercentage,
-    ) {}
-}
+use Spatie\LaravelData\Transformers\Transformer;
 
 it('casts and serializes exact fiscal values through real Spatie Data', function (): void {
     $data = FiscalValuesData::from([
@@ -42,9 +22,11 @@ it('casts and serializes exact fiscal values through real Spatie Data', function
         'taxPercentage' => '15.125',
     ]);
 
-    expect($data->payable)->toBeInstanceOf(Money::class)
-        ->and($data->unitPrice)->toBeInstanceOf(Money::class)
-        ->and($data->exchangeRate)->toBeInstanceOf(BigDecimal::class)
+    expect((string) $data->payable->getAmount())->toBe('1.24')
+        ->and($data->payable->getCurrency()->getCurrencyCode())->toBe('CVE')
+        ->and((string) $data->unitPrice->getAmount())->toBe('1.23456')
+        ->and((string) $data->exchangeRate)->toBe('123.45678')
+        ->and((string) $data->taxPercentage)->toBe('15.125')
         ->and($data->toArray())->toBe([
             'payable'       => '1.24',
             'unitPrice'     => '1.23456',
@@ -53,32 +35,41 @@ it('casts and serializes exact fiscal values through real Spatie Data', function
         ]);
 });
 
-it('rejects floats and scientific notation at the Data boundary', function (array $input, string $field): void {
+it('rejects floats, scientific notation and excess scale at the Data boundary', function (array $input, string $field, string $message): void {
     expect(fn (): FiscalValuesData => FiscalValuesData::from($input))
-        ->toThrow(function (ValidationException $exception) use ($field): void {
-            expect(array_keys($exception->errors()))->toBe([$field]);
+        ->toThrow(function (ValidationException $exception) use ($field, $message): void {
+            expect($exception->errors())->toBe([$field => [$message]]);
         });
 })->with([
-    [['payable' => 1.23, 'unitPrice' => '1.2', 'exchangeRate' => '1', 'taxPercentage' => '15'], 'payable'],
-    [['payable' => '1', 'unitPrice' => '1.2', 'exchangeRate' => '1e3', 'taxPercentage' => '15'], 'exchangeRate'],
-    [['payable' => '1', 'unitPrice' => '1.234567', 'exchangeRate' => '1', 'taxPercentage' => '15'], 'unitPrice'],
-    [['payable' => '1', 'unitPrice' => '1.2', 'exchangeRate' => '1.234567', 'taxPercentage' => '15'], 'exchangeRate'],
-    [['payable' => '1', 'unitPrice' => '1.2', 'exchangeRate' => '1', 'taxPercentage' => '15.1234'], 'taxPercentage'],
+    'float payable'            => [['payable' => 1.23, 'unitPrice' => '1.2', 'exchangeRate' => '1', 'taxPercentage' => '15'], 'payable', 'Money must be an integer, decimal string, or Money value.'],
+    'scientific exchange rate' => [['payable' => '1', 'unitPrice' => '1.2', 'exchangeRate' => '1e3', 'taxPercentage' => '15'], 'exchangeRate', 'Value must be a plain decimal number.'],
+    'unit price scale'         => [['payable' => '1', 'unitPrice' => '1.234567', 'exchangeRate' => '1', 'taxPercentage' => '15'], 'unitPrice', 'Value exceeds the allowed decimal precision.'],
+    'exchange rate scale'      => [['payable' => '1', 'unitPrice' => '1.2', 'exchangeRate' => '1.234567', 'taxPercentage' => '15'], 'exchangeRate', 'Value exceeds the allowed decimal precision.'],
+    'tax percentage scale'     => [['payable' => '1', 'unitPrice' => '1.2', 'exchangeRate' => '1', 'taxPercentage' => '15.1234'], 'taxPercentage', 'Value exceeds the allowed decimal precision.'],
 ]);
 
-it('rejects invalid cast and transformer values at their public boundaries', function (): void {
-    $properties     = resolve(DataConfig::class)->getDataClass(FiscalValuesData::class)->properties;
-    $creation       = FiscalValuesData::factory()->get();
+it('rejects a float at the decimal cast boundary', function (): void {
+    $property = resolve(DataConfig::class)->getDataClass(FiscalValuesData::class)->properties['exchangeRate'];
+    $creation = FiscalValuesData::factory()->get();
+
+    expect(fn (): BigDecimal => new BigDecimalCast()->cast($property, 1.2, [], $creation))
+        ->toFailValidationOn('exchangeRate', 'Value must be a plain decimal number.');
+});
+
+it('rejects invalid values at the transformer boundary', function (Transformer $transformer, string $field, mixed $value, string $message): void {
+    $property       = resolve(DataConfig::class)->getDataClass(FiscalValuesData::class)->properties[$field];
     $transformation = new TransformationContext;
 
-    expect(fn (): BigDecimal => (new BigDecimalCast)->cast($properties['exchangeRate'], 1.2, [], $creation))
-        ->toThrow(ValidationException::class, 'Value must be a plain decimal number.')
-        ->and(fn (): string => (new BigDecimalTransformer)->transform($properties['exchangeRate'], 1.2, $transformation))
-        ->toThrow(ValidationException::class, 'Value must be a plain decimal number.')
-        ->and(fn (): string => new BigDecimalTransformer(2)->transform($properties['exchangeRate'], BigDecimal::of('1.234'), $transformation))
-        ->toThrow(ValidationException::class, 'Value exceeds the allowed decimal precision.')
-        ->and(fn (): string => (new MoneyTransformer)->transform($properties['payable'], '1.00', $transformation))
-        ->toThrow(ValidationException::class, 'Money must be an integer, decimal string, or Money value.')
-        ->and(fn (): string => new MoneyTransformer(2, false)->transform($properties['payable'], Money::of('1.234', 'CVE', new CustomContext(3)), $transformation))
-        ->toThrow(ValidationException::class, 'Value exceeds the allowed decimal precision.');
-});
+    expect(fn (): mixed => $transformer->transform($property, $value, $transformation))
+        ->toFailValidationOn($field, $message);
+})->with([
+    'float decimal'          => [fn (): Transformer => new BigDecimalTransformer, 'exchangeRate', 1.2, 'Value must be a plain decimal number.'],
+    'decimal scale'          => [fn (): Transformer => new BigDecimalTransformer(2), 'exchangeRate', BigDecimal::of('1.234'), 'Value exceeds the allowed decimal precision.'],
+    'money as string'        => [fn (): Transformer => new MoneyTransformer, 'payable', '1.00', 'Money must be an integer, decimal string, or Money value.'],
+    'strict money precision' => [
+        fn (): Transformer => new MoneyTransformer(2, false),
+        'payable',
+        Money::of('1.234', 'CVE', new CustomContext(3)),
+        'Value exceeds the allowed decimal precision.',
+    ],
+]);
