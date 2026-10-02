@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Money;
 
 use Akira\Efatura\Exceptions\EfaturaValidationException;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Brick\Math\Exception\MathException;
 use Brick\Math\RoundingMode;
@@ -38,7 +39,7 @@ final class DecimalFormatter
         return $decimal;
     }
 
-    public static function decimal(BigDecimal $value, int $maxScale = 5): string
+    public static function decimal(BigDecimal $value, int $maxScale = Fiscal::AMOUNT_SCALE): string
     {
         self::checkScale($maxScale);
 

@@ -14,20 +14,21 @@ use Akira\Efatura\Enums\IssueReason;
 use Akira\Efatura\Enums\ReceiptType;
 use Akira\Efatura\Enums\TransportDocumentType;
 use Akira\Efatura\Enums\TransportReceiverType;
+use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 
 trait HasDocumentSections
 {
     public function dueDate(CarbonImmutable $date): self
     {
-        $this->draft['dueDate'] = $date->format('Y-m-d');
+        $this->draft['dueDate'] = $date->format(Fiscal::DATE_FORMAT);
 
         return $this;
     }
 
     public function taxPointDate(CarbonImmutable $date): self
     {
-        $this->draft['taxPointDate'] = $date->format('Y-m-d');
+        $this->draft['taxPointDate'] = $date->format(Fiscal::DATE_FORMAT);
 
         return $this;
     }

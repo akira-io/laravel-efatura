@@ -73,7 +73,7 @@ final class Catalogs
     {
         $row = $this->find('locations', $code, 'codigo');
 
-        return $row !== null && $row['nivel'] > 1 && Str::startsWith($code, 'CV') ? $row : null;
+        return $row !== null && $row['nivel'] > 1 && Str::startsWith($code, Fiscal::COUNTRY) ? $row : null;
     }
 
     /**

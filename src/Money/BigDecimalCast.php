@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Money;
 
 use Akira\Efatura\Exceptions\EfaturaValidationException;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Spatie\LaravelData\Casts\Cast;
 use Spatie\LaravelData\Data;
@@ -13,7 +14,7 @@ use Spatie\LaravelData\Support\DataProperty;
 
 final readonly class BigDecimalCast implements Cast
 {
-    public function __construct(private int $maxScale = 5) {}
+    public function __construct(private int $maxScale = Fiscal::AMOUNT_SCALE) {}
 
     /**
      * @param array<string, mixed>  $properties

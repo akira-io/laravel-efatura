@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Rules\OfficialCode;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
@@ -41,7 +42,7 @@ final class AddressData extends Data
         return [
             'countryCode'   => ['required', new OfficialCode('countries')],
             'addressDetail' => ['required', ...FiscalRules::text(1, 100)],
-            'addressCode'   => ['nullable', 'required_if:' . $field('countryCode') . ',CV', 'regex:/\ACV[0-9]{18}\z/', new OfficialCode('locations')],
+            'addressCode'   => ['nullable', 'required_if:' . $field('countryCode') . ',' . Fiscal::COUNTRY, 'regex:/\ACV[0-9]{18}\z/', new OfficialCode('locations')],
             ...collect(['state', 'city', 'region', 'street', 'streetDetail', 'buildingName', 'buildingNumber', 'buildingFloor', 'postalCode'])
                 ->mapWithKeys(static fn (string $field): array => [$field => ['nullable', ...FiscalRules::text(1, 100)]])->all(),
         ];

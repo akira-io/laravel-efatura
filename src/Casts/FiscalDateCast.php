@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Casts;
 
 use Akira\Efatura\Rules\FiscalDate;
+use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -15,7 +16,7 @@ use Spatie\LaravelData\Support\DataProperty;
 
 final readonly class FiscalDateCast implements Cast
 {
-    public function __construct(private string $format = 'Y-m-d') {}
+    public function __construct(private string $format = Fiscal::DATE_FORMAT) {}
 
     /** @param array<string, mixed> $properties
      * @param CreationContext<Data> $context
@@ -29,7 +30,7 @@ final readonly class FiscalDateCast implements Cast
         Validator::make([$property->name => $value], [$property->name => ['required', 'string', new FiscalDate($this->format)]])->validate();
 
         /** @var CarbonImmutable $date */
-        $date = CarbonImmutable::createFromFormat('!' . $this->format, $value, 'Atlantic/Cape_Verde');
+        $date = CarbonImmutable::createFromFormat('!' . $this->format, $value, Fiscal::TIMEZONE);
 
         return $date->toImmutable();
     }

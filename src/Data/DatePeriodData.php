@@ -7,6 +7,7 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Rules\FiscalDate;
+use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
 use Spatie\LaravelData\Attributes\WithCast;
@@ -19,17 +20,17 @@ final class DatePeriodData extends Data
     use ValidatesFiscalFields;
 
     public function __construct(
-        #[WithCast(FiscalDateCast::class, 'Y-m-d')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'Y-m-d', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
         public readonly CarbonImmutable $startDate,
-        #[WithCast(FiscalDateCast::class, 'Y-m-d')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'Y-m-d', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
         public readonly CarbonImmutable $endDate,
     ) {
         $this->validateFiscalFields(self::rules());
         Validator::make([
-            'startDate' => $startDate->format('Y-m-d'),
-            'endDate'   => $endDate->format('Y-m-d'),
+            'startDate' => $startDate->format(Fiscal::DATE_FORMAT),
+            'endDate'   => $endDate->format(Fiscal::DATE_FORMAT),
         ], ['endDate' => ['after_or_equal:startDate']])->validate();
     }
 

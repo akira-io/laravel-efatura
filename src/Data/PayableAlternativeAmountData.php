@@ -11,6 +11,7 @@ use Akira\Efatura\Money\ForeignMoneyCast;
 use Akira\Efatura\Money\MoneyTransformer;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 use Spatie\LaravelData\Attributes\WithCast;
@@ -23,7 +24,7 @@ final class PayableAlternativeAmountData extends Data
 
     public function __construct(
         #[WithCast(ForeignMoneyCast::class)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly Money $value,
         public readonly string $currencyCode,
         #[WithCast(BigDecimalCast::class)]

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Money;
 
 use Akira\Efatura\Exceptions\EfaturaValidationException;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Money\Money;
 use Spatie\LaravelData\Casts\Cast;
 use Spatie\LaravelData\Data;
@@ -23,6 +24,6 @@ final readonly class ForeignMoneyCast implements Cast
             throw new EfaturaValidationException('currencyCode', __('efatura::efatura.validation.invalid_currency'));
         }
 
-        return new MoneyCast($currency, 5, false)->cast($property, $value, $properties, $context);
+        return new MoneyCast($currency, Fiscal::AMOUNT_SCALE, false)->cast($property, $value, $properties, $context);
     }
 }

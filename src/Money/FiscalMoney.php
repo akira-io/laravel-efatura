@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Money;
 
 use Akira\Efatura\Exceptions\EfaturaValidationException;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\Exception\MathException;
 use Brick\Money\Context\CustomContext;
 use Brick\Money\Exception\MoneyException;
@@ -15,7 +16,7 @@ final class FiscalMoney
 {
     public static function cve(int|float|string|Money $amount): Money
     {
-        return self::of($amount, 'CVE');
+        return self::of($amount, Fiscal::CURRENCY);
     }
 
     public static function of(int|float|string|Money $amount, string $currency): Money
@@ -23,7 +24,7 @@ final class FiscalMoney
         return self::create($amount, $currency, 2, true);
     }
 
-    public static function exact(int|float|string|Money $amount, string $currency, int $scale = 5): Money
+    public static function exact(int|float|string|Money $amount, string $currency, int $scale = Fiscal::AMOUNT_SCALE): Money
     {
         return self::create($amount, $currency, $scale, false);
     }
@@ -38,7 +39,7 @@ final class FiscalMoney
             throw new EfaturaValidationException('currency', __('efatura::efatura.validation.invalid_currency'));
         }
 
-        if ($scale < 0 || $scale > 5) {
+        if ($scale < 0 || $scale > Fiscal::AMOUNT_SCALE) {
             throw new EfaturaValidationException('scale', __('efatura::efatura.validation.invalid_money_scale'));
         }
 

@@ -8,6 +8,7 @@ use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\EventType;
 use Akira\Efatura\Rules\FiscalDate;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
@@ -26,8 +27,8 @@ final class EventData extends Data
     public function __construct(
         public readonly EventType $eventTypeCode,
         public readonly TaxIdData $emitterTaxId,
-        #[WithCast(FiscalDateCast::class, 'Y-m-d\TH:i:s')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'Y-m-d\TH:i:s', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::DATE_TIME_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_TIME_FORMAT, '')]
         public readonly CarbonImmutable $issueDateTime,
         public readonly string $issueReasonDescription,
         public readonly array $iuds = [],
@@ -35,7 +36,7 @@ final class EventData extends Data
         public readonly ?EmissionContextData $emission = null,
     ) {
         $this->validateFiscalFields(self::rules());
-        Validator::make(['countryCode' => $emitterTaxId->countryCode, 'issueDate' => $issueDateTime->format('Y-m-d')], ['countryCode' => ['required', 'in:CV'], 'issueDate' => [new FiscalDate]])->validate();
+        Validator::make(['countryCode' => $emitterTaxId->countryCode, 'issueDate' => $issueDateTime->format(Fiscal::DATE_FORMAT)], ['countryCode' => ['required', 'in:' . Fiscal::COUNTRY], 'issueDate' => [new FiscalDate]])->validate();
     }
 
     /**
@@ -44,7 +45,7 @@ final class EventData extends Data
     public static function rules(): array
     {
         return [
-            'issueDateTime'          => ['required', new FiscalDate('Y-m-d\TH:i:s')],
+            'issueDateTime'          => ['required', new FiscalDate(Fiscal::DATE_TIME_FORMAT)],
             'issueReasonDescription' => ['required', ...FiscalRules::text(10, 500)],
             'iuds'                   => ['array', 'list', 'required_if:eventTypeCode,FDC', 'prohibited_if:eventTypeCode,UDN'],
             'iuds.*'                 => ['required', 'string', 'distinct:strict', 'regex:/\ACV[0-9][0-9]{2}(?:0[1-9]|1[012])(?:0[1-9]|[12][0-9]|3[01])[1-9][0-9]{35}\z/'],

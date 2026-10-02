@@ -9,6 +9,7 @@ use Akira\Efatura\Money\MoneyCast;
 use Akira\Efatura\Money\MoneyTransformer;
 use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Rules\FiscalNumber;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Money\Money;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
@@ -22,29 +23,29 @@ final class TotalsData extends Data
      * @param list<PayableAlternativeAmountData> $payableAlternativeAmounts
      */
     public function __construct(
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly Money $priceExtensionTotalAmount,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly Money $netTotalAmount,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly Money $taxTotalAmount,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly Money $payableAmount,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly ?Money $chargeTotalAmount = null,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly ?Money $discountTotalAmount = null,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly ?Money $withholdingTaxTotalAmount = null,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly ?Money $payableRoundingAmount = null,
         public readonly ?DiscountData $discount = null,
         public readonly array $payableAlternativeAmounts = [],
@@ -60,14 +61,14 @@ final class TotalsData extends Data
     public static function rules(): array
     {
         return [
-            'priceExtensionTotalAmount' => ['required', new FiscalNumber(currency: 'CVE')],
-            'netTotalAmount'            => ['required', new FiscalNumber(currency: 'CVE')],
-            'taxTotalAmount'            => ['required', new FiscalNumber(currency: 'CVE')],
-            'payableAmount'             => ['required', new FiscalNumber(currency: 'CVE')],
-            'chargeTotalAmount'         => ['nullable', new FiscalNumber(currency: 'CVE')],
-            'discountTotalAmount'       => ['nullable', new FiscalNumber(currency: 'CVE')],
-            'withholdingTaxTotalAmount' => ['nullable', new FiscalNumber(currency: 'CVE')],
-            'payableRoundingAmount'     => ['nullable', new FiscalNumber(currency: 'CVE', signed: true)],
+            'priceExtensionTotalAmount' => ['required', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'netTotalAmount'            => ['required', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'taxTotalAmount'            => ['required', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'payableAmount'             => ['required', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'chargeTotalAmount'         => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'discountTotalAmount'       => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'withholdingTaxTotalAmount' => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'payableRoundingAmount'     => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY, signed: true)],
             'payableAlternativeAmounts' => ['array', 'list'],
         ];
     }

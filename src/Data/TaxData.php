@@ -13,6 +13,7 @@ use Akira\Efatura\Money\MoneyCast;
 use Akira\Efatura\Money\MoneyTransformer;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 use Illuminate\Validation\Rule;
@@ -30,13 +31,13 @@ final class TaxData extends Data
         #[WithCast(BigDecimalCast::class, 3)]
         #[WithTransformer(BigDecimalTransformer::class, 3)]
         public readonly ?BigDecimal $taxPercentage = null,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly ?Money $taxAmount = null,
         public readonly ?string $taxExemptionReasonCode = null,
         public readonly ?StampTaxCode $stampTaxCode = null,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly ?Money $taxTotal = null,
     ) {
         $this->validateFiscalFields(self::rules());
@@ -52,10 +53,10 @@ final class TaxData extends Data
         return [
             'taxTypeCode'            => ['required', Rule::enum(TaxType::class)],
             'taxPercentage'          => ['nullable', 'required_without_all:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), 'prohibits:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(3, true, '100')],
-            'taxAmount'              => ['nullable', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(positive: true, currency: 'CVE')],
+            'taxAmount'              => ['nullable', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(positive: true, currency: Fiscal::CURRENCY)],
             'taxExemptionReasonCode' => ['nullable', 'required_if:' . $field('taxTypeCode') . ',NA', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxAmount'), new OfficialCode('tax_exemption_reasons')],
             'stampTaxCode'           => ['nullable', 'required_if:' . $field('taxTypeCode') . ',IS', Rule::enum(StampTaxCode::class)],
-            'taxTotal'               => ['nullable', new FiscalNumber(positive: true, currency: 'CVE')],
+            'taxTotal'               => ['nullable', new FiscalNumber(positive: true, currency: Fiscal::CURRENCY)],
         ];
     }
 }

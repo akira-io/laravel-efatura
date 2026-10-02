@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\EmissionMode;
+use Akira\Efatura\Support\Fiscal;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
@@ -26,7 +27,7 @@ final class EmissionContextData extends Data
             Rule::prohibitedIf($issueMode === EmissionMode::Online),
         ]]);
         if ($transmitterTaxId instanceof TaxIdData) {
-            Validator::make(['countryCode' => $transmitterTaxId->countryCode], ['countryCode' => ['required', 'in:CV']])->validate();
+            Validator::make(['countryCode' => $transmitterTaxId->countryCode], ['countryCode' => ['required', 'in:' . Fiscal::COUNTRY]])->validate();
         }
 
         if ($contingency instanceof ContingencyData) {

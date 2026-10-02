@@ -7,6 +7,7 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Rules\FiscalDate;
+use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
 use Spatie\LaravelData\Attributes\WithCast;
@@ -20,24 +21,24 @@ final class DurationData extends Data
     use ValidatesFiscalFields;
 
     public function __construct(
-        #[WithCast(FiscalDateCast::class, 'Y-m-d')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'Y-m-d', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
         public readonly CarbonImmutable $startDate,
-        #[WithCast(FiscalDateCast::class, 'H:i:s')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'H:i:s', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::TIME_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::TIME_FORMAT, '')]
         public readonly CarbonImmutable $startTime,
-        #[WithCast(FiscalDateCast::class, 'Y-m-d')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'Y-m-d', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
         public readonly ?CarbonImmutable $endDate = null,
-        #[WithCast(FiscalDateCast::class, 'H:i:s')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'H:i:s', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::TIME_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::TIME_FORMAT, '')]
         public readonly ?CarbonImmutable $endTime = null,
     ) {
         $this->validateFiscalFields(self::rules());
         if ($endDate instanceof CarbonImmutable && $endTime instanceof CarbonImmutable) {
             Validator::make([
-                'start' => $startDate->format('Y-m-d') . 'T' . $startTime->format('H:i:s'),
-                'end'   => $endDate->format('Y-m-d') . 'T' . $endTime->format('H:i:s'),
+                'start' => $startDate->format(Fiscal::DATE_FORMAT) . 'T' . $startTime->format(Fiscal::TIME_FORMAT),
+                'end'   => $endDate->format(Fiscal::DATE_FORMAT) . 'T' . $endTime->format(Fiscal::TIME_FORMAT),
             ], ['end' => ['after_or_equal:start']])->validate();
         }
     }
@@ -51,9 +52,9 @@ final class DurationData extends Data
 
         return [
             'startDate' => ['required', new FiscalDate],
-            'startTime' => ['required', new FiscalDate('H:i:s')],
+            'startTime' => ['required', new FiscalDate(Fiscal::TIME_FORMAT)],
             'endDate'   => ['nullable', 'required_with:' . $field('endTime'), new FiscalDate],
-            'endTime'   => ['nullable', 'required_with:' . $field('endDate'), new FiscalDate('H:i:s')],
+            'endTime'   => ['nullable', 'required_with:' . $field('endDate'), new FiscalDate(Fiscal::TIME_FORMAT)],
         ];
     }
 }

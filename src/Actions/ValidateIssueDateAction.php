@@ -7,6 +7,7 @@ namespace Akira\Efatura\Actions;
 use Akira\Efatura\Contracts\Clock;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Enums\EmissionMode;
+use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
 
@@ -16,7 +17,7 @@ final readonly class ValidateIssueDateAction
 
     public function handle(DocumentHeaderData $header, EmissionMode $mode): void
     {
-        $issued   = new CarbonImmutable($header->issueDate->format('Y-m-d') . 'T' . $header->issueTime->format('H:i:s'), 'Atlantic/Cape_Verde');
+        $issued   = new CarbonImmutable($header->issueDate->format(Fiscal::DATE_FORMAT) . 'T' . $header->issueTime->format(Fiscal::TIME_FORMAT), Fiscal::TIMEZONE);
         $now      = $this->clock->now();
         $earliest = $mode === EmissionMode::Online ? $now->subHours(24) : $now->subDays(7);
         if ($issued->lessThan($earliest) || ($mode === EmissionMode::Online && $issued->greaterThan($now->addHour()))) {

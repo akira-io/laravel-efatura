@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
@@ -23,12 +24,12 @@ final class ElectronicInvoiceData extends InvoiceData
         public readonly PartyData $receiver,
         public readonly array $lines,
         public readonly TotalsData $totals,
-        #[WithCast(FiscalDateCast::class, 'Y-m-d')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'Y-m-d', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
         public readonly ?CarbonImmutable $dueDate = null,
         public readonly ?string $orderReference = null,
-        #[WithCast(FiscalDateCast::class, 'Y-m-d')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'Y-m-d', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
         public readonly ?CarbonImmutable $taxPointDate = null,
         public readonly array $references = [],
         public readonly ?PaymentsData $payments = null,

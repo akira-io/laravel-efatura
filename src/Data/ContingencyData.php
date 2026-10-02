@@ -8,6 +8,7 @@ use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\ContingencyReason;
 use Akira\Efatura\Rules\FiscalDate;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Attributes\WithCast;
@@ -21,14 +22,14 @@ final class ContingencyData extends Data
     use ValidatesFiscalFields;
 
     public function __construct(
-        #[WithCast(FiscalDateCast::class, 'Y-m-d')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'Y-m-d', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
         public readonly CarbonImmutable $issueDate,
         public readonly ContingencyReason $reasonTypeCode,
         public readonly int $ledCode,
         public readonly ?string $iuc = null,
-        #[WithCast(FiscalDateCast::class, 'H:i:s')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'H:i:s', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::TIME_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::TIME_FORMAT, '')]
         public readonly ?CarbonImmutable $issueTime = null,
         public readonly ?string $reasonDescription = null,
     ) {
@@ -46,7 +47,7 @@ final class ContingencyData extends Data
             'issueDate'         => ['required', new FiscalDate],
             'ledCode'           => ['required', 'integer', 'between:1,99999'],
             'iuc'               => ['nullable', 'regex:/\A[0-9]{4}\/[0-9]+\z/'],
-            'issueTime'         => ['nullable', new FiscalDate('H:i:s')],
+            'issueTime'         => ['nullable', new FiscalDate(Fiscal::TIME_FORMAT)],
             'reasonDescription' => ['nullable', 'required_if:' . $field('reasonTypeCode') . ',0', ...FiscalRules::text(10, 500)],
         ];
     }

@@ -7,6 +7,7 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Casts\FiscalDateCast;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Rules\FiscalDate;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Attributes\WithCast;
@@ -19,11 +20,11 @@ final class DocumentHeaderData extends Data
     use ValidatesFiscalFields;
 
     public function __construct(
-        #[WithCast(FiscalDateCast::class, 'Y-m-d')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'Y-m-d', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::DATE_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::DATE_FORMAT, '')]
         public readonly CarbonImmutable $issueDate,
-        #[WithCast(FiscalDateCast::class, 'H:i:s')]
-        #[WithTransformer(DateTimeInterfaceTransformer::class, 'H:i:s', '')]
+        #[WithCast(FiscalDateCast::class, Fiscal::TIME_FORMAT)]
+        #[WithTransformer(DateTimeInterfaceTransformer::class, Fiscal::TIME_FORMAT, '')]
         public readonly CarbonImmutable $issueTime,
         public readonly int $ledCode,
         public readonly ?string $serie = null,
@@ -42,7 +43,7 @@ final class DocumentHeaderData extends Data
     {
         return [
             'issueDate'           => ['required', new FiscalDate],
-            'issueTime'           => ['required', new FiscalDate('H:i:s')],
+            'issueTime'           => ['required', new FiscalDate(Fiscal::TIME_FORMAT)],
             'ledCode'             => ['required', 'integer', 'between:1,99999'],
             'serie'               => ['nullable', 'string', 'max:20', 'regex:/\A[aA-zZ0-9]+(?:[_-][aA-zZ0-9]+)*\z/'],
             'documentNumber'      => ['nullable', 'integer', 'between:1,999999999'],

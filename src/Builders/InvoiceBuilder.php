@@ -25,6 +25,7 @@ use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\TotalsData;
 use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 
 final class InvoiceBuilder
@@ -49,7 +50,7 @@ final class InvoiceBuilder
     {
         $now          = $clock->now();
         $this->draft  = ['emitter' => ConfiguredEmitter::party($config->emitter)];
-        $this->header = ['issueDate' => $now->format('Y-m-d'), 'issueTime' => $now->format('H:i:s'), 'ledCode' => $config->emitter?->led];
+        $this->header = ['issueDate' => $now->format(Fiscal::DATE_FORMAT), 'issueTime' => $now->format(Fiscal::TIME_FORMAT), 'ledCode' => $config->emitter?->led];
     }
 
     public function type(DocumentType $type): self
@@ -83,8 +84,8 @@ final class InvoiceBuilder
 
     public function issuedAt(CarbonImmutable $dateTime): self
     {
-        $this->header['issueDate'] = $dateTime->format('Y-m-d');
-        $this->header['issueTime'] = $dateTime->format('H:i:s');
+        $this->header['issueDate'] = $dateTime->format(Fiscal::DATE_FORMAT);
+        $this->header['issueTime'] = $dateTime->format(Fiscal::TIME_FORMAT);
 
         return $this;
     }

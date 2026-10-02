@@ -10,6 +10,7 @@ use Akira\Efatura\Money\MoneyCast;
 use Akira\Efatura\Money\MoneyTransformer;
 use Akira\Efatura\Rules\DataInstances;
 use Akira\Efatura\Rules\FiscalNumber;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Brick\Money\Money;
 use Illuminate\Support\Facades\Validator;
@@ -32,15 +33,15 @@ final class LineItemData extends Data
         public readonly ?string $id = null,
         public readonly ?string $lineReferenceId = null,
         public readonly ?int $orderLineReference = null,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly ?Money $price = null,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly ?Money $priceExtension = null,
         public readonly ?DiscountData $discount = null,
-        #[WithCast(MoneyCast::class, 'CVE', 5, false)]
-        #[WithTransformer(MoneyTransformer::class, 5, false)]
+        #[WithCast(MoneyCast::class, Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)]
+        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
         public readonly ?Money $netTotal = null,
         public readonly array $taxes = [],
     ) {
@@ -61,9 +62,9 @@ final class LineItemData extends Data
             'id'                 => ['nullable', ...FiscalRules::code()],
             'lineReferenceId'    => ['nullable', 'required_if:' . $field('lineTypeCode') . ',C', ...FiscalRules::code()],
             'orderLineReference' => ['nullable', 'integer', 'between:1,99999'],
-            'price'              => ['nullable', new FiscalNumber(currency: 'CVE')],
-            'priceExtension'     => ['nullable', new FiscalNumber(currency: 'CVE')],
-            'netTotal'           => ['nullable', new FiscalNumber(currency: 'CVE')],
+            'price'              => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'priceExtension'     => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
+            'netTotal'           => ['nullable', new FiscalNumber(currency: Fiscal::CURRENCY)],
             'taxes'              => ['array', 'list', 'max:2'],
         ];
     }

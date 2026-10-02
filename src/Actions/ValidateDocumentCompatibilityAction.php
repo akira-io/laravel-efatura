@@ -24,6 +24,7 @@ use Akira\Efatura\Enums\PartyReference;
 use Akira\Efatura\Enums\ReceiptType;
 use Akira\Efatura\Enums\TransportReceiverType;
 use Akira\Efatura\Rules\FiscalDate;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -66,7 +67,7 @@ final readonly class ValidateDocumentCompatibilityAction
             Validator::make(['receiver' => $document->receiver], ['receiver' => [Rule::requiredIf($document->receiverTypeCode !== TransportReceiverType::Undetermined), Rule::prohibitedIf($document->receiverTypeCode === TransportReceiverType::Undetermined)]])->validate();
             if ($document->receiverTypeCode === TransportReceiverType::Taxpayer) {
                 $receiver = $document->receiver?->reference === PartyReference::Emitter ? $document->emitter : $document->receiver;
-                Validator::make(['receiver' => ['taxId' => ['countryCode' => $receiver?->taxId?->countryCode]]], ['receiver.taxId.countryCode' => ['required', 'in:CV']])->validate();
+                Validator::make(['receiver' => ['taxId' => ['countryCode' => $receiver?->taxId?->countryCode]]], ['receiver.taxId.countryCode' => ['required', 'in:' . Fiscal::COUNTRY]])->validate();
             }
 
             if ($document->transportServiceProvider->reference === PartyReference::Receiver) {
@@ -76,8 +77,8 @@ final readonly class ValidateDocumentCompatibilityAction
 
         if ($document instanceof ElectronicInvoiceData || $document instanceof ReceiptInvoiceData) {
             Validator::make(
-                ['orderReference' => $document->orderReference, 'taxPointDate' => $document->taxPointDate?->format('Y-m-d')],
-                ['orderReference' => ['nullable', ...FiscalRules::code()], 'taxPointDate' => ['nullable', new FiscalDate, 'before_or_equal:' . $document->header->issueDate->format('Y-m-d')]],
+                ['orderReference' => $document->orderReference, 'taxPointDate' => $document->taxPointDate?->format(Fiscal::DATE_FORMAT)],
+                ['orderReference' => ['nullable', ...FiscalRules::code()], 'taxPointDate' => ['nullable', new FiscalDate, 'before_or_equal:' . $document->header->issueDate->format(Fiscal::DATE_FORMAT)]],
             )->validate();
         }
 
@@ -94,7 +95,7 @@ final readonly class ValidateDocumentCompatibilityAction
                 'paymentTerms'          => $payments->paymentTerms, 'payeeFinancialAccounts' => $payments->payeeFinancialAccounts], $rules)->validate();
             if ($document instanceof ReceiptInvoiceData) {
                 foreach ($payments->payments as $payment) {
-                    Validator::make(['paymentDate' => $payment->paymentDate?->format('Y-m-d')], ['paymentDate' => ['nullable', 'in:' . $document->header->issueDate->format('Y-m-d')]])->validate();
+                    Validator::make(['paymentDate' => $payment->paymentDate?->format(Fiscal::DATE_FORMAT)], ['paymentDate' => ['nullable', 'in:' . $document->header->issueDate->format(Fiscal::DATE_FORMAT)]])->validate();
                 }
             }
         }

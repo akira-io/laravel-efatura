@@ -11,6 +11,6 @@ final readonly class SystemClock implements Clock
 {
     public function now(): CarbonImmutable
     {
-        return CarbonImmutable::now('Atlantic/Cape_Verde');
+        return CarbonImmutable::now(Fiscal::TIMEZONE);
     }
 }

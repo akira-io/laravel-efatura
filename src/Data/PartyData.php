@@ -6,6 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\PartyReference;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -31,7 +32,7 @@ final class PartyData extends Data
         $this->validateFiscalFields(['taxId' => ['required'], 'address' => ['required'], 'contacts' => ['required'], 'reference' => ['prohibited']]);
         Validator::make(
             ['taxId' => ['countryCode' => $this->taxId?->countryCode], 'address' => ['countryCode' => $this->address?->countryCode]],
-            ['taxId.countryCode' => ['required', 'in:CV'], 'address.countryCode' => ['required', 'in:CV']],
+            ['taxId.countryCode' => ['required', 'in:' . Fiscal::COUNTRY], 'address.countryCode' => ['required', 'in:' . Fiscal::COUNTRY]],
         )->validate();
         $this->contacts?->validateEmitter();
     }

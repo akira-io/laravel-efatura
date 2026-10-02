@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
+use Akira\Efatura\Support\Fiscal;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
@@ -18,7 +19,7 @@ final class FiscalDocumentData extends Data
         public readonly ?bool $isOldDocument = null,
     ) {
         $this->validateFiscalFields(self::rules());
-        $this->validateFiscalFields(['isOldDocument' => [Rule::prohibitedIf($isOldDocument !== null && $isOldDocument === Str::startsWith($value, 'CV'))]]);
+        $this->validateFiscalFields(['isOldDocument' => [Rule::prohibitedIf($isOldDocument !== null && $isOldDocument === Str::startsWith($value, Fiscal::COUNTRY))]]);
     }
 
     /**

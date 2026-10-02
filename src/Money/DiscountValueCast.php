@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Money;
 
 use Akira\Efatura\Enums\DiscountValueType;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 use Spatie\LaravelData\Casts\Cast;
@@ -22,7 +23,7 @@ final readonly class DiscountValueCast implements Cast
         $type = $properties['valueType'] ?? DiscountValueType::Percentage;
 
         return $type === DiscountValueType::Amount || $type === 'A'
-            ? new MoneyCast('CVE', 5, false)->cast($property, $value, $properties, $context)
+            ? new MoneyCast(Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)->cast($property, $value, $properties, $context)
             : (new BigDecimalCast)->cast($property, $value, $properties, $context);
     }
 }

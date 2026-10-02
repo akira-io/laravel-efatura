@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Builders;
 
 use Akira\Efatura\Configuration\EmitterConfig;
+use Akira\Efatura\Support\Fiscal;
 use Illuminate\Support\Arr;
 
 final readonly class ConfiguredEmitter
@@ -33,6 +34,6 @@ final readonly class ConfiguredEmitter
      */
     public static function taxId(?EmitterConfig $emitter): ?array
     {
-        return $emitter instanceof EmitterConfig ? ['value' => $emitter->taxId, 'countryCode' => 'CV'] : null;
+        return $emitter instanceof EmitterConfig ? ['value' => $emitter->taxId, 'countryCode' => Fiscal::COUNTRY] : null;
     }
 }

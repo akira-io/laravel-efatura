@@ -6,6 +6,7 @@ namespace Akira\Efatura\Rules;
 
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\DecimalFormatter;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 use Closure;
@@ -14,7 +15,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 final readonly class FiscalNumber implements ValidationRule
 {
     public function __construct(
-        private int $scale = 5,
+        private int $scale = Fiscal::AMOUNT_SCALE,
         private bool $positive = false,
         private ?string $maximum = null,
         private ?string $currency = null,
