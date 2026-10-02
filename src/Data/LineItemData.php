@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class LineItemData extends Data
 {
@@ -52,11 +53,13 @@ final class LineItemData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
             'id'                 => ['nullable', ...FiscalRules::code()],
-            'lineReferenceId'    => ['nullable', 'required_if:lineTypeCode,C', ...FiscalRules::code()],
+            'lineReferenceId'    => ['nullable', 'required_if:' . $field('lineTypeCode') . ',C', ...FiscalRules::code()],
             'orderLineReference' => ['nullable', 'integer', 'between:1,99999'],
             'price'              => ['nullable', new FiscalNumber(currency: 'CVE')],
             'priceExtension'     => ['nullable', new FiscalNumber(currency: 'CVE')],

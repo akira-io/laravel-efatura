@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Enums\DocumentType;
-use Akira\Efatura\Enums\TransportDocumentType;
-use Akira\Efatura\Enums\TransportReceiverType;
+use Akira\Efatura\Enums\IssueReason;
 
-final class TransportDocumentData extends InvoiceData
+final class ReturnNoteData extends InvoiceData
 {
     /**
      * @param list<LineItemData>  $lines
@@ -17,13 +16,12 @@ final class TransportDocumentData extends InvoiceData
     public function __construct(
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
-        public readonly TransportDocumentType $transportDocumentTypeCode,
-        public readonly PartyData $transportServiceProvider,
+        public readonly PartyData $receiver,
         public readonly array $lines,
-        public readonly TransportRouteData $transportRoute,
-        public readonly ?TransportReceiverType $receiverTypeCode = null,
-        public readonly ?PartyData $receiver = null,
-        public readonly array $references = [],
+        public readonly TotalsData $totals,
+        public readonly IssueReason $issueReasonCode,
+        public readonly array $references,
+        public readonly ?string $issueReasonDescription = null,
         public readonly ?EmissionContextData $emission = null,
         public readonly ?DocumentFooterData $footer = null,
     ) {
@@ -32,6 +30,6 @@ final class TransportDocumentData extends InvoiceData
 
     public function type(): DocumentType
     {
-        return DocumentType::Transport;
+        return DocumentType::ReturnNote;
     }
 }

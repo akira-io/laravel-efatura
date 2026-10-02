@@ -7,6 +7,7 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Support\FiscalRules;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class StandardIdentificationData extends Data
 {
@@ -24,13 +25,15 @@ final class StandardIdentificationData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
-            'gtin'       => ['nullable', 'required_without_all:ean,upc,pharmacode', 'prohibits:ean,upc,pharmacode', ...FiscalRules::code()],
-            'ean'        => ['nullable', 'required_without_all:gtin,upc,pharmacode', 'prohibits:gtin,upc,pharmacode', ...FiscalRules::code()],
-            'upc'        => ['nullable', 'required_without_all:gtin,ean,pharmacode', 'prohibits:gtin,ean,pharmacode', ...FiscalRules::code()],
-            'pharmacode' => ['nullable', 'required_without_all:gtin,ean,upc', 'prohibits:gtin,ean,upc', ...FiscalRules::code()],
+            'gtin'       => ['nullable', 'required_without_all:' . $field('ean') . ',' . $field('upc') . ',' . $field('pharmacode'), 'prohibits:' . $field('ean') . ',' . $field('upc') . ',' . $field('pharmacode'), ...FiscalRules::code()],
+            'ean'        => ['nullable', 'required_without_all:' . $field('gtin') . ',' . $field('upc') . ',' . $field('pharmacode'), 'prohibits:' . $field('gtin') . ',' . $field('upc') . ',' . $field('pharmacode'), ...FiscalRules::code()],
+            'upc'        => ['nullable', 'required_without_all:' . $field('gtin') . ',' . $field('ean') . ',' . $field('pharmacode'), 'prohibits:' . $field('gtin') . ',' . $field('ean') . ',' . $field('pharmacode'), ...FiscalRules::code()],
+            'pharmacode' => ['nullable', 'required_without_all:' . $field('gtin') . ',' . $field('ean') . ',' . $field('upc'), 'prohibits:' . $field('gtin') . ',' . $field('ean') . ',' . $field('upc'), ...FiscalRules::code()],
         ];
     }
 }

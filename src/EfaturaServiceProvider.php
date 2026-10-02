@@ -7,8 +7,8 @@ namespace Akira\Efatura;
 use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
-use Akira\Efatura\Contracts\DocumentTypePolicy;
-use Akira\Efatura\Support\DefaultDocumentTypePolicy;
+use Akira\Efatura\Contracts\Clock;
+use Akira\Efatura\Support\SystemClock;
 use Illuminate\Foundation\Application;
 use Override;
 use Spatie\LaravelPackageTools\Package;
@@ -27,7 +27,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             return $loader();
         });
         $this->app->singleton(EfaturaManager::class);
-        $this->app->singleton(DocumentTypePolicy::class, DefaultDocumentTypePolicy::class);
+        $this->app->singleton(Clock::class, SystemClock::class);
     }
 
     public function configurePackage(Package $package): void

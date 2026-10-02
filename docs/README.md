@@ -11,4 +11,6 @@
 
 ## Validation Scope
 
-The package currently focuses on typed fiscal data, document type policy, Laravel configuration, and validation rules. Host applications remain responsible for persistence, middleware credentials, issued-document storage, and operational audit trails.
+The package validates all nine fiscal document payloads and FDC/UDN event payloads through immutable Spatie Data values. The concrete document classes extend the abstract `InvoiceData` contract; each owns its official fields. Receipts have no lines or totals, and transport documents have no totals. See [Fiscal domain validation](fiscal-domain.md) for entry points, required data, source precedence, and calculation policy.
+
+Host applications remain responsible for persistence, middleware credentials, issued-document storage, and operational audit trails. Successful domain validation is not a completed, signed, authorized XML document.

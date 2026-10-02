@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
 
 final class DurationData extends Data
@@ -44,13 +45,15 @@ final class DurationData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
             'startDate' => ['required', new FiscalDate],
             'startTime' => ['required', new FiscalDate('H:i:s')],
-            'endDate'   => ['nullable', 'required_with:endTime', new FiscalDate],
-            'endTime'   => ['nullable', 'required_with:endDate', new FiscalDate('H:i:s')],
+            'endDate'   => ['nullable', 'required_with:' . $field('endTime'), new FiscalDate],
+            'endTime'   => ['nullable', 'required_with:' . $field('endDate'), new FiscalDate('H:i:s')],
         ];
     }
 }

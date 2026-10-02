@@ -13,6 +13,7 @@ use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
 
 final class ContingencyData extends Data
@@ -37,14 +38,16 @@ final class ContingencyData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
             'issueDate'         => ['required', new FiscalDate],
             'ledCode'           => ['required', 'integer', 'between:1,99999'],
             'iuc'               => ['nullable', 'regex:/\A[0-9]{4}\/[0-9]+\z/'],
             'issueTime'         => ['nullable', new FiscalDate('H:i:s')],
-            'reasonDescription' => ['nullable', 'required_if:reasonTypeCode,0', ...FiscalRules::text(10, 500)],
+            'reasonDescription' => ['nullable', 'required_if:' . $field('reasonTypeCode') . ',0', ...FiscalRules::text(10, 500)],
         ];
     }
 }

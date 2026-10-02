@@ -19,6 +19,7 @@ use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class TaxData extends Data
 {
@@ -44,14 +45,16 @@ final class TaxData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
             'taxTypeCode'            => ['required', Rule::enum(TaxType::class)],
-            'taxPercentage'          => ['nullable', 'required_without_all:taxAmount,taxExemptionReasonCode', 'prohibits:taxAmount,taxExemptionReasonCode', new FiscalNumber(3, true, '100')],
-            'taxAmount'              => ['nullable', 'prohibits:taxPercentage,taxExemptionReasonCode', new FiscalNumber(positive: true, currency: 'CVE')],
-            'taxExemptionReasonCode' => ['nullable', 'required_if:taxTypeCode,NA', 'prohibits:taxPercentage,taxAmount', new OfficialCode('tax_exemption_reasons')],
-            'stampTaxCode'           => ['nullable', 'required_if:taxTypeCode,IS', Rule::enum(StampTaxCode::class)],
+            'taxPercentage'          => ['nullable', 'required_without_all:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), 'prohibits:' . $field('taxAmount') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(3, true, '100')],
+            'taxAmount'              => ['nullable', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxExemptionReasonCode'), new FiscalNumber(positive: true, currency: 'CVE')],
+            'taxExemptionReasonCode' => ['nullable', 'required_if:' . $field('taxTypeCode') . ',NA', 'prohibits:' . $field('taxPercentage') . ',' . $field('taxAmount'), new OfficialCode('tax_exemption_reasons')],
+            'stampTaxCode'           => ['nullable', 'required_if:' . $field('taxTypeCode') . ',IS', Rule::enum(StampTaxCode::class)],
             'taxTotal'               => ['nullable', new FiscalNumber(positive: true, currency: 'CVE')],
         ];
     }

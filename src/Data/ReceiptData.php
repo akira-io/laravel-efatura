@@ -5,23 +5,22 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Enums\DocumentType;
-use Akira\Efatura\Enums\IssueReason;
+use Akira\Efatura\Enums\ReceiptType;
 
-final class CreditNoteData extends InvoiceData
+final class ReceiptData extends InvoiceData
 {
     /**
-     * @param list<LineItemData>  $lines
      * @param list<ReferenceData> $references
      */
     public function __construct(
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
         public readonly PartyData $receiver,
-        public readonly array $lines,
-        public readonly TotalsData $totals,
-        public readonly IssueReason $issueReasonCode,
+        public readonly ReceiptType $receiptTypeCode,
         public readonly array $references,
-        public readonly ?DatePeriodData $rappelPeriod = null,
+        public readonly PaymentsData $payments,
+        public readonly ?PartyData $paymentParty = null,
+        public readonly ?RentReceiptData $rentReceipt = null,
         public readonly ?EmissionContextData $emission = null,
         public readonly ?DocumentFooterData $footer = null,
     ) {
@@ -30,6 +29,6 @@ final class CreditNoteData extends InvoiceData
 
     public function type(): DocumentType
     {
-        return DocumentType::CreditNote;
+        return DocumentType::Receipt;
     }
 }

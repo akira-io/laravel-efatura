@@ -7,6 +7,7 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Support\FiscalRules;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class PayeeFinancialAccountData extends Data
 {
@@ -23,12 +24,14 @@ final class PayeeFinancialAccountData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
             'name'          => ['required', ...FiscalRules::text(3, 150)],
-            'accountNumber' => ['nullable', 'required_without:nib', 'prohibits:nib', 'regex:/\A[0-9]{1,15}\z/'],
-            'nib'           => ['nullable', 'required_without:accountNumber', 'prohibits:accountNumber', 'regex:/\A[0-9]{21}\z/'],
+            'accountNumber' => ['nullable', 'required_without:' . $field('nib'), 'prohibits:' . $field('nib'), 'regex:/\A[0-9]{1,15}\z/'],
+            'nib'           => ['nullable', 'required_without:' . $field('accountNumber'), 'prohibits:' . $field('accountNumber'), 'regex:/\A[0-9]{21}\z/'],
         ];
     }
 }

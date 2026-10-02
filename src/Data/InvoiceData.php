@@ -4,116 +4,78 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Contracts\DocumentTypePolicy;
+use Akira\Efatura\Actions\ValidateDocumentCompatibilityAction;
+use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Enums\DocumentType;
-use Illuminate\Validation\Validator;
+use Akira\Efatura\Rules\DataInstances;
+use Akira\Efatura\Support\FiscalRules;
+use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
+use Override;
 use Spatie\LaravelData\Data;
 
-final class InvoiceData extends Data
+abstract class InvoiceData extends Data
 {
-    /**
-     * @param array<int, LineItemData> $lines
-     */
-    public function __construct(
-        public readonly DocumentType $type,
-        public readonly string $issueDate,
-        public readonly PartyData $emitter,
-        public readonly ?PartyData $receiver,
-        public readonly array $lines,
-        public readonly TotalsData $totals,
-        public readonly ?string $originalIud = null,
-        public readonly ?string $creditNoteReason = null,
-    ) {}
+    use ValidatesFiscalFields;
 
-    /**
-     * @return array<string, array<int, string>>
+    abstract public DocumentHeaderData $header { get; }
+
+    abstract public PartyData $emitter { get; }
+
+    abstract public ?PartyData $receiver { get; }
+
+    abstract public ?EmissionContextData $emission { get; }
+
+    abstract public function type(): DocumentType;
+
+    /** @param array<string, mixed> $properties
+     * @return array<string, mixed>
      */
-    public static function rules(): array
+    #[Override]
+    final public static function prepareForPipeline(array $properties): array
     {
-        return [
-            'emitter'   => ['bail', 'required', 'array'],
-            'issueDate' => ['bail', 'required', 'string'],
-            'lines'     => ['bail', 'required', 'array', 'min:1'],
-            'receiver'  => ['bail', 'nullable', 'array'],
-            'totals'    => ['bail', 'required', 'array'],
-        ];
+        foreach (['lines', 'totals', 'references', 'payments', 'paymentParty', 'delivery', 'dueDate', 'taxPointDate', 'orderReference',
+            'issueReasonCode', 'issueReasonDescription', 'rappelPeriod', 'receiptTypeCode', 'rentReceipt', 'receiverTypeCode',
+            'transportDocumentTypeCode', 'transportServiceProvider', 'transportRoute'] as $field) {
+            if (! property_exists(static::class, $field) && Arr::has($properties, $field)) {
+                throw ValidationException::withMessages([$field => __('efatura::efatura.validation.document_field_forbidden')]);
+            }
+        }
+
+        static::validate($properties);
+
+        return $properties;
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, array<int, mixed>>
      */
-    public static function messages(): array
+    final public static function rules(): array
     {
-        return [
-            'emitter.required'   => __('efatura.validation.emitter_required'),
-            'emitter.array'      => __('efatura.validation.emitter_required'),
-            'issueDate.required' => __('efatura.invoice.issue_date_required'),
-            'lines.required'     => __('efatura.validation.lines_required'),
-            'lines.min'          => __('efatura.validation.lines_required'),
-            'receiver.array'     => __('efatura.validation.receiver_required'),
-            'totals.required'    => __('efatura.validation.totals_required'),
-            'totals.array'       => __('efatura.validation.totals_required'),
-        ];
+        return ['receiver' => [\in_array(static::class, [SalesReceiptData::class, TransportDocumentData::class], true) ? 'nullable' : 'required'], 'emission' => ['nullable'], 'footer' => ['nullable'],
+            'payments'     => [\in_array(static::class, [ReceiptInvoiceData::class, SalesReceiptData::class, ReceiptData::class], true) ? 'required' : 'nullable'], 'paymentParty' => ['nullable'], 'delivery' => ['nullable'], 'rappelPeriod' => ['nullable'], 'rentReceipt' => ['nullable']];
     }
 
-    public static function withValidator(Validator $validator): void
+    protected function validateDocument(): void
     {
-        $validator->after(static function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
+        $rules = [];
+        if (property_exists($this, 'lines')) {
+            $rules['lines'] = ['required', 'array', 'list', 'min:1', new DataInstances(LineItemData::class)];
+        }
 
-            $data     = $validator->getData();
-            $type     = data_get($data, 'type');
-            $receiver = data_get($data, 'receiver');
-            $lines    = data_get($data, 'lines');
+        if (property_exists($this, 'references')) {
+            $rules['references'] = ['array', 'list', new DataInstances(ReferenceData::class)];
+        }
 
-            if ($type instanceof DocumentType) {
-                $documentType = $type;
-            } elseif (\is_string($type)) {
-                $documentType = DocumentType::tryFrom($type);
-            } else {
-                return;
-            }
+        if (property_exists($this, 'orderReference')) {
+            $rules['orderReference'] = ['nullable', ...FiscalRules::code()];
+        }
 
-            if ($documentType === null) {
-                return;
-            }
+        if (property_exists($this, 'issueReasonDescription')) {
+            $rules['issueReasonDescription'] = ['nullable', ...FiscalRules::text(10, 500)];
+        }
 
-            $policy = resolve(DocumentTypePolicy::class);
-
-            if (! $policy->supportsEmission($documentType)) {
-                $validator->errors()->add('type', __('efatura.invoice.document_type_not_supported', [
-                    'type' => $documentType->value,
-                ]));
-
-                return;
-            }
-
-            if ($documentType === DocumentType::SalesReceipt) {
-                return;
-            }
-
-            if (! \is_array($lines) || $lines === []) {
-                $validator->errors()->add('lines', __('efatura.validation.lines_required'));
-
-                return;
-            }
-
-            if ($receiver === null) {
-                $validator->errors()->add('receiver', __('efatura.invoice.receiver_required_for_type'));
-
-                return;
-            }
-
-            if (! \is_array($receiver)) {
-                $validator->errors()->add('receiver', __('efatura.validation.receiver_required'));
-            }
-        });
-    }
-
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
+        $this->validateFiscalFields($rules);
+        resolve(ValidateDocumentCompatibilityAction::class)->handle($this);
     }
 }

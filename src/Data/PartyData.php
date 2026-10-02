@@ -10,6 +10,7 @@ use Akira\Efatura\Support\FiscalRules;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class PartyData extends Data
 {
@@ -35,12 +36,14 @@ final class PartyData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
-            'taxId'     => ['required_without:reference'],
-            'name'      => ['nullable', 'required_without:reference', ...FiscalRules::text(3, 150)],
-            'reference' => ['nullable', Rule::enum(PartyReference::class), 'prohibits:taxId,name,address,contacts'],
+            'taxId'     => ['required_without:' . $field('reference')],
+            'name'      => ['nullable', 'required_without:' . $field('reference'), ...FiscalRules::text(3, 150)],
+            'reference' => ['nullable', Rule::enum(PartyReference::class), 'prohibits:' . $field('taxId') . ',' . $field('name') . ',' . $field('address') . ',' . $field('contacts')],
         ];
     }
 }

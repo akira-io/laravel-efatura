@@ -14,6 +14,7 @@ use Brick\Money\Money;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class ReferenceData extends Data
 {
@@ -38,10 +39,12 @@ final class ReferenceData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
-            'fiscalDocument'      => ['required_without_all:paymentAmount,taxes'],
+            'fiscalDocument'      => ['required_without_all:' . $field('paymentAmount') . ',' . $field('taxes')],
             'innerDocumentNumber' => ['nullable', ...FiscalRules::code()],
             'paymentAmount'       => ['nullable', new FiscalNumber(positive: true, currency: 'CVE')],
             'taxes'               => ['array', 'list', 'max:2'],

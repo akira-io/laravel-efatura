@@ -12,6 +12,7 @@ use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
 
 final class PaymentsData extends Data
@@ -38,12 +39,14 @@ final class PaymentsData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
             'paymentDueDate'         => ['nullable', new FiscalDate],
             'payeeFinancialAccounts' => ['array', 'list'],
-            'payments'               => ['array', 'list', 'prohibits:paymentDueDate,paymentTerms,payeeFinancialAccounts'],
+            'payments'               => ['array', 'list', 'prohibits:' . $field('paymentDueDate') . ',' . $field('paymentTerms') . ',' . $field('payeeFinancialAccounts')],
         ];
     }
 }

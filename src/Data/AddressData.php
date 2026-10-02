@@ -8,6 +8,7 @@ use Akira\Efatura\Concerns\ValidatesFiscalFields;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Support\FiscalRules;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class AddressData extends Data
 {
@@ -33,12 +34,14 @@ final class AddressData extends Data
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(?ValidationContext $context = null): array
     {
+        $field = static fn (string $name): string => $context?->path->property($name)->get() ?? $name;
+
         return [
             'countryCode'   => ['required', new OfficialCode('countries')],
             'addressDetail' => ['required', ...FiscalRules::text(1, 100)],
-            'addressCode'   => ['nullable', 'required_if:countryCode,CV', 'regex:/\ACV[0-9]{18}\z/', new OfficialCode('locations')],
+            'addressCode'   => ['nullable', 'required_if:' . $field('countryCode') . ',CV', 'regex:/\ACV[0-9]{18}\z/', new OfficialCode('locations')],
             ...collect(['state', 'city', 'region', 'street', 'streetDetail', 'buildingName', 'buildingNumber', 'buildingFloor', 'postalCode'])
                 ->mapWithKeys(static fn (string $field): array => [$field => ['nullable', ...FiscalRules::text(1, 100)]])->all(),
         ];

@@ -4,76 +4,29 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesInvoiceType;
 use Akira\Efatura\Enums\DocumentType;
-use Brick\Math\BigDecimal;
-use Illuminate\Validation\Validator;
-use Spatie\LaravelData\Data;
 
-final class SalesReceiptData extends Data
+final class SalesReceiptData extends InvoiceData
 {
-    use ValidatesInvoiceType;
-
-    public const DocumentType TYPE = DocumentType::SalesReceipt;
-
+    /**
+     * @param list<LineItemData> $lines
+     */
     public function __construct(
-        public readonly InvoiceData $invoice,
-    ) {}
-
-    public static function withValidator(Validator $validator): void
-    {
-        $validator->after(static function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $data = $validator->getData();
-            $type = data_get($data, 'invoice.type');
-
-            self::ensureInvoiceType($validator, DocumentType::SalesReceipt, $type, 'invoice.type');
-
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $total    = data_get($data, 'invoice.totals.payableAmount');
-            $receiver = data_get($data, 'invoice.receiver');
-
-            if ((\is_string($total) || \is_int($total)) && BigDecimal::of($total)->isGreaterThanOrEqualTo('20000') && $receiver === null) {
-                $validator->errors()->add('invoice.receiver', __('efatura.invoice.receiver_required_for_type'));
-
-                return;
-            }
-
-            if ((\is_string($total) || \is_int($total)) && BigDecimal::of($total)->isGreaterThanOrEqualTo('20000') && ! \is_array($receiver)) {
-                $validator->errors()->add('invoice.receiver', __('efatura.validation.receiver_required'));
-            }
-        });
+        public readonly DocumentHeaderData $header,
+        public readonly PartyData $emitter,
+        public readonly array $lines,
+        public readonly TotalsData $totals,
+        public readonly PaymentsData $payments,
+        public readonly ?PartyData $receiver = null,
+        public readonly ?DeliveryData $delivery = null,
+        public readonly ?EmissionContextData $emission = null,
+        public readonly ?DocumentFooterData $footer = null,
+    ) {
+        $this->validateDocument();
     }
 
-    public static function stopOnFirstFailure(): bool
+    public function type(): DocumentType
     {
-        return true;
-    }
-
-    /**
-     * @return array<string, array<int, string>>
-     */
-    public static function rules(): array
-    {
-        return [
-            'invoice' => ['bail', 'required', 'array'],
-        ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
-    {
-        return [
-            'invoice.required' => __('efatura.validation.invoice_required'),
-            'invoice.array'    => __('efatura.validation.invoice_required'),
-        ];
+        return DocumentType::SalesReceipt;
     }
 }

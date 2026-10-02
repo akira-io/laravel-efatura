@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 return [
     'validation' => [
+        'document_field_forbidden'     => 'This field does not belong to this fiscal document type.',
+        'issue_date_window'            => 'The issue date and time are outside the permitted emission window.',
+        'reconciliation'               => 'The supplied amount cannot be reconciled with the fiscal evidence.',
         'reserved_field'               => 'The :attribute is reserved for an official fiscal field.',
         'data_instances'               => 'The :attribute must contain the expected immutable data values.',
         'fiscal_date'                  => 'The :attribute must use a valid fiscal date or time.',

@@ -1,221 +1,70 @@
 <?php
 
 declare(strict_types=1);
-
-use Akira\Efatura\Concerns\ValidatesInvoiceType;
-use Akira\Efatura\Data\CreditNoteData;
+use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
-use Akira\Efatura\Data\InvoiceData;
-use Akira\Efatura\Data\ItemData;
-use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\PartyData;
-use Akira\Efatura\Data\QuantityData;
-use Akira\Efatura\Data\ReceiptInvoiceData;
-use Akira\Efatura\Data\SalesReceiptData;
-use Akira\Efatura\Data\TaxData;
-use Akira\Efatura\Data\TaxIdData;
-use Akira\Efatura\Data\TotalsData;
+use Akira\Efatura\Data\ReceiptData;
 use Akira\Efatura\Data\TransportDocumentData;
-use Akira\Efatura\Enums\DocumentType;
-use Akira\Efatura\Enums\TaxType;
-use Akira\Efatura\Money\FiscalMoney;
-use Akira\Efatura\Tests\Support\ValidationFixtures;
-use Brick\Math\BigDecimal;
-use Illuminate\Contracts\Validation\Validator;
+use Akira\Efatura\Enums\EmissionMode;
+use Akira\Efatura\Tests\Support\DocumentFixtures as F;
+use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
+use Spatie\LaravelData\LaravelDataServiceProvider;
 
-it('covers sales receipt receiver type branch', function (): void {
-    $data = [
-        'invoice' => [
-            'type'   => DocumentType::SalesReceipt,
-            'totals' => [
-                'payableAmount' => '20000',
-            ],
-            'receiver' => 'invalid',
-        ],
-    ];
-
-    $validator = resolve('validator')->make($data, []);
-    SalesReceiptData::withValidator($validator);
-    $validator->passes();
-
-    $errors = $validator->errors()->toArray();
-
-    expect($errors['invoice.receiver'][0])->toBe(trans('efatura.validation.receiver_required'));
+beforeEach(function (): void {
+    $this->app->register(LaravelDataServiceProvider::class);
 });
 
-it('covers sales receipt early return branches', function (): void {
-    $validator = resolve('validator')->make([], ['invoice' => ['required']]);
-    SalesReceiptData::withValidator($validator);
-    $validator->passes();
-
-    expect($validator->errors()->isNotEmpty())->toBeTrue();
-
-    $validator = resolve('validator')->make(['invoice' => ['type' => 'FTE']], []);
-    SalesReceiptData::withValidator($validator);
-    $validator->passes();
-
-    expect($validator->errors()->toArray())->toHaveKey('invoice.type');
+beforeEach(fn () => CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00'));
+afterEach(fn () => CarbonImmutable::setTestNow());
+it('validates directly constructed document graphs', function (): void {
+    $payload = F::payload();
+    expect(fn (): ElectronicInvoiceData => new ElectronicInvoiceData(DocumentHeaderData::from($payload['header']), PartyData::from($payload['emitter']), PartyData::from($payload['receiver']), [], F::totals()))->toThrow(ValidationException::class);
 });
-
-it('covers credit note type validator branch', function (): void {
-    $data = [
-        'invoice' => [
-            'type' => DocumentType::CreditNote,
-        ],
-    ];
-
-    $validator = resolve('validator')->make($data, []);
-    CreditNoteData::withValidator($validator);
-    $validator->passes();
-
-    expect($validator->errors()->isNotEmpty())->toBeFalse();
+it('enforces rent receipt requirements without invoice sections', function (): void {
+    $payload = F::payload(['receiptTypeCode' => '4', 'references' => F::references(), 'payments' => F::payments()]);
+    unset($payload['lines'], $payload['totals']);
+    expect(fn (): ReceiptData => ReceiptData::from($payload))->toThrow(ValidationException::class);
+    $payload['rentReceipt'] = ['assetId' => 'HOUSE', 'rentPurposeTypeCode' => '2', 'contractTypeCode' => '1', 'rentTypeCode' => '1', 'referencePeriod' => '2026-10', 'address' => ['countryCode' => 'PT', 'addressDetail' => 'Lisbon']];
+    expect(ReceiptData::from($payload)->rentReceipt->assetId)->toBe('HOUSE');
+    $payload['lines'] = [];
+    expect(fn (): ReceiptData => ReceiptData::from($payload))->toThrow(ValidationException::class);
 });
-
-it('covers wrapper constructors', function (): void {
-    $invoice = new InvoiceData(
-        DocumentType::Invoice,
-        '2026-02-08',
-        new PartyData(new TaxIdData('100200300', 'CV'), 'Emitter'),
-        new PartyData(new TaxIdData('900800700', 'CV'), 'Receiver'),
-        [new LineItemData(new QuantityData(BigDecimal::of('1'), 'C62'), new ItemData('Item', 'SKU-1'), price: FiscalMoney::cve('100'), netTotal: FiscalMoney::cve('100'))],
-        new TotalsData(FiscalMoney::cve('100'), FiscalMoney::cve('100'), FiscalMoney::cve('0'), FiscalMoney::cve('100')),
-    );
-
-    expect(new ElectronicInvoiceData($invoice))->toBeInstanceOf(ElectronicInvoiceData::class)
-        ->and(new ReceiptInvoiceData($invoice))->toBeInstanceOf(ReceiptInvoiceData::class)
-        ->and(new SalesReceiptData($invoice))->toBeInstanceOf(SalesReceiptData::class)
-        ->and(new CreditNoteData($invoice))->toBeInstanceOf(CreditNoteData::class)
-        ->and(new TransportDocumentData($invoice))->toBeInstanceOf(TransportDocumentData::class);
+it('rejects transport totals and global receivers', function (): void {
+    $payload = F::payload(['transportDocumentTypeCode' => '2', 'receiverTypeCode' => '3', 'transportServiceProvider' => ['reference' => 'EP'], 'transportRoute' => F::route()]);
+    unset($payload['totals']);
+    expect(fn (): TransportDocumentData => TransportDocumentData::from($payload))->toThrow(ValidationException::class);
+    $payload['receiver'] = null;
+    $payload['totals']   = F::totalsPayload();
+    expect(fn (): TransportDocumentData => TransportDocumentData::from($payload))->toThrow(ValidationException::class);
 });
-
-it('covers wrapper validation early return', function (): void {
-    foreach ([
-        ElectronicInvoiceData::class,
-        ReceiptInvoiceData::class,
-        TransportDocumentData::class,
-    ] as $wrapper) {
-        try {
-            $wrapper::validate([]);
-            expect(false)->toBeTrue();
-        } catch (ValidationException $validationException) {
-            expect($validationException->errors())->toHaveKey('invoice');
-        }
+it('preserves self billing authorization', function (): void {
+    $payload                          = F::payload();
+    $payload['header']['selfBilling'] = ['authorizationId' => '12345678-1234-1234-1234-123456789abc', 'authorizationCode' => '1234'];
+    expect(ElectronicInvoiceData::from($payload)->header->selfBilling->authorizationCode)->toBe('1234');
+});
+it('enforces inclusive online date windows in Cabo Verde time', function (string $date, string $time, bool $valid): void {
+    $payload = F::payload(['header' => ['issueDate' => $date, 'issueTime' => $time, 'ledCode' => 1]]);
+    if ($valid) {
+        expect(ElectronicInvoiceData::from($payload)->header->issueDate->format('Y-m-d'))->toBe($date);
+    } else {
+        expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($payload))->toThrow(ValidationException::class);
     }
-});
-
-it('covers credit note type mismatch', function (): void {
-    $payload = ValidationFixtures::invoicePayload([
-        'type'             => DocumentType::Invoice,
-        'originalIud'      => 'ORI-12345',
-        'creditNoteReason' => 'Adjustment',
-    ]);
-
-    ValidationFixtures::assertMessage(
-        fn (): array => CreditNoteData::validate(['invoice' => $payload]),
-        'invoice.type',
-        trans('efatura.validation.invoice_type_mismatch'),
-    );
-});
-
-it('covers invoice type trait with invalid value', function (): void {
-    $tester = new class
-    {
-        use ValidatesInvoiceType;
-
-        public static function run(Validator $validator, DocumentType $expected, mixed $value, string $path): void
-        {
-            self::ensureInvoiceType($validator, $expected, $value, $path);
-        }
-    };
-
-    $validator = resolve('validator')->make(['type' => 123], []);
-    $tester::run($validator, DocumentType::Invoice, 123, 'type');
-
-    expect($validator->errors()->toArray())->toHaveKey('type');
-});
-
-it('allows sales receipt without receiver below threshold', function (): void {
-    $payload = ValidationFixtures::invoicePayload([
-        'type'     => DocumentType::SalesReceipt,
-        'receiver' => null,
-        'totals'   => [
-            'netTotalAmount' => '1000',
-            'taxTotalAmount' => '150',
-            'payableAmount'  => '19000',
-        ],
-    ]);
-
-    expect(fn (): array => SalesReceiptData::validate(['invoice' => $payload]))
-        ->not->toThrow(ValidationException::class);
-});
-
-it('requires receiver for sales receipt at threshold', function (): void {
-    $payload = ValidationFixtures::invoicePayload([
-        'type'     => DocumentType::SalesReceipt,
-        'receiver' => null,
-        'totals'   => [
-            'netTotalAmount' => '18000',
-            'taxTotalAmount' => '2000',
-            'payableAmount'  => '20000',
-        ],
-    ]);
-
-    ValidationFixtures::assertMessage(
-        fn (): array => SalesReceiptData::validate(['invoice' => $payload]),
-        'invoice.receiver',
-        trans('efatura.invoice.receiver_required_for_type'),
-    );
-});
-
-it('requires credit note references', function (): void {
-    $payload = ValidationFixtures::invoicePayload([
-        'type'             => DocumentType::CreditNote,
-        'originalIud'      => '',
-        'creditNoteReason' => '',
-    ]);
-
-    ValidationFixtures::assertMessage(
-        fn (): array => CreditNoteData::validate(['invoice' => $payload]),
-        'invoice.originalIud',
-        trans('efatura.invoice.original_iud_required'),
-    );
-});
-
-it('requires NA tax exemption reason', function (): void {
-    expect(fn (): TaxData => new TaxData(TaxType::NotApplicable))->toThrow(ValidationException::class);
-});
-
-it('rejects negative totals', function (): void {
-    expect(fn (): TotalsData => new TotalsData(FiscalMoney::cve('-1'), FiscalMoney::cve('0'), FiscalMoney::cve('0'), FiscalMoney::cve('0')))->toThrow(ValidationException::class);
-});
-
-it('requires party fields', function (): void {
-    expect(fn (): PartyData => new PartyData)->toThrow(ValidationException::class);
-});
-
-it('rejects invoice type mismatch in wrappers', function (): void {
-    $payload = ValidationFixtures::invoicePayload(['type' => DocumentType::InvoiceReceipt]);
-
-    ValidationFixtures::assertMessage(
-        fn (): array => ElectronicInvoiceData::validate(['invoice' => $payload]),
-        'invoice.type',
-        trans('efatura.validation.invoice_type_mismatch'),
-    );
-
-    $receiptPayload = ValidationFixtures::invoicePayload(['type' => DocumentType::Invoice]);
-
-    ValidationFixtures::assertMessage(
-        fn (): array => ReceiptInvoiceData::validate(['invoice' => $receiptPayload]),
-        'invoice.type',
-        trans('efatura.validation.invoice_type_mismatch'),
-    );
-
-    $transportPayload = ValidationFixtures::invoicePayload(['type' => DocumentType::Invoice]);
-
-    ValidationFixtures::assertMessage(
-        fn (): array => TransportDocumentData::validate(['invoice' => $transportPayload]),
-        'invoice.type',
-        trans('efatura.validation.invoice_type_mismatch'),
-    );
-});
+})->with([['2026-10-02', '13:00:00', true], ['2026-10-02', '13:00:01', false], ['2026-10-01', '12:00:00', true], ['2026-10-01', '11:59:59', false]]);
+it('requires mode compatible contingency evidence', function (int $mode, ?array $contingency, bool $valid): void {
+    $payload = F::payload(['emission' => ['issueMode' => $mode, 'contingency' => $contingency]]);
+    if ($valid) {
+        expect(ElectronicInvoiceData::from($payload)->emission->issueMode)->toBe(EmissionMode::from($mode));
+    } else {
+        expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($payload))->toThrow(ValidationException::class);
+    }
+})->with([
+    [2, null, false],
+    [2, ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1, 'reasonTypeCode' => '4'], true],
+    [2, ['issueDate' => '2026-10-02', 'ledCode' => 1, 'reasonTypeCode' => '4'], false],
+    [2, ['issueDate' => '2026-10-02', 'issueTime' => '12:00:00', 'ledCode' => 1, 'reasonTypeCode' => '2'], false],
+    [3, ['issueDate' => '2026-10-02', 'ledCode' => 1, 'reasonTypeCode' => '2', 'iuc' => '2026/1'], true],
+    [3, ['issueDate' => '2026-10-02', 'ledCode' => 1, 'reasonTypeCode' => '2'], false],
+    [1, ['issueDate' => '2026-10-02', 'ledCode' => 1, 'reasonTypeCode' => '2'], false],
+]);
