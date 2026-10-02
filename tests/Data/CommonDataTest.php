@@ -15,10 +15,9 @@ use Akira\Efatura\Enums\DiscountValueType;
 use Akira\Efatura\Enums\TaxType;
 use Akira\Efatura\Money\FiscalMoney;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
+use Akira\Efatura\Tests\Support\FiscalValueFixtures;
 use Brick\Math\BigDecimal;
-use Brick\Money\Money;
 use Carbon\CarbonImmutable;
-use Illuminate\Validation\ValidationException;
 
 it('constructs and serializes complete immutable party details', function (): void {
     $party = PartyData::from([
@@ -32,93 +31,140 @@ it('constructs and serializes complete immutable party details', function (): vo
         ->and(fn (): string => $party->name = 'Changed')->toThrow(Error::class);
 });
 
-it('validates national and foreign tax identifiers without registry lookups', function (): void {
+it('accepts a foreign tax identifier without registry lookups', function (): void {
     expect((new TaxIdData('ABC-123', 'PT'))->countryCode)->toBe('PT');
-    foreach (['012345678', '12345678', '1234567890', 'ABC123456'] as $value) {
-        expect(fn (): TaxIdData => TaxIdData::from(['value' => $value, 'countryCode' => 'CV']))->toThrow(ValidationException::class);
-    }
-
-    expect(fn (): TaxIdData => TaxIdData::from(['value' => str_repeat('A', 21), 'countryCode' => 'PT']))->toThrow(ValidationException::class)
-        ->and(fn (): TaxIdData => TaxIdData::from(['value' => 'AB CD', 'countryCode' => 'PT']))->toThrow(ValidationException::class)
-        ->and(fn (): TaxIdData => TaxIdData::from(['value' => '12345', 'countryCode' => 'ZZ']))->toThrow(ValidationException::class);
 });
 
-it('keeps emitter contact requirements role specific', function (array $contacts, ?string $field): void {
-    CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
-    $emitter = [...F::payload()['emitter'], 'contacts' => $contacts];
-
-    expect(PartyData::from($emitter)->contacts)->toBeInstanceOf(ContactsData::class);
-
-    if ($field === null) {
-        expect(ElectronicInvoiceData::from(F::payload(['emitter' => $emitter]))->emitter->contacts?->email)->toBe('a@example.com');
-    } else {
-        expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from(F::payload(['emitter' => $emitter])))
-            ->toThrow(function (ValidationException $exception) use ($field): void {
-                expect($exception->errors())->toHaveKey($field);
-            });
-    }
+it('rejects malformed tax identifiers', function (array $payload, string $field, string $message): void {
+    expect(fn (): TaxIdData => TaxIdData::from($payload))->toFailValidationOn($field, $message);
 })->with([
-    'email only'      => [['email' => 'a@example.com'], 'emitter.contacts.telephone'],
-    'telephone only'  => [['telephone' => '1234567'], 'emitter.contacts.email'],
-    'email and phone' => [['telephone' => '1234567', 'email' => 'a@example.com'], null],
+    'national leading zero'   => [['value' => '012345678', 'countryCode' => 'CV'], 'value', 'The value must be a valid tax identifier for its country.'],
+    'national too short'      => [['value' => '12345678', 'countryCode' => 'CV'], 'value', 'The value must be a valid tax identifier for its country.'],
+    'national too long'       => [['value' => '1234567890', 'countryCode' => 'CV'], 'value', 'The value must be a valid tax identifier for its country.'],
+    'national with letters'   => [['value' => 'ABC123456', 'countryCode' => 'CV'], 'value', 'The value must be a valid tax identifier for its country.'],
+    'foreign too long'        => [['value' => str_repeat('A', 21), 'countryCode' => 'PT'], 'value', 'The value must be a valid tax identifier for its country.'],
+    'foreign with whitespace' => [['value' => 'AB CD', 'countryCode' => 'PT'], 'value', 'The value must be a valid tax identifier for its country.'],
+    'uncatalogued country'    => [['value' => '12345', 'countryCode' => 'ZZ'], 'countryCode', 'The country code must be a code in the official catalog.'],
 ]);
 
-it('requires emitter contacts but not receiver contacts', function (): void {
+it('accepts partial contacts on a standalone party', function (array $contacts): void {
+    $party = [...F::payload()['emitter'], 'contacts' => $contacts];
+
+    expect(PartyData::from($party)->contacts?->toArray())->toMatchArray($contacts);
+})->with([
+    'email only'      => [['email' => 'a@example.com']],
+    'telephone only'  => [['telephone' => '1234567']],
+    'email and phone' => [['telephone' => '1234567', 'email' => 'a@example.com']],
+]);
+
+it('accepts an emitter with both email and telephone', function (): void {
     CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
-    $party = ['taxId' => ['value' => '123456789', 'countryCode' => 'CV'], 'name' => 'Example Company'];
+    $payload = F::payload(['emitter' => [...F::payload()['emitter'], 'contacts' => ['telephone' => '1234567', 'email' => 'a@example.com']]]);
 
-    expect(ElectronicInvoiceData::from(F::payload(['receiver' => $party]))->receiver?->contacts)->toBeNull()
-        ->and(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from(F::payload(['emitter' => $party])))
-        ->toThrow(function (ValidationException $exception): void {
-            expect($exception->errors())->toHaveKeys(['emitter.address', 'emitter.contacts']);
-        });
+    expect(ElectronicInvoiceData::from($payload)->emitter->contacts?->email)->toBe('a@example.com');
 });
 
-it('distinguishes party references from identified parties', function (): void {
+it('rejects an emitter missing one of its required contacts', function (array $contacts, string $field, string $message): void {
+    CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
+    $payload = F::payload(['emitter' => [...F::payload()['emitter'], 'contacts' => $contacts]]);
+
+    expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($payload))->toFailValidationOn($field, $message);
+})->with([
+    'email only'     => [['email' => 'a@example.com'], 'emitter.contacts.telephone', 'The emitter.contacts.telephone field is required when emitter.contacts.mobilephone is not present.'],
+    'telephone only' => [['telephone' => '1234567'], 'emitter.contacts.email', 'The emitter.contacts.email field is required.'],
+]);
+
+it('accepts a receiver without contacts', function (): void {
+    CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
+    $payload = F::payload(['receiver' => ['taxId' => ['value' => '123456789', 'countryCode' => 'CV'], 'name' => 'Example Company']]);
+
+    expect(ElectronicInvoiceData::from($payload)->receiver?->contacts)->toBeNull();
+});
+
+it('requires emitter address and contacts', function (): void {
+    CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
+    $payload = F::payload(['emitter' => ['taxId' => ['value' => '123456789', 'countryCode' => 'CV'], 'name' => 'Example Company']]);
+
+    expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($payload))
+        ->toFailValidationOn('emitter.address', 'The emitter.address field is required.')
+        ->toFailValidationOn('emitter.contacts', 'The emitter.contacts field is required.');
+});
+
+it('accepts a party reference', function (): void {
     expect(PartyData::from(['reference' => 'EP'])->reference->value)->toBe('EP');
-    expect(fn (): PartyData => PartyData::from(['reference' => 'RP', 'name' => 'Example']))->toThrow(ValidationException::class);
 });
 
-it('enforces address and contact XSD boundaries', function (): void {
-    expect(fn (): AddressData => AddressData::from(['countryCode' => 'CV', 'addressDetail' => 'Praia']))->toThrow(ValidationException::class)
-        ->and(fn (): AddressData => AddressData::from(['countryCode' => 'CV', 'addressDetail' => 'Praia', 'addressCode' => 'CV']))->toThrow(ValidationException::class)
-        ->and(fn (): AddressData => AddressData::from(['countryCode' => 'PT', 'addressDetail' => ' Double  spaces ']))->toThrow(ValidationException::class)
-        ->and(fn (): ContactsData => ContactsData::from(['telephone' => '+2381234']))->toThrow(ValidationException::class)
-        ->and(fn (): ContactsData => ContactsData::from(['email' => 'invalid']))->toThrow(ValidationException::class)
-        ->and(fn (): SoftwareData => SoftwareData::from(['code' => 'lowercase', 'name' => 'Example', 'version' => '1']))->toThrow(ValidationException::class);
+it('rejects a party reference combined with identification', function (): void {
+    $payload = ['reference' => 'RP', 'name' => 'Example'];
+
+    expect(fn (): PartyData => PartyData::from($payload))
+        ->toFailValidationOn('reference', 'The reference field prohibits tax id / name / address / contacts from being present.');
+});
+
+it('accepts software identification within XSD boundaries', function (): void {
     expect((new SoftwareData('AB12', 'Example', '1.0'))->version)->toBe('1.0');
 });
 
-it('preserves decimal quantity precision and conditional standard units', function (): void {
+it('enforces address contact and software XSD boundaries', function (string $class, array $payload, string $field, string $message): void {
+    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, $message);
+})->with([
+    'CV address without code'     => [AddressData::class, ['countryCode' => 'CV', 'addressDetail' => 'Praia'], 'addressCode', 'The address code field is required when country code is CV.'],
+    'CV address with short code'  => [AddressData::class, ['countryCode' => 'CV', 'addressDetail' => 'Praia', 'addressCode' => 'CV'], 'addressCode', 'The address code field format is invalid.'],
+    'address detail with padding' => [AddressData::class, ['countryCode' => 'PT', 'addressDetail' => ' Double  spaces '], 'addressDetail', 'The address detail field format is invalid.'],
+    'telephone with plus sign'    => [ContactsData::class, ['telephone' => '+2381234'], 'telephone', 'The telephone field format is invalid.'],
+    'malformed email'             => [ContactsData::class, ['email' => 'invalid'], 'email', 'The email field format is invalid.'],
+    'lowercase software code'     => [SoftwareData::class, ['code' => 'lowercase', 'name' => 'Example', 'version' => '1'], 'code', 'The code field format is invalid.'],
+]);
+
+it('preserves decimal quantity precision', function (): void {
     $quantity = QuantityData::from(['value' => '1.23456', 'unitCode' => 'C62', 'isStandardUnitCode' => true]);
+
     expect($quantity->toArray()['value'])->toBe('1.23456');
+});
+
+it('accepts a custom unit code when it is not declared standard', function (): void {
     expect((new QuantityData(BigDecimal::of('0'), 'custom'))->unitCode)->toBe('custom');
-    expect(fn (): QuantityData => QuantityData::from(['value' => BigDecimal::of('-1'), 'unitCode' => 'C62']))->toThrow(ValidationException::class)
-        ->and(fn (): QuantityData => QuantityData::from(['value' => BigDecimal::of('1.123456'), 'unitCode' => 'C62']))->toThrow(ValidationException::class)
-        ->and(fn (): QuantityData => QuantityData::from(['value' => BigDecimal::of('1'), 'unitCode' => 'custom', 'isStandardUnitCode' => true]))->toThrow(ValidationException::class);
 });
 
-it('requires exactly one tax representation and preserves optional tax total', function (): void {
+it('rejects quantities outside numeric and catalog boundaries', function (array $payload, string $field, string $message): void {
+    expect(fn (): QuantityData => QuantityData::from($payload))->toFailValidationOn($field, $message);
+})->with([
+    'negative value'        => [['value' => BigDecimal::of('-1'), 'unitCode' => 'C62'], 'value', 'The value is outside its permitted numeric bounds.'],
+    'six decimal places'    => [['value' => BigDecimal::of('1.123456'), 'unitCode' => 'C62'], 'value', 'Value exceeds the allowed decimal precision.'],
+    'uncatalogued std unit' => [['value' => BigDecimal::of('1'), 'unitCode' => 'custom', 'isStandardUnitCode' => true], 'unitCode', 'The unit code must be a code in the official catalog.'],
+]);
+
+it('preserves the optional tax total exactly', function (): void {
     $tax = new TaxData(TaxType::ValueAddedTax, taxPercentage: BigDecimal::of('15.125'), taxTotal: FiscalMoney::exact('1.23456', 'CVE'));
+
     expect($tax->toArray()['taxTotal'])->toBe('1.23456');
-    expect(fn (): TaxData => TaxData::from(['taxTypeCode' => TaxType::NotApplicable]))->toThrow(ValidationException::class)
-        ->and(fn (): TaxData => TaxData::from(['taxTypeCode' => TaxType::ValueAddedTax, 'taxPercentage' => BigDecimal::of('15'), 'taxAmount' => FiscalMoney::cve('1')]))->toThrow(ValidationException::class)
-        ->and(fn (): TaxData => TaxData::from(['taxTypeCode' => TaxType::ValueAddedTax, 'taxPercentage' => BigDecimal::of('15.1234')]))->toThrow(ValidationException::class)
-        ->and(fn (): TaxData => TaxData::from(['taxTypeCode' => TaxType::StampTax, 'taxAmount' => FiscalMoney::cve('1')]))->toThrow(ValidationException::class);
 });
 
-it('rejects typed numeric bypasses through both Spatie entry points', function (): void {
-    foreach (['from', 'validateAndCreate'] as $method) {
-        expect(fn (): QuantityData => QuantityData::$method(['value' => BigDecimal::of('-1'), 'unitCode' => 'C62']))->toThrow(ValidationException::class)
-            ->and(fn (): QuantityData => QuantityData::$method(['value' => null, 'unitCode' => 'C62']))->toThrow(ValidationException::class)
-            ->and(fn (): TaxData => TaxData::$method(['taxTypeCode' => TaxType::ValueAddedTax, 'taxAmount' => FiscalMoney::of('1', 'EUR')]))->toThrow(ValidationException::class);
-    }
+it('requires exactly one tax representation', function (array $payload, string $field, string $message): void {
+    expect(fn (): TaxData => TaxData::from($payload))->toFailValidationOn($field, $message);
+})->with(FiscalValueFixtures::invalidTaxRepresentations());
+
+it('rejects typed numeric bypasses through both Spatie entry points', function (string $method, string $class, array $payload, string $field, string $message): void {
+    expect(fn (): mixed => $class::$method($payload))->toFailValidationOn($field, $message);
+})->with([
+    'from'              => ['from'],
+    'validateAndCreate' => ['validateAndCreate'],
+])->with(FiscalValueFixtures::numericBypasses());
+
+it('models discount percentages with five digits', function (): void {
+    expect(new DiscountData(BigDecimal::of('12.34567'))->toArray()['value'])->toBe('12.34567');
 });
 
-it('models discount amounts as money and percentages with five digits', function (): void {
-    $discount = new DiscountData(BigDecimal::of('12.34567'));
-    expect($discount->toArray()['value'])->toBe('12.34567');
-    expect((new DiscountData(FiscalMoney::exact('1.23456', 'CVE'), DiscountValueType::Amount))->value)->toBeInstanceOf(Money::class);
-    expect(fn (): DiscountData => DiscountData::from(['value' => BigDecimal::of('100.00001')]))->toThrow(ValidationException::class)
-        ->and(fn (): DiscountData => DiscountData::from(['value' => BigDecimal::of('1'), 'valueType' => DiscountValueType::Amount]))->toThrow(ValidationException::class);
+it('models discount amounts as exact money', function (): void {
+    $discount = new DiscountData(FiscalMoney::exact('1.23456', 'CVE'), DiscountValueType::Amount);
+
+    expect($discount->toArray()['value'])->toBe('1.23456')
+        ->and($discount->toArray()['valueType'])->toBe(DiscountValueType::Amount->value);
 });
+
+it('rejects discounts outside their value type', function (array $payload, string $message): void {
+    expect(fn (): DiscountData => DiscountData::from($payload))->toFailValidationOn('value', $message);
+})->with([
+    'percentage above one hundred' => [['value' => BigDecimal::of('100.00001')], 'The value is outside its permitted numeric bounds.'],
+    'amount given as a decimal'    => [['value' => BigDecimal::of('1'), 'valueType' => DiscountValueType::Amount], 'Money amount or currency is invalid.'],
+]);

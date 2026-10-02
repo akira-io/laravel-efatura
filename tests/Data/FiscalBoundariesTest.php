@@ -11,107 +11,154 @@ use Akira\Efatura\Data\DurationData;
 use Akira\Efatura\Data\ExtraFieldData;
 use Akira\Efatura\Data\FiscalDocumentData;
 use Akira\Efatura\Data\ItemData;
-use Akira\Efatura\Data\LineItemData;
-use Akira\Efatura\Data\PayableAlternativeAmountData;
-use Akira\Efatura\Data\PaymentData;
 use Akira\Efatura\Data\PaymentsData;
 use Akira\Efatura\Data\ReferenceData;
 use Akira\Efatura\Data\TaxData;
-use Akira\Efatura\Data\TotalsData;
 use Akira\Efatura\Enums\ContingencyReason;
-use Akira\Efatura\Enums\DiscountValueType;
 use Akira\Efatura\Enums\StampTaxCode;
 use Akira\Efatura\Enums\TaxType;
 use Akira\Efatura\Money\FiscalMoney;
+use Akira\Efatura\Tests\Support\FiscalValueFixtures;
 use Brick\Math\BigDecimal;
-use Brick\Money\Context\CustomContext;
 use Brick\Money\Money;
 use Carbon\CarbonImmutable;
-use Illuminate\Validation\ValidationException;
 
-it('rejects pretyped invalid money in every owning field through construction', function (string $class, array $payload, string $field): void {
-    foreach (['from', 'validateAndCreate'] as $method) {
-        foreach ([FiscalMoney::of('1', 'EUR'), Money::of('1.123456', 'CVE', new CustomContext(6))] as $invalid) {
-            expect(fn () => $class::$method([...$payload, $field => $invalid]))->toThrow(ValidationException::class);
-        }
-    }
+it('rejects pretyped invalid money in every owning field through construction', function (string $method, string $class, array $payload, string $field, Money $invalid, string $message): void {
+    $input = [...$payload, $field => $invalid];
+
+    expect(fn (): mixed => $class::$method($input))->toFailValidationOn($field, $message);
 })->with([
-    [TaxData::class, ['taxTypeCode' => 'IVA'], 'taxAmount'],
-    [TaxData::class, ['taxTypeCode' => 'IVA', 'taxPercentage' => '15'], 'taxTotal'],
-    [PaymentData::class, [], 'paymentAmount'],
-    [ReferenceData::class, [], 'paymentAmount'],
-    ...collect(['price', 'priceExtension', 'netTotal'])->map(fn (string $field): array => [
-        LineItemData::class, ['quantity' => ['value' => '1', 'unitCode' => 'C62'], 'item' => ['description' => 'Item', 'emitterIdentification' => 'SKU']], $field,
-    ])->all(),
-    ...collect(['priceExtensionTotalAmount', 'netTotalAmount', 'taxTotalAmount', 'payableAmount', 'chargeTotalAmount', 'discountTotalAmount', 'withholdingTaxTotalAmount', 'payableRoundingAmount'])->map(fn (string $field): array => [
-        TotalsData::class, ['priceExtensionTotalAmount' => '0', 'netTotalAmount' => '0', 'taxTotalAmount' => '0', 'payableAmount' => '0'], $field,
-    ])->all(),
+    'from'              => ['from'],
+    'validateAndCreate' => ['validateAndCreate'],
+])->with(FiscalValueFixtures::moneyOwners())->with(FiscalValueFixtures::invalidMoney());
+
+it('rejects wrong typed currency and bounds on discounts and alternate amounts', function (string $class, array $payload, string $field, string $message): void {
+    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, $message);
+})->with(FiscalValueFixtures::invalidDiscountsAndAlternateAmounts());
+
+it('accepts five decimal discounts through both Spatie entry points', function (string $method, array $payload, string $expected): void {
+    expect(DiscountData::$method($payload)->toArray()['value'])->toBe($expected);
+})->with([
+    'from'              => ['from'],
+    'validateAndCreate' => ['validateAndCreate'],
+])->with([
+    'amount'     => [['value' => '1.23456', 'valueType' => 'A'], '1.23456'],
+    'percentage' => [['value' => '15.12345'], '15.12345'],
 ]);
 
-it('rejects wrong typed currency and bounds on discounts and alternate amounts', function (): void {
-    expect(fn (): DiscountData => DiscountData::from(['value' => FiscalMoney::cve('1')]))->toThrow(ValidationException::class)
-        ->and(fn (): DiscountData => DiscountData::from(['value' => FiscalMoney::of('1', 'EUR'), 'valueType' => DiscountValueType::Amount]))->toThrow(ValidationException::class)
-        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => FiscalMoney::of('1', 'EUR'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('0')]))->toThrow(ValidationException::class)
-        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => FiscalMoney::of('1', 'EUR'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('1.123456')]))->toThrow(ValidationException::class)
-        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => FiscalMoney::of('1', 'IDR'), 'currencyCode' => 'IDR', 'exchangeRate' => BigDecimal::of('1')]))->toThrow(ValidationException::class);
-    foreach (['from', 'validateAndCreate'] as $method) {
-        expect(DiscountData::$method(['value' => '1.23456', 'valueType' => 'A'])->toArray()['value'])->toBe('1.23456')
-            ->and(DiscountData::$method(['value' => '15.12345'])->toArray()['value'])->toBe('15.12345');
-    }
-});
-
-it('validates exemption catalog and tax boundaries independently of reconciliation', function (): void {
+it('accepts an exemption reason from the catalog', function (): void {
     expect((new TaxData(TaxType::NotApplicable, taxExemptionReasonCode: '1'))->taxExemptionReasonCode)->toBe('1');
-    expect((new TaxData(TaxType::StampTax, taxAmount: FiscalMoney::exact('0.00001', 'CVE'), stampTaxCode: StampTaxCode::Contracts))->stampTaxCode)->toBe(StampTaxCode::Contracts);
+});
+
+it('accepts a typed stamp tax code with a minimal amount', function (): void {
+    $tax = new TaxData(TaxType::StampTax, taxAmount: FiscalMoney::exact('0.00001', 'CVE'), stampTaxCode: StampTaxCode::Contracts);
+
+    expect($tax->stampTaxCode)->toBe(StampTaxCode::Contracts);
+});
+
+it('casts a numeric stamp tax code to its enum', function (): void {
     expect(TaxData::validateAndCreate(['taxTypeCode' => 'IS', 'taxAmount' => '1', 'stampTaxCode' => 1])->stampTaxCode)->toBe(StampTaxCode::CreditOperations);
-    foreach (['0', '-1', '100.001'] as $percentage) {
-        expect(fn (): TaxData => TaxData::from(['taxTypeCode' => TaxType::ValueAddedTax, 'taxPercentage' => BigDecimal::of($percentage)]))->toThrow(ValidationException::class);
-    }
-
-    expect(fn (): TaxData => TaxData::from(['taxTypeCode' => TaxType::NotApplicable, 'taxExemptionReasonCode' => 'unknown']))->toThrow(ValidationException::class)
-        ->and(fn (): TaxData => TaxData::validateAndCreate(['taxTypeCode' => 'IS', 'taxAmount' => '1', 'stampTaxCode' => 10]))->toThrow(ValidationException::class);
 });
 
-it('rejects mutable or untyped values inside data lists', function (): void {
-    expect(fn (): ItemData => ItemData::from(['description' => 'Item', 'emitterIdentification' => 'SKU', 'extraProperties' => [new stdClass]]))->toThrow(ValidationException::class)
-        ->and(fn (): PaymentsData => PaymentsData::from(['payments' => [new stdClass]]))->toThrow(ValidationException::class)
-        ->and(fn (): ReferenceData => ReferenceData::from(['taxes' => [new stdClass]]))->toThrow(ValidationException::class);
+it('rejects tax percentages outside their bounds', function (string $percentage): void {
+    $payload = ['taxTypeCode' => TaxType::ValueAddedTax, 'taxPercentage' => BigDecimal::of($percentage)];
+
+    expect(fn (): TaxData => TaxData::from($payload))->toFailValidationOn('taxPercentage', 'The tax percentage is outside its permitted numeric bounds.');
+})->with([
+    'zero'              => ['0'],
+    'negative'          => ['-1'],
+    'above one hundred' => ['100.001'],
+]);
+
+it('rejects uncatalogued exemption and stamp tax codes', function (string $method, array $payload, string $field, string $message): void {
+    expect(fn (): TaxData => TaxData::$method($payload))->toFailValidationOn($field, $message);
+})->with(FiscalValueFixtures::uncataloguedTaxCodes());
+
+it('rejects untyped values inside data lists', function (string $class, array $payload, string $field): void {
+    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, "The {$field} field must be an array.");
+})->with([
+    'item extra properties' => [ItemData::class, ['description' => 'Item', 'emitterIdentification' => 'SKU', 'extraProperties' => [new stdClass]], 'extraProperties.0'],
+    'payments'              => [PaymentsData::class, ['payments' => [new stdClass]], 'payments.0'],
+    'reference taxes'       => [ReferenceData::class, ['taxes' => [new stdClass]], 'taxes.0'],
+]);
+
+it('limits reference taxes to two entries', function (): void {
+    $tax     = new TaxData(TaxType::ValueAddedTax, taxPercentage: BigDecimal::of('15'));
+    $payload = ['taxes' => [$tax, $tax, $tax]];
+
+    expect(fn (): ReferenceData => ReferenceData::from($payload))->toFailValidationOn('taxes', 'The taxes field must not have more than 2 items.');
+});
+
+it('accepts a reference with a single tax', function (): void {
     $tax = new TaxData(TaxType::ValueAddedTax, taxPercentage: BigDecimal::of('15'));
-    expect(fn (): ReferenceData => ReferenceData::from(['taxes' => [$tax, $tax, $tax]]))->toThrow(ValidationException::class);
-    expect((new ReferenceData(taxes: [$tax]))->taxes)->toHaveCount(1);
+
+    expect((new ReferenceData(taxes: [$tax]))->taxes)->toBe([$tax]);
 });
 
-it('accepts the official IUD shape and checks the optional old document flag', function (): void {
+it('accepts the official IUD shape with an optional old document flag', function (): void {
     $iud = 'CV1261002123456789' . str_repeat('0', 27);
+
     expect((new FiscalDocumentData($iud, false))->value)->toBe($iud)
         ->and((new FiscalDocumentData($iud))->isOldDocument)->toBeNull();
-    expect(fn (): FiscalDocumentData => FiscalDocumentData::from(['value' => $iud, 'isOldDocument' => true]))->toThrow(ValidationException::class);
 });
 
-it('validates direct immutable dates and exact time formats', function (): void {
-    $address = new AddressData('PT', 'Example address');
-    expect(fn (): DeliveryData => DeliveryData::from(['deliveryDate' => CarbonImmutable::parse('2020-12-31'), 'address' => $address]))->toThrow(ValidationException::class);
+it('rejects the old document flag on an official IUD', function (): void {
+    $payload = ['value' => 'CV1261002123456789' . str_repeat('0', 27), 'isOldDocument' => true];
+
+    expect(fn (): FiscalDocumentData => FiscalDocumentData::from($payload))->toFailValidationOn('isOldDocument', 'The is old document field is prohibited.');
+});
+
+it('rejects a delivery date before the fiscal epoch', function (): void {
+    $payload = ['deliveryDate' => CarbonImmutable::parse('2020-12-31'), 'address' => new AddressData('PT', 'Example address')];
+
+    expect(fn (): DeliveryData => DeliveryData::from($payload))->toFailValidationOn('deliveryDate', 'The delivery date must use a valid fiscal date or time.');
+});
+
+it('accepts a single day date period', function (): void {
     expect(DatePeriodData::validateAndCreate(['startDate' => '2021-01-01', 'endDate' => '2021-01-01'])->toArray()['endDate'])->toBe('2021-01-01');
-    expect(fn (): DurationData => DurationData::from(['startDate' => '2026-01-01', 'startTime' => '24:01:00']))->toThrow(ValidationException::class)
-        ->and(fn (): DurationData => DurationData::from(['startDate' => '2026-01-01', 'startTime' => '09:00:00', 'endDate' => '2026-01-01', 'endTime' => '08:59:59']))->toThrow(ValidationException::class);
-    expect((new ContingencyData(CarbonImmutable::parse('2026-01-01'), ContingencyReason::Other, 99999, reasonDescription: 'Other issue description'))->ledCode)->toBe(99999);
 });
 
-it('keeps extension content as text and reserves official element names', function (): void {
+it('rejects invalid or reversed duration times', function (array $payload, string $field, string $message): void {
+    expect(fn (): DurationData => DurationData::from($payload))->toFailValidationOn($field, $message);
+})->with(FiscalValueFixtures::invalidDurations());
+
+it('accepts the highest LED code on a contingency', function (): void {
+    $contingency = new ContingencyData(CarbonImmutable::parse('2026-01-01'), ContingencyReason::Other, 99999, reasonDescription: 'Other issue description');
+
+    expect($contingency->ledCode)->toBe(99999);
+});
+
+it('keeps extension content as text', function (): void {
     expect((new ExtraFieldData('CustomNote', '<child>text</child>', 'urn:example:custom'))->value)->toBe('<child>text</child>');
-    foreach (['RappelPeriod', 'taxId', 'AddressDetail', 'Quantity', 'SelfBilling', 'TaxPercentage'] as $name) {
-        expect(fn (): ExtraFieldData => ExtraFieldData::from(['name' => $name, 'value' => 'value']))->toThrow(ValidationException::class);
-    }
-
-    expect(fn (): ExtraFieldData => ExtraFieldData::from(['name' => 'CustomNote', 'value' => 'value', 'namespace' => 'urn:cv:efatura:xsd:v1.0']))->toThrow(ValidationException::class)
-        ->and(fn (): ExtraFieldData => ExtraFieldData::from(['name' => 'invalid:name', 'value' => 'value']))->toThrow(ValidationException::class);
 });
 
-it('accepts a cataloged CV address and rejects coercion at cast boundaries', function (): void {
+it('reserves official element names', function (string $name): void {
+    $payload = ['name' => $name, 'value' => 'value'];
+
+    expect(fn (): ExtraFieldData => ExtraFieldData::from($payload))->toFailValidationOn('name', 'The name is reserved for an official fiscal field.');
+})->with([
+    'rappel period'  => ['RappelPeriod'],
+    'tax id'         => ['taxId'],
+    'address detail' => ['AddressDetail'],
+    'quantity'       => ['Quantity'],
+    'self billing'   => ['SelfBilling'],
+    'tax percentage' => ['TaxPercentage'],
+]);
+
+it('rejects the official namespace and malformed names on extension fields', function (array $payload, string $field, string $message): void {
+    expect(fn (): ExtraFieldData => ExtraFieldData::from($payload))->toFailValidationOn($field, $message);
+})->with([
+    'official namespace' => [['name' => 'CustomNote', 'value' => 'value', 'namespace' => 'urn:cv:efatura:xsd:v1.0'], 'namespace', 'The selected namespace is invalid.'],
+    'prefixed name'      => [['name' => 'invalid:name', 'value' => 'value'], 'name', 'The name field format is invalid.'],
+]);
+
+it('accepts a cataloged CV address', function (): void {
     expect(new AddressData('CV', 'Boca de Pedregal', addressCode: 'CV111111111011110101')->addressCode)->toBe('CV111111111011110101');
-    expect(fn (): DeliveryData => DeliveryData::from(['deliveryDate' => 123, 'address' => ['countryCode' => 'PT', 'addressDetail' => 'Example address']]))->toThrow(ValidationException::class)
-        ->and(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from(['value' => '1', 'exchangeRate' => '1']))->toThrow(ValidationException::class);
 });
+
+it('rejects coercion at cast boundaries', function (string $class, array $payload, string $field, string $message): void {
+    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, $message);
+})->with(FiscalValueFixtures::castCoercions());
 
 it('preserves fiscal calendar dates and wall clock times under host timezone settings', function (): void {
     config(['data.date_timezone' => 'Pacific/Honolulu']);
