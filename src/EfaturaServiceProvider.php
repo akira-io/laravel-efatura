@@ -14,6 +14,8 @@ use Carbon\FactoryImmutable;
 use Illuminate\Foundation\Application;
 use Override;
 use Psr\Clock\ClockInterface;
+use Random\Engine\Secure;
+use Random\Randomizer;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -33,6 +35,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $this->app->singleton(Catalogs::class);
         CatalogCurrency::resolveCatalogsUsing(fn (): Catalogs => $this->app->make(Catalogs::class));
         $this->app->singleton(ClockInterface::class, fn (): ClockInterface => new FactoryImmutable(['timezone' => Fiscal::TIMEZONE]));
+        $this->app->bind(Randomizer::class, fn (): Randomizer => new Randomizer(new Secure));
     }
 
     public function configurePackage(Package $package): void

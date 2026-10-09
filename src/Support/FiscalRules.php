@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Support;
 
 use Akira\Efatura\Rules\NotBlank;
+use Illuminate\Support\Str;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class FiscalRules
@@ -41,6 +42,11 @@ final class FiscalRules
     public static function series(): array
     {
         return ['string', new NotBlank, 'max:20', 'regex:/\A' . self::SERIES . '\z/'];
+    }
+
+    public static function isIud(string $value): bool
+    {
+        return Str::isMatch('/\A' . self::IUD . '\z/', $value);
     }
 
     /**

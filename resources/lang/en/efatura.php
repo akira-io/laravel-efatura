@@ -14,6 +14,7 @@ return [
         'fiscal_date'              => 'The :attribute must use a valid fiscal date or time.',
         'official_code'            => 'The :attribute must be a code in the official catalog.',
         'tax_id'                   => 'The :attribute must be a valid tax identifier for its country.',
+        'iud_invalid'              => 'The :attribute must be an official IUD with a valid check digit.',
         'number_bounds'            => 'The :attribute is outside its permitted numeric bounds.',
         'invalid_decimal'          => 'Value must be a plain decimal number.',
         'decimal_scale_exceeded'   => 'Value exceeds the allowed decimal precision.',

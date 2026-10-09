@@ -22,7 +22,9 @@
             "oversized",
             "unpriced",
             "durations",
-            "coercions"
+            "coercions",
+            "luhn",
+            "randomizer"
         ],
         "paths": [
             "resources/catalogs/source",

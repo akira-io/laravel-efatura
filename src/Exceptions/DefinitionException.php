@@ -40,4 +40,9 @@ final class DefinitionException extends EfaturaException
     {
         return new self('definition.document_class', \sprintf('%s is not one of the nine official document classes.', $class));
     }
+
+    public static function luhnPayload(string $payload): self
+    {
+        return new self('definition.luhn_payload', \sprintf('A Luhn payload must contain only ASCII digits, %d characters given.', mb_strlen($payload)));
+    }
 }

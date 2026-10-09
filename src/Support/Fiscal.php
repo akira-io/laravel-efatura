@@ -31,6 +31,8 @@ final class Fiscal
 
     public const string EARLIEST_DATE = '2021-01-01';
 
+    public const string IDENTIFIER_DATE_LIMIT = '2100-01-01';
+
     public const string DATE_FORMAT = 'Y-m-d';
 
     public const string TIME_FORMAT = 'H:i:s';
