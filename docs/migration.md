@@ -130,6 +130,13 @@ whitespace or any of `"<>{}|\^` and the backtick, and the XML namespaces
 refused like the official one, at `footer.extraFields.N.namespace`.
 Percent-encode those characters in a namespace that carries them.
 
+A percentage discount (`valueType` `P`) carries at most three decimal places
+and at most 100, as the Manual's PERC type and the XSD's
+`stDiscountPercentage` fix, and is written with three places. A value such as
+`12.3456` used to validate and now fails at its `value` field with
+`Value exceeds the allowed decimal precision.`; round it to three places before
+building the document. Amount discounts (`A`) keep five places.
+
 ## Document types and environments
 
 | Before | After |

@@ -29,6 +29,8 @@ final class DiscountData extends FiscalData
     {
         $type = ValidationPayload::enum($context, 'valueType', DiscountValueType::class, DiscountValueType::Percentage);
 
-        return ['value' => [$type === DiscountValueType::Amount ? FiscalNumber::amount(Fiscal::CURRENCY) : FiscalNumber::nonNegative(maximum: '100')]];
+        $value = $type === DiscountValueType::Amount ? FiscalNumber::amount(Fiscal::CURRENCY) : FiscalNumber::nonNegative(Fiscal::PERCENTAGE_SCALE, '100');
+
+        return ['value' => [$value]];
     }
 }

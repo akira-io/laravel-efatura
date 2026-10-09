@@ -38,14 +38,14 @@ it('rejects wrong typed currency and bounds on discounts and alternate amounts',
     expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, $message);
 })->with(FiscalValueFixtures::invalidDiscountsAndAlternateAmounts());
 
-it('accepts five decimal discounts through both Spatie entry points', function (string $method, array $payload, string $expected): void {
+it('accepts five decimal amount and three decimal percentage discounts through both Spatie entry points', function (string $method, array $payload, string $expected): void {
     expect(DiscountData::$method($payload)->toArray()['value'])->toBe($expected);
 })->with([
     'from'              => ['from'],
     'validateAndCreate' => ['validateAndCreate'],
 ])->with([
     'amount'     => [['value' => '1.23456', 'valueType' => 'A'], '1.23456'],
-    'percentage' => [['value' => '15.12345'], '15.12345'],
+    'percentage' => [['value' => '15.123'], '15.123'],
 ]);
 
 it('accepts an exemption reason from the catalog', function (): void {

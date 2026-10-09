@@ -99,7 +99,7 @@ it('reports an unwritable tax percentage on the wire path of the tax', function 
 });
 
 it('reports an unwritable percentage discount on the wire path of the discount', function (): void {
-    $line = new LineItemData(new QuantityData(BigDecimal::one(), 'C62'), new ItemData('Product', 'SKU'), discount: new DiscountData(BigDecimal::of('1.123456')));
+    $line = new LineItemData(new QuantityData(BigDecimal::one(), 'C62'), new ItemData('Product', 'SKU'), discount: new DiscountData(BigDecimal::of('1.1234')));
 
     expect(fn (): string => XmlFragment::of(fn (XmlWriter $xml, DOMElement $root): DOMElement => resolve(LineXmlSerializer::class)->append($xml, $root, [$line], 'lines')))
         ->toFailValidationOn('lines.0.discount.value', 'Value exceeds the allowed decimal precision.');
