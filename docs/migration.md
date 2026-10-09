@@ -79,6 +79,9 @@ error. Configured emitter and transmitter tax IDs follow the document pattern
 type, and `DocumentType::fromDataClass()` resolves the reverse. `DocumentData`
 derives `type()` and the static `documentType()` from that mapping, so both
 are final: a document class outside the nine official ones has no type.
+`DocumentData::documentRules()` is abstract: a subclass declares its own
+document rules, returning `[]` when it has none, instead of inheriting an empty
+default.
 
 `Builders\ConfiguredEmitter` is gone. The configuration maps itself onto the
 fiscal payload field by field: `EmitterConfig::partyPayload()` and

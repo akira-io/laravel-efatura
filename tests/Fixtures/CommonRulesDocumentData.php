@@ -8,6 +8,8 @@ use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Data\EmissionContextData;
 use Akira\Efatura\Data\PartyData;
+use Override;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class CommonRulesDocumentData extends DocumentData
 {
@@ -17,4 +19,13 @@ final class CommonRulesDocumentData extends DocumentData
         public readonly ?PartyData $receiver = null,
         public readonly ?EmissionContextData $emission = null,
     ) {}
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    #[Override]
+    protected static function documentRules(ValidationContext $context): array
+    {
+        return [];
+    }
 }

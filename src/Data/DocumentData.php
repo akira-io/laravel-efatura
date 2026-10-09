@@ -72,10 +72,7 @@ abstract class DocumentData extends FiscalData
     /**
      * @return array<string, list<mixed>>
      */
-    protected static function documentRules(ValidationContext $context): array
-    {
-        return [];
-    }
+    abstract protected static function documentRules(ValidationContext $context): array;
 
     /**
      * @param  array<string, list<mixed>> ...$ruleSets
