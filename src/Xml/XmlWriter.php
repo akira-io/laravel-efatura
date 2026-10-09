@@ -6,6 +6,8 @@ namespace Akira\Efatura\Xml;
 
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Support\Fiscal;
+use Brick\Math\BigDecimal;
+use Brick\Money\Money;
 use DOMDocument;
 use DOMElement;
 use Illuminate\Support\Str;
@@ -36,15 +38,31 @@ final readonly class XmlWriter
 
     public function element(DOMElement $parent, string $name, ?string $value, string $path): ?DOMElement
     {
-        if ($value === null) {
-            return null;
-        }
+        return $value === null ? null : $this->requiredElement($parent, $name, $value, $path);
+    }
 
-        if ($value === '') {
+    public function requiredElement(DOMElement $parent, string $name, ?string $value, string $path): DOMElement
+    {
+        if ($value === null || $value === '') {
             throw self::missing($path);
         }
 
         return $this->text($parent, Fiscal::XML_NAMESPACE, $name, $value, $path);
+    }
+
+    public function decimal(DOMElement $parent, string $name, BigDecimal|Money|null $value, string $path, int $scale = Fiscal::AMOUNT_SCALE): ?DOMElement
+    {
+        return $this->element($parent, $name, XmlValue::decimal($value, $path, $scale), $path);
+    }
+
+    /**
+     * @param array<string, array{string, ?string}> $fields
+     */
+    public function elements(DOMElement $parent, string $path, array $fields): void
+    {
+        foreach ($fields as $name => [$property, $value]) {
+            $this->element($parent, $name, $value, $path . '.' . $property);
+        }
     }
 
     public function attribute(DOMElement $element, string $name, ?string $value, string $path): void

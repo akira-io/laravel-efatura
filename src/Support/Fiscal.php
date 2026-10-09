@@ -19,6 +19,8 @@ final class Fiscal
 
     public const int AMOUNT_SCALE = 5;
 
+    public const int PERCENTAGE_SCALE = 3;
+
     public const int INTEGER_DIGITS = 15;
 
     public const int MAX_LINES = 1000;

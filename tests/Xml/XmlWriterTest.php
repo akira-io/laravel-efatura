@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Xml\XmlWriter;
+use Brick\Math\BigDecimal;
 
 it('writes children in the default fiscal namespace without prefixes or redeclarations', function (): void {
     $xml  = new XmlWriter;
@@ -85,6 +86,39 @@ it('refuses to write an empty fiscal element', function (): void {
 
     expect(fn (): ?DOMElement => $xml->element($root, 'Serie', '', 'header.serie'))
         ->toFailValidationOn('header.serie', 'The header.serie is required to write the XML document.');
+});
+
+it('requires a valued element on its field path', function (?string $value): void {
+    $xml  = new XmlWriter;
+    $root = $xml->document('Dfe');
+
+    expect($xml->requiredElement($root, 'Serie', 'A-1', 'header.serie')->textContent)->toBe('A-1')
+        ->and(fn (): DOMElement => $xml->requiredElement($root, 'Serie', $value, 'header.serie'))
+        ->toFailValidationOn('header.serie', 'The header.serie is required to write the XML document.');
+})->with(['absent' => null, 'empty' => '']);
+
+it('writes optional elements in the given order with their property paths', function (): void {
+    $xml  = new XmlWriter;
+    $root = $xml->document('Dfe');
+
+    $xml->elements($root, 'emitter.contacts', ['Telephone' => ['telephone', '1234567'], 'Telefax' => ['telefax', null], 'Email' => ['email', 'a@b.cv']]);
+
+    expect($xml->toXml())->toContain('<Telephone>1234567</Telephone><Email>a@b.cv</Email>')
+        ->and(fn () => $xml->elements($root, 'emitter.contacts', ['Website' => ['website', "\x01"]]))
+        ->toFailValidationOn('emitter.contacts.website', 'The emitter.contacts.website contains characters that XML 1.0 does not allow.');
+});
+
+it('writes a decimal element at the scale of its field', function (): void {
+    $xml  = new XmlWriter;
+    $root = $xml->document('Dfe');
+
+    $xml->decimal($root, 'Price', BigDecimal::of('30000.00000'), 'lines.0.price');
+    $xml->decimal($root, 'TaxPercentage', BigDecimal::of('15.500'), 'lines.0.taxes.0.taxPercentage', 3);
+
+    expect($xml->decimal($root, 'NetTotal', null, 'lines.0.netTotal'))->toBeNull()
+        ->and($xml->toXml())->toContain('<Price>30000</Price><TaxPercentage>15.5</TaxPercentage></Dfe>')
+        ->and(fn (): ?DOMElement => $xml->decimal($root, 'TaxPercentage', BigDecimal::of('15.1234'), 'lines.0.taxes.0.taxPercentage', 3))
+        ->toFailValidationOn('lines.0.taxes.0.taxPercentage', 'Value exceeds the allowed decimal precision.');
 });
 
 it('requires a value on its field path', function (): void {
