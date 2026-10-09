@@ -2,8 +2,10 @@
 
 `Efatura::invoice()` returns a new mutable `DocumentBuilder`, defaulting to
 `DocumentType::Invoice`. `Efatura::event()` returns a new `EventBuilder`; select
-its event type explicitly. The facade, `EfaturaManager`, and its `efatura()`
-entry point expose the same methods. Each `build()` returns a fresh canonical
+its event type explicitly. `invoice()`, `event()` and `config()` exist on the
+facade, on `EfaturaManager` and on the `Efatura` instance that
+`EfaturaManager::efatura()` returns; `efatura()` and `withConfig()` exist only
+on the facade and the manager. Each `build()` returns a fresh canonical
 Data graph with readonly fiscal fields. It never allocates a number or IUD,
 signs, submits, or issues a document.
 
