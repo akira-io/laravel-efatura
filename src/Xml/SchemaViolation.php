@@ -22,7 +22,7 @@ final readonly class SchemaViolation
 
     private static function redact(string $message): string
     {
-        $message = Str::squish($message);
+        $message = Str::squish(mb_scrub($message, 'UTF-8'));
         $subject = preg_match(self::SUBJECT, $message, $match) === 1 ? $match[0] : '';
         $detail  = substr($message, \strlen($subject));
 
