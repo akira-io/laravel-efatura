@@ -105,14 +105,14 @@ it('accepts a reference with a single tax', function (): void {
 });
 
 it('accepts the official IUD shape with an optional old document flag', function (): void {
-    $iud = 'CV1261002123456789' . str_repeat('0', 27);
+    $iud = 'CV1261002123456789' . str_repeat('0', 26) . '2';
 
     expect((new FiscalDocumentData($iud, false))->value)->toBe($iud)
         ->and((new FiscalDocumentData($iud))->isOldDocument)->toBeNull();
 });
 
 it('rejects the old document flag on an official IUD', function (): void {
-    $payload = ['value' => 'CV1261002123456789' . str_repeat('0', 27), 'isOldDocument' => true];
+    $payload = ['value' => 'CV1261002123456789' . str_repeat('0', 26) . '2', 'isOldDocument' => true];
 
     expect(fn (): FiscalDocumentData => FiscalDocumentData::from($payload))->toFailValidationOn('isOldDocument', 'The is old document field is prohibited.');
 });

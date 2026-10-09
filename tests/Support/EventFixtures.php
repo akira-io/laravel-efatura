@@ -18,7 +18,7 @@ final class EventFixtures
 
     public static function iud(): string
     {
-        return 'CV1261002100200300' . str_repeat('0', 27);
+        return 'CV1261002100200300' . str_repeat('0', 26) . '5';
     }
 
     public static function numberRange(int $start, int $end): array

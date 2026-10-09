@@ -113,6 +113,14 @@ A document accepts at most 1000 `lines` and 1000 `references`, and the
 extension lists at most 100 entries each; Manual 11 sets no count, so these
 are defensive limits, listed in [fiscal domain validation](fiscal-domain.md).
 
+A received IUD, in an event's `iuds` or in `references[].fiscalDocument.value`,
+must carry the Luhn check digit of Manual 11. An identifier with the official
+shape and a wrong last digit now fails at that field with
+`validation.iud_invalid`; the authority refuses it anyway. Old document
+references such as `1/2021/A/1` are unaffected. Replace stored or fixture IUDs
+built by padding with zeros by real identifiers, or compute the last digit with
+`Akira\Efatura\Support\Luhn::checkDigit()` over the 42 digits between `CV` and the check digit.
+
 ## Document types and environments
 
 | Before | After |

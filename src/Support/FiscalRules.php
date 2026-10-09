@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Support;
 
+use Akira\Efatura\Rules\IudCheckDigit;
 use Akira\Efatura\Rules\NotBlank;
 use Illuminate\Support\Str;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
@@ -50,19 +51,19 @@ final class FiscalRules
     }
 
     /**
-     * @return list<string|NotBlank>
+     * @return list<string|NotBlank|IudCheckDigit>
      */
     public static function iud(): array
     {
-        return ['string', new NotBlank, 'regex:/\A' . self::IUD . '\z/'];
+        return ['string', new NotBlank, 'regex:/\A' . self::IUD . '\z/', new IudCheckDigit];
     }
 
     /**
-     * @return list<string|NotBlank>
+     * @return list<string|NotBlank|IudCheckDigit>
      */
     public static function fiscalDocumentReference(): array
     {
-        return ['string', new NotBlank, 'regex:~\A(?:' . self::IUD . '|[1-9]/[0-9]{4}/' . self::SERIES . '/[0-9]{1,9})\z~'];
+        return ['string', new NotBlank, 'regex:~\A(?:' . self::IUD . '|[1-9]/[0-9]{4}/' . self::SERIES . '/[0-9]{1,9})\z~', new IudCheckDigit];
     }
 
     /**

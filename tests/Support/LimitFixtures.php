@@ -13,7 +13,7 @@ final class LimitFixtures
      */
     public static function iuds(int $count): array
     {
-        return array_map(static fn (int $number): string => 'CV12610021' . str_pad((string) $number, 35, '0', STR_PAD_LEFT), range(1, $count));
+        return array_map(static fn (int $number): string => IdentifierFixtures::withCheckDigit('CV12610021' . str_pad((string) $number, 34, '0', STR_PAD_LEFT)), range(1, $count));
     }
 
     /**
