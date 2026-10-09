@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Data\DocumentHeaderData;
 use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Rules\UnreservedFiscalField;
 use Akira\Efatura\Rules\ValidTaxId;
 use Akira\Efatura\Support\Catalogs;
+use Akira\Efatura\Tests\Support\DocumentPayloads as P;
 use Illuminate\Support\Facades\Validator;
 
 it('accepts a known official code', function (): void {
@@ -70,4 +72,22 @@ it('rejects a non-string extra field name with its own message', function (mixed
     'integer'  => [12, 'The name must be a text field name.'],
     'array'    => [['IssueDate'], 'The name must be a text field name.'],
     'reserved' => ['IssueDate', 'The name is reserved for an official fiscal field.'],
+]);
+
+it('accepts series of up to twenty characters joined by single inner separators', function (string $series): void {
+    expect(DocumentHeaderData::from(P::allocatedHeader(['serie' => $series]))->series)->toBe($series);
+})->with([
+    'twenty characters' => [str_repeat('A', 20)],
+    'underscore'        => ['A_B'],
+    'hyphen'            => ['A-B'],
+]);
+
+it('rejects series beyond the length or separator pattern', function (string $series, string $message): void {
+    expect(fn (): DocumentHeaderData => DocumentHeaderData::from(P::allocatedHeader(['serie' => $series])))->toFailValidationOn('serie', $message);
+})->with([
+    'twenty one characters' => [str_repeat('A', 21), 'The serie field must not be greater than 20 characters.'],
+    'dot'                   => ['A.B', 'The serie field format is invalid.'],
+    'double separator'      => ['A__B', 'The serie field format is invalid.'],
+    'leading separator'     => ['-A', 'The serie field format is invalid.'],
+    'trailing separator'    => ['A-', 'The serie field format is invalid.'],
 ]);
