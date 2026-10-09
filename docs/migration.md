@@ -179,8 +179,11 @@ that binds its own `ClockInterface` after the provider registers keeps it.
 `EmitterConfig::$led` changes from `?string` to `?int`. `AddressConfig` and
 `ContactsConfig` gain the new fields as optional trailing constructor
 arguments, so existing positional calls keep working. `CertificateConfig`,
-`OAuthConfig` and `TransmitterConfig` redact their secrets from `dump()` and
-`var_dump()` output.
+`OAuthConfig` and `TransmitterConfig` redact their secrets from `dump()`,
+`var_dump()` and `print_r()` output, and implement `JsonSerializable` with the
+same redaction, so `json_encode()` and Monolog's normalizer write `[redacted]`.
+`var_export()` and `serialize()` still write the secrets, because neither
+consults `__debugInfo()` or `jsonSerialize()`; never pass these objects to them.
 
 Merge the new keys from the published [config](../config/efatura.php) into an
 application config file that was published before, then set the address code

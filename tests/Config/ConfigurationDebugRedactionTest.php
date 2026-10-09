@@ -6,6 +6,7 @@ use Akira\Efatura\Configuration\CertificateConfig;
 use Akira\Efatura\Configuration\OAuthConfig;
 use Akira\Efatura\Configuration\TransmitterConfig;
 use Akira\Efatura\Tests\Support\ConfigFixtures;
+use Monolog\Formatter\NormalizerFormatter;
 
 dataset('debug outputs', [
     'print_r'  => [static fn (object $value): string => print_r($value, true)],
@@ -15,6 +16,8 @@ dataset('debug outputs', [
 
         return (string) ob_get_clean();
     }],
+    'json_encode'        => [static fn (object $value): string => (string) json_encode($value)],
+    'monolog normalizer' => [static fn (object $value): string => (string) json_encode(new NormalizerFormatter()->normalizeValue($value))],
 ]);
 
 it('redacts configured secrets from debug output', function (Closure $dump): void {
@@ -50,4 +53,11 @@ it('reports absent secrets as null in debug output', function (): void {
         'clientId'     => 'client',
         'clientSecret' => '[redacted]',
     ]);
+});
+
+it('redacts the secrets of each configuration from its json form', function (): void {
+    expect(json_encode(new TransmitterConfig('100200300', 'Transmitter', 'synthetic-middleware-key', new OAuthConfig('client', 'synthetic-client-secret'))))
+        ->toBe('{"taxId":"100200300","name":"Transmitter","middlewareKey":"[redacted]","oauth":{"clientId":"client","clientSecret":"[redacted]"}}')
+        ->and(json_encode(new CertificateConfig('disk', 'cert.pem', 'key.pem', 'synthetic-passphrase')))
+        ->toBe('{"disk":"disk","certificatePath":"cert.pem","privateKeyPath":"key.pem","passphrase":"[redacted]"}');
 });

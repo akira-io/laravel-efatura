@@ -15,6 +15,22 @@ trait RedactsSensitiveParameters
      */
     public function __debugInfo(): array
     {
+        return $this->redactedProperties();
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->redactedProperties();
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function redactedProperties(): array
+    {
         $properties = get_object_vars($this);
 
         foreach (new ReflectionMethod($this, '__construct')->getParameters() as $parameter) {
