@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Enums\ReceiptType;
-use Akira\Efatura\Support\DocumentRules;
+use Akira\Efatura\Support\DocumentRuleSets;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
 use Illuminate\Validation\Rule;
@@ -45,8 +45,8 @@ final class ReceiptData extends DocumentData
         $rent = ValidationPayload::enum($context, 'receiptTypeCode', ReceiptType::class) === ReceiptType::Rent;
 
         return [
-            ...DocumentRules::settledPayments($context),
-            'references'  => DocumentRules::requiredList(),
+            ...DocumentRuleSets::settledPayments($context),
+            'references'  => DocumentRuleSets::requiredList(),
             'rentReceipt' => [Rule::requiredIf($rent), Rule::prohibitedIf(! $rent)],
         ];
     }

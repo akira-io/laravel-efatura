@@ -13,7 +13,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class DocumentRules
+final class DocumentRuleSets
 {
     /**
      * @return list<string>

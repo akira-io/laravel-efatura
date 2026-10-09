@@ -8,7 +8,7 @@ use Akira\Efatura\Data\Attributes\FiscalDateFormat;
 use Akira\Efatura\Data\Contracts\HasTaxPointDate;
 use Akira\Efatura\Data\Contracts\HasTotals;
 use Akira\Efatura\Data\Contracts\SettlesOnIssue;
-use Akira\Efatura\Support\DocumentRules;
+use Akira\Efatura\Support\DocumentRuleSets;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Carbon\CarbonImmutable;
@@ -51,8 +51,8 @@ final class ReceiptInvoiceData extends DocumentData implements HasTaxPointDate, 
     protected static function documentRules(ValidationContext $context): array
     {
         return [
-            ...DocumentRules::lines($context, self::documentType()),
-            ...DocumentRules::settledPayments($context),
+            ...DocumentRuleSets::lines($context, self::documentType()),
+            ...DocumentRuleSets::settledPayments($context),
             'orderReference' => FiscalRules::code(),
         ];
     }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Contracts\HasTotals;
-use Akira\Efatura\Support\DocumentRules;
+use Akira\Efatura\Support\DocumentRuleSets;
 use Akira\Efatura\Support\Fiscal;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -42,8 +42,8 @@ final class RegistrationNoteData extends DocumentData implements HasTotals
     protected static function documentRules(ValidationContext $context): array
     {
         return [
-            ...DocumentRules::lines($context, self::documentType()),
-            ...DocumentRules::settledPayments($context),
+            ...DocumentRuleSets::lines($context, self::documentType()),
+            ...DocumentRuleSets::settledPayments($context),
         ];
     }
 }

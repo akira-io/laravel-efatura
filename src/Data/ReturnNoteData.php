@@ -6,7 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Contracts\HasTotals;
 use Akira\Efatura\Enums\IssueReason;
-use Akira\Efatura\Support\DocumentRules;
+use Akira\Efatura\Support\DocumentRuleSets;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Akira\Efatura\Support\ValidationPayload;
@@ -50,9 +50,9 @@ final class ReturnNoteData extends DocumentData implements HasTotals
         $other = ValidationPayload::enum($context, 'issueReasonCode', IssueReason::class) === IssueReason::Other;
 
         return [
-            ...DocumentRules::lines($context, self::documentType()),
-            'references'             => DocumentRules::requiredList(),
-            'issueReasonCode'        => DocumentRules::issueReason(self::documentType()),
+            ...DocumentRuleSets::lines($context, self::documentType()),
+            'references'             => DocumentRuleSets::requiredList(),
+            'issueReasonCode'        => DocumentRuleSets::issueReason(self::documentType()),
             'issueReasonDescription' => [Rule::requiredIf($other), ...FiscalRules::text(10, 500)],
         ];
     }

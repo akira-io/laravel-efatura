@@ -6,7 +6,7 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Contracts\HasTotals;
 use Akira\Efatura\Enums\IssueReason;
-use Akira\Efatura\Support\DocumentRules;
+use Akira\Efatura\Support\DocumentRuleSets;
 use Akira\Efatura\Support\Fiscal;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -44,9 +44,9 @@ final class DebitNoteData extends DocumentData implements HasTotals
     protected static function documentRules(ValidationContext $context): array
     {
         return [
-            ...DocumentRules::lines($context, self::documentType()),
-            'references'      => DocumentRules::requiredList(),
-            'issueReasonCode' => DocumentRules::issueReason(self::documentType()),
+            ...DocumentRuleSets::lines($context, self::documentType()),
+            'references'      => DocumentRuleSets::requiredList(),
+            'issueReasonCode' => DocumentRuleSets::issueReason(self::documentType()),
         ];
     }
 }

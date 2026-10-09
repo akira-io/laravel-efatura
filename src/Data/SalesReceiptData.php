@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Contracts\HasTotals;
-use Akira\Efatura\Support\DocumentRules;
+use Akira\Efatura\Support\DocumentRuleSets;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
 use Brick\Math\BigDecimal;
@@ -46,8 +46,8 @@ final class SalesReceiptData extends DocumentData implements HasTotals
         $identifiedAmount = $net instanceof BigDecimal && $tax instanceof BigDecimal ? $net->plus($tax) : null;
 
         return [
-            ...DocumentRules::lines($context, self::documentType()),
-            ...DocumentRules::settledPayments($context),
+            ...DocumentRuleSets::lines($context, self::documentType()),
+            ...DocumentRuleSets::settledPayments($context),
             'receiver' => [Rule::requiredIf($identifiedAmount?->isGreaterThanOrEqualTo(Fiscal::SALES_RECEIPT_IDENTIFIED_RECEIVER_AMOUNT) ?? false)],
         ];
     }

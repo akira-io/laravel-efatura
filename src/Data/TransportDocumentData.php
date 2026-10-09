@@ -7,7 +7,7 @@ namespace Akira\Efatura\Data;
 use Akira\Efatura\Enums\PartyReference;
 use Akira\Efatura\Enums\TransportDocumentType;
 use Akira\Efatura\Enums\TransportReceiverType;
-use Akira\Efatura\Support\DocumentRules;
+use Akira\Efatura\Support\DocumentRuleSets;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
 use Illuminate\Validation\Rule;
@@ -53,7 +53,7 @@ final class TransportDocumentData extends DocumentData
         $undetermined       = $receiverType === TransportReceiverType::Undetermined;
         $providerIsReceiver = ValidationPayload::string($context, 'transportServiceProvider.reference') === PartyReference::Receiver->value;
         $rules              = [
-            ...DocumentRules::lines($context, self::documentType()),
+            ...DocumentRuleSets::lines($context, self::documentType()),
             'receiver' => [Rule::requiredIf(! $undetermined || $providerIsReceiver), Rule::prohibitedIf($undetermined)],
         ];
 
