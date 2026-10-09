@@ -120,4 +120,42 @@ final class TotalsFixtures
             'discount'                  => ['value' => '10', 'valueType' => 'A'],
         ]);
     }
+
+    /**
+     * @return list<LineItemData>
+     */
+    public static function withheldLines(string $lineType, string $amount): array
+    {
+        return [
+            F::line(['taxes' => [['taxTypeCode' => 'IVA', 'taxPercentage' => '15'], ['taxTypeCode' => 'IR', 'taxPercentage' => '10']]]),
+            F::line(['lineTypeCode' => $lineType, 'price' => $amount, 'priceExtension' => $amount, 'netTotal' => $amount,
+                'taxes'             => [['taxTypeCode' => 'IR', 'taxPercentage' => '10']]]),
+        ];
+    }
+
+    public static function withheldTotals(string $net, string $withholding, string $payable): TotalsData
+    {
+        return F::totals([
+            'priceExtensionTotalAmount' => $net,
+            'netTotalAmount'            => $net,
+            'withholdingTaxTotalAmount' => $withholding,
+            'payableAmount'             => $payable,
+        ]);
+    }
+
+    /**
+     * @return list<LineItemData>
+     */
+    public static function deductionBeyondNetLines(): array
+    {
+        return [
+            F::line(['price' => '0.006', 'priceExtension' => '0.006', 'discount' => ['value' => '0.005', 'valueType' => 'A'], 'netTotal' => '0.001', 'taxes' => []]),
+            F::line(['lineTypeCode' => 'D', 'price' => '0.005', 'priceExtension' => '0.005', 'netTotal' => '0.005', 'taxes' => []]),
+        ];
+    }
+
+    public static function deductionBeyondNetTotals(): TotalsData
+    {
+        return F::totals(['priceExtensionTotalAmount' => '0.001', 'netTotalAmount' => '0', 'taxTotalAmount' => '0', 'payableAmount' => '0']);
+    }
 }

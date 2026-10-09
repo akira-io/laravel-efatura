@@ -114,3 +114,29 @@ it('rejects a final tax sum that is neither exact nor rounded half up', function
     expect(fn (): null => resolve(VerifyDocumentTotalsAction::class)->handle($lines, $totals))
         ->toFailValidationOn('totals.taxTotalAmount', 'The supplied amount cannot be reconciled with the fiscal evidence.');
 });
+
+it('signs line withholding by the line type', function (string $lineType, string $amount, array $totals): void {
+    expect(resolve(VerifyDocumentTotalsAction::class)->handle(T::withheldLines($lineType, $amount), T::withheldTotals(...$totals)))->toBeNull();
+})->with([
+    'deduction subtracts its withholding' => ['D', '20', ['80', '8', '87']],
+    'information leaves withholding out'  => ['I', '10', ['100', '10', '105']],
+]);
+
+it('rejects withholding that ignores the line type sign', function (string $lineType, string $amount, array $totals): void {
+    $lines      = T::withheldLines($lineType, $amount);
+    $totalsData = T::withheldTotals(...$totals);
+
+    expect(fn (): null => resolve(VerifyDocumentTotalsAction::class)->handle($lines, $totalsData))
+        ->toFailValidationOn('totals.withholdingTaxTotalAmount', 'The supplied amount cannot be reconciled with the fiscal evidence.');
+})->with([
+    'deduction withholding added'   => ['D', '20', ['80', '12', '83']],
+    'information withholding added' => ['I', '10', ['100', '11', '104']],
+]);
+
+it('rejects a negative net sum even when it rounds to the declared zero', function (): void {
+    $lines  = T::deductionBeyondNetLines();
+    $totals = T::deductionBeyondNetTotals();
+
+    expect(fn (): null => resolve(VerifyDocumentTotalsAction::class)->handle($lines, $totals))
+        ->toFailValidationOn('totals.netTotalAmount', 'The supplied amount cannot be reconciled with the fiscal evidence.');
+});
