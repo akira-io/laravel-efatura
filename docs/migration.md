@@ -109,6 +109,12 @@ keys its code as `code`, and so is `Catalogs::sources()`: the checksums of the
 official downloads live in `resources/official-artifacts.json`. The accepted
 codes are unchanged.
 
+`VerifyDocumentTotalsAction` subtracts the withholding aggregate from the
+payable amount: `payableAmount` must equal `netTotalAmount + taxTotalAmount -
+withholdingTaxTotalAmount + payableRoundingAmount`. A document that declared
+IR withholding and a payable of net plus tax now fails at
+`totals.payableAmount`; lower its payable by the withholding.
+
 ## Renamed symbols
 
 PHP names describe the domain concept; wire names (input keys, `toArray()`

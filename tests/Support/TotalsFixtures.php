@@ -59,14 +59,14 @@ final class TotalsFixtures
         return [$line, $line];
     }
 
-    public static function taxAndWithholdingTotals(string $tax, string $payable): TotalsData
+    public static function taxAndWithholdingTotals(string $tax): TotalsData
     {
         return F::totals([
             'priceExtensionTotalAmount' => '0.1',
             'netTotalAmount'            => '0.1',
             'taxTotalAmount'            => $tax,
             'withholdingTaxTotalAmount' => $tax,
-            'payableAmount'             => $payable,
+            'payableAmount'             => '0.1',
         ]);
     }
 

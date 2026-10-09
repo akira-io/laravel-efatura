@@ -66,6 +66,7 @@ final readonly class VerifyDocumentTotalsAction
 
         $payable = $totals->netTotalAmount->getAmount()
             ->plus($totals->taxTotalAmount->getAmount())
+            ->minus($withholding?->getAmount() ?? BigDecimal::zero())
             ->plus($totals->payableRoundingAmount?->getAmount() ?? BigDecimal::zero());
         $this->matchesExact('totals.payableAmount', $totals->payableAmount->getAmount(), [$payable]);
     }

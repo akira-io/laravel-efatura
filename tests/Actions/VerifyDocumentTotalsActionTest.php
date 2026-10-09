@@ -19,8 +19,8 @@ it('accepts totals that reconcile with the line evidence', function (Closure $sc
     expect(resolve(VerifyDocumentTotalsAction::class)->handle($lines, $totals))->toBeNull();
 })->with([
     'informational tax kept while informational net is excluded' => fn (): array => [T::informationalLines(), T::informationalTaxTotals()],
-    'tax and withholding rounded down'                           => fn (): array => [T::taxAndWithholdingLines(), T::taxAndWithholdingTotals('0.01', '0.11')],
-    'tax and withholding rounded up'                             => fn (): array => [T::taxAndWithholdingLines(), T::taxAndWithholdingTotals('0.02', '0.12')],
+    'tax and withholding rounded down'                           => fn (): array => [T::taxAndWithholdingLines(), T::taxAndWithholdingTotals('0.01')],
+    'tax and withholding rounded up'                             => fn (): array => [T::taxAndWithholdingLines(), T::taxAndWithholdingTotals('0.02')],
     'percentage discounts charges and rounding residual'         => fn (): array => [T::percentageDiscountAndChargeLines(), T::percentageDiscountAndChargeTotals()],
     'submitted net totals as amount discount allocation'         => fn (): array => [[F::line(['netTotal' => '93']), F::line(['netTotal' => '97'])], T::amountDiscountAllocationTotals()],
     'amount discount beside deduction and informational nets'    => fn (): array => [T::informationalLines('90'), T::amountDiscountWithInformationalTotals()],
@@ -28,6 +28,21 @@ it('accepts totals that reconcile with the line evidence', function (Closure $sc
     'final tax sum rounded down'                                 => fn (): array => [T::smallTaxLines(), T::smallTaxTotals('0.01', '0.15')],
     'final tax sum rounded up'                                   => fn (): array => [T::smallTaxLines(), T::smallTaxTotals('0.02', '0.16')],
 ]);
+
+it('subtracts withholding from the payable amount', function (): void {
+    $line   = F::line(['taxes' => [['taxTypeCode' => 'IVA', 'taxPercentage' => '15'], ['taxTypeCode' => 'IR', 'taxPercentage' => '10']]]);
+    $totals = F::totals(['withholdingTaxTotalAmount' => '10', 'payableRoundingAmount' => '0.5', 'payableAmount' => '105.5']);
+
+    expect(resolve(VerifyDocumentTotalsAction::class)->handle([$line], $totals))->toBeNull();
+});
+
+it('rejects a payable amount that ignores the withholding', function (): void {
+    $line   = F::line(['taxes' => [['taxTypeCode' => 'IVA', 'taxPercentage' => '15'], ['taxTypeCode' => 'IR', 'taxPercentage' => '10']]]);
+    $totals = F::totals(['withholdingTaxTotalAmount' => '10', 'payableAmount' => '115']);
+
+    expect(fn (): null => resolve(VerifyDocumentTotalsAction::class)->handle([$line], $totals))
+        ->toFailValidationOn('totals.payableAmount', 'The supplied amount cannot be reconciled with the fiscal evidence.');
+});
 
 it('compares mixed Money contexts and fixed tax amounts as exact decimals', function (): void {
     $line = F::line(['price' => FiscalMoney::cve('100'), 'netTotal' => FiscalMoney::exact('95', 'CVE'),
