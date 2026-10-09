@@ -48,7 +48,7 @@ final class DocumentXmlGraphs
     {
         return resolve(BuildIudAction::class)->handle(IudData::from([
             'repositoryCode'   => Environment::Test->value,
-            'issueDate'        => $document->header->issueDate->format('Y-m-d'),
+            'issueDate'        => $document->header->issueDate,
             'emitterTaxId'     => $document->emitter->taxId?->value,
             'ledCode'          => $document->header->ledCode,
             'documentTypeCode' => $document->type()->value,

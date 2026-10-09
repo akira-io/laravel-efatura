@@ -18,7 +18,7 @@ final class IudData extends FiscalData
     public function __construct(
         #[MapName('repositoryCode')]
         public readonly Environment $repository,
-        #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
+        #[FiscalDateFormat(Fiscal::DATE_FORMAT, instant: true)]
         public readonly CarbonImmutable $issueDate,
         public readonly string $emitterTaxId,
         public readonly int $ledCode,
@@ -34,7 +34,7 @@ final class IudData extends FiscalData
     public static function rules(): array
     {
         return [
-            'issueDate'      => [new FiscalDate, 'before:' . Fiscal::IDENTIFIER_DATE_LIMIT],
+            'issueDate'      => [new FiscalDate(instant: true), 'before:' . Fiscal::IDENTIFIER_DATE_LIMIT],
             'emitterTaxId'   => ['regex:/\A' . FiscalRules::CV_TAX_ID . '\z/'],
             'ledCode'        => FiscalRules::ledCode(),
             'documentNumber' => FiscalRules::documentNumber(),

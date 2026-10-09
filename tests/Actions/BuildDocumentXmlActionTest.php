@@ -60,6 +60,19 @@ it('rejects an identifier that names another document', function (array $overrid
     'repository'      => [['repositoryCode' => Environment::Homologation->value]],
 ]);
 
+it('accepts an identifier built from the same instant as the header', function (): void {
+    CarbonImmutable::setTestNow('2026-10-03T01:00:00Z');
+    $moment   = new CarbonImmutable('2026-10-03T00:30:00Z');
+    $document = X::document(DocumentType::Invoice);
+    $header   = DocumentHeaderData::from([...$document->header->toPayload(), 'issueDate' => $moment, 'issueTime' => $moment]);
+    $late     = ElectronicInvoiceData::from([...$document->toPayload(), 'header' => $header]);
+    $iud      = X::iud($late, ['issueDate' => $moment]);
+
+    expect(substr($iud, 3, 6))->toBe('261002')
+        ->and(resolve(BuildDocumentXmlAction::class)->handle($late, $iud, Environment::Test))
+        ->toContain('<IssueDate>2026-10-02</IssueDate><IssueTime>23:30:00</IssueTime>');
+});
+
 it('rejects an identifier with a wrong check digit', function (): void {
     $document = X::document(DocumentType::Invoice);
     $iud      = X::iud($document);

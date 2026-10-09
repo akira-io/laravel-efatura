@@ -49,6 +49,17 @@ it('pads every numeric component to its fixed width', function (array $overrides
     'issue date'               => [['issueDate' => '2099-12-31'], 3, '991231'],
 ]);
 
+it('dates the identifier on the Cape Verde day of the issue instant', function (): void {
+    $moment = new CarbonImmutable('2026-10-03T00:30:00Z');
+
+    $built = resolve(BuildIudAction::class)->handle(IudData::from(I::iudPayload(['issueDate' => $moment])));
+    $new   = resolve(BuildIudAction::class)->handle(new IudData(Environment::Test, $moment, '100200300', 1, DocumentType::Invoice, 1, '1234567890'));
+
+    expect(substr($built, 3, 6))->toBe('261002')
+        ->and(substr($new, 3, 6))->toBe('261002')
+        ->and(IudData::from(I::iudPayload(['issueDate' => $moment]))->issueDate->format('Y-m-d'))->toBe('2026-10-02');
+});
+
 it('generates the random code from the injected randomizer', function (): void {
     $payload = IudData::from(I::iudPayload(['randomCode' => null]));
 

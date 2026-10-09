@@ -47,7 +47,8 @@ final readonly class BuildDocumentXmlAction
         $identifier = $this->parseIud->handle($iud);
 
         $matches = $identifier->repository === $repository
-            && XmlValue::date($identifier->issueDate) === XmlValue::date($document->header->issueDate, instant: true)
+            && Fiscal::format($identifier->issueDate, Fiscal::DATE_FORMAT, instant: true)
+                === Fiscal::format($document->header->issueDate, Fiscal::DATE_FORMAT, instant: true)
             && $identifier->emitterTaxId === $document->emitter->taxId?->value
             && $identifier->ledCode === $document->header->ledCode
             && $identifier->documentType === $document->type()

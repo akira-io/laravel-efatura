@@ -21,7 +21,7 @@ final readonly class BuildIudAction
         $data = IudData::from($data);
 
         $payload = $data->repository->value
-            . $data->issueDate->format('ymd')
+            . Fiscal::format($data->issueDate, 'ymd', instant: true)
             . $data->emitterTaxId
             . Str::padLeft((string) $data->ledCode, 5, '0')
             . Str::padLeft((string) $data->documentType->code(), 2, '0')
