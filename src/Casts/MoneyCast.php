@@ -45,7 +45,7 @@ final readonly class MoneyCast implements Cast, Transformer
 
         try {
             return $this->round
-                ? FiscalMoney::of($value, $this->currency, $path)
+                ? FiscalMoney::rounded($value, $this->currency, $path)
                 : FiscalMoney::exact($value, $this->currency, $this->scale, $path);
         } catch (EfaturaValidationException $efaturaValidationException) {
             throw ValidationException::withMessages([$path => $efaturaValidationException->getMessage()]);

@@ -11,8 +11,8 @@ use Brick\Math\BigDecimal;
 use Brick\Money\Context\CustomContext;
 use Brick\Money\Money;
 
-it('normalizes fiscal amounts half up to two digits in CVE and foreign currencies', function (int|string $input, string $currency, string $expected): void {
-    $amount = FiscalMoney::of($input, $currency);
+it('rounds fiscal amounts half up to two digits in CVE and foreign currencies on request', function (int|string $input, string $currency, string $expected): void {
+    $amount = FiscalMoney::rounded($input, $currency);
 
     expect($amount->getCurrency()->getCurrencyCode())->toBe($currency)
         ->and(DecimalFormatter::money($amount))->toBe($expected);
@@ -25,19 +25,37 @@ it('normalizes fiscal amounts half up to two digits in CVE and foreign currencie
     ['999999999999999999999999.995', 'USD', '1000000000000000000000000.00'],
 ]);
 
-it('normalizes existing Money without changing its currency', function (): void {
+it('rounds existing Money without changing its currency', function (): void {
     $source = Money::of('3.12500', 'USD', new CustomContext(5));
 
-    expect(DecimalFormatter::money(FiscalMoney::of($source, 'USD')))->toBe('3.13')
-        ->and(DecimalFormatter::money(FiscalMoney::cve('3.125')))->toBe('3.13');
+    expect(DecimalFormatter::money(FiscalMoney::rounded($source, 'USD')))->toBe('3.13')
+        ->and(FiscalMoney::rounded('3.125', 'CVE')->getAmount()->isEqualTo('3.13'))->toBeTrue();
 });
 
-it('preserves a five-digit source amount until fiscal normalization is requested', function (): void {
+it('preserves a five-digit source amount until rounding is requested', function (): void {
     $source = FiscalMoney::exact('1.23456', 'CVE', 5);
 
     expect(DecimalFormatter::money($source, 5, false))->toBe('1.23456')
-        ->and(DecimalFormatter::money(FiscalMoney::cve($source)))->toBe('1.23');
+        ->and(DecimalFormatter::money(FiscalMoney::rounded($source, 'CVE')))->toBe('1.23');
 });
+
+it('creates two-place fiscal amounts without rounding', function (int|string|Money $input, string $expected): void {
+    expect((string) FiscalMoney::cve($input)->getAmount())->toBe($expected)
+        ->and((string) FiscalMoney::of($input, 'CVE')->getAmount())->toBe($expected);
+})->with([
+    'integer'               => [12, '12.00'],
+    'two places'            => ['1.23', '1.23'],
+    'insignificant zeros'   => ['1.23000', '1.23'],
+    'five-place zero Money' => [Money::of('3.12000', 'CVE', new CustomContext(5)), '3.12'],
+]);
+
+it('rejects amounts beyond two places instead of rounding them', function (Closure $create): void {
+    expect($create)->toFailValidationOn('lines.0.price', 'Value exceeds the allowed decimal precision.');
+})->with([
+    'cve text'      => [fn (): Money => FiscalMoney::cve('3.125', 'lines.0.price')],
+    'of text'       => [fn (): Money => FiscalMoney::of('1.234', 'USD', 'lines.0.price')],
+    'of five-place' => [fn (): Money => FiscalMoney::of(FiscalMoney::exact('1.23456', 'CVE'), 'CVE', 'lines.0.price')],
+]);
 
 it('accepts insignificant decimal zeros without losing exact precision boundaries', function (): void {
     expect((string) DecimalFormatter::parse('1.23000', 2))->toBe('1.23000')

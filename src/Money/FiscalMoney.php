@@ -21,6 +21,11 @@ final class FiscalMoney
 
     public static function of(int|float|string|Money $amount, string|Currency $currency, string $field = 'amount'): Money
     {
+        return self::create($amount, $currency, 2, false, $field);
+    }
+
+    public static function rounded(int|float|string|Money $amount, string|Currency $currency, string $field = 'amount'): Money
+    {
         return self::create($amount, $currency, 2, true, $field);
     }
 

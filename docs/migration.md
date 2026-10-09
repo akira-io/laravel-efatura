@@ -133,6 +133,12 @@ with `money.invalid_currency` ("Currency must be an uppercase code of the
 official currency catalog."), and catalog codes Brick does not ship, such as
 `XDR`, now build fiscal money instead of failing with `money.invalid`.
 
+`FiscalMoney::of()` and `FiscalMoney::cve()` no longer round. An amount with a
+significant digit beyond two decimal places, such as `'3.125'`, now fails with
+`decimal.scale_exceeded` ("Value exceeds the allowed decimal precision.")
+instead of becoming `3.13`. Call `FiscalMoney::rounded($amount, $currency)` to
+keep the half-up rounding to two places; `FiscalMoney::exact()` keeps up to five.
+
 ## Renamed symbols
 
 PHP names describe the domain concept; wire names (input keys, `toArray()`
