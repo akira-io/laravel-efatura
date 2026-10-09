@@ -17,6 +17,7 @@ use LibXMLError;
 
 use const LIBXML_ERR_ERROR;
 use const LIBXML_NONET;
+use const LIBXML_RECOVER;
 
 final readonly class LibxmlSchemaValidator implements SchemaValidator
 {
@@ -80,7 +81,9 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
     {
         $document = new DOMDocument;
         if ($xml === '' || ! $document->loadXML($xml, LIBXML_NONET)) {
-            throw SchemaValidationException::malformed($this->violations($pending));
+            $violations = $this->violations($pending);
+
+            throw self::declaresDocumentType($xml) ? SchemaValidationException::doctypeForbidden() : SchemaValidationException::malformed($violations);
         }
 
         if ($document->doctype instanceof DOMDocumentType) {
@@ -88,6 +91,13 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
         }
 
         return $document;
+    }
+
+    private static function declaresDocumentType(string $xml): bool
+    {
+        $document = new DOMDocument;
+
+        return $xml !== '' && @$document->loadXML($xml, LIBXML_NONET | LIBXML_RECOVER) && $document->doctype instanceof DOMDocumentType;
     }
 
     private static function schemaFailedToLoad(int $pending): bool

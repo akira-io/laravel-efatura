@@ -86,11 +86,22 @@ it('refuses a document type declaration before parsing it', function (string $xm
     'recursive entity' => ['<!DOCTYPE Dfe [<!ENTITY a "&b;&b;"><!ENTITY b "&a;&a;">]><Dfe>&a;</Dfe>'],
 ]);
 
-it('refuses a document type declaration hidden by another encoding', function (): void {
-    $xml = "\xFF\xFE" . mb_convert_encoding('<?xml version="1.0" encoding="UTF-16"?><!DOCTYPE Dfe><Dfe/>', 'UTF-16LE', 'UTF-8');
+it('refuses a document type declaration hidden by another encoding', function (string $declaration, string $content): void {
+    $file = $this->schemas->root . '/private.txt';
+    $this->schemas->write('private.txt', 'PRIVATE-FILE-CONTENTS');
+    $utf8 = '<?xml version="1.0" encoding="UTF-16"?><!DOCTYPE Dfe [' . str_replace('FILE', $file, $declaration) . ']><Dfe>' . $content . '</Dfe>';
 
-    expect(fn () => resolve(SchemaValidator::class)->validate($xml))->toThrow(SchemaValidationException::class, 'xml.doctype_forbidden');
-});
+    expect(fn () => resolve(SchemaValidator::class)->validate("\xFF\xFE" . mb_convert_encoding($utf8, 'UTF-16LE', 'UTF-8')))
+        ->toThrow(function (SchemaValidationException $exception): void {
+            expect($exception->errorCode)->toBe('xml.doctype_forbidden')
+                ->and($exception->violations)->toBe([])
+                ->and(json_encode([$exception->getMessage(), $exception->context], JSON_THROW_ON_ERROR))->not->toContain('PRIVATE-FILE-CONTENTS');
+        });
+})->with([
+    'no entity'        => ['', ''],
+    'external entity'  => ['<!ENTITY x SYSTEM "file://FILE">', '&x;'],
+    'recursive entity' => ['<!ENTITY a "&b;&b;"><!ENTITY b "&a;&a;">', '&a;'],
+]);
 
 it('accepts only the root elements of the signature profile', function (string $xml, SignatureProfile $profile): void {
     expect(fn () => resolve(SchemaValidator::class)->validate($xml, $profile))
