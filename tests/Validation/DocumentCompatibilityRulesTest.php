@@ -93,6 +93,21 @@ it('requires an identified receiver on sales receipts from the fiscal threshold'
     });
 });
 
+it('requires an identified receiver on sales receipts whose net plus tax reaches the threshold', function (): void {
+    $payload = P::anonymousSalesReceipt('19000', '1000', '20000');
+
+    expect(fn (): SalesReceiptData => SalesReceiptData::from($payload))
+        ->toFailValidationOn('receiver', 'The receiver field is required.');
+});
+
+it('keeps sales receipts anonymous when only the payable rounding reaches the threshold', function (): void {
+    $payload                                    = P::exemptAnonymousSalesReceipt('19999.99');
+    $payload['totals']['payableRoundingAmount'] = '0.01';
+    $payload['totals']['payableAmount']         = '20000';
+
+    expect(SalesReceiptData::from($payload)->receiver)->toBeNull();
+});
+
 it('leaves line taxes optional on credit notes', function (): void {
     $credit = CreditNoteData::from(P::correction(['lines' => [F::linePayload(['taxes' => []])], 'totals' => F::totalsPayload(['taxTotalAmount' => '0', 'payableAmount' => '100'])]));
 

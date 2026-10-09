@@ -115,6 +115,12 @@ withholdingTaxTotalAmount + payableRoundingAmount`. A document that declared
 IR withholding and a payable of net plus tax now fails at
 `totals.payableAmount`; lower its payable by the withholding.
 
+A sales receipt requires its `receiver` when `netTotalAmount + taxTotalAmount`
+reaches 20000 CVE, instead of `payableAmount`. A receipt whose payable reaches
+the threshold only through `payableRoundingAmount` may stay anonymous, and one
+whose net plus tax reaches it must name the receiver even when withholding
+lowers the payable below 20000.
+
 ## Renamed symbols
 
 PHP names describe the domain concept; wire names (input keys, `toArray()`

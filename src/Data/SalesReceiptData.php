@@ -8,6 +8,7 @@ use Akira\Efatura\Data\Contracts\HasTotals;
 use Akira\Efatura\Support\DocumentRules;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
+use Brick\Math\BigDecimal;
 use Illuminate\Validation\Rule;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -39,12 +40,14 @@ final class SalesReceiptData extends DocumentData implements HasTotals
     #[Override]
     protected static function documentRules(ValidationContext $context): array
     {
-        $payable = ValidationPayload::decimal($context, 'totals.payableAmount');
+        $net              = ValidationPayload::decimal($context, 'totals.netTotalAmount');
+        $tax              = ValidationPayload::decimal($context, 'totals.taxTotalAmount');
+        $identifiedAmount = $net instanceof BigDecimal && $tax instanceof BigDecimal ? $net->plus($tax) : null;
 
         return [
             ...DocumentRules::lines($context, self::documentType()),
             ...DocumentRules::settledPayments($context),
-            'receiver' => [Rule::requiredIf($payable?->isGreaterThanOrEqualTo(Fiscal::SALES_RECEIPT_IDENTIFIED_RECEIVER_AMOUNT) ?? false)],
+            'receiver' => [Rule::requiredIf($identifiedAmount?->isGreaterThanOrEqualTo(Fiscal::SALES_RECEIPT_IDENTIFIED_RECEIVER_AMOUNT) ?? false)],
         ];
     }
 }
