@@ -40,7 +40,7 @@ final readonly class HeaderXmlSerializer
         $extraFields = $xml->container($body, 'ExtraFields');
 
         foreach ($footer->extraFields as $index => $field) {
-            $xml->foreign($extraFields, $field->name, $field->namespace, $field->value, $path . '.extraFields.' . $index . '.value');
+            $xml->foreign($extraFields, $field->name, $field->namespace, $field->value, $path . '.extraFields.' . $index);
         }
     }
 

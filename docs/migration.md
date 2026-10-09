@@ -121,6 +121,15 @@ references such as `1/2021/A/1` are unaffected. Replace stored or fixture IUDs
 built by padding with zeros by real identifiers, or compute the last digit with
 `Akira\Efatura\Support\Luhn::checkDigit()` over the 42 digits between `CV` and the check digit.
 
+An extra field `name` follows the XML 1.0 name characters (NameStartChar and
+NameChar, without the colon): `a²`, `a½` or `aª`, which the previous pattern
+accepted and the XML writer then could not write, now fail at
+`footer.extraFields.N.name`. A `namespace` must be an absolute URI without
+whitespace or any of `"<>{}|\^` and the backtick, and the XML namespaces
+`http://www.w3.org/2000/xmlns/` and `http://www.w3.org/XML/1998/namespace` are
+refused like the official one, at `footer.extraFields.N.namespace`.
+Percent-encode those characters in a namespace that carries them.
+
 ## Document types and environments
 
 | Before | After |

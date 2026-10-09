@@ -20,6 +20,8 @@ return [
         'event_id_mismatch'        => 'The :attribute does not identify this event.',
         'xml_text_invalid'         => 'The :attribute contains characters that XML 1.0 does not allow.',
         'xml_required'             => 'The :attribute is required to write the XML document.',
+        'xml_name_invalid'         => 'The :attribute must be an XML 1.0 element name.',
+        'xml_namespace_invalid'    => 'The :attribute must be a namespace URI that an XML document can declare.',
         'number_bounds'            => 'The :attribute is outside its permitted numeric bounds.',
         'invalid_decimal'          => 'Value must be a plain decimal number.',
         'decimal_scale_exceeded'   => 'Value exceeds the allowed decimal precision.',

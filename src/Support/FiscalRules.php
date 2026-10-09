@@ -25,6 +25,15 @@ final class FiscalRules
 
     private const string URL_TOKEN = '[A-Za-z0-9_-]';
 
+    private const string XML_NAME_START = 'A-Z_a-z\x{C0}-\x{D6}\x{D8}-\x{F6}\x{F8}-\x{2FF}\x{370}-\x{37D}\x{37F}-\x{1FFF}\x{200C}-\x{200D}'
+        . '\x{2070}-\x{218F}\x{2C00}-\x{2FEF}\x{3001}-\x{D7FF}\x{F900}-\x{FDCF}\x{FDF0}-\x{FFFD}\x{10000}-\x{EFFFF}';
+
+    private const string XML_NAME = '[' . self::XML_NAME_START . '][' . self::XML_NAME_START . '.0-9\x{B7}\x{300}-\x{36F}\x{203F}-\x{2040}-]*';
+
+    private const string NAMESPACE_URI = '[A-Za-z][A-Za-z0-9+.-]*:[^\s"<>{}|\\\^`]+';
+
+    private const array W3C_RESERVED_URIS = ['http://www.w3.org/2000/xmlns/', 'http://www.w3.org/XML/1998/namespace'];
+
     /**
      * @return list<string|NotBlank>
      */
@@ -57,6 +66,34 @@ final class FiscalRules
     public static function isEventId(string $value): bool
     {
         return Str::isMatch('/\A' . self::EVENT_ID . '\z/', $value) && Str::isMatch('/\A' . self::CLOCK_TIME . '\z/', substr($value, 9, 6));
+    }
+
+    public static function isXmlName(string $value): bool
+    {
+        return Str::isMatch('/\A' . self::XML_NAME . '\z/u', $value);
+    }
+
+    public static function isXmlNamespace(string $value): bool
+    {
+        return Str::isMatch('/\A' . self::NAMESPACE_URI . '\z/', $value) && ! \in_array($value, self::W3C_RESERVED_URIS, true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function xmlName(): array
+    {
+        return ['regex:/\A' . self::XML_NAME . '\z/u'];
+    }
+
+    /**
+     * @return list<string|NotBlank>
+     */
+    public static function xmlNamespace(): array
+    {
+        $reserved = implode(',', [Fiscal::XML_NAMESPACE, ...self::W3C_RESERVED_URIS]);
+
+        return [new NotBlank, 'max:256', 'regex:/\A' . self::NAMESPACE_URI . '\z/', 'not_in:' . $reserved];
     }
 
     /**

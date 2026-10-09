@@ -6,17 +6,17 @@ namespace Akira\Efatura\Xml;
 
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FiscalRules;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 use DOMDocument;
 use DOMElement;
+use DOMException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 final readonly class XmlWriter
 {
-    private const string NAME = '/\A[\p{L}_][\p{L}\p{N}_.-]*\z/u';
-
     private const string XML_TEXT = '/\A[\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]*\z/u';
 
     private DOMDocument $document;
@@ -47,7 +47,7 @@ final readonly class XmlWriter
             throw self::missing($path);
         }
 
-        return $this->text($parent, Fiscal::XML_NAMESPACE, $name, $value, $path);
+        return $parent->appendChild($this->withText($this->create(Fiscal::XML_NAMESPACE, $name), $value, $path));
     }
 
     public function decimal(DOMElement $parent, string $name, BigDecimal|Money|null $value, string $path, int $scale = Fiscal::AMOUNT_SCALE): ?DOMElement
@@ -76,7 +76,17 @@ final readonly class XmlWriter
 
     public function foreign(DOMElement $parent, string $name, ?string $namespace, string $value, string $path): DOMElement
     {
-        return $this->text($parent, $namespace ?? Fiscal::XML_NAMESPACE, $name, $value, $path);
+        if ($namespace !== null && ! FiscalRules::isXmlNamespace($namespace)) {
+            throw self::invalid($path . '.namespace', 'xml_namespace_invalid');
+        }
+
+        try {
+            $element = $this->document->createElementNS($namespace ?? Fiscal::XML_NAMESPACE, $name);
+        } catch (DOMException) {
+            throw self::invalid($path . '.name', 'xml_name_invalid');
+        }
+
+        return $parent->appendChild($this->withText($element, $value, $path . '.value'));
     }
 
     /**
@@ -95,12 +105,11 @@ final readonly class XmlWriter
         return (string) $this->document->saveXML();
     }
 
-    private function text(DOMElement $parent, string $namespace, string $name, string $value, string $path): DOMElement
+    private function withText(DOMElement $element, string $value, string $path): DOMElement
     {
-        $element = $this->create($namespace, $name);
         $element->appendChild($this->document->createTextNode(self::checked($value, $path)));
 
-        return $parent->appendChild($element);
+        return $element;
     }
 
     private function create(string $namespace, string $name): DOMElement
@@ -110,13 +119,13 @@ final readonly class XmlWriter
 
     private static function name(string $name): string
     {
-        return Str::isMatch(self::NAME, $name) ? $name : throw DefinitionException::xmlName($name);
+        return FiscalRules::isXmlName($name) ? $name : throw DefinitionException::xmlName($name);
     }
 
     private static function checked(string $value, string $path): string
     {
         if (! mb_check_encoding($value, 'UTF-8') || ! Str::isMatch(self::XML_TEXT, $value)) {
-            throw ValidationException::withMessages([$path => __('efatura::efatura.validation.xml_text_invalid', ['attribute' => $path])]);
+            throw self::invalid($path, 'xml_text_invalid');
         }
 
         return $value;
@@ -124,6 +133,11 @@ final readonly class XmlWriter
 
     private static function missing(string $path): ValidationException
     {
-        return ValidationException::withMessages([$path => __('efatura::efatura.validation.xml_required', ['attribute' => $path])]);
+        return self::invalid($path, 'xml_required');
+    }
+
+    private static function invalid(string $path, string $message): ValidationException
+    {
+        return ValidationException::withMessages([$path => __('efatura::efatura.validation.' . $message, ['attribute' => $path])]);
     }
 }

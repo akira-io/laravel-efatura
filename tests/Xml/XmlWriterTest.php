@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FiscalRules;
 use Akira\Efatura\Xml\XmlWriter;
 use Brick\Math\BigDecimal;
 
@@ -133,7 +134,7 @@ it('writes a foreign element in its own namespace or in the default one', functi
     $xml  = new XmlWriter;
     $root = $xml->document('Dfe');
 
-    $xml->foreign($xml->container($root, 'ExtraFields'), 'QualquerCampo', $namespace, 'a & b', 'footer.extraFields.0.value');
+    $xml->foreign($xml->container($root, 'ExtraFields'), 'QualquerCampo', $namespace, 'a & b', 'footer.extraFields.0');
 
     expect($xml->toXml())->toContain('<ExtraFields>' . $expected . '</ExtraFields>');
 })->with([
@@ -143,7 +144,7 @@ it('writes a foreign element in its own namespace or in the default one', functi
 
 it('writes an empty foreign element when the extra field is explicitly empty', function (): void {
     $xml = new XmlWriter;
-    $xml->foreign($xml->document('Dfe'), 'Flag', null, '', 'footer.extraFields.0.value');
+    $xml->foreign($xml->document('Dfe'), 'Flag', null, '', 'footer.extraFields.0');
 
     expect($xml->toXml())->toContain('<Flag></Flag>');
 });
@@ -152,7 +153,7 @@ it('rejects invalid foreign text on its field path', function (): void {
     $xml  = new XmlWriter;
     $root = $xml->document('Dfe');
 
-    expect(fn (): DOMElement => $xml->foreign($root, 'Flag', null, "\x07", 'footer.extraFields.0.value'))
+    expect(fn (): DOMElement => $xml->foreign($root, 'Flag', null, "\x07", 'footer.extraFields.0'))
         ->toFailValidationOn('footer.extraFields.0.value', 'The footer.extraFields.0.value contains characters that XML 1.0 does not allow.');
 });
 
@@ -168,7 +169,40 @@ it('rejects element and attribute names that are not XML names as definition err
     'attribute' => [function (XmlWriter $xml, DOMElement $root): void {
         $xml->attribute($root, 'a:b', 'x', 'x');
     }],
-    'foreign' => [fn (XmlWriter $xml, DOMElement $root): DOMElement => $xml->foreign($root, '', null, 'x', 'x')],
+    'superscript' => [fn (XmlWriter $xml, DOMElement $root): DOMElement => $xml->container($root, 'a²')],
+]);
+
+it('accepts the XML 1.0 name characters the DOM accepts', function (string $name): void {
+    $xml = new XmlWriter;
+    $xml->container($xml->document('Dfe'), $name);
+    $xml->foreign($xml->document('Dfe'), $name, null, 'v', 'footer.extraFields.0');
+
+    expect($xml->toXml())->toContain('<' . $name . '/>')
+        ->and(FiscalRules::isXmlName($name))->toBeTrue();
+})->with(['accented start' => ['Ângulo'], 'middle dot' => ['a·b'], 'combining mark' => ['á'], 'undertie' => ['a‿b'], 'astral' => ["\u{10000}a"]]);
+
+it('rejects a foreign element name the XML document cannot carry on its field path', function (string $name): void {
+    $xml  = new XmlWriter;
+    $root = $xml->document('Dfe');
+
+    expect(fn (): DOMElement => $xml->foreign($root, $name, null, 'v', 'footer.extraFields.2'))
+        ->toFailValidationOn('footer.extraFields.2.name', 'The footer.extraFields.2.name must be an XML 1.0 element name.');
+})->with(['empty' => [''], 'superscript' => ['a²'], 'fraction' => ['a½'], 'ordinal' => ['aª']]);
+
+it('rejects a foreign namespace the XML document cannot declare on its field path', function (string $namespace): void {
+    $xml  = new XmlWriter;
+    $root = $xml->document('Dfe');
+
+    expect(fn (): DOMElement => $xml->foreign($root, 'Flag', $namespace, 'v', 'footer.extraFields.1'))
+        ->toFailValidationOn('footer.extraFields.1.namespace', 'The footer.extraFields.1.namespace must be a namespace URI that an XML document can declare.');
+})->with([
+    'xmlns namespace' => ['http://www.w3.org/2000/xmlns/'],
+    'xml namespace'   => ['http://www.w3.org/XML/1998/namespace'],
+    'markup'          => ['urn:x"y<z'],
+    'braces'          => ['urn:x{y}'],
+    'backtick'        => ['urn:x`y'],
+    'whitespace'      => ['urn:x y'],
+    'relative'        => ['fields/extra'],
 ]);
 
 it('keeps the rejected name out of the definition error', function (): void {
