@@ -69,8 +69,8 @@ issued on 2 October at `23:30:00`. Code that built those values from a host
 clock and relied on the host's wall-clock fields now gets Cabo Verde time.
 Calendar fields keep the date as given.
 
-`EmitterConfig::$led` is now `?int`. The loader accepts only `EFATURA_EMITTER_LED`
-values matching `[1-9][0-9]{0,4}` and fails with `configuration.invalid_led`
+`EmitterConfig::$led` is now `?int`. The loader accepts an integer or a string
+`EFATURA_EMITTER_LED` value matching `[1-9][0-9]{0,4}` and fails with `configuration.invalid_led`
 otherwise, instead of letting `1e2` become 100 or `abc` fail later with a type
 error. Configured emitter and transmitter tax IDs follow the document pattern
 `[1-9][0-9]{8}`, so a NIF starting with 0 now fails loading.

@@ -73,9 +73,9 @@ validation happens when validating the selected document.
 
 A complete CV emitter supplies a CV tax ID (nine digits, the first from 1 to 9), name, country `CV`, an
 address detail, an official address code, email, telephone or mobile, and LED.
-LED must be a decimal integer string in `1..99999` without sign, exponent,
-fraction or leading zero (`FiscalRules::LED`); surrounding whitespace is trimmed
-like every config string. Anything else fails loading with
+LED must be an integer or a decimal integer string in `1..99999` without sign,
+exponent, fraction or leading zero (`FiscalRules::LED`); surrounding whitespace is
+trimmed like every config string. Anything else fails loading with
 `configuration.invalid_led`, and `EmitterConfig::$led` holds the converted integer.
 Configured tax IDs share `FiscalRules::CV_TAX_ID` with document validation. Address codes must occur in the bundled location catalog. Additional
 address and contact fields are optional; no values are fabricated.

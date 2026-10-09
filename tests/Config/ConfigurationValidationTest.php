@@ -50,7 +50,10 @@ it('rejects invalid configuration with stable safe field errors', function (stri
     ['efatura.emitter.led', '01', 'configuration.invalid_led'],
     ['efatura.emitter.led', '100000', 'configuration.invalid_led'],
     ['efatura.emitter.led', '+5', 'configuration.invalid_led'],
-    ['efatura.emitter.led', 5, 'configuration.invalid_type'],
+    ['efatura.emitter.led', 0, 'configuration.invalid_led'],
+    ['efatura.emitter.led', -5, 'configuration.invalid_led'],
+    ['efatura.emitter.led', 100000, 'configuration.invalid_led'],
+    ['efatura.emitter.led', 5.0, 'configuration.invalid_type'],
     ['efatura.storage.disk', '', 'configuration.empty_string'],
     ['efatura.cache.store', ' ', 'configuration.empty_string'],
     ['efatura.storage.path', '../private', 'configuration.unsafe_path'],
@@ -99,9 +102,9 @@ it('rejects missing required host defaults with their original field path', func
         ->toThrow(ConfigurationException::class, 'configuration.invalid_type: queue.default');
 });
 
-it('converts a configured LED to its integer header value', function (string $configured, int $led): void {
+it('converts a configured LED to its integer header value', function (int|string $configured, int $led): void {
     $repository = resolve('config');
     $repository->set('efatura.emitter.led', $configured);
 
     expect((new LoadEfaturaConfig($repository))()->emitter->led)->toBe($led);
-})->with([['1', 1], ['99999', 99999], [' 5 ', 5]]);
+})->with([['1', 1], ['99999', 99999], [' 5 ', 5], [22, 22], [99999, 99999]]);

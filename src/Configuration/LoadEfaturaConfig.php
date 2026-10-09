@@ -152,6 +152,13 @@ final readonly class LoadEfaturaConfig
         return $value;
     }
 
+    private function led(string $path): ?int
+    {
+        $value = $this->repository->get($path);
+
+        return $this->validatedLed(\is_int($value) ? (string) $value : $this->string($path), $path);
+    }
+
     private function taxId(string $path): ?string
     {
         return $this->validatedTaxId($this->string($path), $path);
@@ -184,7 +191,7 @@ final readonly class LoadEfaturaConfig
         $emitter = new EmitterConfig(
             $this->taxId('efatura.emitter.tax_id'),
             $this->string('efatura.emitter.name'),
-            $this->validatedLed($this->string('efatura.emitter.led'), 'efatura.emitter.led'),
+            $this->led('efatura.emitter.led'),
             new AddressConfig(
                 $this->string('efatura.emitter.address.country_code'),
                 $this->string('efatura.emitter.address.region'),
