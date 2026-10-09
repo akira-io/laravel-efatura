@@ -102,6 +102,10 @@ final readonly class FiscalNumber implements ValidationRule
 
         $decimal = BigDecimal::of($value);
 
+        if (! DecimalFormatter::fitsIntegerDigits($decimal)) {
+            return 'integer_digits_exceeded';
+        }
+
         if (! DecimalFormatter::fitsScale($decimal, $this->scale)) {
             return 'decimal_scale_exceeded';
         }

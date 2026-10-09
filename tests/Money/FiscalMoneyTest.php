@@ -22,7 +22,7 @@ it('rounds fiscal amounts half up to two digits in CVE and foreign currencies on
     ['1.234', 'CVE', '1.23'],
     ['1.235', 'CVE', '1.24'],
     ['-1.235', 'CVE', '-1.24'],
-    ['999999999999999999999999.995', 'USD', '1000000000000000000000000.00'],
+    ['999999999999999.995', 'USD', '1000000000000000.00'],
 ]);
 
 it('rounds existing Money without changing its currency', function (): void {

@@ -17,6 +17,8 @@ final class Fiscal
 
     public const int AMOUNT_SCALE = 5;
 
+    public const int INTEGER_DIGITS = 15;
+
     public const string EARLIEST_DATE = '2021-01-01';
 
     public const string DATE_FORMAT = 'Y-m-d';

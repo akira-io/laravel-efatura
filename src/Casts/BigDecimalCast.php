@@ -30,6 +30,10 @@ final readonly class BigDecimalCast implements Cast
 
         $decimal = BigDecimal::of($value);
 
+        if (! DecimalFormatter::fitsIntegerDigits($decimal)) {
+            throw ValidationException::withMessages([FieldPath::of($context, $property) => __('efatura::efatura.validation.integer_digits_exceeded')]);
+        }
+
         if (! DecimalFormatter::fitsScale($decimal, $this->maxScale)) {
             throw ValidationException::withMessages([FieldPath::of($context, $property) => __('efatura::efatura.validation.decimal_scale_exceeded')]);
         }

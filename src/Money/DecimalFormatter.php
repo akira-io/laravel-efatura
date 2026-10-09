@@ -33,6 +33,11 @@ final class DecimalFormatter
         return $value->strippedOfTrailingZeros()->getScale() <= $scale;
     }
 
+    public static function fitsIntegerDigits(BigDecimal $value): bool
+    {
+        return $value->getPrecision() - $value->getScale() <= Fiscal::INTEGER_DIGITS;
+    }
+
     public static function parse(int|float|string|BigDecimal $value, ?int $maxScale = null, string $field = 'amount'): BigDecimal
     {
         if ($maxScale !== null) {
@@ -44,6 +49,10 @@ final class DecimalFormatter
         }
 
         $decimal = BigDecimal::of($value);
+
+        if (! self::fitsIntegerDigits($decimal)) {
+            throw EfaturaValidationException::integerDigitsExceeded($field);
+        }
 
         if ($maxScale !== null && ! self::fitsScale($decimal, $maxScale)) {
             throw EfaturaValidationException::decimalScaleExceeded($field);

@@ -139,6 +139,12 @@ significant digit beyond two decimal places, such as `'3.125'`, now fails with
 instead of becoming `3.13`. Call `FiscalMoney::rounded($amount, $currency)` to
 keep the half-up rounding to two places; `FiscalMoney::exact()` keeps up to five.
 
+Every decimal input (amounts, quantities, prices, exchange rates and
+percentages) now accepts at most 15 integer digits (`Fiscal::INTEGER_DIGITS`).
+A longer integer part fails at its full path with "Value exceeds the allowed
+15 integer digits." (`decimal.integer_digits_exceeded` from `FiscalMoney` and
+`DecimalFormatter::parse()`), before any arithmetic runs on it.
+
 ## Renamed symbols
 
 PHP names describe the domain concept; wire names (input keys, `toArray()`

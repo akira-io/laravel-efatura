@@ -21,6 +21,11 @@ final class EfaturaValidationException extends EfaturaException
         return new self('decimal.scale_exceeded', $field, 'decimal_scale_exceeded');
     }
 
+    public static function integerDigitsExceeded(string $field): self
+    {
+        return new self('decimal.integer_digits_exceeded', $field, 'integer_digits_exceeded');
+    }
+
     public static function invalidCurrency(string $field): self
     {
         return new self('money.invalid_currency', $field, 'invalid_currency');
