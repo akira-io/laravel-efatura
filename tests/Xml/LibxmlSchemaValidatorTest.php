@@ -146,3 +146,29 @@ it('refuses every resource the manifest does not list', function (string $locati
     'outside the root' => ['../../efatura-outside.xsd'],
     'unlisted file'    => ['unlisted.xsd'],
 ]);
+
+it('reports a bundled schema that cannot be loaded as an artifact failure', function (array $schemas): void {
+    $this->schemas->custom($schemas);
+
+    expect(fn () => $this->schemas->validator()->validate(X::fixture(DocumentType::Invoice)))
+        ->toThrow(function (OfficialArtifactException $exception): void {
+            expect($exception->errorCode)->toBe('artifacts.invalid_schema')
+                ->and($exception->context)->toBe(['operation' => 'validate'])
+                ->and($exception->getMessage())->not->toContain($this->schemas->root);
+        });
+})->with([
+    'corrupt entry'   => [['schemas/entry.xsd' => 'not a schema']],
+    'not a schema'    => [['schemas/entry.xsd' => '<root/>']],
+    'corrupt include' => [[
+        'schemas/entry.xsd' => '<x:schema xmlns:x="http://www.w3.org/2001/XMLSchema"><x:include schemaLocation="part.xsd"/></x:schema>',
+        'schemas/part.xsd'  => 'not a schema',
+    ]],
+]);
+
+it('refuses to validate when the bundled entry schema is missing', function (): void {
+    $this->schemas->custom(['schemas/entry.xsd' => '<x:schema xmlns:x="http://www.w3.org/2001/XMLSchema"/>']);
+    unlink($this->schemas->root . '/schemas/entry.xsd');
+
+    expect(fn () => $this->schemas->validator()->validate(X::fixture(DocumentType::Invoice)))
+        ->toThrow(OfficialArtifactException::class, 'artifacts.missing_or_unreadable');
+});

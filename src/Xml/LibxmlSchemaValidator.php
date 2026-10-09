@@ -13,12 +13,15 @@ use Akira\Efatura\Support\OfficialArtifacts;
 use DOMDocument;
 use DOMDocumentType;
 use DOMElement;
+use LibXMLError;
 
 use const LIBXML_ERR_ERROR;
 use const LIBXML_NONET;
 
 final readonly class LibxmlSchemaValidator implements SchemaValidator
 {
+    private const array SCHEMA_PARSER_ERROR_CODES = [[1700, 1799], [3000, 3099]];
+
     public function __construct(private OfficialArtifacts $artifacts) {}
 
     public function validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped): void
@@ -54,6 +57,10 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
                 throw $refusal;
             }
 
+            if (self::schemaFailedToLoad($pending)) {
+                throw new OfficialArtifactException('artifacts.invalid_schema', 'validate');
+            }
+
             if (! $valid) {
                 throw SchemaValidationException::schemaInvalid($this->violations($pending));
             }
@@ -81,6 +88,12 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
         }
 
         return $document;
+    }
+
+    private static function schemaFailedToLoad(int $pending): bool
+    {
+        return collect(\array_slice(libxml_get_errors(), $pending))->contains(static fn (LibXMLError $error): bool => collect(self::SCHEMA_PARSER_ERROR_CODES)
+            ->contains(static fn (array $range): bool => $error->code >= $range[0] && $error->code <= $range[1]));
     }
 
     private static function assertRoot(DOMDocument $document, SignatureProfile $profile): void
