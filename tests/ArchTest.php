@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Filesystem\Filesystem;
+use Spatie\LaravelData\Attributes\WithCast;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Casts\Cast;
 use Spatie\LaravelData\Transformers\Transformer;
 
@@ -14,9 +16,14 @@ arch('runtime configuration never reads environment variables')
     ->expect('Akira\Efatura')
     ->not->toUse('env');
 
-arch('data casts live in the Casts namespace')
+arch('data casts live in the Casts namespace and transform what they cast')
     ->expect('Akira\Efatura\Casts')
-    ->toImplement(Cast::class);
+    ->toImplement(Cast::class)
+    ->toImplement(Transformer::class);
+
+arch('data properties attach a cast and its transformer together')
+    ->expect('Akira\Efatura\Data')
+    ->not->toUse([WithCast::class, WithTransformer::class]);
 
 arch('data transformers live in the Transformers namespace')
     ->expect('Akira\Efatura\Transformers')

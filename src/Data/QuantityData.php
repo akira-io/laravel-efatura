@@ -10,17 +10,14 @@ use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Support\Catalogs;
 use Akira\Efatura\Support\ValidationPayload;
-use Akira\Efatura\Transformers\BigDecimalTransformer;
 use Brick\Math\BigDecimal;
-use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Attributes\WithTransformer;
+use Spatie\LaravelData\Attributes\WithCastAndTransformer;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class QuantityData extends FiscalData
 {
     public function __construct(
-        #[WithCast(BigDecimalCast::class)]
-        #[WithTransformer(BigDecimalTransformer::class)]
+        #[WithCastAndTransformer(BigDecimalCast::class)]
         public readonly BigDecimal $value,
         public readonly string $unitCode,
         public readonly bool $isStandardUnitCode = false,

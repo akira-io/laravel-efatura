@@ -9,18 +9,15 @@ use Akira\Efatura\Enums\DiscountValueType;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
-use Akira\Efatura\Transformers\DiscountValueTransformer;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
-use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Attributes\WithTransformer;
+use Spatie\LaravelData\Attributes\WithCastAndTransformer;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class DiscountData extends FiscalData
 {
     public function __construct(
-        #[WithCast(DiscountValueCast::class)]
-        #[WithTransformer(DiscountValueTransformer::class)]
+        #[WithCastAndTransformer(DiscountValueCast::class)]
         public readonly Money|BigDecimal $value,
         public readonly DiscountValueType $valueType = DiscountValueType::Percentage,
     ) {}

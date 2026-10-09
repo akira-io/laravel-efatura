@@ -10,25 +10,19 @@ use Akira\Efatura\Enums\Catalog;
 use Akira\Efatura\Rules\FiscalNumber;
 use Akira\Efatura\Rules\OfficialCode;
 use Akira\Efatura\Support\Catalogs;
-use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
-use Akira\Efatura\Transformers\BigDecimalTransformer;
-use Akira\Efatura\Transformers\MoneyTransformer;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
-use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Attributes\WithTransformer;
+use Spatie\LaravelData\Attributes\WithCastAndTransformer;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class PayableAlternativeAmountData extends FiscalData
 {
     public function __construct(
-        #[WithCast(ForeignMoneyCast::class)]
-        #[WithTransformer(MoneyTransformer::class, Fiscal::AMOUNT_SCALE, false)]
+        #[WithCastAndTransformer(ForeignMoneyCast::class)]
         public readonly Money $value,
         public readonly string $currencyCode,
-        #[WithCast(BigDecimalCast::class)]
-        #[WithTransformer(BigDecimalTransformer::class)]
+        #[WithCastAndTransformer(BigDecimalCast::class)]
         public readonly BigDecimal $exchangeRate,
     ) {}
 
