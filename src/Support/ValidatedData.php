@@ -14,9 +14,7 @@ final class ValidatedData
     /** @var WeakMap<FiscalData, true>|null */
     private static ?WeakMap $instances = null;
 
-    private static ?self $marker = null;
-
-    private function __construct() {}
+    private function __construct(private readonly string $class) {}
 
     /**
      * @template TData of FiscalData
@@ -41,12 +39,14 @@ final class ValidatedData
             return $payload;
         }
 
-        return [...$payload, self::KEY => self::marker()];
+        return [...$payload, self::KEY => new self($data::class)];
     }
 
-    public static function isMarked(mixed $payload): bool
+    public static function isMarked(mixed $payload, string $class): bool
     {
-        return \is_array($payload) && ($payload[self::KEY] ?? null) === self::marker();
+        $marker = \is_array($payload) ? $payload[self::KEY] ?? null : null;
+
+        return $marker instanceof self && $marker->class === $class;
     }
 
     /**
@@ -55,10 +55,5 @@ final class ValidatedData
     private static function instances(): WeakMap
     {
         return self::$instances ??= new WeakMap;
-    }
-
-    private static function marker(): self
-    {
-        return self::$marker ??= new self;
     }
 }

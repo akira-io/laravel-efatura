@@ -21,7 +21,7 @@ final class FiscalValidationRulesResolver extends DataValidationRulesResolver
     #[Override]
     public function execute(string $class, array $fullPayload, ValidationPath $path, DataRules $dataRules): array
     {
-        if (! $path->isRoot() && ValidatedData::isMarked(Arr::get($fullPayload, $path->get()))) {
+        if (! $path->isRoot() && ValidatedData::isMarked(Arr::get($fullPayload, $path->get()), $class)) {
             return $dataRules->rules;
         }
 

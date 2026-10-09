@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Data\ContactsData;
 use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\ItemData;
 use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\QuantityData;
 use Akira\Efatura\Data\ReferenceData;
+use Akira\Efatura\Data\TaxData;
 use Akira\Efatura\Facades\Efatura;
 use Akira\Efatura\Support\ValidatedData;
 use Akira\Efatura\Tests\Support\BuilderFixtures as B;
@@ -52,4 +54,16 @@ it('does not trust a validation marker supplied in an array payload', function (
 
     expect(fn (): DocumentData => ElectronicInvoiceData::from(F::payload(['lines' => [$line]])))
         ->toFailValidationOn('lines.0.quantity.value', 'The lines.0.quantity.value is outside its permitted numeric bounds.');
+});
+
+it('validates a data object validated as another class in full', function (): void {
+    $contacts = ContactsData::from(['email' => 'receiver@example.cv']);
+    $tax      = TaxData::from(['taxTypeCode' => 'IVA', 'taxPercentage' => '15']);
+
+    expect(fn (): DocumentData => ElectronicInvoiceData::from(F::payload(['receiver' => $contacts])))
+        ->toFailValidationOn('receiver.taxId', 'The receiver.tax id field is required when receiver.reference is not present.')
+        ->toFailValidationOn('receiver.name', 'The receiver.name field is required when receiver.reference is not present.')
+        ->and(fn (): DocumentData => ElectronicInvoiceData::from(F::payload(['lines' => [F::line(), $tax]])))
+        ->toFailValidationOn('lines.1.quantity', 'The lines.1.quantity field is required.')
+        ->toFailValidationOn('lines.1.item.description', 'The lines.1.item.description field is required.');
 });
