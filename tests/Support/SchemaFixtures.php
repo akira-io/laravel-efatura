@@ -9,6 +9,7 @@ use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Support\OfficialArtifacts;
 use Akira\Efatura\Xml\LibxmlSchemaValidator;
+use DOMDocument;
 use Illuminate\Filesystem\Filesystem;
 use RuntimeException;
 
@@ -37,6 +38,17 @@ final readonly class SchemaFixtures
     public static function official(string $artifact): string
     {
         return (string) file_get_contents(resolve(OfficialArtifacts::class)->path(self::XSD . $artifact));
+    }
+
+    public static function withoutSignature(string $xml): string
+    {
+        $document = new DOMDocument;
+        $document->loadXML($xml);
+        foreach (iterator_to_array($document->getElementsByTagNameNS('http://www.w3.org/2000/09/xmldsig#', 'Signature')) as $signature) {
+            $signature->parentNode?->removeChild($signature);
+        }
+
+        return (string) $document->saveXML();
     }
 
     public static function invalidInvoice(): string
