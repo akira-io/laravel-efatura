@@ -43,15 +43,6 @@ it('allows each correction document only its own issue reasons', function (Docum
     'registration note' => [DocumentType::RegistrationNote, []],
 ]);
 
-it('derives the line policy from the document type', function (): void {
-    expect(DocumentType::Transport->requiresLinePricing())->toBeFalse()
-        ->and(DocumentType::CreditNote->requiresLinePricing())->toBeTrue()
-        ->and(DocumentType::CreditNote->requiresLineTaxes())->toBeFalse()
-        ->and(DocumentType::ReturnNote->requiresLineTaxes())->toBeFalse()
-        ->and(DocumentType::Transport->requiresLineTaxes())->toBeFalse()
-        ->and(DocumentType::Invoice->requiresLineTaxes())->toBeTrue();
-});
-
 it('reports document compatibility failures at their full path', function (string $class, array $payload, array $errors): void {
     expect(fn (): DocumentData => $class::from($payload))->toThrow(function (ValidationException $exception) use ($errors): void {
         expect($exception->errors())->toBe($errors);

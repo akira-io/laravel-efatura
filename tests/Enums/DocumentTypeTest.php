@@ -14,7 +14,14 @@ use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Exceptions\DefinitionException;
+use Akira\Efatura\Tests\Support\DocumentFixtures as F;
+use Akira\Efatura\Tests\Support\DocumentPayloads as P;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
+
+beforeEach(function (): void {
+    CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
+});
 
 it('includes all official document types', function (): void {
     $values = collect(DocumentType::cases())
@@ -74,3 +81,27 @@ it('names exactly the document elements the XSD admits in a Dfe', function (): v
         ->toBe($elements)
         ->and($elements)->toHaveCount(9);
 });
+
+it('derives the line pricing and tax policy of every document type', function (DocumentType $type, bool $pricing, bool $taxes): void {
+    expect($type->requiresLinePricing())->toBe($pricing)
+        ->and($type->requiresLineTaxes())->toBe($taxes);
+})->with([
+    'FTE' => [DocumentType::Invoice, true, true],
+    'FRE' => [DocumentType::InvoiceReceipt, true, true],
+    'TVE' => [DocumentType::SalesReceipt, true, true],
+    'RCE' => [DocumentType::Receipt, true, true],
+    'NCE' => [DocumentType::CreditNote, true, false],
+    'NDE' => [DocumentType::DebitNote, true, true],
+    'DTE' => [DocumentType::Transport, false, false],
+    'DVE' => [DocumentType::ReturnNote, true, false],
+    'NLE' => [DocumentType::RegistrationNote, true, true],
+]);
+
+it('requires line taxes on the documents whose policy demands them', function (string $class, array $payload): void {
+    $payload['lines'] = [F::linePayload(['taxes' => []])];
+
+    expect(fn (): DocumentData => $class::from($payload))->toFailValidationOn('lines.0.taxes', 'The lines.0.taxes field is required.');
+})->with([
+    'NDE' => [DebitNoteData::class, P::correction()],
+    'TVE' => [SalesReceiptData::class, F::payload(['payments' => F::payments()])],
+]);
