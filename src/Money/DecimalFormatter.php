@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Money;
 
+use Akira\Efatura\Enums\DecimalViolation;
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Support\Fiscal;
@@ -38,24 +39,26 @@ final class DecimalFormatter
         return $value->getPrecision() - $value->getScale() <= Fiscal::INTEGER_DIGITS;
     }
 
-    public static function parse(int|float|string|BigDecimal $value, ?int $maxScale = null, string $field = 'amount'): BigDecimal
+    public static function violation(mixed $value, ?int $maxScale = null): ?DecimalViolation
+    {
+        return self::isPlainDecimal($value) ? self::boundsViolation(BigDecimal::of($value), $maxScale) : DecimalViolation::InvalidDecimal;
+    }
+
+    public static function parse(mixed $value, ?int $maxScale = null, string $field = 'amount'): BigDecimal
     {
         if ($maxScale !== null) {
             self::checkScale($maxScale);
         }
 
         if (! self::isPlainDecimal($value)) {
-            throw EfaturaValidationException::invalidDecimal($field);
+            throw self::exception(DecimalViolation::InvalidDecimal, $field);
         }
 
-        $decimal = BigDecimal::of($value);
+        $decimal   = BigDecimal::of($value);
+        $violation = self::boundsViolation($decimal, $maxScale);
 
-        if (! self::fitsIntegerDigits($decimal)) {
-            throw EfaturaValidationException::integerDigitsExceeded($field);
-        }
-
-        if ($maxScale !== null && ! self::fitsScale($decimal, $maxScale)) {
-            throw EfaturaValidationException::decimalScaleExceeded($field);
+        if ($violation instanceof DecimalViolation) {
+            throw self::exception($violation, $field);
         }
 
         return $decimal;
@@ -63,9 +66,7 @@ final class DecimalFormatter
 
     public static function decimal(BigDecimal $value, int $maxScale = Fiscal::AMOUNT_SCALE, string $field = 'amount'): string
     {
-        if (! self::fitsScale($value, $maxScale)) {
-            throw EfaturaValidationException::decimalScaleExceeded($field);
-        }
+        self::ensureScale($value, $maxScale, $field);
 
         $plain = (string) $value;
 
@@ -76,8 +77,8 @@ final class DecimalFormatter
     {
         self::checkScale($scale);
 
-        if (! $round && ! self::fitsScale($value->getAmount(), $scale)) {
-            throw EfaturaValidationException::decimalScaleExceeded($field);
+        if (! $round) {
+            self::ensureScale($value->getAmount(), $scale, $field);
         }
 
         return (string) $value->getAmount()->toScale($scale, $round ? self::fiscalRounding() : RoundingMode::Unnecessary);
@@ -86,6 +87,31 @@ final class DecimalFormatter
     public static function fiscalRounding(): RoundingMode
     {
         return RoundingMode::HalfUp;
+    }
+
+    private static function boundsViolation(BigDecimal $value, ?int $maxScale): ?DecimalViolation
+    {
+        if (! self::fitsIntegerDigits($value)) {
+            return DecimalViolation::IntegerDigitsExceeded;
+        }
+
+        return $maxScale === null || self::fitsScale($value, $maxScale) ? null : DecimalViolation::ScaleExceeded;
+    }
+
+    private static function ensureScale(BigDecimal $value, int $scale, string $field): void
+    {
+        if (! self::fitsScale($value, $scale)) {
+            throw self::exception(DecimalViolation::ScaleExceeded, $field);
+        }
+    }
+
+    private static function exception(DecimalViolation $violation, string $field): EfaturaValidationException
+    {
+        return match ($violation) {
+            DecimalViolation::InvalidDecimal        => EfaturaValidationException::invalidDecimal($field),
+            DecimalViolation::IntegerDigitsExceeded => EfaturaValidationException::integerDigitsExceeded($field),
+            DecimalViolation::ScaleExceeded         => EfaturaValidationException::decimalScaleExceeded($field),
+        };
     }
 
     private static function checkScale(int $scale): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Rules;
 
+use Akira\Efatura\Enums\DecimalViolation;
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Support\Fiscal;
@@ -27,7 +28,7 @@ final readonly class FiscalNumber implements ValidationRule
             throw DefinitionException::negativeScale($scale);
         }
 
-        if ($maximum !== null && (! DecimalFormatter::isPlainDecimal($maximum) || ! DecimalFormatter::fitsScale(BigDecimal::of($maximum), $scale))) {
+        if ($maximum !== null && DecimalFormatter::violation($maximum, $scale) instanceof DecimalViolation) {
             throw DefinitionException::numericBound($maximum, $scale);
         }
 
@@ -96,21 +97,13 @@ final readonly class FiscalNumber implements ValidationRule
             return 'currency_mismatch';
         }
 
-        if (! DecimalFormatter::isPlainDecimal($value)) {
-            return 'invalid_decimal';
+        $violation = DecimalFormatter::violation($value, $this->scale);
+
+        if ($violation instanceof DecimalViolation) {
+            return $violation->value;
         }
 
-        $decimal = BigDecimal::of($value);
-
-        if (! DecimalFormatter::fitsIntegerDigits($decimal)) {
-            return 'integer_digits_exceeded';
-        }
-
-        if (! DecimalFormatter::fitsScale($decimal, $this->scale)) {
-            return 'decimal_scale_exceeded';
-        }
-
-        return $this->withinBounds($decimal) ? null : 'number_bounds';
+        return $this->withinBounds(DecimalFormatter::parse($value)) ? null : 'number_bounds';
     }
 
     private function withinBounds(BigDecimal $decimal): bool

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Transformers;
 
+use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Brick\Money\Money;
 use Illuminate\Validation\ValidationException;
@@ -20,14 +21,16 @@ final readonly class MoneyTransformer implements Transformer
 
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
+        $field = $property->name;
+
         if (! $value instanceof Money) {
-            throw ValidationException::withMessages([$property->name => __('efatura::efatura.validation.invalid_money_input')]);
+            throw ValidationException::withMessages([$field => __('efatura::efatura.validation.invalid_money_input')]);
         }
 
-        if (! $this->round && ! DecimalFormatter::fitsScale($value->getAmount(), $this->scale)) {
-            throw ValidationException::withMessages([$property->name => __('efatura::efatura.validation.decimal_scale_exceeded')]);
+        try {
+            return DecimalFormatter::money($value, $this->scale, $this->round, $field);
+        } catch (EfaturaValidationException $efaturaValidationException) {
+            throw ValidationException::withMessages([$field => $efaturaValidationException->getMessage()]);
         }
-
-        return DecimalFormatter::money($value, $this->scale, $this->round, $property->name);
     }
 }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Casts\MoneyCast;
+use Akira\Efatura\Enums\DecimalViolation;
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\DecimalFormatter;
@@ -151,4 +152,20 @@ it('answers decimal shape and scale questions without throwing', function (): vo
         ->and(DecimalFormatter::isPlainDecimal(null))->toBeFalse()
         ->and(DecimalFormatter::fitsScale(BigDecimal::of('1.23000'), 2))->toBeTrue()
         ->and(DecimalFormatter::fitsScale(BigDecimal::of('1.234'), 2))->toBeFalse();
+});
+
+it('names the first decimal violation of any input', function (mixed $value, ?int $scale, ?DecimalViolation $violation): void {
+    expect(DecimalFormatter::violation($value, $scale))->toBe($violation);
+})->with([
+    'plain within scale'     => ['1.23000', 2, null],
+    'unbounded scale'        => ['1.123456789', null, null],
+    'array'                  => [['1'], 2, DecimalViolation::InvalidDecimal],
+    'float'                  => [1.5, 2, DecimalViolation::InvalidDecimal],
+    'sixteen integer digits' => [str_repeat('9', 16) . '.123', 2, DecimalViolation::IntegerDigitsExceeded],
+    'scale exceeded'         => ['1.234', 2, DecimalViolation::ScaleExceeded],
+]);
+
+it('rejects input that is not a plain decimal when parsing', function (): void {
+    expect(fn (): BigDecimal => DecimalFormatter::parse(['1'], 2, 'lines.0.price'))
+        ->toFailValidationOn('lines.0.price', 'Value must be a plain decimal number.');
 });

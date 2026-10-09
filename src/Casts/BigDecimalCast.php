@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Casts;
 
+use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
@@ -24,20 +25,12 @@ final readonly class BigDecimalCast implements Cast
      */
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): BigDecimal
     {
-        if (! DecimalFormatter::isPlainDecimal($value)) {
-            throw ValidationException::withMessages([FieldPath::of($context, $property) => __('efatura::efatura.validation.invalid_decimal')]);
+        $path = FieldPath::of($context, $property);
+
+        try {
+            return DecimalFormatter::parse($value, $this->maxScale, $path);
+        } catch (EfaturaValidationException $efaturaValidationException) {
+            throw ValidationException::withMessages([$path => $efaturaValidationException->getMessage()]);
         }
-
-        $decimal = BigDecimal::of($value);
-
-        if (! DecimalFormatter::fitsIntegerDigits($decimal)) {
-            throw ValidationException::withMessages([FieldPath::of($context, $property) => __('efatura::efatura.validation.integer_digits_exceeded')]);
-        }
-
-        if (! DecimalFormatter::fitsScale($decimal, $this->maxScale)) {
-            throw ValidationException::withMessages([FieldPath::of($context, $property) => __('efatura::efatura.validation.decimal_scale_exceeded')]);
-        }
-
-        return $decimal;
     }
 }

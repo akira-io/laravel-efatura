@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Transformers;
 
+use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
@@ -18,14 +19,16 @@ final readonly class BigDecimalTransformer implements Transformer
 
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
+        $field = $property->name;
+
         if (! $value instanceof BigDecimal) {
-            throw ValidationException::withMessages([$property->name => __('efatura::efatura.validation.invalid_decimal')]);
+            throw ValidationException::withMessages([$field => __('efatura::efatura.validation.invalid_decimal')]);
         }
 
-        if (! DecimalFormatter::fitsScale($value, $this->maxScale)) {
-            throw ValidationException::withMessages([$property->name => __('efatura::efatura.validation.decimal_scale_exceeded')]);
+        try {
+            return DecimalFormatter::decimal($value, $this->maxScale, $field);
+        } catch (EfaturaValidationException $efaturaValidationException) {
+            throw ValidationException::withMessages([$field => $efaturaValidationException->getMessage()]);
         }
-
-        return DecimalFormatter::decimal($value, $this->maxScale, $property->name);
     }
 }
