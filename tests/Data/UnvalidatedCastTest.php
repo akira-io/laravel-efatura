@@ -29,5 +29,5 @@ it('rejects a foreign amount without a currency code', function (): void {
     $payload = ['value' => '1'];
 
     expect(fn (): UnvalidatedForeignAmountData => UnvalidatedForeignAmountData::from($payload))
-        ->toFailValidationOn('currencyCode', 'Currency must be a supported uppercase ISO code.');
+        ->toFailValidationOn('currencyCode', 'Currency must be an uppercase code of the official currency catalog.');
 });

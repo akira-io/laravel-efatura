@@ -50,10 +50,10 @@ it('writes schema countries with the name published for each country location', 
     ]);
 });
 
-it('writes schema enumerations with trimmed names when the schema names them', function (): void {
+it('writes schema enumerations with trimmed names and only uppercase currency codes', function (): void {
     $this->sources->generator()->write();
 
-    expect($this->sources->catalog('currencies'))->toBe(['CVE' => ['code' => 'CVE', 'name' => 'Escudo'], 'IdR' => ['code' => 'IdR']])
+    expect($this->sources->catalog('currencies'))->toBe(['CVE' => ['code' => 'CVE', 'name' => 'Escudo']])
         ->and($this->sources->catalog('payment_means'))->toBe([1 => ['code' => '1', 'name' => 'Instrument not defined']]);
 });
 

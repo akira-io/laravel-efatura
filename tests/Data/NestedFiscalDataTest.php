@@ -54,10 +54,10 @@ it('models every total independently without premature reconciliation', function
         ->and($totals->payableAlternativeAmounts[0]->value->getCurrency()->getCurrencyCode())->toBe('EUR');
 });
 
-it('keeps the declared alternate currency code as given', function (): void {
-    $amount = PayableAlternativeAmountData::from(['value' => '1', 'currencyCode' => 'IdR', 'exchangeRate' => '1']);
+it('keeps a declared alternate currency that Brick does not ship', function (): void {
+    $amount = PayableAlternativeAmountData::from(['value' => '1', 'currencyCode' => 'XDR', 'exchangeRate' => '1']);
 
-    expect($amount->value->getCurrency()->getCurrencyCode())->toBe('IdR');
+    expect($amount->value->getCurrency()->getCurrencyCode())->toBe('XDR');
 });
 
 it('rejects an alternate amount in a currency other than its declared one', function (): void {

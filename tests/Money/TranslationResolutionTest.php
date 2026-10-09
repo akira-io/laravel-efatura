@@ -9,7 +9,7 @@ use Brick\Money\Money;
 
 it('renders package validation errors from actual translations', function (): void {
     expect(fn (): Money => FiscalMoney::of('1', 'bad'))
-        ->toFailValidationOn('amount', 'Currency must be a supported uppercase ISO code.');
+        ->toFailValidationOn('amount', 'Currency must be an uppercase code of the official currency catalog.');
 });
 
 it('renders numeric precision errors from package translations', function (): void {

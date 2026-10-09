@@ -17,7 +17,7 @@ return [
         'number_bounds'            => 'The :attribute is outside its permitted numeric bounds.',
         'invalid_decimal'          => 'Value must be a plain decimal number.',
         'decimal_scale_exceeded'   => 'Value exceeds the allowed decimal precision.',
-        'invalid_currency'         => 'Currency must be a supported uppercase ISO code.',
+        'invalid_currency'         => 'Currency must be an uppercase code of the official currency catalog.',
         'currency_mismatch'        => 'Money currency does not match the requested currency.',
         'invalid_money'            => 'Money amount or currency is invalid.',
         'invalid_money_input'      => 'Money must be an integer, decimal string, or Money value.',

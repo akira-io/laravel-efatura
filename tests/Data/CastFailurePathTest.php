@@ -53,6 +53,6 @@ it('reports a missing alternative currency at its own field', function (): void 
 
     expect(fn (): PayableAlternativeAmountData => PayableAlternativeAmountData::from($payload))
         ->toThrow(function (ValidationException $exception): void {
-            expect($exception->errors())->toBe(['currencyCode' => ['Currency must be a supported uppercase ISO code.']]);
+            expect($exception->errors())->toBe(['currencyCode' => ['Currency must be an uppercase code of the official currency catalog.']]);
         });
 });

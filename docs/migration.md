@@ -121,6 +121,15 @@ the threshold only through `payableRoundingAmount` may stay anonymous, and one
 whose net plus tax reaches it must name the receiver even when withholding
 lowers the payable below 20000.
 
+Currencies follow the 178 uppercase codes of the XSD enumeration, in
+`PayableAlternativeAmountData` and in `FiscalMoney` alike. The currency catalog
+no longer lists the schema's literal `IdR`, so `IdR` and `IDR` are both
+rejected. `FiscalMoney` and `CatalogCurrency::of()` resolve string currencies
+through that catalog: a code outside it, such as `IDR`, `VED` or `ZZZ`, fails
+with `money.invalid_currency` ("Currency must be an uppercase code of the
+official currency catalog."), and catalog codes Brick does not ship, such as
+`XDR`, now build fiscal money instead of failing with `money.invalid`.
+
 ## Renamed symbols
 
 PHP names describe the domain concept; wire names (input keys, `toArray()`

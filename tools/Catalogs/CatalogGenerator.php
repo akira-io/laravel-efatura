@@ -6,6 +6,7 @@ namespace Akira\Efatura\Tools\Catalogs;
 
 use Akira\Efatura\Enums\Catalog;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 use UnexpectedValueException;
 
 use const JSON_FORCE_OBJECT;
@@ -91,7 +92,7 @@ final readonly class CatalogGenerator
             Catalog::Units               => $this->units(),
             Catalog::Countries           => $this->countries($places),
             Catalog::Locations           => $places,
-            Catalog::Currencies          => $this->xsd->records($this->source(self::XSD . 'ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd')),
+            Catalog::Currencies          => $this->currencies(),
             Catalog::PaymentMeans        => $this->xsd->records($this->source(self::XSD . 'UNECE_PaymentMeansCode_D19B.xsd')),
             Catalog::TaxExemptionReasons => $this->taxExemptionReasons(),
         };
@@ -107,6 +108,17 @@ final readonly class CatalogGenerator
         throw_if($indexed->count() !== \count($records), UnexpectedValueException::class, 'Duplicate codes in ' . $catalog->value);
 
         return json_encode($indexed->all(), JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n";
+    }
+
+    /**
+     * @return array<int, array<string, float|int|string>>
+     */
+    private function currencies(): array
+    {
+        return collect($this->xsd->records($this->source(self::XSD . 'ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd')))
+            ->filter(static fn (array $record): bool => Str::isMatch('/^[A-Z]{3}$/D', $record['code']))
+            ->values()
+            ->all();
     }
 
     /**

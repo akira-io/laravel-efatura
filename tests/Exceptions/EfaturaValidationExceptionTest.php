@@ -22,7 +22,7 @@ it('exposes a stable code, the field and the translated message', function (Efat
     'invalid currency' => [
         fn (): EfaturaValidationException => EfaturaValidationException::invalidCurrency('lines.0.price'),
         'money.invalid_currency',
-        'Currency must be a supported uppercase ISO code.',
+        'Currency must be an uppercase code of the official currency catalog.',
     ],
     'currency mismatch' => [
         fn (): EfaturaValidationException => EfaturaValidationException::currencyMismatch('lines.0.price'),

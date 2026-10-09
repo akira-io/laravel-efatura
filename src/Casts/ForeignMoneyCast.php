@@ -24,7 +24,7 @@ final readonly class ForeignMoneyCast implements Cast
     {
         $currency = $properties['currencyCode'] ?? null;
 
-        if (! \is_string($currency)) {
+        if (! \is_string($currency) || ! CatalogCurrency::isOfficial($currency)) {
             throw ValidationException::withMessages([FieldPath::of($context, 'currencyCode') => __('efatura::efatura.validation.invalid_currency')]);
         }
 

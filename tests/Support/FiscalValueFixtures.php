@@ -181,7 +181,7 @@ final class FiscalValueFixtures
             ],
             'uncatalogued currency' => [
                 PayableAlternativeAmountData::class,
-                ['value' => FiscalMoney::of('1', 'IDR'), 'currencyCode' => 'IDR', 'exchangeRate' => BigDecimal::of('1')],
+                ['value' => Money::of('1', 'IDR'), 'currencyCode' => 'IDR', 'exchangeRate' => BigDecimal::of('1')],
                 'currencyCode',
                 'The currency code must be a code in the official catalog.',
             ],
@@ -244,7 +244,7 @@ final class FiscalValueFixtures
                 PayableAlternativeAmountData::class,
                 ['value' => '1', 'exchangeRate' => '1'],
                 'currencyCode',
-                'Currency must be a supported uppercase ISO code.',
+                'Currency must be an uppercase code of the official currency catalog.',
             ],
         ];
     }

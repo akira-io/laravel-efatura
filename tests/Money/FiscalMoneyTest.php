@@ -60,9 +60,10 @@ it('rejects malformed amount text and unknown or badly cased currencies', functi
     'not a number'         => ['NaN', 'CVE', 'Value must be a plain decimal number.'],
     'scientific notation'  => ['1e3', 'CVE', 'Value must be a plain decimal number.'],
     'thousands separator'  => ['1,000.00', 'CVE', 'Value must be a plain decimal number.'],
-    'four letter currency' => ['1.00', 'NOPE', 'Currency must be a supported uppercase ISO code.'],
-    'unknown currency'     => ['1.00', 'ZZZ', 'Money amount or currency is invalid.'],
-    'mixed case currency'  => ['1.00', 'IdR', 'Currency must be a supported uppercase ISO code.'],
+    'four letter currency' => ['1.00', 'NOPE', 'Currency must be an uppercase code of the official currency catalog.'],
+    'unknown currency'     => ['1.00', 'ZZZ', 'Currency must be an uppercase code of the official currency catalog.'],
+    'mixed case currency'  => ['1.00', 'IdR', 'Currency must be an uppercase code of the official currency catalog.'],
+    'ISO code outside XSD' => ['1.00', 'IDR', 'Currency must be an uppercase code of the official currency catalog.'],
 ]);
 
 it('rejects a Money value with a different requested currency', function (): void {
@@ -117,7 +118,7 @@ it('reports programmatic failures at the field the caller names', function (Clos
     'malformed'         => [fn (): Money => FiscalMoney::cve('abc', 'lines.3.price'), 'decimal.invalid'],
     'excess scale'      => [fn (): Money => FiscalMoney::exact('1.123456', 'CVE', 5, 'lines.3.price'), 'decimal.scale_exceeded'],
     'float'             => [fn (): Money => FiscalMoney::of(1.5, 'CVE', 'lines.3.price'), 'money.invalid'],
-    'unknown currency'  => [fn (): Money => FiscalMoney::of('1', 'ZZZ', 'lines.3.price'), 'money.invalid'],
+    'unknown currency'  => [fn (): Money => FiscalMoney::of('1', 'ZZZ', 'lines.3.price'), 'money.invalid_currency'],
     'invalid currency'  => [fn (): Money => FiscalMoney::of('1', 'cve', 'lines.3.price'), 'money.invalid_currency'],
     'currency mismatch' => [fn (): Money => FiscalMoney::cve(Money::of('1', 'USD'), 'lines.3.price'), 'money.currency_mismatch'],
     'parse'             => [fn (): BigDecimal => DecimalFormatter::parse('1.234', 2, 'lines.3.price'), 'decimal.scale_exceeded'],

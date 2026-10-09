@@ -7,13 +7,10 @@ namespace Akira\Efatura\Money;
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Support\Fiscal;
-use Brick\Math\Exception\MathException;
 use Brick\Math\RoundingMode;
 use Brick\Money\Context\CustomContext;
 use Brick\Money\Currency;
-use Brick\Money\Exception\MoneyException;
 use Brick\Money\Money;
-use Illuminate\Support\Str;
 
 final class FiscalMoney
 {
@@ -42,12 +39,8 @@ final class FiscalMoney
             throw EfaturaValidationException::invalidMoney($field);
         }
 
-        if (\is_string($currency) && ! Str::isMatch('/^[A-Z]{3}$/D', $currency)) {
-            throw EfaturaValidationException::invalidCurrency($field);
-        }
-
-        $code = $currency instanceof Currency ? $currency->getCurrencyCode() : $currency;
-        if ($amount instanceof Money && $amount->getCurrency()->getCurrencyCode() !== $code) {
+        $currency = \is_string($currency) ? CatalogCurrency::of($currency, $field) : $currency;
+        if ($amount instanceof Money && $amount->getCurrency()->getCurrencyCode() !== $currency->getCurrencyCode()) {
             throw EfaturaValidationException::currencyMismatch($field);
         }
 
@@ -57,15 +50,11 @@ final class FiscalMoney
             $field,
         );
 
-        try {
-            return Money::of(
-                $decimal,
-                $currency,
-                new CustomContext($scale),
-                $round ? DecimalFormatter::fiscalRounding() : RoundingMode::Unnecessary,
-            );
-        } catch (MathException|MoneyException) {
-            throw EfaturaValidationException::invalidMoney($field);
-        }
+        return Money::of(
+            $decimal,
+            $currency,
+            new CustomContext($scale),
+            $round ? DecimalFormatter::fiscalRounding() : RoundingMode::Unnecessary,
+        );
     }
 }
