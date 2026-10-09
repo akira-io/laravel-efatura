@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\DataPipes\FiscalDatesDataPipe;
+use Akira\Efatura\Support\FiscalValidatorResolver;
+use Akira\Efatura\Support\ValidatedData;
 use BackedEnum;
+use Illuminate\Contracts\Support\Arrayable;
 use Override;
 use Spatie\LaravelData\Attributes\MergeValidationRules;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\DataPipeline;
 use Spatie\LaravelData\Support\Creation\CreationContext;
 use Spatie\LaravelData\Support\Creation\CreationContextFactory;
+use Spatie\LaravelData\Support\DataContainer;
 
 #[MergeValidationRules]
 abstract class FiscalData extends Data
@@ -28,6 +32,36 @@ abstract class FiscalData extends Data
         }
 
         return parent::factory()->alwaysValidate();
+    }
+
+    #[Override]
+    final public static function from(mixed ...$payloads): static
+    {
+        $data = parent::from(...$payloads);
+        static::verifyCreated($data);
+
+        return ValidatedData::remember($data);
+    }
+
+    /**
+     * @param Arrayable<array-key, mixed>|array<array-key, mixed> $payload
+     */
+    #[Override]
+    final public static function validateAndCreate(Arrayable|array $payload): static
+    {
+        return self::from($payload);
+    }
+
+    /**
+     * @param  Arrayable<array-key, mixed>|array<array-key, mixed> $payload
+     * @return array<array-key, mixed>
+     */
+    #[Override]
+    final public static function validate(Arrayable|array $payload): array
+    {
+        $validator = resolve(FiscalValidatorResolver::class)->execute(static::class, $payload);
+
+        return DataContainer::get()->validatedPayloadResolver()->execute(static::class, $validator);
     }
 
     #[Override]
@@ -54,10 +88,12 @@ abstract class FiscalData extends Data
         return (clone $this)->setDataContext(null)->toArray();
     }
 
+    protected static function verifyCreated(self $data): void {}
+
     private static function normalized(mixed $value): mixed
     {
         if ($value instanceof self) {
-            return $value->toPayload();
+            return ValidatedData::mark($value, $value->toPayload());
         }
 
         if ($value instanceof Data) {

@@ -11,7 +11,6 @@ use Akira\Efatura\Rules\ForeignDocumentField;
 use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Validation\Rule;
 use Override;
 use Spatie\LaravelData\Support\DataConfig;
@@ -38,24 +37,6 @@ abstract class DocumentData extends FiscalData
         return self::documentType();
     }
 
-    #[Override]
-    final public static function from(mixed ...$payloads): static
-    {
-        $document = parent::from(...$payloads);
-        resolve(ValidateDocumentCompatibilityAction::class)->handle($document);
-
-        return $document;
-    }
-
-    /**
-     * @param Arrayable<array-key, mixed>|array<array-key, mixed> $payload
-     */
-    #[Override]
-    final public static function validateAndCreate(Arrayable|array $payload): static
-    {
-        return self::from($payload);
-    }
-
     /**
      * @return array<string, list<mixed>>
      */
@@ -67,6 +48,14 @@ abstract class DocumentData extends FiscalData
             self::foreignFieldRules($context, $config),
             static::documentRules($context),
         );
+    }
+
+    #[Override]
+    final protected static function verifyCreated(FiscalData $data): void
+    {
+        if ($data instanceof self) {
+            resolve(ValidateDocumentCompatibilityAction::class)->handle($data);
+        }
     }
 
     /**

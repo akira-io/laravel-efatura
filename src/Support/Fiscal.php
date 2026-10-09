@@ -21,6 +21,10 @@ final class Fiscal
 
     public const int INTEGER_DIGITS = 15;
 
+    public const int MAX_LINES = 1000;
+
+    public const int MAX_REFERENCES = 1000;
+
     public const string EARLIEST_DATE = '2021-01-01';
 
     public const string DATE_FORMAT = 'Y-m-d';

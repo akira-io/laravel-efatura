@@ -6,12 +6,14 @@ namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Enums\ReceiptType;
 use Akira\Efatura\Support\DocumentRules;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\ValidationPayload;
 use Illuminate\Validation\Rule;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class ReceiptData extends DocumentData
@@ -25,7 +27,7 @@ final class ReceiptData extends DocumentData
         public readonly PartyData $receiver,
         #[MapName('receiptTypeCode')]
         public readonly ReceiptType $receiptType,
-        #[DataCollectionOf(ReferenceData::class), ListType]
+        #[DataCollectionOf(ReferenceData::class), ListType, Max(Fiscal::MAX_REFERENCES)]
         public readonly array $references,
         public readonly PaymentsData $payments,
         public readonly ?PartyData $paymentParty = null,

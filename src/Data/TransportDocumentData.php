@@ -15,6 +15,7 @@ use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -30,13 +31,13 @@ final class TransportDocumentData extends DocumentData
         #[MapName('transportDocumentTypeCode')]
         public readonly TransportDocumentType $transportDocumentType,
         public readonly PartyData $transportServiceProvider,
-        #[DataCollectionOf(LineItemData::class), ListType, Min(1)]
+        #[DataCollectionOf(LineItemData::class), ListType, Min(1), Max(Fiscal::MAX_LINES)]
         public readonly array $lines,
         public readonly TransportRouteData $transportRoute,
         #[MapName('receiverTypeCode')]
         public readonly ?TransportReceiverType $receiverType = null,
         public readonly ?PartyData $receiver = null,
-        #[DataCollectionOf(ReferenceData::class), ListType]
+        #[DataCollectionOf(ReferenceData::class), ListType, Max(Fiscal::MAX_REFERENCES)]
         public readonly array $references = [],
         public readonly ?EmissionContextData $emission = null,
         public readonly ?DocumentFooterData $footer = null,

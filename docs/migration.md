@@ -147,6 +147,10 @@ A longer integer part fails at its full path with "Value exceeds the allowed
 15 integer digits." (`decimal.integer_digits_exceeded` from `FiscalMoney` and
 `DecimalFormatter::parse()`), before any arithmetic runs on it.
 
+A document now accepts at most 1000 `lines` and 1000 `references`; one more
+fails with "The lines field must not have more than 1000 items." (or
+`references`). Manual 11 sets no count; the limits are defensive.
+
 ## Renamed symbols
 
 PHP names describe the domain concept; wire names (input keys, `toArray()`

@@ -13,6 +13,7 @@ use Illuminate\Validation\Rule;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -24,7 +25,7 @@ final class SalesReceiptData extends DocumentData implements HasTotals
     public function __construct(
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
-        #[DataCollectionOf(LineItemData::class), ListType, Min(1)]
+        #[DataCollectionOf(LineItemData::class), ListType, Min(1), Max(Fiscal::MAX_LINES)]
         public readonly array $lines,
         public readonly TotalsData $totals,
         public readonly PaymentsData $payments,

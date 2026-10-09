@@ -160,4 +160,14 @@ final class DocumentPayloads
             'emission'   => ['issueMode' => 2, 'contingency' => self::offlineContingency(['reasonTypeCode' => '0', 'reasonDescription' => 'Temporary service interruption'])],
         ]);
     }
+
+    public static function invoiceWithLines(array $lines): array
+    {
+        $count = \count($lines);
+
+        return F::payload(['lines' => $lines, 'totals' => F::totalsPayload([
+            'priceExtensionTotalAmount' => (string) (100 * $count), 'netTotalAmount' => (string) (100 * $count),
+            'taxTotalAmount'            => (string) (15 * $count), 'payableAmount' => (string) (115 * $count),
+        ])]);
+    }
 }

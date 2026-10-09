@@ -14,6 +14,7 @@ use Carbon\CarbonImmutable;
 use Override;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -27,7 +28,7 @@ final class ElectronicInvoiceData extends DocumentData implements HasTaxPointDat
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
         public readonly PartyData $receiver,
-        #[DataCollectionOf(LineItemData::class), ListType, Min(1)]
+        #[DataCollectionOf(LineItemData::class), ListType, Min(1), Max(Fiscal::MAX_LINES)]
         public readonly array $lines,
         public readonly TotalsData $totals,
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
@@ -35,7 +36,7 @@ final class ElectronicInvoiceData extends DocumentData implements HasTaxPointDat
         public readonly ?string $orderReference = null,
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly ?CarbonImmutable $taxPointDate = null,
-        #[DataCollectionOf(ReferenceData::class), ListType]
+        #[DataCollectionOf(ReferenceData::class), ListType, Max(Fiscal::MAX_REFERENCES)]
         public readonly array $references = [],
         public readonly ?PaymentsData $payments = null,
         public readonly ?DeliveryData $delivery = null,
