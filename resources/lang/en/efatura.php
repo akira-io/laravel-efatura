@@ -17,6 +17,7 @@ return [
         'iud_invalid'              => 'The :attribute must be an official IUD with a valid check digit.',
         'iud_mismatch'             => 'The :attribute does not identify this document.',
         'event_id_invalid'         => 'The :attribute must be an official event identifier.',
+        'event_id_mismatch'        => 'The :attribute does not identify this event.',
         'xml_text_invalid'         => 'The :attribute contains characters that XML 1.0 does not allow.',
         'xml_required'             => 'The :attribute is required to write the XML document.',
         'number_bounds'            => 'The :attribute is outside its permitted numeric bounds.',
