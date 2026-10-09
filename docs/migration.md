@@ -1,200 +1,249 @@
-# Migrating fiscal payloads
+# Migrating from the first release
 
-Replace the old generic invoice and `{invoice: ...}` wrapper with a canonical
-concrete document such as `ElectronicInvoiceData`, or use `Efatura::invoice()`
-with `DocumentType::Invoice`. `InvoiceData` is now the abstract `DocumentData` contract. The nine
-document classes own their official fields; receipts have no lines or totals,
-and transport documents have no totals. See the [field graph](fiscal-domain.md).
+This guide covers every public change between the first published `main`
+(commit `580b0f0`) and this release. Each section names what existed, what
+replaces it, and the steps to upgrade. Symbols that only existed while this
+release was being built are not listed.
 
-Replace `nif` with `taxId: {value: '100200300', countryCode: 'CV'}`. Compose
-`DocumentHeaderData` with issue date, issue time and LED, plus supplied allocation
-fields when available. Item descriptions belong to `ItemData`; quantities use
-`QuantityData`; prices and totals use the named official monetary fields shown
-in the executable [Quick Start](../README.md#quick-start).
+## Runtime
 
-Use exact decimal strings, `Brick\Math\BigDecimal` and supported `Brick\Money\Money`
-values instead of floats. Fiscal money is CVE with five decimal places; quantity,
-percentage and alternative currency fields retain their own contracts. Do not
-apply floating-point calculations before passing values into Data.
+The package needs PHP 8.5 and Laravel 13, and adds `psr/clock` to its
+dependencies. Run `composer update akira/efatura`. `php artisan
+efatura:install` skips a config file that already exists, so merge the new
+keys by hand as described under [configuration](#configuration).
 
-Published emitter configuration now supports `address_detail`, `address_code`,
-state, street detail, building fields, telefax and website. Merge these keys into
-an existing application config using the [configuration reference](builders.md).
-Provide a complete CV address and contacts and replace nonnumeric LED values
-with the registered integer LED. Partial configuration can boot, but builders
-validate the chosen profile. `emitter()` without a LED keeps the configured LED or
-the one set by `ledCode()`, whatever the call order; pass a LED to replace it.
+## Documents
 
-`from()` and `validateAndCreate()` validate the whole graph once, through
-Spatie's validation pipeline, and report each failure at its full path, such as
-`lines.2.taxes.0.taxTypeCode` or `emitter.contacts.email`. Direct construction
-with `new` no longer validates: build Data from arrays with `from()` when the
-input is untrusted. `PartyData::validateEmitter()` and
-`ContactsData::validateEmitter()` are gone; the emitter rules now belong to the
-document and report under `emitter.*`. `OfficialCode` takes the `Catalogs`
-service as its second argument. Builders defer draft validation to `build()`,
-which validates the assembled document, including Data passed into setters. A builder defaults issue date/time from the package
-clock, while direct DTO construction requires them explicitly. Successful
-validation yields staged fiscal data: sequence/IUD allocation, completed XML
-envelope preparation, signing, transmission and authority acceptance are later
-operations. There is no `issue()` operation in this API.
+The first release modelled every document as an `InvoiceData` wrapped in a
+type-specific class: `{invoice: {type, issueDate, emitter, receiver, lines,
+totals, originalIud, creditNoteReason}}`. Each document is now one concrete
+class carrying the official fields of Manual 11 at the top level, with no
+`invoice` wrapper and no `type` field.
 
-`ReconcileDocumentTotalsAction` is now `VerifyDocumentTotalsAction`. Its
-`handle()` returns `void` instead of echoing the `TotalsData` it received.
-`DecimalFormatter::roundingMode(bool)` is replaced by
-`DecimalFormatter::fiscalRounding()`, which names the half-up fiscal rounding.
+| Before | After |
+| --- | --- |
+| `Data\InvoiceData` (final, concrete) | `Data\DocumentData` (abstract); build the concrete class |
+| `ElectronicInvoiceData`, `ReceiptInvoiceData`, `SalesReceiptData`, `CreditNoteData`, `TransportDocumentData` holding `$invoice` | The same classes, with `header`, `emitter`, `receiver`, `lines`, `totals` and their own fields |
+| No class for RCE, NDE, DVE and NLE | `ReceiptData`, `DebitNoteData`, `ReturnNoteData`, `RegistrationNoteData` |
+| `<Document>Data::TYPE` | `<Document>Data::documentType()` and `$document->type()` |
+| `invoice.type` in the payload | Implied by the class; `DocumentType::dataClass()` names the class for a type |
+| `invoice.issueDate` | `header.issueDate` plus `header.issueTime` and `header.ledCode` |
+| `invoice.originalIud` | `references[].fiscalDocument` |
+| `invoice.creditNoteReason` | `issueReasonCode` (an `IssueReason` value) and `issueReasonDescription` |
 
-The emission window (online: 24 hours before to one hour after the clock;
-contingency: seven days before) is checked only when a document is issued
-through `DocumentBuilder::build()`. `from()` and `validateAndCreate()` no
-longer reject a document because of its age, so an issued document can be
-rehydrated from storage. Code that relied on `from()` to enforce the window
-must issue through the builder or call `ValidateIssueDateAction` itself.
+Upgrade steps:
 
-Document compatibility rules now run in the same validation pass as the rest
-of the payload and report at full paths: duplicate line identifiers under
-`lines.N.id`, missing line prices or taxes under `lines.N.price` and
-`lines.N.taxes`, settled-payment conflicts once each, under `payments.payments`
-("The payments.payments field is prohibited." on an invoice) or
-`payments.paymentDueDate` (on FRE, TVE, NLE and RCE; `PaymentsData` on its own
-accepts both, since the document type decides), and an invoice receipt payment date under
-`payments.payments.N.paymentDate`. The previous bare keys (`ids.N`, `price`,
-`payments`, `paymentDate`, `receiverReference`) are gone. Allowed issue
-reasons per document come from `IssueReason::allowedFor(DocumentType)`.
+1. Remove the `invoice` key and move its fields to the top level of the
+   payload given to the concrete class, or build the document with
+   `Efatura::invoice()` (see the [Quick Start](../README.md#quick-start) and
+   [builders and configuration](builders.md)).
+2. Replace `type` with the class: `DocumentType::Invoice->dataClass()` returns
+   `ElectronicInvoiceData::class`.
+3. Move `issueDate` into `header` and add `issueTime` and `ledCode`.
+4. On credit notes, send the original document in `references` and the reason
+   as `issueReasonCode`.
 
-Issuance Carbon values are instants. `DocumentBuilder::issuedAt()`,
-`EventBuilder::issuedAt()`, the builder clock, `DocumentHeaderData::$issueDate`
-and `$issueTime`, `ContingencyData::$issueDate` and `$issueTime`, and
-`EventData::$issueDateTime` convert any `CarbonInterface`
-to `Atlantic/Cape_Verde` before formatting, so a UTC `00:30` on 3 October is
-issued on 2 October at `23:30:00`. Code that built those values from a host
-clock and relied on the host's wall-clock fields now gets Cabo Verde time.
-Calendar fields keep the date as given.
+The [field graph](fiscal-domain.md) lists the sections each document accepts:
+receipts have no lines or totals, and transport documents have no totals.
 
-`EmitterConfig::$led` is now `?int`. The loader accepts an integer or a string
-`EFATURA_EMITTER_LED` value matching `[1-9][0-9]{0,4}` and fails with `configuration.invalid_led`
-otherwise, instead of letting `1e2` become 100 or `abc` fail later with a type
-error. Configured emitter and transmitter tax IDs follow the document pattern
-`[1-9][0-9]{8}`, so a NIF starting with 0 now fails loading.
+### Parties
 
-`DocumentType::dataClass()` names the concrete Data class of each document
-type, and `DocumentType::fromDataClass()` resolves the reverse. `DocumentData`
-derives `type()` and the static `documentType()` from that mapping, so both
-are final: a document class outside the nine official ones has no type.
-`DocumentData::documentRules()` is abstract: a subclass declares its own
-document rules, returning `[]` when it has none, instead of inheriting an empty
-default.
+| Before (`PartyData`) | After |
+| --- | --- |
+| `string $nif` | `?TaxIdData $taxId`, input `taxId: {value: '100200300', countryCode: 'CV'}` |
+| `string $name` | `?string $name` |
+| `?string $address`, `?string $city`, `?string $country` | `?AddressData $address` with `countryCode`, `addressDetail`, `addressCode`, `city` and the other official address fields |
+| none | `?ContactsData $contacts`, `?PartyReference $reference` |
 
-`Builders\ConfiguredEmitter` is gone. The configuration maps itself onto the
-fiscal payload field by field: `EmitterConfig::partyPayload()` and
-`EmitterConfig::taxIdPayload()`, built from `AddressConfig::addressPayload()`
-and `ContactsConfig::contactsPayload()` (where `mobile` becomes
-`mobilephone`). They return input arrays, not Data, so a partial profile still
-reaches document validation and fails at its `emitter.*` path.
+An emitter needs a complete Cabo Verde address, with an official
+`addressCode`, and contacts. A NIF is `[1-9][0-9]{8}` in Cabo Verde.
 
-Builders keep the Data, enums and dates passed to their setters and assemble
-the document once, in `build()`. `Builders\Concerns\HasDocumentSections`
-is folded into `DocumentBuilder`, and every builder setter returns `static`.
-Data given to `from()`, `validateAndCreate()` or a builder contributes its
-values: `only()`, `except()`, `include()` and `exclude()` on that Data no longer
-remove fields from the input, and `FiscalData::toPayload()` returns the same
-values as an array.
+### Lines and taxes
 
-The terminal builder method is now `build()`: `DocumentBuilder::validate()` and
-`EventBuilder::validate()` are renamed, with the same return types and the
-same validation. `DocumentBuilder::build()` still checks the emission window
-against the builder's clock.
+| Before (`LineItemData`) | After |
+| --- | --- |
+| `string $description` | `ItemData $item` with `description` and `emitterIdentification` |
+| `float $quantity` | `QuantityData $quantity` with `value` (decimal string) and `unitCode` |
+| `float $unitPrice` | `?Money $price` |
+| `float $total` | `?Money $priceExtension` and `?Money $netTotal` |
+| none | `lineTypeCode`, `id`, `lineReferenceId`, `orderLineReference`, `discount` |
 
-Catalog records use English keys: location rows returned by
-`Catalogs::find(Catalog::Locations, ...)` and `Catalogs::records()` carry `code`,
-`level`, `country`, `island`, `municipality`, `parish`, `zone`, `place` and
-`name` instead of `codigo`, `nivel`, `pais`, `ilha`, `concelho`, `freguesia`,
-`zona`, `lugar` and `nome`. `Catalog::codeField()` is gone, since every record
-keys its code as `code`, and so is `Catalogs::sources()`: the checksums of the
-official downloads live in `resources/official-artifacts.json`. The accepted
-codes are unchanged.
+| Before (`TaxData`) | After |
+| --- | --- |
+| `string $type` | `TaxType $taxType`, input and output key `taxTypeCode` |
+| `float $rate` | `?BigDecimal $taxPercentage` |
+| `float $amount` | `?Money $taxAmount` (fixed amounts) and `?Money $taxTotal` (line evidence) |
+| `?string $exemptionReason` | `?string $taxExemptionReasonCode`, from the official catalog |
+| none | `?StampTaxCode $stampTaxCode` for `IS` |
 
-`VerifyDocumentTotalsAction` subtracts the withholding aggregate from the
-payable amount: `payableAmount` must equal `netTotalAmount + taxTotalAmount -
-withholdingTaxTotalAmount + payableRoundingAmount`. A document that declared
-IR withholding and a payable of net plus tax now fails at
-`totals.payableAmount`; lower its payable by the withholding.
+### Totals
 
-A sales receipt requires its `receiver` when `netTotalAmount + taxTotalAmount`
-reaches 20000 CVE, instead of `payableAmount`. A receipt whose payable reaches
-the threshold only through `payableRoundingAmount` may stay anonymous, and one
-whose net plus tax reaches it must name the receiver even when withholding
-lowers the payable below 20000.
+| Before (`TotalsData`) | After |
+| --- | --- |
+| `float $subtotal` | `Money $priceExtensionTotalAmount` and `Money $netTotalAmount` |
+| `float $taxTotal` | `Money $taxTotalAmount` |
+| `float $grandTotal` | `Money $payableAmount` |
+| none | `chargeTotalAmount`, `discountTotalAmount`, `withholdingTaxTotalAmount`, `payableRoundingAmount`, `discount`, `payableAlternativeAmounts` |
 
-Currencies follow the 178 uppercase codes of the XSD enumeration, in
-`PayableAlternativeAmountData` and in `FiscalMoney` alike. The currency catalog
-no longer lists the schema's literal `IdR`, so `IdR` and `IDR` are both
-rejected. `FiscalMoney` and `CatalogCurrency::of()` resolve string currencies
-through that catalog: a code outside it, such as `IDR`, `VED` or `ZZZ`, fails
-with `money.invalid_currency` ("Currency must be an uppercase code of the
-official currency catalog."), and catalog codes Brick does not ship, such as
-`XDR`, now build fiscal money instead of failing with `money.invalid`.
+`payableAmount` must equal `netTotalAmount + taxTotalAmount -
+withholdingTaxTotalAmount + payableRoundingAmount`, and the lines must
+reconcile with the totals.
 
-`FiscalMoney::of()` and `FiscalMoney::cve()` no longer round. An amount with a
-significant digit beyond two decimal places, such as `'3.125'`, now fails with
-`decimal.scale_exceeded` ("Value exceeds the allowed decimal precision.")
-instead of becoming `3.13`. Call `FiscalMoney::rounded($amount, $currency)` to
-keep the half-up rounding to two places; `FiscalMoney::exact()` keeps up to five.
+### Numbers
 
-Every decimal input (amounts, quantities, prices, exchange rates and
-percentages) now accepts at most 15 integer digits (`Fiscal::INTEGER_DIGITS`).
-A longer integer part fails at its full path with "Value exceeds the allowed
-15 integer digits." (`decimal.integer_digits_exceeded` from `FiscalMoney` and
-`DecimalFormatter::parse()`), before any arithmetic runs on it.
+Floats are rejected everywhere they used to be accepted. Pass decimal strings,
+integers, `Brick\Math\BigDecimal` or `Brick\Money\Money`. CVE amounts keep five
+decimal places, percentages three, and every decimal at most 15 integer digits.
+`FiscalMoney::cve()` and `FiscalMoney::of()` build exact amounts;
+`FiscalMoney::rounded()` rounds half up to two places.
 
-A document now accepts at most 1000 `lines` and 1000 `references`; one more
-fails with "The lines field must not have more than 1000 items." (or
-`references`). Manual 11 sets no count; the limits are defensive.
-Footer extra fields and item extra properties are limited to 100 entries,
-payments and payee financial accounts to 100 each, extra field names to 50
-characters, namespaces to 256, and extra field and extra property values to
-1000 characters.
+### Validation
+
+`from()` and `validateAndCreate()` validate the whole graph in one pass and
+report every failure at its full path, such as `lines.2.taxes.0.taxTypeCode`.
+The first release stopped at the first failure and reported under `invoice.*`.
+Error messages are Laravel's defaults plus the package keys listed under
+[translations](#translations). Code that matched the old messages, such as
+"Emitter is required.", must match the field path instead.
+
+All nine document types validate and build. The first release refused NDE,
+RCE, DVE and NLE through its document type policy.
+
+A document accepts at most 1000 `lines` and 1000 `references`, and the
+extension lists at most 100 entries each; Manual 11 sets no count, so these
+are defensive limits, listed in [fiscal domain validation](fiscal-domain.md).
+
+## Document types and environments
+
+| Before | After |
+| --- | --- |
+| `DocumentType::ELECTRONIC_INVOICE` | `DocumentType::Invoice` |
+| `DocumentType::ELECTRONIC_INVOICE_RECEIPT` | `DocumentType::InvoiceReceipt` |
+| `DocumentType::ELECTRONIC_SALES_TICKET` | `DocumentType::SalesReceipt` |
+| `DocumentType::ELECTRONIC_RECEIPT` | `DocumentType::Receipt` |
+| `DocumentType::ELECTRONIC_CREDIT_NOTE` | `DocumentType::CreditNote` |
+| `DocumentType::ELECTRONIC_DEBIT_NOTE` | `DocumentType::DebitNote` |
+| `DocumentType::ELECTRONIC_TRANSPORT_DOCUMENT` | `DocumentType::Transport` |
+| `DocumentType::ELECTRONIC_RETURN_NOTE` | `DocumentType::ReturnNote` |
+| `DocumentType::ELECTRONIC_ENTRY_NOTE` | `DocumentType::RegistrationNote` |
+| `Environment::PRODUCTION`, `::HOMOLOGATION`, `::TEST` | `Environment::Production`, `::Homologation`, `::Test` |
+
+The case values (`'FTE'`, `1`, ...) are unchanged, so stored values and
+`DocumentType::from('FTE')` keep working; replace the case names in code.
+`Environment::fromName()` now ignores letter case, so `TEST`, `test` and
+`Test` all select `Environment::Test`.
+
+## Removed symbols
+
+| Removed | Replacement |
+| --- | --- |
+| `Contracts\DocumentTypePolicy` and its container binding | None. Every document type is supported; remove custom policy bindings |
+| `Support\DefaultDocumentTypePolicy` | None |
+| `Concerns\ValidatesInvoiceType` | None. The concrete class decides the type |
+| `Data\InvoiceData` | `Data\DocumentData` and the nine concrete classes |
+| `<Document>Data::TYPE` constants | `<Document>Data::documentType()` |
+| `new EfaturaValidationException($field, $message)` | Thrown by the package only; read `$exception->field()` and `$exception->errorCode` |
+
+`EfaturaValidationException` now carries a specific `errorCode`
+(`decimal.invalid`, `decimal.scale_exceeded`, `decimal.integer_digits_exceeded`,
+`money.invalid_currency`, `money.currency_mismatch`, `money.invalid`) instead
+of `validation.invalid_value`. It is raised by the `FiscalMoney` and
+`DecimalFormatter` API; Data validation raises Laravel's `ValidationException`.
+Programming errors, such as a negative scale or a class that is not a
+document, raise `Exceptions\DefinitionException`, which extends
+`EfaturaException`.
+
+## Entry points
+
+| Before | After |
+| --- | --- |
+| `new Efatura($config)` | `new Efatura($config, $clock)` with a `Psr\Clock\ClockInterface`; resolve it from the container instead |
+| `new EfaturaManager($config)` | `new EfaturaManager($config, $clock)`; resolve it from the container instead |
+| `Efatura::config()`, `efatura()`, `withConfig()` | Unchanged |
+| none | `Efatura::invoice()` and `Efatura::event()` return builders |
+
+The service provider now binds `Psr\Clock\ClockInterface` to a Carbon factory
+in `Atlantic/Cape_Verde` and the `Support\Catalogs` singleton. An application
+that binds its own `ClockInterface` after the provider registers keeps it.
+
+## Configuration
+
+| Key | Change |
+| --- | --- |
+| `efatura.environment` / `EFATURA_ENVIRONMENT` | Default is now `test`; a name in any letter case or the codes `1`, `2`, `3` |
+| `efatura.emitter.tax_id`, `efatura.transmitter.tax_id` | Must match `[1-9][0-9]{8}`; a NIF starting with 0 now fails loading |
+| `efatura.emitter.led` | An integer or a string matching `[1-9][0-9]{0,4}`; anything else fails with `configuration.invalid_led` |
+| `efatura.emitter.address.address_detail`, `address_code`, `state`, `street_detail`, `building_name`, `building_number`, `building_floor` | New, from `EFATURA_EMITTER_ADDRESS_DETAIL`, `EFATURA_EMITTER_ADDRESS_CODE`, `EFATURA_EMITTER_STATE`, `EFATURA_EMITTER_STREET_DETAIL`, `EFATURA_EMITTER_BUILDING_NAME`, `EFATURA_EMITTER_BUILDING_NUMBER`, `EFATURA_EMITTER_BUILDING_FLOOR` |
+| `efatura.emitter.contacts.telefax`, `website` | New, from `EFATURA_EMITTER_TELEFAX` and `EFATURA_EMITTER_WEBSITE` |
+
+`EmitterConfig::$led` changes from `?string` to `?int`. `AddressConfig` and
+`ContactsConfig` gain the new fields as optional trailing constructor
+arguments, so existing positional calls keep working. `CertificateConfig`,
+`OAuthConfig` and `TransmitterConfig` redact their secrets from `dump()` and
+`var_dump()` output.
+
+Merge the new keys from the published [config](../config/efatura.php) into an
+application config file that was published before, then set the address code
+and address detail the emitter needs.
+
+## Translations
+
+The package translations are now read from the `efatura` namespace. The first
+release looked them up as `efatura.*` in the application's own
+`lang/{locale}/efatura.php`; move any overrides to
+`lang/vendor/efatura/{locale}/efatura.php`.
+
+These keys are gone, because nothing produces those messages any more:
+`validation.invoice_type_mismatch`, `emitter_nif_required`,
+`emitter_name_required`, `party_nif_required`, `party_name_required`,
+`receiver_nif_required`, `receiver_name_required`, `receiver_required`,
+`emitter_required`, `totals_required`, `invoice_required`, `lines_required`,
+`totals_negative`, `na_tax_exemption_required`; `invoice.issue_date_required`,
+`receiver_required_for_type`, `original_iud_required`,
+`credit_note_reason_required`, `document_type_not_supported`;
+`config.transmitter_nif_required`, `transmitter_led_required`,
+`software_code_required`, `software_name_required`,
+`software_version_required`, `middleware_base_url_required`,
+`environment_invalid`; `install.command_description`; `general.package`. The
+`install.*` keys the command prints are unchanged. The new `validation.*` keys
+are listed in [resources/lang/en/efatura.php](../resources/lang/en/efatura.php).
 
 ## Renamed symbols
 
 PHP names describe the domain concept; wire names (input keys, `toArray()`
-output, validation error keys and XML elements) are unchanged unless the table
-says otherwise. Properties that hold a code from an official table, such as
-`ledCode`, `addressCode`, `countryCode`, `unitCode` or `TaxData::$stampTaxCode`,
-keep their names.
+output, validation error keys and XML elements) keep the official names
+through `#[MapName]`. These are the properties whose PHP name differs from the
+wire name:
 
-`Environment::fromName()` and `EFATURA_ENVIRONMENT` accept a name in any letter
-case, so `test`, `TEST` and `Test` all select `Environment::Test`; the codes
-`1`, `2` and `3` still work. The published config defaults to `test`.
-
-| Before | After |
+| Property | Wire key |
 | --- | --- |
-| `Data\InvoiceData` | `Data\DocumentData` |
-| `Builders\InvoiceBuilder` | `Builders\DocumentBuilder` (`Efatura::invoice()` keeps its name) |
-| `DocumentHeaderData::$serie` | `DocumentHeaderData::$series` (input and output key `serie`) |
-| `EventNumberRangeData::$serie` | `EventNumberRangeData::$series` (input and output key `serie`) |
-| `LineItemData::$lineTypeCode` | `LineItemData::$lineType` (key `lineTypeCode`) |
-| `TaxData::$taxTypeCode` | `TaxData::$taxType` (key `taxTypeCode`) |
-| `ReceiptData::$receiptTypeCode` | `ReceiptData::$receiptType` (key `receiptTypeCode`) |
-| `CreditNoteData`, `DebitNoteData`, `ReturnNoteData` `::$issueReasonCode` | `::$issueReason` (key `issueReasonCode`) |
-| `TransportDocumentData::$transportDocumentTypeCode` | `TransportDocumentData::$transportDocumentType` (key `transportDocumentTypeCode`) |
-| `TransportDocumentData::$receiverTypeCode` | `TransportDocumentData::$receiverType` (key `receiverTypeCode`) |
-| `TransportLocationData::$transportModeCode` | `TransportLocationData::$transportMode` (key `transportModeCode`) |
-| `ContingencyData::$reasonTypeCode` | `ContingencyData::$reason` (key `reasonTypeCode`) |
-| `EventData::$eventTypeCode` | `EventData::$eventType` (key `eventTypeCode`) |
-| `EventNumberRangeData::$documentTypeCode` | `EventNumberRangeData::$documentType` (key `documentTypeCode`) |
-| `RentReceiptData::$rentPurposeTypeCode` | `RentReceiptData::$rentPurpose` (key `rentPurposeTypeCode`) |
-| `RentReceiptData::$contractTypeCode` | `RentReceiptData::$contractType` (key `contractTypeCode`) |
-| `RentReceiptData::$rentTypeCode` | `RentReceiptData::$rentType` (key `rentTypeCode`) |
-| `Environment::PRODUCTION`, `::HOMOLOGATION`, `::TEST` | `Environment::Production`, `::Homologation`, `::Test` |
-| `Money\MoneyCast`, `Money\BigDecimalCast`, `Money\ForeignMoneyCast`, `Money\DiscountValueCast` | `Casts\MoneyCast`, `Casts\BigDecimalCast`, `Casts\ForeignMoneyCast`, `Casts\DiscountValueCast` |
-| `Money\MoneyTransformer`, `Money\BigDecimalTransformer`, `Money\DiscountValueTransformer` | `Transformers\MoneyTransformer`, `Transformers\BigDecimalTransformer`, `Transformers\DiscountValueTransformer` |
+| `DocumentHeaderData::$series`, `EventNumberRangeData::$series` | `serie` |
+| `LineItemData::$lineType` | `lineTypeCode` |
+| `TaxData::$taxType` | `taxTypeCode` |
+| `ReceiptData::$receiptType` | `receiptTypeCode` |
+| `CreditNoteData`, `DebitNoteData`, `ReturnNoteData` `::$issueReason` | `issueReasonCode` |
+| `TransportDocumentData::$transportDocumentType`, `::$receiverType` | `transportDocumentTypeCode`, `receiverTypeCode` |
+| `TransportLocationData::$transportMode` | `transportModeCode` |
+| `ContingencyData::$reason` | `reasonTypeCode` |
+| `EventData::$eventType` | `eventTypeCode` |
+| `EventNumberRangeData::$documentType` | `documentTypeCode` |
+| `RentReceiptData::$rentPurpose`, `::$contractType`, `::$rentType` | `rentPurposeTypeCode`, `contractTypeCode`, `rentTypeCode` |
 
-Laravel Data casts live in `Akira\Efatura\Casts` and transformers in
-`Akira\Efatura\Transformers`. `Akira\Efatura\Money` keeps the money value
-objects and services: `FiscalMoney`, `DecimalFormatter`, `CatalogCurrency` and
-`TotalsAccumulator`.
+Properties that hold a code from an official table, such as `ledCode`,
+`addressCode`, `countryCode`, `unitCode` or `TaxData::$stampTaxCode`, keep
+the official name in PHP too.
 
-`efatura:install` takes its description from the `#[Description]` attribute.
-The `install.command_description` translation key is gone, along with the
-validation, invoice, config and general keys that nothing in the package used.
+## Behaviour to know
+
+- Issuance instants (`header.issueDate` and `issueTime`, the contingency
+  issue date and time, `EventData::$issueDateTime`, `issuedAt()` and the
+  builder clock) are converted to `Atlantic/Cape_Verde` before formatting, so
+  `00:30 UTC` on 3 October is issued on 2 October at `23:30:00`. Calendar
+  fields keep the date as given.
+- The emission window (online: 24 hours before to one hour after the clock;
+  contingency: seven days before, with no future bound) is checked only by
+  `DocumentBuilder::build()`, so a stored document can be rehydrated with
+  `from()` whatever its age.
+- Building Data with `new` does not validate; use `from()` for untrusted input.
+- Validation, building and verification never allocate numbers or IUDs, sign,
+  transmit or issue a document.
