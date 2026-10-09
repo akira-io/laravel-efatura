@@ -18,7 +18,6 @@ use Akira\Efatura\Data\TaxData;
 use Akira\Efatura\Data\TotalsData;
 use Akira\Efatura\Enums\DiscountValueType;
 use Akira\Efatura\Enums\TaxType;
-use Akira\Efatura\Money\FiscalMoney;
 use Brick\Math\BigDecimal;
 use Brick\Money\Context\CustomContext;
 use Brick\Money\Money;
@@ -58,7 +57,7 @@ final class FiscalValueFixtures
     public static function invalidMoney(): array
     {
         return [
-            'foreign currency'      => [FiscalMoney::of('1', 'EUR'), 'Money currency does not match the requested currency.'],
+            'foreign currency'      => [Money::of('1', 'EUR'), 'Money currency does not match the requested currency.'],
             'excess decimal places' => [Money::of('1.123456', 'CVE', new CustomContext(6)), 'Value exceeds the allowed decimal precision.'],
         ];
     }
@@ -105,7 +104,7 @@ final class FiscalValueFixtures
                 'The tax percentage field is required when none of tax amount / tax exemption reason code are present.',
             ],
             'percentage and amount' => [
-                ['taxTypeCode' => TaxType::ValueAddedTax, 'taxPercentage' => BigDecimal::of('15'), 'taxAmount' => FiscalMoney::cve('1')],
+                ['taxTypeCode' => TaxType::ValueAddedTax, 'taxPercentage' => BigDecimal::of('15'), 'taxAmount' => Money::of('1', 'CVE')],
                 'taxPercentage',
                 'The tax percentage field prohibits tax amount / tax exemption reason code from being present.',
             ],
@@ -115,7 +114,7 @@ final class FiscalValueFixtures
                 'Value exceeds the allowed decimal precision.',
             ],
             'stamp tax without code' => [
-                ['taxTypeCode' => TaxType::StampTax, 'taxAmount' => FiscalMoney::cve('1')],
+                ['taxTypeCode' => TaxType::StampTax, 'taxAmount' => Money::of('1', 'CVE')],
                 'stampTaxCode',
                 'The stamp tax code field is required.',
             ],
@@ -142,7 +141,7 @@ final class FiscalValueFixtures
             ],
             'foreign tax amount' => [
                 TaxData::class,
-                ['taxTypeCode' => TaxType::ValueAddedTax, 'taxAmount' => FiscalMoney::of('1', 'EUR')],
+                ['taxTypeCode' => TaxType::ValueAddedTax, 'taxAmount' => Money::of('1', 'EUR')],
                 'taxAmount',
                 'Money currency does not match the requested currency.',
             ],
@@ -157,25 +156,25 @@ final class FiscalValueFixtures
         return [
             'money as a percentage discount' => [
                 DiscountData::class,
-                ['value' => FiscalMoney::cve('1')],
+                ['value' => Money::of('1', 'CVE')],
                 'value',
                 'Money currency does not match the requested currency.',
             ],
             'foreign amount discount' => [
                 DiscountData::class,
-                ['value' => FiscalMoney::of('1', 'EUR'), 'valueType' => DiscountValueType::Amount],
+                ['value' => Money::of('1', 'EUR'), 'valueType' => DiscountValueType::Amount],
                 'value',
                 'Money currency does not match the requested currency.',
             ],
             'zero exchange rate' => [
                 PayableAlternativeAmountData::class,
-                ['value' => FiscalMoney::of('1', 'EUR'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('0')],
+                ['value' => Money::of('1', 'EUR'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('0')],
                 'exchangeRate',
                 'The exchange rate is outside its permitted numeric bounds.',
             ],
             'six decimal exchange rate' => [
                 PayableAlternativeAmountData::class,
-                ['value' => FiscalMoney::of('1', 'EUR'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('1.123456')],
+                ['value' => Money::of('1', 'EUR'), 'currencyCode' => 'EUR', 'exchangeRate' => BigDecimal::of('1.123456')],
                 'exchangeRate',
                 'Value exceeds the allowed decimal precision.',
             ],

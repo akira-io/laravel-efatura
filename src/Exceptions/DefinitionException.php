@@ -26,6 +26,11 @@ final class DefinitionException extends EfaturaException
         return new self('definition.rounding_scale', \sprintf('Rounded fiscal Money uses two decimal places, %d given.', $scale));
     }
 
+    public static function catalogsUnavailable(): self
+    {
+        return new self('definition.catalogs_unavailable', 'Currency catalogs are resolved through the efatura service provider, which is not registered.');
+    }
+
     public static function numericBound(string $bound, int $scale): self
     {
         return new self('definition.numeric_bound', \sprintf('Numeric bound "%s" must be a plain decimal within scale %d.', $bound, $scale));
