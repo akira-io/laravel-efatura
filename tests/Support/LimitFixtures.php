@@ -23,4 +23,14 @@ final class LimitFixtures
     {
         return array_fill(0, $count, ['value' => '1', 'currencyCode' => 'EUR', 'exchangeRate' => '110.265']);
     }
+
+    /**
+     * @return array{description: string, emitterIdentification: string, extraProperties: list<array{name: string, value: string}>}
+     */
+    public static function itemWithExtraProperties(int $count): array
+    {
+        $properties = array_fill(0, $count, ['name' => 'Colour', 'value' => 'Blue']);
+
+        return ['description' => 'Product', 'emitterIdentification' => 'SKU', 'extraProperties' => $properties];
+    }
 }

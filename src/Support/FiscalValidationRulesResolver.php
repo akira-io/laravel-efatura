@@ -6,6 +6,7 @@ namespace Akira\Efatura\Support;
 
 use Illuminate\Support\Arr;
 use Override;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Resolvers\DataValidationRulesResolver;
 use Spatie\LaravelData\Support\DataProperty;
 use Spatie\LaravelData\Support\Validation\DataRules;
@@ -24,6 +25,8 @@ final class FiscalValidationRulesResolver extends DataValidationRulesResolver
             return $dataRules->rules;
         }
 
+        $this->rejectOversizedLists($class, $fullPayload, $path);
+
         return parent::execute($class, $fullPayload, $path, $dataRules);
     }
 
@@ -41,6 +44,22 @@ final class FiscalValidationRulesResolver extends DataValidationRulesResolver
             }
 
             $this->execute((string) $dataProperty->type->dataClass, $fullPayload, $propertyPath->property((string) $key), $dataRules);
+        }
+    }
+
+    /**
+     * @param array<array-key, mixed> $fullPayload
+     */
+    private function rejectOversizedLists(string $class, array $fullPayload, ValidationPath $path): void
+    {
+        foreach ($this->dataConfig->getDataClass($class)->properties as $property) {
+            $limit        = $property->attributes->first(Max::class)?->parameters()[0];
+            $propertyPath = (string) $path->property($property->inputMappedName ?? $property->name)->get();
+            $value        = Arr::get($fullPayload, $propertyPath);
+
+            if (\is_int($limit) && \is_array($value) && \count($value) > $limit) {
+                validator($fullPayload, [$propertyPath => ['array', 'max:' . $limit]])->validate();
+            }
         }
     }
 }

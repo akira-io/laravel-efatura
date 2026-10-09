@@ -13,6 +13,7 @@ use Akira\Efatura\Support\ValidationPayload;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\MapName;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\RequiredIf;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -28,7 +29,7 @@ final class EventData extends FiscalData
         #[FiscalDateFormat(Fiscal::DATE_TIME_FORMAT, instant: true)]
         public readonly CarbonImmutable $issueDateTime,
         public readonly string $issueReasonDescription,
-        #[RequiredIf('eventTypeCode', EventType::FiscalDocumentCancellation)]
+        #[RequiredIf('eventTypeCode', EventType::FiscalDocumentCancellation), Max(Fiscal::MAX_EVENT_IUDS)]
         public readonly array $iuds = [],
         public readonly ?EventNumberRangeData $numberRange = null,
         public readonly ?EmissionContextData $emission = null,
@@ -45,7 +46,7 @@ final class EventData extends FiscalData
             'emitterTaxId.countryCode' => ['in:' . Fiscal::COUNTRY],
             'issueDateTime'            => [new FiscalDate(Fiscal::DATE_TIME_FORMAT, instant: true)],
             'issueReasonDescription'   => FiscalRules::text(10, 500),
-            'iuds'                     => ['list', 'max:' . Fiscal::MAX_EVENT_IUDS, Rule::prohibitedIf($type === EventType::UnusedDocumentNumber)],
+            'iuds'                     => ['list', Rule::prohibitedIf($type === EventType::UnusedDocumentNumber)],
             'iuds.*'                   => ['required', 'distinct:strict', ...FiscalRules::iud()],
             'numberRange'              => [
                 Rule::requiredIf($type === EventType::UnusedDocumentNumber),
