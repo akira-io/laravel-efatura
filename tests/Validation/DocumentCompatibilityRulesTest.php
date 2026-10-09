@@ -68,7 +68,10 @@ it('reports document compatibility failures at their full path', function (strin
         ['lines.1.lineReferenceId' => ['The selected lines.1.lineReferenceId is invalid.']]],
     'unpriced and untaxed invoice line' => [ElectronicInvoiceData::class, F::payload(['lines' => [F::linePayload(['price' => null, 'taxes' => []])]]),
         ['lines.0.price' => ['The lines.0.price field is required.'], 'lines.0.taxes' => ['The lines.0.taxes field is required.']]],
-    'invoice with settled payments' => [ElectronicInvoiceData::class, F::payload(['payments' => F::payments()]), ['payments.payments' => ['The payments.payments field is prohibited.']]],
+    'invoice with settled payments'              => [ElectronicInvoiceData::class, F::payload(['payments' => F::payments()]), ['payments.payments' => ['The payments.payments field is prohibited.']]],
+    'invoice with due date and settled payments' => [ElectronicInvoiceData::class, F::payload(['payments' => [...F::payments(), 'paymentDueDate' => '2026-10-31']]), [
+        'payments.payments' => ['The payments.payments field prohibits payments.payment due date / payments.payment terms / payments.payee financial accounts from being present.'],
+    ]],
     'invoice receipt with due date' => [ReceiptInvoiceData::class, F::payload(['payments' => [...F::payments(), 'paymentDueDate' => '2026-10-31']]), [
         'payments.paymentDueDate' => ['The payments.payment due date field is prohibited.'],
         'payments.payments'       => ['The payments.payments field prohibits payments.payment due date / payments.payment terms / payments.payee financial accounts from being present.'],

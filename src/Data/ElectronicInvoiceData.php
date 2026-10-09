@@ -52,7 +52,7 @@ final class ElectronicInvoiceData extends DocumentData implements HasTaxPointDat
         return [
             ...DocumentRules::lines($context, self::documentType()),
             'orderReference'    => FiscalRules::code(),
-            'payments.payments' => ['prohibited'],
+            'payments.payments' => ['bail', 'prohibited'],
         ];
     }
 }
