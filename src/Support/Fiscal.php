@@ -6,6 +6,8 @@ namespace Akira\Efatura\Support;
 
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Carbon\Exceptions\InvalidFormatException;
+use Illuminate\Support\Str;
 
 final class Fiscal
 {
@@ -39,5 +41,25 @@ final class Fiscal
     public static function format(CarbonInterface $moment, string $format, bool $instant): string
     {
         return ($instant ? self::local($moment) : $moment)->format($format);
+    }
+
+    public static function parse(string $value, string $format): ?CarbonImmutable
+    {
+        try {
+            $date = CarbonImmutable::createFromFormat('!' . $format, $value, self::TIMEZONE);
+        } catch (InvalidFormatException) {
+            return null;
+        }
+
+        if (! $date instanceof CarbonImmutable || $date->format($format) !== $value || self::precedesEarliestDate($date, $format)) {
+            return null;
+        }
+
+        return $date;
+    }
+
+    private static function precedesEarliestDate(CarbonImmutable $date, string $format): bool
+    {
+        return Str::contains($format, ['Y', 'y']) && $date->format(self::DATE_FORMAT) < self::EARLIEST_DATE;
     }
 }

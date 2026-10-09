@@ -8,7 +8,6 @@ use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Support\Facades\Validator;
 
 final readonly class FiscalDate implements ValidationRule
 {
@@ -20,12 +19,7 @@ final readonly class FiscalDate implements ValidationRule
             $value = Fiscal::format($value, $this->format, $this->instant);
         }
 
-        $rules = ['required', 'string', 'date_format:' . $this->format];
-        if ($this->format === Fiscal::DATE_FORMAT) {
-            $rules[] = 'after_or_equal:' . Fiscal::EARLIEST_DATE;
-        }
-
-        if (Validator::make(['value' => $value], ['value' => $rules])->fails()) {
+        if (! \is_string($value) || ! Fiscal::parse($value, $this->format) instanceof CarbonInterface) {
             $fail('efatura::efatura.validation.fiscal_date')->translate();
         }
     }

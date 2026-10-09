@@ -8,7 +8,6 @@ use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
-use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Casts\Cast;
@@ -33,7 +32,7 @@ final readonly class FiscalDateCast implements Cast, Transformer
             $value = Fiscal::format($value, $this->format, $this->instant);
         }
 
-        $date = \is_string($value) ? $this->parse($value) : null;
+        $date = \is_string($value) ? Fiscal::parse($value, $this->format) : null;
 
         if (! $date instanceof CarbonImmutable) {
             $path = FieldPath::of($context, $property);
@@ -53,24 +52,5 @@ final readonly class FiscalDateCast implements Cast, Transformer
         }
 
         return Fiscal::format($value, $this->format, $this->instant);
-    }
-
-    private function parse(string $value): ?CarbonImmutable
-    {
-        try {
-            $date = CarbonImmutable::createFromFormat('!' . $this->format, $value, Fiscal::TIMEZONE);
-        } catch (InvalidFormatException) {
-            return null;
-        }
-
-        if (! $date instanceof CarbonImmutable || $date->format($this->format) !== $value) {
-            return null;
-        }
-
-        if ($this->format === Fiscal::DATE_FORMAT && $value < Fiscal::EARLIEST_DATE) {
-            return null;
-        }
-
-        return $date;
     }
 }
