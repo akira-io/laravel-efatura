@@ -43,6 +43,8 @@ final class Fiscal
 
     public const string XML_NAMESPACE = 'urn:cv:efatura:xsd:v1.0';
 
+    public const string XML_SCHEMA_VERSION = '1.0';
+
     public static function local(CarbonInterface $moment): CarbonImmutable
     {
         return $moment->toImmutable()->setTimezone(self::TIMEZONE);

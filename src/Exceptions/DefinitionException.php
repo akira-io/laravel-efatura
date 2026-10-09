@@ -45,4 +45,9 @@ final class DefinitionException extends EfaturaException
     {
         return new self('definition.luhn_payload', \sprintf('A Luhn payload must contain only ASCII digits, %d characters given.', mb_strlen($payload)));
     }
+
+    public static function xmlName(string $name): self
+    {
+        return new self('definition.xml_name', \sprintf('An XML element or attribute name must be an NCName, %d characters given.', mb_strlen($name)));
+    }
 }
