@@ -31,7 +31,7 @@ final class QuantityData extends FiscalData
      */
     public static function rules(ValidationContext $context, Catalogs $catalogs): array
     {
-        $unitCode = ['regex:/\A[A-Za-z0-9]{1,10}\z/'];
+        $unitCode = ['regex:/\A[A-z0-9]{1,10}\z/'];
 
         return [
             'value'    => [FiscalNumber::nonNegative()],

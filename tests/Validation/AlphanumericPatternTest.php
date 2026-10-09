@@ -39,12 +39,16 @@ it('rejects punctuation inside a fiscal document reference series', function (st
         ->toFailValidationOn('value', 'The value field format is invalid.');
 })->with(['A[B', 'A\B', 'A]B', 'A^B', 'A`B', '_AB']);
 
-it('rejects punctuation inside a unit code', function (string $character): void {
-    $payload = ['value' => '1', 'unitCode' => 'C' . $character . '2'];
+it('accepts the literal XSD A-z range inside a unit code', function (string $unitCode): void {
+    expect(QuantityData::from(['value' => '1', 'unitCode' => $unitCode])->unitCode)->toBe($unitCode);
+})->with(['KG_X', 'C[2', 'C\2', 'C]2', 'C^2', 'C`2', 'ABCDEFGHIJ']);
+
+it('rejects a unit code outside the literal XSD A-z range or above ten characters', function (string $unitCode): void {
+    $payload = ['value' => '1', 'unitCode' => $unitCode];
 
     expect(fn (): QuantityData => QuantityData::from($payload))
         ->toFailValidationOn('unitCode', 'The unit code field format is invalid.');
-})->with([...['[', '\\', ']', '^', '`'], '_']);
+})->with(['KG X', 'KG-X', 'KG{X', 'KG@X', 'ABCDEFGHIJK']);
 
 it('rejects punctuation inside a website host', function (string $character): void {
     $payload = ['website' => 'www.exa' . $character . 'mple.cv'];
