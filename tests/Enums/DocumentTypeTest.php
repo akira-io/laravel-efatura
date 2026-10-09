@@ -13,7 +13,7 @@ use Akira\Efatura\Data\ReturnNoteData;
 use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
-use Illuminate\Support\ItemNotFoundException;
+use Akira\Efatura\Exceptions\DefinitionException;
 use Illuminate\Support\Str;
 
 it('includes all official document types', function (): void {
@@ -53,7 +53,8 @@ it('maps each document type to its data class and back', function (DocumentType 
 ]);
 
 it('rejects a class that is not a document', function (): void {
-    expect(fn (): DocumentType => DocumentType::fromDataClass(DocumentData::class))->toThrow(ItemNotFoundException::class);
+    expect(fn (): DocumentType => DocumentType::fromDataClass(DocumentData::class))
+        ->toThrow(DefinitionException::class, DocumentData::class . ' is not one of the nine official document classes.');
 });
 
 it('names exactly the document elements the XSD admits in a Dfe', function (): void {

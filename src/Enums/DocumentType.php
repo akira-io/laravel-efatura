@@ -14,6 +14,7 @@ use Akira\Efatura\Data\RegistrationNoteData;
 use Akira\Efatura\Data\ReturnNoteData;
 use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\TransportDocumentData;
+use Akira\Efatura\Exceptions\DefinitionException;
 
 enum DocumentType: string
 {
@@ -47,7 +48,8 @@ enum DocumentType: string
      */
     public static function fromDataClass(string $dataClass): self
     {
-        return collect(self::cases())->firstOrFail(static fn (self $type): bool => $type->dataClass() === $dataClass);
+        return collect(self::cases())->first(static fn (self $type): bool => $type->dataClass() === $dataClass)
+            ?? throw DefinitionException::documentClass($dataClass);
     }
 
     /**

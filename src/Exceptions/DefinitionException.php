@@ -35,4 +35,9 @@ final class DefinitionException extends EfaturaException
     {
         return new self('definition.numeric_bound', \sprintf('Numeric bound "%s" must be a plain decimal within scale %d.', $bound, $scale));
     }
+
+    public static function documentClass(string $class): self
+    {
+        return new self('definition.document_class', \sprintf('%s is not one of the nine official document classes.', $class));
+    }
 }
