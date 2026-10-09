@@ -24,6 +24,10 @@ final class PartyData extends FiscalData
      */
     public static function rules(ValidationContext $context): array
     {
+        if (! \is_array($context->payload) || $context->payload === []) {
+            return [];
+        }
+
         return [
             'taxId'     => ['required_without:' . FieldPath::of($context, 'reference')],
             'name'      => ['required_without:' . FieldPath::of($context, 'reference'), ...FiscalRules::text(3, 150)],
