@@ -10,6 +10,7 @@ use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\ReturnNoteData;
 use Akira\Efatura\Data\SalesReceiptData;
 use Akira\Efatura\Data\TransportDocumentData;
+use Akira\Efatura\Enums\ContingencyReason;
 use Akira\Efatura\Tests\Support\BuilderFixtures as B;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Akira\Efatura\Tests\Support\DocumentPayloads as P;
@@ -78,6 +79,15 @@ it('rejects an issuance one second before the seven day contingency floor', func
             expect($exception->errors())->toBe(['header.issueDate' => ['The issue date and time are outside the permitted emission window.']]);
         });
 });
+
+it('sets no future bound on contingency issuance, as Manual IDT-IMC-GE does not', function (array $emission): void {
+    $document = B::issuance(P::header(['issueTime' => '14:00:00']))->emission(EmissionContextData::from($emission))->build();
+
+    expect($document->header->issueTime->format('H:i:s'))->toBe('14:00:00');
+})->with([
+    'offline' => [['issueMode' => 2, 'contingency' => P::offlineContingency()]],
+    'off'     => [['issueMode' => 3, 'contingency' => P::contingency(ContingencyReason::PowerFailure)]],
+]);
 
 it('rejects a tax point after the issue date', function (): void {
     $payload = F::payload(['taxPointDate' => '2026-10-03']);
