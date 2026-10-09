@@ -38,6 +38,22 @@ arch('configuration values are immutable')
     ->expect('Akira\Efatura\Configuration')
     ->toBeReadonly();
 
+arch('xml receives its collaborators instead of locating them')
+    ->expect('Akira\Efatura\Xml')
+    ->not->toUse(['Illuminate\Support\Facades', 'resolve', 'app']);
+
+arch('actions receive their collaborators instead of locating them')
+    ->expect('Akira\Efatura\Actions')
+    ->not->toUse(['Illuminate\Support\Facades', 'resolve', 'app']);
+
+arch('xml is written through the dom only')
+    ->expect('Akira\Efatura\Xml')
+    ->not->toUse(['simplexml_load_string', 'XMLWriter', 'sprintf', 'vsprintf']);
+
+arch('actions expose a single handle entry point')
+    ->expect('Akira\Efatura\Actions')
+    ->toHaveMethod('handle');
+
 it('keeps source and tooling lines within 160 characters', function (): void {
     $longLines = collect(new Filesystem()->allFiles(__DIR__ . '/../src'))
         ->merge(new Filesystem()->allFiles(__DIR__ . '/../tools'))
