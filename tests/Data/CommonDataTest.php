@@ -105,10 +105,16 @@ it('accepts software identification within XSD boundaries', function (): void {
     expect((new SoftwareData('AB12', 'Example', '1.0'))->version)->toBe('1.0');
 });
 
+it('requires an address code on every Cabo Verde address (Manual ADD-AC-R, p. 41)', function (): void {
+    $payload = ['countryCode' => 'CV', 'addressDetail' => 'Praia'];
+
+    expect(fn (): AddressData => AddressData::from($payload))
+        ->toFailValidationOn('addressCode', 'The address code field is required when country code is CV.');
+});
+
 it('enforces address contact and software XSD boundaries', function (string $class, array $payload, string $field, string $message): void {
     expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, $message);
 })->with([
-    'CV address without code'     => [AddressData::class, ['countryCode' => 'CV', 'addressDetail' => 'Praia'], 'addressCode', 'The address code field is required when country code is CV.'],
     'CV address with short code'  => [AddressData::class, ['countryCode' => 'CV', 'addressDetail' => 'Praia', 'addressCode' => 'CV'], 'addressCode', 'The address code field format is invalid.'],
     'address detail with padding' => [AddressData::class, ['countryCode' => 'PT', 'addressDetail' => ' Double  spaces '], 'addressDetail', 'The address detail field format is invalid.'],
     'telephone with plus sign'    => [ContactsData::class, ['telephone' => '+2381234'], 'telephone', 'The telephone field format is invalid.'],
