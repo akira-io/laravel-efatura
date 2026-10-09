@@ -45,7 +45,7 @@ final class EventData extends FiscalData
             'emitterTaxId.countryCode' => ['in:' . Fiscal::COUNTRY],
             'issueDateTime'            => [new FiscalDate(Fiscal::DATE_TIME_FORMAT, instant: true)],
             'issueReasonDescription'   => FiscalRules::text(10, 500),
-            'iuds'                     => ['list', Rule::prohibitedIf($type === EventType::UnusedDocumentNumber)],
+            'iuds'                     => ['list', 'max:' . Fiscal::MAX_EVENT_IUDS, Rule::prohibitedIf($type === EventType::UnusedDocumentNumber)],
             'iuds.*'                   => ['required', 'distinct:strict', ...FiscalRules::iud()],
             'numberRange'              => [
                 Rule::requiredIf($type === EventType::UnusedDocumentNumber),

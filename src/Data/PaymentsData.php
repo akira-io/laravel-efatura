@@ -23,9 +23,9 @@ final class PaymentsData extends FiscalData
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly ?CarbonImmutable $paymentDueDate = null,
         public readonly ?PaymentTermsData $paymentTerms = null,
-        #[DataCollectionOf(PayeeFinancialAccountData::class), ListType, Max(100)]
+        #[DataCollectionOf(PayeeFinancialAccountData::class), ListType, Max(Fiscal::MAX_LIST_ENTRIES)]
         public readonly array $payeeFinancialAccounts = [],
-        #[DataCollectionOf(PaymentData::class), ListType, Max(100)]
+        #[DataCollectionOf(PaymentData::class), ListType, Max(Fiscal::MAX_LIST_ENTRIES)]
         public readonly array $payments = [],
     ) {}
 

@@ -10,6 +10,7 @@ use Akira\Efatura\Support\Fiscal;
 use Brick\Money\Money;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
 
 final class TotalsData extends FiscalData
 {
@@ -44,7 +45,7 @@ final class TotalsData extends FiscalData
         #[CveAmount]
         public readonly ?Money $payableRoundingAmount = null,
         public readonly ?DiscountData $discount = null,
-        #[DataCollectionOf(PayableAlternativeAmountData::class), ListType]
+        #[DataCollectionOf(PayableAlternativeAmountData::class), ListType, Max(Fiscal::MAX_LIST_ENTRIES)]
         public readonly array $payableAlternativeAmounts = [],
     ) {}
 

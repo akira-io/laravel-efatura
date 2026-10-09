@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Rules\FiscalNumber;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
@@ -24,7 +25,7 @@ final class ItemData extends FiscalData
         public readonly ?string $modelName = null,
         public readonly ?StandardIdentificationData $standardIdentification = null,
         public readonly ?bool $hazardousRiskIndicator = null,
-        #[DataCollectionOf(ExtraPropertyData::class), ListType, Max(100)]
+        #[DataCollectionOf(ExtraPropertyData::class), ListType, Max(Fiscal::MAX_LIST_ENTRIES)]
         public readonly array $extraProperties = [],
     ) {}
 

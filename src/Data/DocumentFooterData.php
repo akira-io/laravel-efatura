@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
@@ -16,7 +17,7 @@ final class DocumentFooterData extends FiscalData
      */
     public function __construct(
         public readonly ?string $note = null,
-        #[DataCollectionOf(ExtraFieldData::class), ListType, Max(100)]
+        #[DataCollectionOf(ExtraFieldData::class), ListType, Max(Fiscal::MAX_LIST_ENTRIES)]
         public readonly array $extraFields = [],
     ) {}
 

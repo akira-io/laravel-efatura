@@ -25,6 +25,10 @@ final class Fiscal
 
     public const int MAX_REFERENCES = 1000;
 
+    public const int MAX_EVENT_IUDS = 1000;
+
+    public const int MAX_LIST_ENTRIES = 100;
+
     public const string EARLIEST_DATE = '2021-01-01';
 
     public const string DATE_FORMAT = 'Y-m-d';

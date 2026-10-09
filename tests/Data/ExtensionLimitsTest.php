@@ -3,10 +3,15 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Data\DocumentFooterData;
+use Akira\Efatura\Data\EventData;
 use Akira\Efatura\Data\ExtraFieldData;
 use Akira\Efatura\Data\ExtraPropertyData;
 use Akira\Efatura\Data\ItemData;
 use Akira\Efatura\Data\PaymentsData;
+use Akira\Efatura\Data\TotalsData;
+use Akira\Efatura\Tests\Support\DocumentFixtures as F;
+use Akira\Efatura\Tests\Support\EventFixtures as E;
+use Akira\Efatura\Tests\Support\LimitFixtures;
 
 it('bounds the text of extensions', function (string $class, array $payload, string $field, string $message): void {
     expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, $message);
@@ -41,4 +46,17 @@ it('bounds the number of entries in extension and payment lists', function (stri
 it('accepts a hundred entries in each bounded list', function (): void {
     expect(DocumentFooterData::from(['extraFields' => array_fill(0, 100, ['name' => 'CustomerTag', 'value' => 'v'])])->extraFields)->toHaveCount(100)
         ->and(PaymentsData::from(['payments' => array_fill(0, 100, ['paymentMeansCode' => '10'])])->payments)->toHaveCount(100);
+});
+
+it('bounds event targets and alternative payable amounts', function (string $class, array $payload, string $field, string $message): void {
+    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, $message);
+})->with([
+    'event iuds'          => [EventData::class, E::payload(['iuds' => LimitFixtures::iuds(1001)]), 'iuds', 'The iuds field must not have more than 1000 items.'],
+    'alternative amounts' => [TotalsData::class, F::totalsPayload(['payableAlternativeAmounts' => LimitFixtures::alternativeAmounts(101)]),
+        'payableAlternativeAmounts', 'The payable alternative amounts field must not have more than 100 items.'],
+]);
+
+it('accepts event targets and alternative payable amounts at their limits', function (): void {
+    expect(EventData::from(E::payload(['iuds' => LimitFixtures::iuds(1000)]))->iuds)->toHaveCount(1000)
+        ->and(TotalsData::from(F::totalsPayload(['payableAlternativeAmounts' => LimitFixtures::alternativeAmounts(100)]))->payableAlternativeAmounts)->toHaveCount(100);
 });
