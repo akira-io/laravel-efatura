@@ -25,11 +25,13 @@
             "coercions",
             "luhn",
             "randomizer",
-            "serializers"
+            "serializers",
+            "dfe"
         ],
         "paths": [
             "resources/catalogs/source",
-            "resources/xsd"
+            "resources/xsd",
+            "tests/Fixtures/xml"
         ]
     }
 }

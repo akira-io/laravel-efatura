@@ -15,6 +15,7 @@ return [
         'official_code'            => 'The :attribute must be a code in the official catalog.',
         'tax_id'                   => 'The :attribute must be a valid tax identifier for its country.',
         'iud_invalid'              => 'The :attribute must be an official IUD with a valid check digit.',
+        'iud_mismatch'             => 'The :attribute does not identify this document.',
         'event_id_invalid'         => 'The :attribute must be an official event identifier.',
         'xml_text_invalid'         => 'The :attribute contains characters that XML 1.0 does not allow.',
         'xml_required'             => 'The :attribute is required to write the XML document.',
