@@ -46,3 +46,7 @@ it('refuses to check an identifier that is not made of digits', function (): voi
     expect(fn (): bool => Luhn::passes('12a4'))
         ->toThrow(DefinitionException::class, 'A Luhn payload must contain only ASCII digits, 4 characters given.');
 });
+
+it('rejects an identifier too short to carry a check digit', function (string $digits): void {
+    expect(Luhn::passes($digits))->toBeFalse();
+})->with(['empty' => [''], 'one digit' => ['0'], 'another digit' => ['9']]);

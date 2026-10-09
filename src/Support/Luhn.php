@@ -22,6 +22,10 @@ final class Luhn
 
     public static function passes(string $digitsWithCheckDigit): bool
     {
+        if (Str::isMatch('/\A[0-9]?\z/', $digitsWithCheckDigit)) {
+            return false;
+        }
+
         self::assertDigits($digitsWithCheckDigit);
 
         return self::checkDigit(substr($digitsWithCheckDigit, 0, -1)) === (int) substr($digitsWithCheckDigit, -1);
