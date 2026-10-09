@@ -7,6 +7,7 @@ namespace Akira\Efatura\Support;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\IssueReason;
 use Akira\Efatura\Enums\LineType;
+use Akira\Efatura\Rules\InKeyedSet;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -58,12 +59,14 @@ final class DocumentRules
             ->map(static fn (array $line): mixed => $line['lineTypeCode'] ?? LineType::Normal->value);
         $normalIds = $lineTypes->filter(static fn (mixed $lineType): bool => $lineType === LineType::Normal->value)->keys()->all();
 
-        $rules = [
+        $knownIds   = new InKeyedSet($lineTypes->keys());
+        $chargeable = new InKeyedSet($normalIds);
+        $rules      = [
             'lines.*.id'              => ['nullable', 'distinct:strict'],
-            'lines.*.lineReferenceId' => ['nullable', Rule::in($lineTypes->keys()->all())],
+            'lines.*.lineReferenceId' => ['nullable', $knownIds],
             ...$lines->filter(static fn (array $line): bool => ($line['lineTypeCode'] ?? null) === LineType::Charge->value)
                 ->mapWithKeys(static fn (array $line, int|string $index): array => [
-                    'lines.' . $index . '.lineReferenceId' => ['required', Rule::in($normalIds)],
+                    'lines.' . $index . '.lineReferenceId' => ['required', $chargeable],
                 ])
                 ->all(),
         ];
