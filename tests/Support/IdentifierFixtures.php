@@ -10,6 +10,8 @@ final class IdentifierFixtures
 {
     public const string NODE_IUD = 'CV3260208100200300001230100000000112345678909';
 
+    public const string OFFICIAL_EVENT_ID = 'CV1210805181011123456789';
+
     public static function iudPayload(array $overrides = []): array
     {
         return array_replace([

@@ -19,6 +19,10 @@ final class FiscalRules
 
     private const string IUD = 'CV[0-9][0-9]{2}(?:0[1-9]|1[012])(?:0[1-9]|[12][0-9]|3[01])[1-9][0-9]{35}';
 
+    private const string EVENT_ID = 'CV[0-9][0-9]{2}(?:0[1-9]|1[012])(?:0[1-9]|[12][0-9]|3[01])[0-9]{6}[1-9][0-9]{8}';
+
+    private const string CLOCK_TIME = '(?:[01][0-9]|2[0-3])[0-5][0-9][0-5][0-9]';
+
     private const string URL_TOKEN = '[A-Za-z0-9_-]';
 
     /**
@@ -48,6 +52,11 @@ final class FiscalRules
     public static function isIud(string $value): bool
     {
         return Str::isMatch('/\A' . self::IUD . '\z/', $value);
+    }
+
+    public static function isEventId(string $value): bool
+    {
+        return Str::isMatch('/\A' . self::EVENT_ID . '\z/', $value) && Str::isMatch('/\A' . self::CLOCK_TIME . '\z/', substr($value, 9, 6));
     }
 
     /**
