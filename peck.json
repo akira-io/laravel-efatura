@@ -24,7 +24,8 @@
             "durations",
             "coercions",
             "luhn",
-            "randomizer"
+            "randomizer",
+            "serializers"
         ],
         "paths": [
             "resources/catalogs/source",
