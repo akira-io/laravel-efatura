@@ -39,6 +39,26 @@ it('reports a due date beside settled payments once, at the due date', function 
     'RCE' => [ReceiptData::class, F::receiptPayload('1')],
 ]);
 
+it('prohibits payment terms and payee accounts on documents settled on issue', function (string $class, array $payload): void {
+    $payload['payments'] = [
+        ...F::payments(),
+        'paymentTerms'           => ['note' => 'Payment within thirty days'],
+        'payeeFinancialAccounts' => [['name' => 'Bank Account', 'nib' => '123456789012345678901']],
+    ];
+
+    expect(fn (): DocumentData => $class::from($payload))->toThrow(function (ValidationException $exception): void {
+        expect(Arr::where($exception->errors(), fn (array $messages, string $field): bool => Str::startsWith($field, 'payments')))->toBe([
+            'payments.paymentTerms'           => ['The payments.payment terms field is prohibited.'],
+            'payments.payeeFinancialAccounts' => ['The payments.payee financial accounts field is prohibited.'],
+        ]);
+    });
+})->with([
+    'FRE' => [ReceiptInvoiceData::class, F::payload()],
+    'TVE' => [SalesReceiptData::class, F::payload()],
+    'NLE' => [RegistrationNoteData::class, F::payload()],
+    'RCE' => [ReceiptData::class, F::receiptPayload('1')],
+]);
+
 it('leaves the choice between terms and settled payments to the document', function (): void {
     $payments = PaymentsData::from(['paymentTerms' => new PaymentTermsData('Payment within thirty days'), 'payments' => [new PaymentData]]);
 
