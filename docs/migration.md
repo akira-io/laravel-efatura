@@ -170,7 +170,7 @@ that binds its own `ClockInterface` after the provider registers keeps it.
 
 | Key | Change |
 | --- | --- |
-| `efatura.environment` / `EFATURA_ENVIRONMENT` | Default is now `test`; a name in any letter case or the codes `1`, `2`, `3` |
+| `efatura.environment` / `EFATURA_ENVIRONMENT` | Unchanged: a name in any letter case or the codes `1`, `2`, `3`, defaulting to the test environment; the published file now spells the default `test` instead of `TEST` |
 | `efatura.emitter.tax_id`, `efatura.transmitter.tax_id` | Must match `[1-9][0-9]{8}`; a NIF starting with 0 now fails loading |
 | `efatura.emitter.led` | An integer or a string matching `[1-9][0-9]{0,4}`; anything else fails with `configuration.invalid_led` |
 | `efatura.emitter.address.address_detail`, `address_code`, `state`, `street_detail`, `building_name`, `building_number`, `building_floor` | New, from `EFATURA_EMITTER_ADDRESS_DETAIL`, `EFATURA_EMITTER_ADDRESS_CODE`, `EFATURA_EMITTER_STATE`, `EFATURA_EMITTER_STREET_DETAIL`, `EFATURA_EMITTER_BUILDING_NAME`, `EFATURA_EMITTER_BUILDING_NUMBER`, `EFATURA_EMITTER_BUILDING_FLOOR` |
