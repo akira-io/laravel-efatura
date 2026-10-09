@@ -18,6 +18,6 @@ final class ExtraPropertyData extends FiscalData
      */
     public static function rules(): array
     {
-        return ['name' => FiscalRules::code()];
+        return ['name' => FiscalRules::code(), 'value' => ['max:1000']];
     }
 }

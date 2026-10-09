@@ -24,8 +24,9 @@ final class ExtraFieldData extends FiscalData
     public static function rules(): array
     {
         return [
-            'name'      => ['regex:/\A[\p{L}_][\p{L}\p{N}_.-]*\z/u', new UnreservedFiscalField],
-            'namespace' => [new NotBlank, 'regex:/\A[a-zA-Z][a-zA-Z0-9+.-]*:[^\s]+\z/', 'not_in:' . Fiscal::XML_NAMESPACE],
+            'name'      => ['max:50', 'regex:/\A[\p{L}_][\p{L}\p{N}_.-]*\z/u', new UnreservedFiscalField],
+            'value'     => ['max:1000'],
+            'namespace' => [new NotBlank, 'max:256', 'regex:/\A[a-zA-Z][a-zA-Z0-9+.-]*:[^\s]+\z/', 'not_in:' . Fiscal::XML_NAMESPACE],
         ];
     }
 }

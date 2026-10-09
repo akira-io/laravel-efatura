@@ -10,6 +10,7 @@ use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class PaymentsData extends FiscalData
@@ -22,9 +23,9 @@ final class PaymentsData extends FiscalData
         #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
         public readonly ?CarbonImmutable $paymentDueDate = null,
         public readonly ?PaymentTermsData $paymentTerms = null,
-        #[DataCollectionOf(PayeeFinancialAccountData::class), ListType]
+        #[DataCollectionOf(PayeeFinancialAccountData::class), ListType, Max(100)]
         public readonly array $payeeFinancialAccounts = [],
-        #[DataCollectionOf(PaymentData::class), ListType]
+        #[DataCollectionOf(PaymentData::class), ListType, Max(100)]
         public readonly array $payments = [],
     ) {}
 

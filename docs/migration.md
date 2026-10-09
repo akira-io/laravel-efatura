@@ -150,6 +150,10 @@ A longer integer part fails at its full path with "Value exceeds the allowed
 A document now accepts at most 1000 `lines` and 1000 `references`; one more
 fails with "The lines field must not have more than 1000 items." (or
 `references`). Manual 11 sets no count; the limits are defensive.
+Footer extra fields and item extra properties are limited to 100 entries,
+payments and payee financial accounts to 100 each, extra field names to 50
+characters, namespaces to 256, and extra field and extra property values to
+1000 characters.
 
 ## Renamed symbols
 
