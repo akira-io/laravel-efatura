@@ -7,10 +7,13 @@ namespace Akira\Efatura;
 use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
-use Akira\Efatura\Contracts\DocumentTypePolicy;
-use Akira\Efatura\Support\DefaultDocumentTypePolicy;
+use Akira\Efatura\Money\CatalogCurrency;
+use Akira\Efatura\Support\Catalogs;
+use Akira\Efatura\Support\Fiscal;
+use Carbon\FactoryImmutable;
 use Illuminate\Foundation\Application;
 use Override;
+use Psr\Clock\ClockInterface;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -27,7 +30,9 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             return $loader();
         });
         $this->app->singleton(EfaturaManager::class);
-        $this->app->singleton(DocumentTypePolicy::class, DefaultDocumentTypePolicy::class);
+        $this->app->singleton(Catalogs::class);
+        CatalogCurrency::resolveCatalogsUsing(fn (): Catalogs => $this->app->make(Catalogs::class));
+        $this->app->singleton(ClockInterface::class, fn (): ClockInterface => new FactoryImmutable(['timezone' => Fiscal::TIMEZONE]));
     }
 
     public function configurePackage(Package $package): void

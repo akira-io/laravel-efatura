@@ -1,0 +1,27 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Akira\Efatura\Tools\Catalogs\CatalogGenerator;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$generator = CatalogGenerator::for(dirname(__DIR__) . '/resources');
+
+if (! in_array('--check', $argv, true)) {
+    $generator->write();
+    fwrite(STDOUT, 'Catalogs generated.' . PHP_EOL);
+
+    exit(0);
+}
+
+$stale = $generator->stale();
+
+if ($stale !== []) {
+    fwrite(STDERR, 'Catalogs differ from sources: ' . implode(', ', $stale) . PHP_EOL);
+
+    exit(1);
+}
+
+fwrite(STDOUT, 'Catalogs match sources.' . PHP_EOL);

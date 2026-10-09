@@ -32,47 +32,65 @@ Publish the package configuration and prepare the required environment keys:
 php artisan efatura:install
 ```
 
+The command offers `EFATURA_TRANSMITTER_TAX_ID`, `EFATURA_EMITTER_LED`,
+`EFATURA_TRANSMITTER_KEY`, `EFATURA_MIDDLEWARE_BASE_URL` and `EFATURA_ENVIRONMENT`,
+and never overwrites an existing key. The remaining `EFATURA_EMITTER_*` keys are
+optional; `config/efatura.php` lists them.
+
 ## Quick Start
 
 ```php
-use Akira\Efatura\Data\ElectronicInvoiceData;
-use Akira\Efatura\Enums\DocumentType;
+<?php
 
-$document = ElectronicInvoiceData::from([
-    'invoice' => [
-        'type' => DocumentType::ELECTRONIC_INVOICE,
-        'issueDate' => now()->toDateString(),
-        'emitter' => [
-            'nif' => '100200300',
-            'name' => 'Emitter',
-        ],
-        'receiver' => [
-            'nif' => '900800700',
-            'name' => 'Receiver',
-        ],
-        'lines' => [
-            [
-                'description' => 'Service',
-                'quantity' => 1,
-                'unitPrice' => 1000,
-                'total' => 1000,
-                'taxes' => [
-                    [
-                        'type' => 'IVA',
-                        'rate' => 15,
-                        'amount' => 150,
-                    ],
-                ],
-            ],
-        ],
-        'totals' => [
-            'subtotal' => 1000,
-            'taxTotal' => 150,
-            'grandTotal' => 1150,
-        ],
+declare(strict_types=1);
+
+use Akira\Efatura\Data\LineItemData;
+use Akira\Efatura\Data\PartyData;
+use Akira\Efatura\Data\TotalsData;
+use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Facades\Efatura;
+
+$emitter = PartyData::from([
+    'taxId'   => ['value' => '100200300', 'countryCode' => 'CV'],
+    'name'    => 'Example emitter',
+    'address' => [
+        'countryCode' => 'CV', 'addressDetail' => 'Praia office',
+        'addressCode' => 'CV111111111011110101',
     ],
+    'contacts' => ['email' => 'billing@example.cv', 'telephone' => '2600000'],
 ]);
+
+$document = Efatura::invoice()
+    ->type(DocumentType::Invoice)
+    ->emitter($emitter, ledCode: 1)
+    ->receiver(PartyData::from([
+        'taxId' => ['value' => '900800700', 'countryCode' => 'CV'],
+        'name'  => 'Example receiver',
+    ]))
+    ->line(LineItemData::from([
+        'quantity' => ['value' => '1', 'unitCode' => 'C62'],
+        'item'     => ['description' => 'Service', 'emitterIdentification' => 'SERVICE-1'],
+        'price'    => '100', 'priceExtension' => '100', 'netTotal' => '100',
+        'taxes'    => [['taxTypeCode' => 'IVA', 'taxPercentage' => '15']],
+    ]))
+    ->totals(TotalsData::from([
+        'priceExtensionTotalAmount' => '100', 'netTotalAmount' => '100',
+        'taxTotalAmount'            => '15', 'payableAmount' => '115',
+    ]))
+    ->build();
 ```
+
+The example lives in [docs/examples/quick-start.php](docs/examples/quick-start.php). `build()` returns an
+`ElectronicInvoiceData`; it does not issue the document or allocate a sequence number.
+Replace the example identities, address and LED with your registered fiscal data.
+The builder snapshots the package clock (Atlantic/Cape_Verde) when created; use
+`issuedAt(CarbonInterface $dateTime)` (converted to Cabo Verde time) or `header(DocumentHeaderData $header)` for
+explicit dates. Decimal strings avoid float rounding. A configured complete emitter
+can replace the explicit `emitter()` call. See [builders and configuration](docs/builders.md)
+and the [migration guide](docs/migration.md). Payload keys keep the official XML names
+(`serie`, `taxTypeCode`, `lineTypeCode`); the Data properties that read them are
+named after their concept (`$header->series`, `$tax->taxType`, `$line->lineType`),
+as listed in the [renamed symbols](docs/migration.md#renamed-symbols) table.
 
 ## Documentation
 

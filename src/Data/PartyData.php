@@ -4,42 +4,34 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Spatie\LaravelData\Data;
+use Akira\Efatura\Enums\PartyReference;
+use Akira\Efatura\Support\FieldPath;
+use Akira\Efatura\Support\FiscalRules;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class PartyData extends Data
+final class PartyData extends FiscalData
 {
     public function __construct(
-        public readonly string $nif,
-        public readonly string $name,
-        public readonly ?string $address = null,
-        public readonly ?string $city = null,
-        public readonly ?string $country = null,
+        public readonly ?TaxIdData $taxId = null,
+        public readonly ?string $name = null,
+        public readonly ?AddressData $address = null,
+        public readonly ?ContactsData $contacts = null,
+        public readonly ?PartyReference $reference = null,
     ) {}
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(): array
+    public static function rules(ValidationContext $context): array
     {
-        return [
-            'nif'  => ['bail', 'required', 'string'],
-            'name' => ['bail', 'required', 'string'],
-        ];
-    }
+        if (! \is_array($context->payload) || $context->payload === []) {
+            return [];
+        }
 
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
-    {
         return [
-            'nif.required'  => __('efatura.validation.party_nif_required'),
-            'name.required' => __('efatura.validation.party_name_required'),
+            'taxId'     => ['required_without:' . FieldPath::of($context, 'reference')],
+            'name'      => ['required_without:' . FieldPath::of($context, 'reference'), ...FiscalRules::text(3, 150)],
+            'reference' => ['prohibits:' . FieldPath::list($context, 'taxId', 'name', 'address', 'contacts')],
         ];
-    }
-
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
     }
 }

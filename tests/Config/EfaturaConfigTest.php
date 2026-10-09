@@ -2,31 +2,16 @@
 
 declare(strict_types=1);
 
-use Akira\Efatura\Configuration\EfaturaConfig;
+use Akira\Efatura\Configuration\HttpClientConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
 use Akira\Efatura\Enums\Environment;
+use Akira\Efatura\Tests\Support\ConfigFixtures;
 use Illuminate\Config\Repository;
 
-/**
- * @param array<string, mixed> $overrides
- */
-function loadEfaturaConfig(array $overrides = []): EfaturaConfig
-{
-    $repository = new Repository([
-        'filesystems' => ['default' => 'host-disk'],
-        'cache'       => ['default' => 'host-cache'],
-        'database'    => ['default' => 'host-database'],
-        'queue'       => ['default' => 'host-queue', 'connections' => ['host-queue' => ['queue' => 'host-jobs']]],
-        'efatura'     => $overrides,
-    ]);
-
-    return (new LoadEfaturaConfig($repository))();
-}
-
 it('resolves minimal host defaults without optional identities or secrets', function (): void {
-    $config = loadEfaturaConfig();
+    $config = ConfigFixtures::load();
 
-    expect($config->environment->environment)->toBe(Environment::TEST)
+    expect($config->environment->environment)->toBe(Environment::Test)
         ->and($config->environment->repositoryCode())->toBe(3)
         ->and($config->emitter)->toBeNull()
         ->and($config->transmitter->taxId)->toBeNull()
@@ -46,22 +31,29 @@ it('resolves minimal host defaults without optional identities or secrets', func
         ->and($config->database->connection)->toBe('host-database')
         ->and($config->database->sequencesTable)->toBe('efatura_sequences')
         ->and($config->queue->connection)->toBe('host-queue')
-        ->and($config->queue->queue)->toBe('host-jobs');
-
-    foreach ([$config->http->defaults, $config->http->middleware, $config->http->platform, $config->http->bcv, $config->http->worldBank] as $client) {
-        expect($client->timeoutSeconds)->toBe(30)
-            ->and($client->connectTimeoutSeconds)->toBe(10)
-            ->and($client->retries)->toBe(2)
-            ->and($client->retryDelayMilliseconds)->toBe(200)
-            ->and($client->concurrency)->toBe(5)
-            ->and($client->verifyTls)->toBeTrue();
-    }
-
-    expect($config->http->middleware->baseUrl)->toBe('https://localhost:3443')
+        ->and($config->queue->queue)->toBe('host-jobs')
+        ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443')
         ->and($config->http->platform->baseUrl)->toBe('https://services.efatura.cv/v1')
         ->and($config->http->bcv->baseUrl)->toBeNull()
         ->and($config->http->worldBank->baseUrl)->toBeNull();
 });
+
+it('resolves the default transport settings for each HTTP client', function (string $client): void {
+    $settings = ConfigFixtures::load()->http->{$client};
+
+    expect($settings->timeoutSeconds)->toBe(30)
+        ->and($settings->connectTimeoutSeconds)->toBe(10)
+        ->and($settings->retries)->toBe(2)
+        ->and($settings->retryDelayMilliseconds)->toBe(200)
+        ->and($settings->concurrency)->toBe(5)
+        ->and($settings->verifyTls)->toBeTrue();
+})->with([
+    'defaults'   => 'defaults',
+    'middleware' => 'middleware',
+    'platform'   => 'platform',
+    'bcv'        => 'bcv',
+    'world bank' => 'worldBank',
+]);
 
 it('boots with the published configuration and no operation credentials', function (): void {
     $config = (new LoadEfaturaConfig(resolve('config')))();
@@ -74,11 +66,11 @@ it('boots with the published configuration and no operation credentials', functi
 });
 
 it('keeps published defaults aligned with loader defaults', function (): void {
-    expect(loadEfaturaConfig(require __DIR__ . '/../../config/efatura.php'))->toEqual(loadEfaturaConfig());
+    expect(ConfigFixtures::load(require __DIR__ . '/../../config/efatura.php'))->toEqual(ConfigFixtures::load());
 });
 
 it('retains partial emitter defaults independently from transmitter identity', function (): void {
-    $config = loadEfaturaConfig([
+    $config = ConfigFixtures::load([
         'emitter'     => ['contacts' => ['email' => 'fiscal@example.test']],
         'transmitter' => ['tax_id' => '100200300', 'name' => 'Transmitter'],
     ]);
@@ -89,10 +81,10 @@ it('retains partial emitter defaults independently from transmitter identity', f
 });
 
 it('normalizes configured identities infrastructure and client overrides', function (): void {
-    $config = loadEfaturaConfig([
+    $config = ConfigFixtures::load([
         'environment' => ' production ',
         'emitter'     => [
-            'tax_id'   => '100200300', 'name' => ' Fiscal party ', 'led' => 'LED-1',
+            'tax_id'   => '100200300', 'name' => ' Fiscal party ', 'led' => '12',
             'address'  => ['country_code' => 'CV', 'region' => 'Santiago', 'city' => 'Praia', 'street' => 'Rua 1', 'postal_code' => '7600'],
             'contacts' => ['email' => 'fiscal@example.test', 'telephone' => '2600000', 'mobile' => '9900000'],
         ],
@@ -119,7 +111,7 @@ it('normalizes configured identities infrastructure and client overrides', funct
     expect($config->environment->repositoryCode())->toBe(1)
         ->and($config->emitter->taxId)->toBe('100200300')
         ->and($config->emitter->name)->toBe('Fiscal party')
-        ->and($config->emitter->led)->toBe('LED-1')
+        ->and($config->emitter->led)->toBe(12)
         ->and($config->emitter->address->countryCode)->toBe('CV')
         ->and($config->emitter->address->region)->toBe('Santiago')
         ->and($config->emitter->address->city)->toBe('Praia')
@@ -163,12 +155,12 @@ it('normalizes configured identities infrastructure and client overrides', funct
 });
 
 it('accepts official environment names codes and enum cases', function (mixed $environment, int $code): void {
-    expect(loadEfaturaConfig(['environment' => $environment])->environment->repositoryCode())->toBe($code);
-})->with([[Environment::HOMOLOGATION, 2], ['homologation', 2], [1, 1], ['1', 1], ['2', 2], ['3', 3]]);
+    expect(ConfigFixtures::load(['environment' => $environment])->environment->repositoryCode())->toBe($code);
+})->with([[Environment::Homologation, 2], ['homologation', 2], [1, 1], ['1', 1], ['2', 2], ['3', 3]]);
 
 it('trims ASCII edge whitespace while preserving non-breaking spaces and secrets', function (): void {
     $nonBreaking = "\u{00A0}name\u{00A0}";
-    $config      = loadEfaturaConfig([
+    $config      = ConfigFixtures::load([
         'software'    => ['name' => $nonBreaking, 'code' => " \tcode\r\n"],
         'transmitter' => ['middleware_key' => " \tsecret\r\n", 'oauth' => ['client_secret' => "\u{00A0}secret\u{00A0}"]],
     ]);
@@ -179,7 +171,7 @@ it('trims ASCII edge whitespace while preserving non-breaking spaces and secrets
         ->and($config->transmitter->oauth->clientSecret)->toBe("\u{00A0}secret\u{00A0}");
 });
 
-it('inherits explicit null overrides including the selected queue connection', function (): void {
+it('inherits the queue name of an explicitly selected queue connection', function (): void {
     $repository = new Repository([
         'filesystems' => ['default' => 'local'], 'cache' => ['default' => 'array'],
         'database'    => ['default' => 'sqlite'],
@@ -188,11 +180,20 @@ it('inherits explicit null overrides including the selected queue connection', f
     ]);
 
     expect((new LoadEfaturaConfig($repository))()->queue->queue)->toBe('priority');
-    $repository->set('efatura.queue.connection');
+});
+
+it('leaves the queue name empty when the inherited host connection declares none', function (): void {
+    $repository = new Repository([
+        'filesystems' => ['default' => 'local'], 'cache' => ['default' => 'array'],
+        'database'    => ['default' => 'sqlite'],
+        'queue'       => ['default' => 'sync', 'connections' => ['redis' => ['queue' => 'priority']]],
+        'efatura'     => ['emitter' => null, 'queue' => ['connection' => null, 'queue' => null], 'http' => ['middleware' => ['timeout_seconds' => null]]],
+    ]);
+
     expect((new LoadEfaturaConfig($repository))()->queue->queue)->toBeNull();
 });
 
-it('observes repository overrides before loading and keeps resolved graphs immutable', function (): void {
+it('observes repository overrides made before each load', function (): void {
     $repository = resolve('config');
     $repository->set('efatura.environment', 'PRODUCTION');
     $repository->set('efatura.transmitter.tax_id', '100200300');
@@ -204,7 +205,34 @@ it('observes repository overrides before loading and keeps resolved graphs immut
     expect($original->environment->repositoryCode())->toBe(1)
         ->and($loader()->environment->repositoryCode())->toBe(3)
         ->and($original->emitter)->toBeNull();
-    expect(function () use ($original): void {
-        $original->http->defaults->timeoutSeconds = 99;
-    })->toThrow(Error::class);
+});
+
+it('keeps resolved configuration graphs immutable', function (): void {
+    $config = ConfigFixtures::load();
+
+    expect(function () use ($config): void {
+        $config->http->defaults->timeoutSeconds = 99;
+    })->toThrow(Error::class, 'Cannot modify readonly property ' . HttpClientConfig::class . '::$timeoutSeconds');
+});
+
+it('maps the configured emitter onto the fiscal party payload field by field', function (): void {
+    $emitter = ConfigFixtures::load(['emitter' => [
+        'tax_id'   => '100200300', 'name' => 'Fiscal party',
+        'address'  => ['country_code' => 'CV', 'address_detail' => 'Praia office', 'building_floor' => '2'],
+        'contacts' => ['email' => 'fiscal@example.test', 'mobile' => '9900000'],
+    ]])->emitter;
+
+    expect($emitter->partyPayload())->toBe([
+        'taxId'    => ['value' => '100200300', 'countryCode' => 'CV'],
+        'name'     => 'Fiscal party',
+        'address'  => ['countryCode' => 'CV', 'addressDetail' => 'Praia office', 'buildingFloor' => '2'],
+        'contacts' => ['email' => 'fiscal@example.test', 'telephone' => null, 'mobilephone' => '9900000', 'telefax' => null, 'website' => null],
+    ]);
+});
+
+it('leaves the address out of a configured emitter that has none', function (): void {
+    $emitter = ConfigFixtures::load(['emitter' => ['contacts' => ['email' => 'fiscal@example.test']]])->emitter;
+
+    expect($emitter->partyPayload()['address'])->toBeNull()
+        ->and($emitter->taxIdPayload())->toBe(['value' => null, 'countryCode' => 'CV']);
 });

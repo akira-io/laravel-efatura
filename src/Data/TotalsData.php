@@ -4,42 +4,60 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Spatie\LaravelData\Data;
+use Akira\Efatura\Data\Attributes\CveAmount;
+use Akira\Efatura\Rules\FiscalNumber;
+use Akira\Efatura\Support\Fiscal;
+use Brick\Money\Money;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
 
-final class TotalsData extends Data
+final class TotalsData extends FiscalData
 {
+    private const array UNSIGNED_AMOUNTS = [
+        'priceExtensionTotalAmount',
+        'netTotalAmount',
+        'taxTotalAmount',
+        'payableAmount',
+        'chargeTotalAmount',
+        'discountTotalAmount',
+        'withholdingTaxTotalAmount',
+    ];
+
+    /**
+     * @param list<PayableAlternativeAmountData> $payableAlternativeAmounts
+     */
     public function __construct(
-        public readonly float $subtotal,
-        public readonly float $taxTotal,
-        public readonly float $grandTotal,
+        #[CveAmount]
+        public readonly Money $priceExtensionTotalAmount,
+        #[CveAmount]
+        public readonly Money $netTotalAmount,
+        #[CveAmount]
+        public readonly Money $taxTotalAmount,
+        #[CveAmount]
+        public readonly Money $payableAmount,
+        #[CveAmount]
+        public readonly ?Money $chargeTotalAmount = null,
+        #[CveAmount]
+        public readonly ?Money $discountTotalAmount = null,
+        #[CveAmount]
+        public readonly ?Money $withholdingTaxTotalAmount = null,
+        #[CveAmount]
+        public readonly ?Money $payableRoundingAmount = null,
+        public readonly ?DiscountData $discount = null,
+        #[DataCollectionOf(PayableAlternativeAmountData::class), ListType, Max(Fiscal::MAX_LIST_ENTRIES)]
+        public readonly array $payableAlternativeAmounts = [],
     ) {}
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, list<mixed>>
      */
     public static function rules(): array
     {
         return [
-            'subtotal'   => ['bail', 'numeric', 'min:0'],
-            'taxTotal'   => ['bail', 'numeric', 'min:0'],
-            'grandTotal' => ['bail', 'numeric', 'min:0'],
+            ...collect(self::UNSIGNED_AMOUNTS)
+                ->mapWithKeys(static fn (string $field): array => [$field => [FiscalNumber::amount(Fiscal::CURRENCY)]])->all(),
+            'payableRoundingAmount' => [FiscalNumber::signedAmount(Fiscal::CURRENCY)],
         ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
-    {
-        return [
-            'subtotal.min'   => __('efatura.validation.totals_negative'),
-            'taxTotal.min'   => __('efatura.validation.totals_negative'),
-            'grandTotal.min' => __('efatura.validation.totals_negative'),
-        ];
-    }
-
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
     }
 }

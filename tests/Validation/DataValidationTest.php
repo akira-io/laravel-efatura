@@ -1,219 +1,75 @@
 <?php
 
 declare(strict_types=1);
-
-use Akira\Efatura\Contracts\DocumentTypePolicy;
-use Akira\Efatura\Data\InvoiceData;
-use Akira\Efatura\Data\LineItemData;
-use Akira\Efatura\Data\PartyData;
-use Akira\Efatura\Data\TaxData;
-use Akira\Efatura\Data\TotalsData;
+use Akira\Efatura\Data\CreditNoteData;
+use Akira\Efatura\Data\DebitNoteData;
+use Akira\Efatura\Data\DocumentData;
+use Akira\Efatura\Data\ElectronicInvoiceData;
+use Akira\Efatura\Data\ReceiptData;
+use Akira\Efatura\Data\ReceiptInvoiceData;
+use Akira\Efatura\Data\RegistrationNoteData;
+use Akira\Efatura\Data\ReturnNoteData;
+use Akira\Efatura\Data\SalesReceiptData;
+use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
-use Akira\Efatura\Support\DefaultDocumentTypePolicy;
-use Akira\Efatura\Tests\Support\ValidationFixtures;
-use Illuminate\Validation\ValidationException;
+use Akira\Efatura\Tests\Support\DocumentFixtures as F;
+use Akira\Efatura\Tests\Support\DocumentPayloads as P;
+use Carbon\CarbonImmutable;
 
-it('validates invoice issue date', function (): void {
-    $payload = ValidationFixtures::invoicePayload(['issueDate' => '']);
-
-    ValidationFixtures::assertMessage(
-        fn (): array => InvoiceData::validate($payload),
-        'issueDate',
-        trans('efatura.invoice.issue_date_required'),
-    );
+beforeEach(function (): void {
+    CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
 });
 
-it('covers line item construction', function (): void {
-    $line = new LineItemData('Item', 1.0, 100.0, 100.0, []);
+dataset('canonical factories', ['from', 'validateAndCreate']);
 
-    expect($line->description)->toBe('Item');
+it('constructs all nine concrete fiscal document graphs', function (string $class, string $type, array $payload, string $factory): void {
+    $document = $class::$factory($payload);
+
+    expect($document->type())->toBe(DocumentType::from($type))
+        ->and($document->header->documentNumber)->toBeNull();
+})->with([
+    'invoice'         => [ElectronicInvoiceData::class, 'FTE', F::payload()],
+    'invoice receipt' => [ReceiptInvoiceData::class, 'FRE', F::payload(['payments' => F::payments()])],
+    'sales receipt'   => [SalesReceiptData::class, 'TVE', F::payload(['payments' => F::payments(), 'receiver' => null])],
+    'receipt'         => [ReceiptData::class, 'RCE', F::receiptPayload('1')],
+    'credit note'     => [CreditNoteData::class, 'NCE', P::correction(['issueReasonCode' => 'DRP'])],
+    'debit note'      => [DebitNoteData::class, 'NDE', P::correction(['issueReasonCode' => 'DD'])],
+    'return note'     => [ReturnNoteData::class, 'DVE', P::returnNote('0')],
+    'registration'    => [RegistrationNoteData::class, 'NLE', F::payload()],
+    'transport'       => [TransportDocumentData::class, 'DTE', P::unpricedTransport()],
+])->with('canonical factories');
+
+it('rejects invalid document combinations through both canonical factories', function (string $class, array $payload, string $field, string $message, string $factory): void {
+    expect(fn (): DocumentData => $class::$factory($payload))->toFailValidationOn($field, $message);
+})->with([
+    'missing lines'            => [ElectronicInvoiceData::class, F::payload(['lines' => []]), 'lines', 'The lines field must have at least 1 items.'],
+    'receiver required'        => [ElectronicInvoiceData::class, F::payload(['receiver' => null]), 'receiver', 'The receiver field is required.'],
+    'credit references'        => [CreditNoteData::class, F::payload(['issueReasonCode' => '2']), 'references', 'The references field must be present.'],
+    'debit references'         => [DebitNoteData::class, F::payload(['issueReasonCode' => 'DD']), 'references', 'The references field must be present.'],
+    'return references'        => [ReturnNoteData::class, F::payload(['issueReasonCode' => 'IN']), 'references', 'The references field must be present.'],
+    'invoice payments'         => [ElectronicInvoiceData::class, F::payload(['payments' => F::payments()]), 'payments.payments', 'The payments.payments field is prohibited.'],
+    'receipt invoice payments' => [ReceiptInvoiceData::class, F::payload(), 'payments', 'The payments field is required.'],
+    'sales payments'           => [SalesReceiptData::class, F::payload(), 'payments', 'The payments field is required.'],
+    'incompatible reason'      => [CreditNoteData::class, P::correction(['issueReasonCode' => 'DD']), 'issueReasonCode', 'The selected issue reason code is invalid.'],
+    'other reason description' => [ReturnNoteData::class, P::correction(['issueReasonCode' => '0']), 'issueReasonDescription', 'The issue reason description field is required.'],
+    'forbidden reason'         => [ElectronicInvoiceData::class, F::payload(['issueReasonCode' => '2']), 'issueReasonCode', 'This field does not belong to this fiscal document type.'],
+    'forbidden rappel'         => [DebitNoteData::class, P::correction(['issueReasonCode' => 'DD', 'rappelPeriod' => ['startDate' => '2026-01-01', 'endDate' => '2026-02-01']]),
+        'rappelPeriod', 'This field does not belong to this fiscal document type.'],
+    'missing tax'            => [ElectronicInvoiceData::class, F::payload(['lines' => [F::linePayload(['taxes' => []])]]), 'lines.0.taxes', 'The lines.0.taxes field is required.'],
+    'missing price evidence' => [ElectronicInvoiceData::class, F::payload(['lines' => [F::linePayload(['price' => null])]]), 'lines.0.price', 'The lines.0.price field is required.'],
+    'duplicate line ids'     => [ElectronicInvoiceData::class, P::duplicateLineIds('A'), 'lines.1.id', 'The lines.1.id field has a duplicate value.'],
+    'missing charge target'  => [ElectronicInvoiceData::class, F::payload(['lines' => [F::linePayload(['lineTypeCode' => 'C', 'lineReferenceId' => 'missing'])]]),
+        'lines.0.lineReferenceId', 'The selected lines.0.lineReferenceId is invalid.'],
+    'receiver self reference' => [ElectronicInvoiceData::class, F::payload(['receiver' => ['reference' => 'RP']]), 'receiver.reference', 'The selected receiver.reference is invalid.'],
+])->with('canonical factories');
+
+it('accepts an anonymous sales receipt below the receiver threshold', function (): void {
+    expect(SalesReceiptData::from(P::exemptAnonymousSalesReceipt('19999.99999'))->receiver)->toBeNull();
 });
 
-it('covers policy behavior', function (): void {
-    $policy = new DefaultDocumentTypePolicy;
+it('requires a receiver on sales receipts from the exact payable threshold', function (string $amount): void {
+    $payload = P::exemptAnonymousSalesReceipt($amount);
 
-    expect($policy->supportsEmission(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->supportsEmission(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse()
-        ->and($policy->allowsIud(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->allowsIud(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse()
-        ->and($policy->allowsXml(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->allowsXml(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse()
-        ->and($policy->allowedInProduction(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->allowedInProduction(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse();
-});
-
-it('covers party rules and messages', function (): void {
-    expect(PartyData::rules())->toHaveKey('nif')
-        ->and(PartyData::messages())->toHaveKey('nif.required')
-        ->and(PartyData::stopOnFirstFailure())->toBeTrue();
-});
-
-it('covers tax rules and messages', function (): void {
-    expect(TaxData::rules())->toHaveKey('exemptionReason')
-        ->and(TaxData::messages())->toHaveKey('exemptionReason.required_if')
-        ->and(TaxData::stopOnFirstFailure())->toBeTrue();
-});
-
-it('covers tax data constructor', function (): void {
-    $tax = new TaxData('IVA', 15.0, 150.0);
-
-    expect($tax->type)->toBe('IVA')
-        ->and($tax->rate)->toBe(15.0)
-        ->and($tax->amount)->toBe(150.0)
-        ->and($tax->exemptionReason)->toBeNull();
-});
-
-it('covers totals rules and messages', function (): void {
-    expect(TotalsData::rules())->toHaveKey('subtotal')
-        ->and(TotalsData::messages())->toHaveKey('subtotal.min')
-        ->and(TotalsData::stopOnFirstFailure())->toBeTrue();
-});
-
-it('requires invoice lines', function (): void {
-    $payload          = ValidationFixtures::invoicePayload();
-    $payload['lines'] = [];
-
-    ValidationFixtures::assertMessage(
-        fn (): array => InvoiceData::validate($payload),
-        'lines',
-        trans('efatura.validation.lines_required'),
-    );
-});
-
-it('requires receiver for non sales receipt types', function (): void {
-    $payload = ValidationFixtures::invoicePayload(['receiver' => null]);
-
-    ValidationFixtures::assertMessage(
-        fn (): array => InvoiceData::validate($payload),
-        'receiver',
-        trans('efatura.invoice.receiver_required_for_type'),
-    );
-});
-
-it('accepts supported document types', function (): void {
-    $policy = resolve(DocumentTypePolicy::class);
-
-    foreach (DocumentType::cases() as $type) {
-        if (! $policy->supportsEmission($type)) {
-            continue;
-        }
-
-        $payload = ValidationFixtures::invoicePayload(['type' => $type]);
-
-        expect(fn (): array => InvoiceData::validate($payload))
-            ->not->toThrow(ValidationException::class);
-    }
-});
-
-it('covers invoice data constructor', function (): void {
-    $invoice = new InvoiceData(
-        DocumentType::ELECTRONIC_INVOICE,
-        '2026-02-08',
-        new PartyData('100200300', 'Emitter'),
-        new PartyData('900800700', 'Receiver'),
-        [new LineItemData('Item', 1.0, 100.0, 100.0, [])],
-        new TotalsData(100.0, 0.0, 100.0),
-    );
-
-    expect($invoice->type)->toBe(DocumentType::ELECTRONIC_INVOICE);
-});
-
-it('rejects unsupported document types', function (): void {
-    $unsupported = [
-        DocumentType::ELECTRONIC_RECEIPT,
-        DocumentType::ELECTRONIC_DEBIT_NOTE,
-        DocumentType::ELECTRONIC_RETURN_NOTE,
-        DocumentType::ELECTRONIC_ENTRY_NOTE,
-    ];
-
-    foreach ($unsupported as $type) {
-        $payload = ValidationFixtures::invoicePayload(['type' => $type]);
-
-        ValidationFixtures::assertMessage(
-            fn (): array => InvoiceData::validate($payload),
-            'type',
-            trans('efatura.invoice.document_type_not_supported', ['type' => $type->value]),
-        );
-    }
-});
-
-it('covers invoice type non string branch', function (): void {
-    $validator = resolve('validator')->make(['type' => 123], []);
-    InvoiceData::withValidator($validator);
-    $validator->passes();
-
-    expect($validator->errors()->isEmpty())->toBeTrue();
-});
-
-it('covers invoice type invalid string branch', function (): void {
-    $data = [
-        'type' => 'INVALID',
-    ];
-
-    $validator = resolve('validator')->make($data, []);
-    InvoiceData::withValidator($validator);
-    $validator->passes();
-
-    expect($validator->errors()->isEmpty())->toBeTrue();
-});
-
-it('covers receiver invalid type branch', function (): void {
-    $data = [
-        'type'      => DocumentType::ELECTRONIC_INVOICE,
-        'issueDate' => '2026-02-08',
-        'emitter'   => [
-            'nif'  => '100200300',
-            'name' => 'Emitter',
-        ],
-        'receiver' => 'invalid',
-        'lines'    => [
-            [
-                'description' => 'Item',
-                'quantity'    => 1,
-                'unitPrice'   => 1000.0,
-                'total'       => 1000.0,
-                'taxes'       => [],
-            ],
-        ],
-        'totals' => [
-            'subtotal'   => 1000.0,
-            'taxTotal'   => 0.0,
-            'grandTotal' => 1000.0,
-        ],
-    ];
-
-    $validator = resolve('validator')->make($data, []);
-    InvoiceData::withValidator($validator);
-    $validator->passes();
-
-    $errors = $validator->errors()->toArray();
-
-    expect($errors['receiver'][0])->toBe(trans('efatura.validation.receiver_required'));
-});
-
-it('covers invoice lines branch', function (): void {
-    $data = [
-        'type'      => DocumentType::ELECTRONIC_INVOICE,
-        'issueDate' => '2026-02-08',
-        'emitter'   => [
-            'nif'  => '100200300',
-            'name' => 'Emitter',
-        ],
-        'receiver' => [
-            'nif'  => '900800700',
-            'name' => 'Receiver',
-        ],
-        'lines'  => [],
-        'totals' => [
-            'subtotal'   => 1000.0,
-            'taxTotal'   => 0.0,
-            'grandTotal' => 1000.0,
-        ],
-    ];
-
-    $validator = resolve('validator')->make($data, []);
-    InvoiceData::withValidator($validator);
-    $validator->passes();
-
-    expect($validator->errors()->toArray())->toHaveKey('lines');
-});
+    expect(fn (): SalesReceiptData => SalesReceiptData::from($payload))
+        ->toFailValidationOn('receiver', 'The receiver field is required.');
+})->with(['20000', '20000.00001']);

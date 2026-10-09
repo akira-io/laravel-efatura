@@ -4,57 +4,56 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesInvoiceType;
-use Akira\Efatura\Enums\DocumentType;
-use Illuminate\Validation\Validator;
-use Spatie\LaravelData\Data;
+use Akira\Efatura\Data\Attributes\FiscalDateFormat;
+use Akira\Efatura\Data\Contracts\HasTaxPointDate;
+use Akira\Efatura\Data\Contracts\HasTotals;
+use Akira\Efatura\Data\Contracts\SettlesOnIssue;
+use Akira\Efatura\Support\DocumentRuleSets;
+use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FiscalRules;
+use Carbon\CarbonImmutable;
+use Override;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
+use Spatie\LaravelData\Attributes\Validation\Min;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class ReceiptInvoiceData extends Data
+final class ReceiptInvoiceData extends DocumentData implements HasTaxPointDate, HasTotals, SettlesOnIssue
 {
-    use ValidatesInvoiceType;
-
-    public const DocumentType TYPE = DocumentType::ELECTRONIC_INVOICE_RECEIPT;
-
+    /**
+     * @param list<LineItemData>  $lines
+     * @param list<ReferenceData> $references
+     */
     public function __construct(
-        public readonly InvoiceData $invoice,
+        public readonly DocumentHeaderData $header,
+        public readonly PartyData $emitter,
+        public readonly PartyData $receiver,
+        #[DataCollectionOf(LineItemData::class), ListType, Min(1), Max(Fiscal::MAX_LINES)]
+        public readonly array $lines,
+        public readonly TotalsData $totals,
+        public readonly PaymentsData $payments,
+        public readonly ?string $orderReference = null,
+        #[FiscalDateFormat(Fiscal::DATE_FORMAT)]
+        public readonly ?CarbonImmutable $taxPointDate = null,
+        public readonly ?PartyData $paymentParty = null,
+        #[DataCollectionOf(ReferenceData::class), ListType, Max(Fiscal::MAX_REFERENCES)]
+        public readonly array $references = [],
+        public readonly ?DeliveryData $delivery = null,
+        public readonly ?EmissionContextData $emission = null,
+        public readonly ?DocumentFooterData $footer = null,
     ) {}
 
-    public static function withValidator(Validator $validator): void
-    {
-        $validator->after(static function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $type = data_get($validator->getData(), 'invoice.type');
-
-            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_INVOICE_RECEIPT, $type, 'invoice.type');
-        });
-    }
-
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(): array
+    #[Override]
+    protected static function documentRules(ValidationContext $context): array
     {
         return [
-            'invoice' => ['bail', 'required', 'array'],
+            ...DocumentRuleSets::lines($context, self::documentType()),
+            ...DocumentRuleSets::settledPayments($context),
+            'orderReference' => FiscalRules::code(),
         ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
-    {
-        return [
-            'invoice.required' => __('efatura.validation.invoice_required'),
-            'invoice.array'    => __('efatura.validation.invoice_required'),
-        ];
-    }
-
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
     }
 }

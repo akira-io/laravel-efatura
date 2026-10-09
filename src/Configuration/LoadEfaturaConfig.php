@@ -17,11 +17,23 @@ final readonly class LoadEfaturaConfig
 {
     use ValidatesConfigurationValues;
 
+    private const array SECTIONS = [
+        'efatura',
+        'efatura.transmitter',
+        'efatura.transmitter.oauth',
+        'efatura.software',
+        'efatura.certificates',
+        'efatura.storage',
+        'efatura.cache',
+        'efatura.database',
+        'efatura.queue',
+    ];
+
     public function __construct(#[SensitiveParameter] private Repository $repository) {}
 
     public function __invoke(): EfaturaConfig
     {
-        foreach (['efatura', 'efatura.transmitter', 'efatura.transmitter.oauth', 'efatura.software', 'efatura.certificates', 'efatura.storage', 'efatura.cache', 'efatura.database', 'efatura.queue'] as $path) {
+        foreach (self::SECTIONS as $path) {
             $this->section($path);
         }
 
@@ -35,8 +47,12 @@ final readonly class LoadEfaturaConfig
                 $this->string('efatura.transmitter.middleware_key', secret: true),
                 new OAuthConfig($this->string('efatura.transmitter.oauth.client_id'), $this->string('efatura.transmitter.oauth.client_secret', secret: true)),
             ),
-            software: new SoftwareConfig($this->string('efatura.software.code'), $this->string('efatura.software.name'), $this->string('efatura.software.version')),
-            environment: new EnvironmentConfig($this->environment($this->repository->get('efatura.environment', Environment::TEST))),
+            software: new SoftwareConfig(
+                $this->string('efatura.software.code'),
+                $this->string('efatura.software.name'),
+                $this->string('efatura.software.version'),
+            ),
+            environment: new EnvironmentConfig($this->environment($this->repository->get('efatura.environment', Environment::Test))),
             certificates: new CertificateConfig(
                 $this->inherit('efatura.certificates.disk', 'filesystems.default'),
                 $this->relativePath('efatura.certificates.certificate_path'),
@@ -45,7 +61,8 @@ final readonly class LoadEfaturaConfig
             ),
             storage: new StorageConfig(
                 $this->inherit('efatura.storage.disk', 'filesystems.default'),
-                $this->relativePath('efatura.storage.path', 'efatura') ?? throw new ConfigurationException('configuration.invalid_type', 'efatura.storage.path'),
+                $this->relativePath('efatura.storage.path', 'efatura')
+                    ?? throw new ConfigurationException('configuration.invalid_type', 'efatura.storage.path'),
             ),
             cache: new CacheConfig(
                 $this->inherit('efatura.cache.store', 'cache.default'),
@@ -135,6 +152,13 @@ final readonly class LoadEfaturaConfig
         return $value;
     }
 
+    private function led(string $path): ?int
+    {
+        $value = $this->repository->get($path);
+
+        return $this->validatedLed(\is_int($value) ? (string) $value : $this->string($path), $path);
+    }
+
     private function taxId(string $path): ?string
     {
         return $this->validatedTaxId($this->string($path), $path);
@@ -167,18 +191,27 @@ final readonly class LoadEfaturaConfig
         $emitter = new EmitterConfig(
             $this->taxId('efatura.emitter.tax_id'),
             $this->string('efatura.emitter.name'),
-            $this->string('efatura.emitter.led'),
+            $this->led('efatura.emitter.led'),
             new AddressConfig(
                 $this->string('efatura.emitter.address.country_code'),
                 $this->string('efatura.emitter.address.region'),
                 $this->string('efatura.emitter.address.city'),
                 $this->string('efatura.emitter.address.street'),
                 $this->string('efatura.emitter.address.postal_code'),
+                $this->string('efatura.emitter.address.address_detail'),
+                $this->string('efatura.emitter.address.address_code'),
+                $this->string('efatura.emitter.address.state'),
+                $this->string('efatura.emitter.address.street_detail'),
+                $this->string('efatura.emitter.address.building_name'),
+                $this->string('efatura.emitter.address.building_number'),
+                $this->string('efatura.emitter.address.building_floor'),
             ),
             new ContactsConfig(
                 $this->string('efatura.emitter.contacts.email'),
                 $this->string('efatura.emitter.contacts.telephone'),
                 $this->string('efatura.emitter.contacts.mobile'),
+                $this->string('efatura.emitter.contacts.telefax'),
+                $this->string('efatura.emitter.contacts.website'),
             ),
         );
         foreach ([$emitter->taxId, $emitter->name, $emitter->led, ...get_object_vars($emitter->address), ...get_object_vars($emitter->contacts)] as $field) {

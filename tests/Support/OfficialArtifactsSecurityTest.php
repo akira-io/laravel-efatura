@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Support\OfficialArtifacts;
 use Akira\Efatura\Tests\Support\ArtifactFixture;
+use Akira\Efatura\Tests\Support\ExceptionTrace;
 use Illuminate\Filesystem\Filesystem;
 
 beforeEach(function (): void {
@@ -40,27 +41,30 @@ it('rejects unknown signature profiles', function (): void {
         ->toThrow(OfficialArtifactException::class, 'artifacts.unknown_profile');
 });
 
-it('detects modified bytes including line ending normalization on every lookup', function (): void {
+it('detects modified bytes on every lookup', function (string $bytes, string $errorCode): void {
     $artifacts = $this->fixture->artifacts();
-    $path      = $artifacts->path('nested/example.xsd');
-    $this->files->put($path, "original\nbytes\n");
+    $this->files->put($artifacts->path('nested/example.xsd'), $bytes);
 
-    expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(OfficialArtifactException::class, 'artifacts.size_mismatch');
+    expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(OfficialArtifactException::class, $errorCode);
+})->with([
+    'normalized line endings' => ["original\nbytes\n", 'artifacts.size_mismatch'],
+    'same size, other bytes'  => ["changed!\r\nbytes\r\n", 'artifacts.checksum_mismatch'],
+]);
 
-    $this->files->put($path, "changed!\r\nbytes\r\n");
-
-    expect(fn (): string => $artifacts->path('nested/example.xsd'))->toThrow(OfficialArtifactException::class, 'artifacts.checksum_mismatch');
-});
-
-it('rejects missing files and directories', function (bool $directory): void {
+it('rejects a missing file', function (): void {
     $this->files->delete($this->fixture->root . '/nested/example.xsd');
-    if ($directory) {
-        $this->files->ensureDirectoryExists($this->fixture->root . '/nested/example.xsd');
-    }
 
     expect(fn (): string => $this->fixture->artifacts()->path('nested/example.xsd'))
         ->toThrow(OfficialArtifactException::class, 'artifacts.missing_or_unreadable');
-})->with([true, false]);
+});
+
+it('rejects a directory in place of a file', function (): void {
+    $this->files->delete($this->fixture->root . '/nested/example.xsd');
+    $this->files->ensureDirectoryExists($this->fixture->root . '/nested/example.xsd');
+
+    expect(fn (): string => $this->fixture->artifacts()->path('nested/example.xsd'))
+        ->toThrow(OfficialArtifactException::class, 'artifacts.missing_or_unreadable');
+});
 
 it('rejects symbolic links even when their target has the expected bytes', function (): void {
     $this->files->move($this->fixture->root . '/nested/example.xsd', $this->fixture->root . '/target.xsd');
@@ -78,29 +82,33 @@ it('rejects symbolic link directories', function (): void {
         ->toThrow(OfficialArtifactException::class, 'artifacts.symbolic_link');
 });
 
-it('fails safely when the resource root or manifest is missing', function (bool $root): void {
+it('fails safely when the manifest or the resource root is missing', function (string $suffix, string $errorCode): void {
     $this->files->delete($this->fixture->root . '/official-artifacts.json');
+    $root = $this->fixture->root . $suffix;
 
-    expect(fn (): OfficialArtifacts => new OfficialArtifacts(new Filesystem, $this->fixture->root . ($root ? '/absent' : '')))
-        ->toThrow(OfficialArtifactException::class, $root ? 'artifacts.missing_root' : 'artifacts.missing_or_unreadable');
-})->with([true, false]);
+    expect(fn (): OfficialArtifacts => new OfficialArtifacts(new Filesystem, $root))->toThrow(OfficialArtifactException::class, $errorCode);
+})->with([
+    'missing root'     => ['/absent', 'artifacts.missing_root'],
+    'missing manifest' => ['', 'artifacts.missing_or_unreadable'],
+]);
 
 it('normalizes a native root canonicalization failure without exposing the supplied path', function (): void {
     $original  = ini_set('zend.exception_ignore_args', '0');
     $resources = $this->fixture->root . "/synthetic-private-root\0invalid";
 
     try {
-        try {
-            new OfficialArtifacts(new Filesystem, $resources);
-            test()->fail('An invalid resource root was accepted.');
-        } catch (OfficialArtifactException $exception) {
-            expect($exception->errorCode)->toBe('artifacts.missing_root')
-                ->and($exception->getMessage())->toBe('artifacts.missing_root')
-                ->and($exception->context)->toBe(['operation' => 'load_manifest'])
-                ->and($exception->getPrevious())->toBeNull()
-                ->and(array_column($exception->getTrace(), 'args'))->not->toBeEmpty()
-                ->and(print_r($exception->getTrace(), true))->not->toContain($resources, 'synthetic-private-root');
-        }
+        expect(fn (): OfficialArtifacts => new OfficialArtifacts(new Filesystem, $resources))
+            ->toThrow(function (OfficialArtifactException $exception) use ($resources): void {
+                $dump = print_r(ExceptionTrace::packageArguments($exception), true);
+
+                expect($exception->errorCode)->toBe('artifacts.missing_root')
+                    ->and($exception->getMessage())->toBe('artifacts.missing_root')
+                    ->and($exception->context)->toBe(['operation' => 'load_manifest'])
+                    ->and($exception->getPrevious())->toBeNull()
+                    ->and($exception->getTrace()[0]['args'][1] ?? null)->toBeInstanceOf(SensitiveParameterValue::class)
+                    ->and($dump)->not->toContain($resources)
+                    ->and($dump)->not->toContain('synthetic-private-root');
+            });
     } finally {
         ini_set('zend.exception_ignore_args', $original);
     }
@@ -156,16 +164,16 @@ it('rejects a same-byte symlink swapped in during hashing without leaking the ro
         }
     };
 
-    try {
-        new OfficialArtifacts($filesystem, $root)->path('nested/example.xsd');
-        test()->fail('A symlink replacement was accepted.');
-    } catch (OfficialArtifactException $officialArtifactException) {
-        expect($officialArtifactException->errorCode)->toBeIn(['artifacts.symbolic_link', 'artifacts.missing_or_unreadable'])
-            ->and($officialArtifactException->getMessage())->not->toContain($root)
-            ->and(json_encode($officialArtifactException->context, JSON_THROW_ON_ERROR))->not->toContain($root)
-            ->and($officialArtifactException->getPrevious())->toBeNull()
-            ->and(json_encode($officialArtifactException->getTrace(), JSON_THROW_ON_ERROR))->not->toContain($root);
-    }
+    $artifacts = new OfficialArtifacts($filesystem, $root);
+
+    expect(fn (): string => $artifacts->path('nested/example.xsd'))
+        ->toThrow(function (OfficialArtifactException $officialArtifactException) use ($root): void {
+            expect($officialArtifactException->errorCode)->toBeIn(['artifacts.symbolic_link', 'artifacts.missing_or_unreadable'])
+                ->and($officialArtifactException->getMessage())->not->toContain($root)
+                ->and(json_encode($officialArtifactException->context, JSON_THROW_ON_ERROR))->not->toContain($root)
+                ->and($officialArtifactException->getPrevious())->toBeNull()
+                ->and(json_encode($officialArtifactException->getTrace(), JSON_THROW_ON_ERROR))->not->toContain($root);
+        });
 });
 
 it('returns safe errors for failed filesystem checks', function (string $method, string $errorCode): void {
@@ -215,16 +223,14 @@ it('returns safe errors for failed filesystem checks', function (string $method,
         }
     };
 
-    try {
-        $this->fixture->artifacts($filesystem)->path('nested/example.xsd');
-        test()->fail('A filesystem failure was accepted.');
-    } catch (OfficialArtifactException $officialArtifactException) {
-        expect($officialArtifactException->errorCode)->toBe($errorCode)
-            ->and($officialArtifactException->getMessage())->not->toContain($root)
-            ->and(json_encode($officialArtifactException->context, JSON_THROW_ON_ERROR))->not->toContain($root)
-            ->and($officialArtifactException->getPrevious())->toBeNull()
-            ->and(json_encode($officialArtifactException->getTrace(), JSON_THROW_ON_ERROR))->not->toContain($root);
-    }
+    expect(fn (): string => $this->fixture->artifacts($filesystem)->path('nested/example.xsd'))
+        ->toThrow(function (OfficialArtifactException $officialArtifactException) use ($root, $errorCode): void {
+            expect($officialArtifactException->errorCode)->toBe($errorCode)
+                ->and($officialArtifactException->getMessage())->not->toContain($root)
+                ->and(json_encode($officialArtifactException->context, JSON_THROW_ON_ERROR))->not->toContain($root)
+                ->and($officialArtifactException->getPrevious())->toBeNull()
+                ->and(json_encode($officialArtifactException->getTrace(), JSON_THROW_ON_ERROR))->not->toContain($root);
+        });
 })->with([
     ['isDirectory', 'artifacts.missing_root'],
     ['isDirectoryFalse', 'artifacts.missing_root'],

@@ -2,8 +2,26 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Data\CreditNoteData;
+use Akira\Efatura\Data\DebitNoteData;
+use Akira\Efatura\Data\DocumentData;
+use Akira\Efatura\Data\ElectronicInvoiceData;
+use Akira\Efatura\Data\ReceiptData;
+use Akira\Efatura\Data\ReceiptInvoiceData;
+use Akira\Efatura\Data\RegistrationNoteData;
+use Akira\Efatura\Data\ReturnNoteData;
+use Akira\Efatura\Data\SalesReceiptData;
+use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\DocumentType;
-use Akira\Efatura\Support\DefaultDocumentTypePolicy;
+use Akira\Efatura\Exceptions\DefinitionException;
+use Akira\Efatura\Tests\Support\DocumentFixtures as F;
+use Akira\Efatura\Tests\Support\DocumentPayloads as P;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Str;
+
+beforeEach(function (): void {
+    CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
+});
 
 it('includes all official document types', function (): void {
     $values = collect(DocumentType::cases())
@@ -25,15 +43,65 @@ it('includes all official document types', function (): void {
     ]);
 });
 
-it('marks supported document types', function (): void {
-    foreach (DocumentType::cases() as $type) {
-        expect($type)->toBeInstanceOf(DocumentType::class);
-    }
+it('maps each document type to its data class and back', function (DocumentType $type, string $dataClass): void {
+    expect($type->dataClass())->toBe($dataClass)
+        ->and(DocumentType::fromDataClass($dataClass))->toBe($type)
+        ->and($dataClass::documentType())->toBe($type);
+})->with([
+    [DocumentType::Invoice, ElectronicInvoiceData::class],
+    [DocumentType::InvoiceReceipt, ReceiptInvoiceData::class],
+    [DocumentType::SalesReceipt, SalesReceiptData::class],
+    [DocumentType::Receipt, ReceiptData::class],
+    [DocumentType::CreditNote, CreditNoteData::class],
+    [DocumentType::DebitNote, DebitNoteData::class],
+    [DocumentType::Transport, TransportDocumentData::class],
+    [DocumentType::ReturnNote, ReturnNoteData::class],
+    [DocumentType::RegistrationNote, RegistrationNoteData::class],
+]);
+
+it('rejects a class that is not a document', function (): void {
+    expect(fn (): DocumentType => DocumentType::fromDataClass(DocumentData::class))
+        ->toThrow(DefinitionException::class, DocumentData::class . ' is not one of the nine official document classes.');
 });
 
-it('covers policy support', function (): void {
-    $policy = new DefaultDocumentTypePolicy;
+it('names exactly the document elements the XSD admits in a Dfe', function (): void {
+    $schema = new DOMDocument;
+    $schema->load(dirname(__DIR__, 2) . '/resources/xsd/efatura/2024-05-27/common/CV_EFatura_MainTypes_v1.0.xsd');
 
-    expect($policy->supportsEmission(DocumentType::ELECTRONIC_INVOICE))->toBeTrue()
-        ->and($policy->supportsEmission(DocumentType::ELECTRONIC_ENTRY_NOTE))->toBeFalse();
+    $xpath = new DOMXPath($schema);
+    $xpath->registerNamespace('x', 'http://www.w3.org/2001/XMLSchema');
+
+    $elements = collect($xpath->query('//x:complexType[@name="ctDfe"]//x:choice/x:element/@ref'))
+        ->map(static fn (DOMAttr $reference): string => Str::after($reference->value, ':'))
+        ->sort()
+        ->values()
+        ->all();
+
+    expect(collect(DocumentType::cases())->map(static fn (DocumentType $type): string => $type->xmlElement())->sort()->values()->all())
+        ->toBe($elements)
+        ->and($elements)->toHaveCount(9);
 });
+
+it('derives the line pricing and tax policy of every document type', function (DocumentType $type, bool $pricing, bool $taxes): void {
+    expect($type->requiresLinePricing())->toBe($pricing)
+        ->and($type->requiresLineTaxes())->toBe($taxes);
+})->with([
+    'FTE' => [DocumentType::Invoice, true, true],
+    'FRE' => [DocumentType::InvoiceReceipt, true, true],
+    'TVE' => [DocumentType::SalesReceipt, true, true],
+    'RCE' => [DocumentType::Receipt, true, true],
+    'NCE' => [DocumentType::CreditNote, true, false],
+    'NDE' => [DocumentType::DebitNote, true, true],
+    'DTE' => [DocumentType::Transport, false, false],
+    'DVE' => [DocumentType::ReturnNote, true, false],
+    'NLE' => [DocumentType::RegistrationNote, true, true],
+]);
+
+it('requires line taxes on the documents whose policy demands them', function (string $class, array $payload): void {
+    $payload['lines'] = [F::linePayload(['taxes' => []])];
+
+    expect(fn (): DocumentData => $class::from($payload))->toFailValidationOn('lines.0.taxes', 'The lines.0.taxes field is required.');
+})->with([
+    'NDE' => [DebitNoteData::class, P::correction()],
+    'TVE' => [SalesReceiptData::class, F::payload(['payments' => F::payments()])],
+]);

@@ -20,6 +20,7 @@ return RectorConfig::configure()
         __DIR__ . '/src',
         __DIR__ . '/config',
         __DIR__ . '/tests',
+        __DIR__ . '/tools',
     ])
     ->withSkip([
         LocallyCalledStaticMethodToNonStaticRector::class,

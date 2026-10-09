@@ -41,5 +41,9 @@ jobs:
         run: |
           composer update --${{ matrix.stability }} --prefer-dist --no-progress --no-interaction
 
+      - name: Check catalogs against official sources
+        if: matrix.stability == 'prefer-stable'
+        run: composer catalogs:check
+
       - name: Run tests (Pest)
         run: composer test

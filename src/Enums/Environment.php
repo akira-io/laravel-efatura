@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace Akira\Efatura\Enums;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 enum Environment: int
 {
-    case PRODUCTION   = 1;
-    case HOMOLOGATION = 2;
-    case TEST         = 3;
+    case Production   = 1;
+    case Homologation = 2;
+    case Test         = 3;
 
     public static function fromName(string $name): ?self
     {
         return Arr::first(
             self::cases(),
-            static fn (self $case): bool => $case->name === $name,
+            static fn (self $case): bool => Str::lower($case->name) === Str::lower($name),
         );
     }
 

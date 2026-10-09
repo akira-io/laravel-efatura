@@ -8,12 +8,13 @@ return [
     | Fiscal Environment
     |--------------------------------------------------------------------------
     |
-    | Accepts TEST (3), HOMOLOGATION (2), or PRODUCTION (1), as a name, code,
-    | or Environment enum. TEST is the safe default. Changing the environment
-    | selects the official repository code; it never changes client URLs.
+    | Accepts test (3), homologation (2), or production (1), as a name in any
+    | letter case, a code, or an Environment enum. test is the safe default.
+    | Changing the environment selects the official repository code; it never
+    | changes client URLs.
     |
     */
-    'environment' => env('EFATURA_ENVIRONMENT', 'TEST'),
+    'environment' => env('EFATURA_ENVIRONMENT', 'test'),
 
     /*
     |--------------------------------------------------------------------------
@@ -26,6 +27,9 @@ return [
     | boot; required fiscal fields are checked when building the document.
     | Tax IDs are nine-digit strings; names, LED, address and contact values
     | are nullable strings. No field is copied from the transmitter.
+    | A CV address needs country_code, address_detail and an official
+    | address_code. Contacts need email and telephone or mobile. LED is a
+    | decimal string (1..99999).
     |
     */
     'emitter' => [
@@ -33,16 +37,25 @@ return [
         'name'    => env('EFATURA_EMITTER_NAME'),
         'led'     => env('EFATURA_EMITTER_LED'),
         'address' => [
-            'country_code' => env('EFATURA_EMITTER_COUNTRY_CODE'),
-            'region'       => env('EFATURA_EMITTER_REGION'),
-            'city'         => env('EFATURA_EMITTER_CITY'),
-            'street'       => env('EFATURA_EMITTER_STREET'),
-            'postal_code'  => env('EFATURA_EMITTER_POSTAL_CODE'),
+            'country_code'    => env('EFATURA_EMITTER_COUNTRY_CODE'),
+            'region'          => env('EFATURA_EMITTER_REGION'),
+            'city'            => env('EFATURA_EMITTER_CITY'),
+            'street'          => env('EFATURA_EMITTER_STREET'),
+            'postal_code'     => env('EFATURA_EMITTER_POSTAL_CODE'),
+            'address_detail'  => env('EFATURA_EMITTER_ADDRESS_DETAIL'),
+            'address_code'    => env('EFATURA_EMITTER_ADDRESS_CODE'),
+            'state'           => env('EFATURA_EMITTER_STATE'),
+            'street_detail'   => env('EFATURA_EMITTER_STREET_DETAIL'),
+            'building_name'   => env('EFATURA_EMITTER_BUILDING_NAME'),
+            'building_number' => env('EFATURA_EMITTER_BUILDING_NUMBER'),
+            'building_floor'  => env('EFATURA_EMITTER_BUILDING_FLOOR'),
         ],
         'contacts' => [
             'email'     => env('EFATURA_EMITTER_EMAIL'),
             'telephone' => env('EFATURA_EMITTER_TELEPHONE'),
             'mobile'    => env('EFATURA_EMITTER_MOBILE'),
+            'telefax'   => env('EFATURA_EMITTER_TELEFAX'),
+            'website'   => env('EFATURA_EMITTER_WEBSITE'),
         ],
     ],
 

@@ -4,75 +4,51 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesInvoiceType;
-use Akira\Efatura\Enums\DocumentType;
-use Illuminate\Validation\Validator;
-use Spatie\LaravelData\Data;
+use Akira\Efatura\Data\Contracts\HasTotals;
+use Akira\Efatura\Support\DocumentRuleSets;
+use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\ValidationPayload;
+use Brick\Math\BigDecimal;
+use Illuminate\Validation\Rule;
+use Override;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
+use Spatie\LaravelData\Attributes\Validation\Min;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class SalesReceiptData extends Data
+final class SalesReceiptData extends DocumentData implements HasTotals
 {
-    use ValidatesInvoiceType;
-
-    public const DocumentType TYPE = DocumentType::ELECTRONIC_SALES_TICKET;
-
+    /**
+     * @param list<LineItemData> $lines
+     */
     public function __construct(
-        public readonly InvoiceData $invoice,
+        public readonly DocumentHeaderData $header,
+        public readonly PartyData $emitter,
+        #[DataCollectionOf(LineItemData::class), ListType, Min(1), Max(Fiscal::MAX_LINES)]
+        public readonly array $lines,
+        public readonly TotalsData $totals,
+        public readonly PaymentsData $payments,
+        public readonly ?PartyData $receiver = null,
+        public readonly ?DeliveryData $delivery = null,
+        public readonly ?EmissionContextData $emission = null,
+        public readonly ?DocumentFooterData $footer = null,
     ) {}
 
-    public static function withValidator(Validator $validator): void
-    {
-        $validator->after(static function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $data = $validator->getData();
-            $type = data_get($data, 'invoice.type');
-
-            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_SALES_TICKET, $type, 'invoice.type');
-
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $total    = data_get($data, 'invoice.totals.grandTotal');
-            $receiver = data_get($data, 'invoice.receiver');
-
-            if (is_numeric($total) && (float) $total >= 20000.0 && $receiver === null) {
-                $validator->errors()->add('invoice.receiver', __('efatura.invoice.receiver_required_for_type'));
-
-                return;
-            }
-
-            if (is_numeric($total) && (float) $total >= 20000.0 && ! \is_array($receiver)) {
-                $validator->errors()->add('invoice.receiver', __('efatura.validation.receiver_required'));
-            }
-        });
-    }
-
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
-    }
-
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(): array
+    #[Override]
+    protected static function documentRules(ValidationContext $context): array
     {
-        return [
-            'invoice' => ['bail', 'required', 'array'],
-        ];
-    }
+        $net              = ValidationPayload::decimal($context, 'totals.netTotalAmount');
+        $tax              = ValidationPayload::decimal($context, 'totals.taxTotalAmount');
+        $identifiedAmount = $net instanceof BigDecimal && $tax instanceof BigDecimal ? $net->plus($tax) : null;
 
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
-    {
         return [
-            'invoice.required' => __('efatura.validation.invoice_required'),
-            'invoice.array'    => __('efatura.validation.invoice_required'),
+            ...DocumentRuleSets::lines($context, self::documentType()),
+            ...DocumentRuleSets::settledPayments($context),
+            'receiver' => [Rule::requiredIf($identifiedAmount?->isGreaterThanOrEqualTo(Fiscal::SALES_RECEIPT_IDENTIFIED_RECEIVER_AMOUNT) ?? false)],
         ];
     }
 }

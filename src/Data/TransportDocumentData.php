@@ -4,57 +4,64 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Concerns\ValidatesInvoiceType;
-use Akira\Efatura\Enums\DocumentType;
-use Illuminate\Validation\Validator;
-use Spatie\LaravelData\Data;
+use Akira\Efatura\Enums\PartyReference;
+use Akira\Efatura\Enums\TransportDocumentType;
+use Akira\Efatura\Enums\TransportReceiverType;
+use Akira\Efatura\Support\DocumentRuleSets;
+use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\ValidationPayload;
+use Illuminate\Validation\Rule;
+use Override;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\MapName;
+use Spatie\LaravelData\Attributes\Validation\ListType;
+use Spatie\LaravelData\Attributes\Validation\Max;
+use Spatie\LaravelData\Attributes\Validation\Min;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
-final class TransportDocumentData extends Data
+final class TransportDocumentData extends DocumentData
 {
-    use ValidatesInvoiceType;
-
-    public const DocumentType TYPE = DocumentType::ELECTRONIC_TRANSPORT_DOCUMENT;
-
+    /**
+     * @param list<LineItemData>  $lines
+     * @param list<ReferenceData> $references
+     */
     public function __construct(
-        public readonly InvoiceData $invoice,
+        public readonly DocumentHeaderData $header,
+        public readonly PartyData $emitter,
+        #[MapName('transportDocumentTypeCode')]
+        public readonly TransportDocumentType $transportDocumentType,
+        public readonly PartyData $transportServiceProvider,
+        #[DataCollectionOf(LineItemData::class), ListType, Min(1), Max(Fiscal::MAX_LINES)]
+        public readonly array $lines,
+        public readonly TransportRouteData $transportRoute,
+        #[MapName('receiverTypeCode')]
+        public readonly ?TransportReceiverType $receiverType = null,
+        public readonly ?PartyData $receiver = null,
+        #[DataCollectionOf(ReferenceData::class), ListType, Max(Fiscal::MAX_REFERENCES)]
+        public readonly array $references = [],
+        public readonly ?EmissionContextData $emission = null,
+        public readonly ?DocumentFooterData $footer = null,
     ) {}
 
-    public static function withValidator(Validator $validator): void
-    {
-        $validator->after(static function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $type = data_get($validator->getData(), 'invoice.type');
-
-            self::ensureInvoiceType($validator, DocumentType::ELECTRONIC_TRANSPORT_DOCUMENT, $type, 'invoice.type');
-        });
-    }
-
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, list<mixed>>
      */
-    public static function rules(): array
+    #[Override]
+    protected static function documentRules(ValidationContext $context): array
     {
-        return [
-            'invoice' => ['bail', 'required', 'array'],
+        $receiverType       = ValidationPayload::enum($context, 'receiverTypeCode', TransportReceiverType::class);
+        $undetermined       = $receiverType === TransportReceiverType::Undetermined;
+        $providerIsReceiver = ValidationPayload::string($context, 'transportServiceProvider.reference') === PartyReference::Receiver->value;
+        $rules              = [
+            ...DocumentRuleSets::lines($context, self::documentType()),
+            'receiver' => [Rule::requiredIf(! $undetermined || $providerIsReceiver), Rule::prohibitedIf($undetermined)],
         ];
-    }
 
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
-    {
-        return [
-            'invoice.required' => __('efatura.validation.invoice_required'),
-            'invoice.array'    => __('efatura.validation.invoice_required'),
-        ];
-    }
+        if ($receiverType !== TransportReceiverType::Taxpayer || ! \is_array(ValidationPayload::value($context, 'receiver'))
+            || ValidationPayload::string($context, 'receiver.reference') === PartyReference::Emitter->value) {
+            return $rules;
+        }
 
-    public static function stopOnFirstFailure(): bool
-    {
-        return true;
+        return [...$rules, 'receiver.taxId.countryCode' => ['required', 'in:' . Fiscal::COUNTRY]];
     }
 }

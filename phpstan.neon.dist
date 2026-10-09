@@ -2,6 +2,7 @@ parameters:
     level: max
     paths:
         - src
+        - tools
     configDirectories:
         - config
     tmpDir: build/phpstan

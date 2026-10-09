@@ -26,7 +26,8 @@
         "illuminate/support": "^13.0",
         "illuminate/validation": "^13.0",
         "spatie/laravel-data": "^4.19",
-        "brick/money": "^0.11.0"
+        "brick/money": "^0.11.0",
+        "psr/clock": "^1.0"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.3",
@@ -47,7 +48,8 @@
         "phpstan/phpstan-phpunit": "^2.0",
         "rector/rector": "^2.4",
         "roave/security-advisories": "dev-latest",
-        "peckphp/peck": "^0.3.0"
+        "peckphp/peck": "^0.3.0",
+        "phpoffice/phpspreadsheet": "^5.10"
     },
     "autoload": {
         "psr-4": {
@@ -57,7 +59,8 @@
     "autoload-dev": {
         "psr-4": {
             "Akira\\Efatura\\Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/"
+            "Workbench\\App\\": "workbench/app/",
+            "Akira\\Efatura\\Tools\\": "tools/"
         }
     },
     "extra": {
@@ -80,6 +83,8 @@
             "@composer run build",
             "@php vendor/bin/testbench serve"
         ],
+        "catalogs:generate": "@php tools/generate-catalogs",
+        "catalogs:check": "@php tools/generate-catalogs --check",
         "lint": [
             "rector",
             "pint"
