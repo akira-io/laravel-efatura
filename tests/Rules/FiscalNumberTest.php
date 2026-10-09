@@ -40,12 +40,12 @@ it('reports each fiscal number failure with its own message', function (mixed $v
     'decimal for an amount'  => [BigDecimal::of('1'), FiscalNumber::amount('CVE'), 'Money amount or currency is invalid.'],
 ]);
 
-it('rejects an impossible rule definition as a programming error', function (Closure $definition): void {
-    expect($definition)->toThrow(DefinitionException::class);
+it('rejects an impossible rule definition as a programming error', function (Closure $definition, string $message): void {
+    expect($definition)->toThrow(DefinitionException::class, $message);
 })->with([
-    'malformed maximum'    => [fn (): FiscalNumber => FiscalNumber::positive(3, 'one hundred')],
-    'maximum beyond scale' => [fn (): FiscalNumber => FiscalNumber::nonNegative(2, '100.001')],
-    'negative scale'       => [fn (): FiscalNumber => FiscalNumber::positive(-1)],
+    'malformed maximum'    => [fn (): FiscalNumber => FiscalNumber::positive(3, 'one hundred'), 'Numeric bound "one hundred" must be a plain decimal within scale 3.'],
+    'maximum beyond scale' => [fn (): FiscalNumber => FiscalNumber::nonNegative(2, '100.001'), 'Numeric bound "100.001" must be a plain decimal within scale 2.'],
+    'negative scale'       => [fn (): FiscalNumber => FiscalNumber::positive(-1), 'Decimal scale must not be negative, -1 given.'],
 ]);
 
 it('reports an excess line amount precision at its full path', function (): void {

@@ -28,7 +28,7 @@ it('constructs and serializes complete immutable party details', function (): vo
     ]);
     expect($party->taxId->value)->toBe('123456789')
         ->and($party->toArray()['address']['buildingFloor'])->toBe('3')
-        ->and(fn (): string => $party->name = 'Changed')->toThrow(Error::class);
+        ->and(fn (): string => $party->name = 'Changed')->toThrow(Error::class, 'Cannot modify readonly property ' . PartyData::class . '::$name');
 });
 
 it('accepts a foreign tax identifier without registry lookups', function (): void {

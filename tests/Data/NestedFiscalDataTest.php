@@ -10,6 +10,7 @@ use Akira\Efatura\Data\DurationData;
 use Akira\Efatura\Data\ExtraFieldData;
 use Akira\Efatura\Data\ExtraPropertyData;
 use Akira\Efatura\Data\FiscalDocumentData;
+use Akira\Efatura\Data\ItemData;
 use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\PayableAlternativeAmountData;
 use Akira\Efatura\Data\PayeeFinancialAccountData;
@@ -33,7 +34,8 @@ it('models the full item and line graph with exact money and immutable arrays', 
     expect($line->toArray()['price'])->toBe('1.23456')
         ->and($line->item->extraProperties[0]->name)->toBe('Colour')
         ->and($line->item->extraProperties[0]->value)->toBe('Blue')
-        ->and(fn (): ExtraPropertyData => $line->item->extraProperties[] = new ExtraPropertyData('Size', 'Large'))->toThrow(Error::class);
+        ->and(fn (): ExtraPropertyData => $line->item->extraProperties[] = new ExtraPropertyData('Size', 'Large'))
+        ->toThrow(Error::class, 'Cannot indirectly modify readonly property ' . ItemData::class . '::$extraProperties');
 });
 
 it('requires exactly one standard identification', function (array $payload, string $field, string $message): void {
