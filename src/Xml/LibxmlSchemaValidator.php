@@ -8,10 +8,13 @@ use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Exceptions\SchemaValidationException;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\OfficialArtifacts;
 use DOMDocument;
 use DOMDocumentType;
+use DOMElement;
 
+use const LIBXML_ERR_ERROR;
 use const LIBXML_NONET;
 
 final readonly class LibxmlSchemaValidator implements SchemaValidator
@@ -54,6 +57,8 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
             if (! $valid) {
                 throw SchemaValidationException::schemaInvalid($this->violations($pending));
             }
+
+            self::assertRoot($document, $profile);
         } finally {
             libxml_set_external_entity_loader($loader);
             if ($pending === 0) {
@@ -76,6 +81,23 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
         }
 
         return $document;
+    }
+
+    private static function assertRoot(DOMDocument $document, SignatureProfile $profile): void
+    {
+        $root = $document->documentElement;
+        $name = $root instanceof DOMElement ? '{' . $root->namespaceURI . '}' . $root->localName : '';
+
+        $roots = match ($profile) {
+            SignatureProfile::Enveloped          => ['{' . Fiscal::XML_NAMESPACE . '}Dfe', '{' . Fiscal::XML_NAMESPACE . '}Event'],
+            SignatureProfile::InternallyDetached => ['{}internally-detached'],
+        };
+
+        if (! \in_array($name, $roots, true)) {
+            $message = 'Element ' . $name . ' is not a root element of the ' . $profile->value . ' profile.';
+
+            throw SchemaValidationException::schemaInvalid([new SchemaViolation($root?->getLineNo() ?? 0, 0, LIBXML_ERR_ERROR, $message)]);
+        }
     }
 
     /**

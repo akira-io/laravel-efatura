@@ -92,6 +92,22 @@ it('refuses a document type declaration hidden by another encoding', function ()
     expect(fn () => resolve(SchemaValidator::class)->validate($xml))->toThrow(SchemaValidationException::class, 'xml.doctype_forbidden');
 });
 
+it('accepts only the root elements of the signature profile', function (string $xml, SignatureProfile $profile): void {
+    expect(fn () => resolve(SchemaValidator::class)->validate($xml, $profile))
+        ->toThrow(function (SchemaValidationException $exception) use ($profile): void {
+            expect($exception->errorCode)->toBe('xml.schema_invalid')
+                ->and($exception->violations)->toHaveCount(1)
+                ->and($exception->violations[0]->level)->toBe(LIBXML_ERR_ERROR)
+                ->and($exception->violations[0]->message)->toEndWith(" is not a root element of the {$profile->value} profile.")
+                ->and(print_r($exception->violations, true))->not->toContain('SECRET');
+        });
+})->with([
+    'discount'              => ['<Discount xmlns="urn:cv:efatura:xsd:v1.0" ValueType="P">10</Discount>', SignatureProfile::Enveloped],
+    'note'                  => ['<Note xmlns="urn:cv:efatura:xsd:v1.0">SECRET customer delivery note</Note>', SignatureProfile::Enveloped],
+    'signature object'      => ['<ds:Object xmlns:ds="http://www.w3.org/2000/09/xmldsig#">SECRET</ds:Object>', SignatureProfile::Enveloped],
+    'document not detached' => [fn (): string => X::fixture(DocumentType::Invoice), SignatureProfile::InternallyDetached],
+]);
+
 it('validates against the profile it is given', function (): void {
     $detached = SchemaFixtures::official('1 Invoice - InternallyDetachedSignature.xml');
 
