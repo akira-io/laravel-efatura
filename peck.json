@@ -17,7 +17,12 @@
             "ean",
             "pharmacode",
             "iuds",
-            "multimodal"
+            "multimodal",
+            "unvalidated",
+            "oversized",
+            "unpriced",
+            "durations",
+            "coercions"
         ],
         "paths": [
             "resources/catalogs/source",
