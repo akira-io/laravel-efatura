@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\DataPipes\FiscalDatesDataPipe;
 use BackedEnum;
 use Override;
 use Spatie\LaravelData\Attributes\MergeValidationRules;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\DataPipeline;
 use Spatie\LaravelData\Support\Creation\CreationContext;
 use Spatie\LaravelData\Support\Creation\CreationContextFactory;
 
@@ -26,6 +28,12 @@ abstract class FiscalData extends Data
         }
 
         return parent::factory()->alwaysValidate();
+    }
+
+    #[Override]
+    final public static function pipeline(): DataPipeline
+    {
+        return parent::pipeline()->firstThrough(FiscalDatesDataPipe::class);
     }
 
     /**

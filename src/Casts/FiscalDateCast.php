@@ -29,7 +29,7 @@ final readonly class FiscalDateCast implements Cast, Transformer
     public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): CarbonImmutable
     {
         if ($value instanceof CarbonInterface) {
-            $value = Fiscal::format($value, $this->format, $this->instant);
+            $value = $this->formatted($value);
         }
 
         $date = \is_string($value) ? Fiscal::parse($value, $this->format) : null;
@@ -51,6 +51,11 @@ final readonly class FiscalDateCast implements Cast, Transformer
             return new DateTimeInterfaceTransformer($this->format, '')->transform($property, $value, $context);
         }
 
+        return $this->formatted($value);
+    }
+
+    public function formatted(CarbonInterface $value): string
+    {
         return Fiscal::format($value, $this->format, $this->instant);
     }
 }
