@@ -36,7 +36,7 @@ it('reports nested dependent rule failures at the owning fiscal path', function 
     'reference without document' => ['references', [['innerDocumentNumber' => 'REF']], 'references.0.fiscalDocument',
         'The references.0.fiscal document field is required when none of references.0.payment amount / references.0.taxes are present.'],
     'due date with payments' => ['payments', ['paymentDueDate' => '2026-10-31', 'payments' => [['paymentAmount' => '100']]], 'payments.payments',
-        'The payments.payments field prohibits payments.payment due date / payments.payment terms / payments.payee financial accounts from being present.'],
+        'The payments.payments field is prohibited.'],
     'charge without target'        => ['lines.0.lineTypeCode', 'C', 'lines.0.lineReferenceId', 'The lines.0.lineReferenceId field is required.'],
     'two standard identifications' => ['lines.0.item.standardIdentification', ['ean' => '123', 'gtin' => '456'], 'lines.0.item.standardIdentification.ean',
         'The lines.0.item.standard identification.ean field prohibits lines.0.item.standard identification.gtin / '

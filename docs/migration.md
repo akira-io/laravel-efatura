@@ -54,8 +54,10 @@ must issue through the builder or call `ValidateIssueDateAction` itself.
 Document compatibility rules now run in the same validation pass as the rest
 of the payload and report at full paths: duplicate line identifiers under
 `lines.N.id`, missing line prices or taxes under `lines.N.price` and
-`lines.N.taxes`, settled-payment conflicts under `payments.payments` and
-`payments.paymentDueDate`, and an invoice receipt payment date under
+`lines.N.taxes`, settled-payment conflicts once each, under `payments.payments`
+("The payments.payments field is prohibited." on an invoice) or
+`payments.paymentDueDate` (on FRE, TVE, NLE and RCE; `PaymentsData` on its own
+accepts both, since the document type decides), and an invoice receipt payment date under
 `payments.payments.N.paymentDate`. The previous bare keys (`ids.N`, `price`,
 `payments`, `paymentDate`, `receiverReference`) are gone. Allowed issue
 reasons per document come from `IssueReason::allowedFor(DocumentType)`.

@@ -83,13 +83,6 @@ it('requires exactly one bank account identifier', function (array $payload, str
     'both identifiers'   => [['name' => 'Account Holder', 'accountNumber' => '1234', 'nib' => '123456789012345678901'], 'accountNumber', 'The account number field prohibits nib from being present.'],
 ]);
 
-it('rejects actual payments alongside invoice payment terms', function (): void {
-    $payload = ['paymentTerms' => new PaymentTermsData('Payment within thirty days'), 'payments' => [new PaymentData]];
-
-    expect(fn (): PaymentsData => PaymentsData::from($payload))
-        ->toFailValidationOn('payments', 'The payments field prohibits payment due date / payment terms / payee financial accounts from being present.');
-});
-
 it('rejects a zero payment amount', function (): void {
     $payload = ['paymentAmount' => FiscalMoney::cve('0')];
 

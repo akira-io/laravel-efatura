@@ -70,11 +70,10 @@ it('reports document compatibility failures at their full path', function (strin
         ['lines.0.price' => ['The lines.0.price field is required.'], 'lines.0.taxes' => ['The lines.0.taxes field is required.']]],
     'invoice with settled payments'              => [ElectronicInvoiceData::class, F::payload(['payments' => F::payments()]), ['payments.payments' => ['The payments.payments field is prohibited.']]],
     'invoice with due date and settled payments' => [ElectronicInvoiceData::class, F::payload(['payments' => [...F::payments(), 'paymentDueDate' => '2026-10-31']]), [
-        'payments.payments' => ['The payments.payments field prohibits payments.payment due date / payments.payment terms / payments.payee financial accounts from being present.'],
+        'payments.payments' => ['The payments.payments field is prohibited.'],
     ]],
     'invoice receipt with due date' => [ReceiptInvoiceData::class, F::payload(['payments' => [...F::payments(), 'paymentDueDate' => '2026-10-31']]), [
         'payments.paymentDueDate' => ['The payments.payment due date field is prohibited.'],
-        'payments.payments'       => ['The payments.payments field prohibits payments.payment due date / payments.payment terms / payments.payee financial accounts from being present.'],
     ]],
     'tax point after issue' => [ElectronicInvoiceData::class, F::payload(['taxPointDate' => '2026-10-03']), ['taxPointDate' => ['The tax point date cannot be later than the issue date.']]],
     'payment before issue'  => [ReceiptInvoiceData::class, F::payload(['payments' => ['payments' => [F::payments()['payments'][0], ['paymentMeansCode' => '10', 'paymentDate' => '2026-10-01']]]]),

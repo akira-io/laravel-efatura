@@ -10,7 +10,6 @@ use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\ListType;
-use Spatie\LaravelData\Attributes\Validation\Prohibits;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class PaymentsData extends FiscalData
@@ -25,7 +24,7 @@ final class PaymentsData extends FiscalData
         public readonly ?PaymentTermsData $paymentTerms = null,
         #[DataCollectionOf(PayeeFinancialAccountData::class), ListType]
         public readonly array $payeeFinancialAccounts = [],
-        #[DataCollectionOf(PaymentData::class), ListType, Prohibits('paymentDueDate', 'paymentTerms', 'payeeFinancialAccounts')]
+        #[DataCollectionOf(PaymentData::class), ListType]
         public readonly array $payments = [],
     ) {}
 
