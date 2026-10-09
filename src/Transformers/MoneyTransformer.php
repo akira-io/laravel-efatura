@@ -6,6 +6,7 @@ namespace Akira\Efatura\Transformers;
 
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\DecimalFormatter;
+use Akira\Efatura\Support\FieldPath;
 use Brick\Money\Money;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Support\DataProperty;
@@ -21,7 +22,7 @@ final readonly class MoneyTransformer implements Transformer
 
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
-        $field = $property->name;
+        $field = FieldPath::name($property);
 
         if (! $value instanceof Money) {
             throw ValidationException::withMessages([$field => __('efatura::efatura.validation.invalid_money_input')]);

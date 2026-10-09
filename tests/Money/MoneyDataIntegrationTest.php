@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Akira\Efatura\Casts\BigDecimalCast;
 use Akira\Efatura\Tests\Fixtures\FiscalValuesData;
+use Akira\Efatura\Tests\Fixtures\MappedFiscalValuesData;
 use Akira\Efatura\Transformers\BigDecimalTransformer;
 use Akira\Efatura\Transformers\MoneyTransformer;
 use Brick\Math\BigDecimal;
@@ -72,4 +73,11 @@ it('rejects invalid values at the transformer boundary', function (Transformer $
         Money::of('1.234', 'CVE', new CustomContext(3)),
         'Value exceeds the allowed decimal precision.',
     ],
+]);
+
+it('reports transformer failures at the mapped field name', function (MappedFiscalValuesData $data, string $field): void {
+    expect(fn (): array => $data->toArray())->toFailValidationOn($field, 'Value exceeds the allowed decimal precision.');
+})->with([
+    'decimal' => [fn (): MappedFiscalValuesData => new MappedFiscalValuesData(BigDecimal::of('1.123456'), Money::of('1', 'CVE')), 'wireRate'],
+    'money'   => [fn (): MappedFiscalValuesData => new MappedFiscalValuesData(BigDecimal::one(), Money::of('1.234', 'CVE', new CustomContext(3))), 'wireAmount'],
 ]);

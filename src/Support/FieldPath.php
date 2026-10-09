@@ -16,13 +16,18 @@ final class FieldPath
      */
     public static function of(CreationContext|ValidationContext $context, DataProperty|string $property): string
     {
-        $name = $property instanceof DataProperty ? $property->inputMappedName ?? $property->name : $property;
+        $name = $property instanceof DataProperty ? self::name($property) : $property;
 
         if ($context instanceof ValidationContext) {
             return $context->path->property($name)->get() ?? $name;
         }
 
         return implode('.', [...$context->currentPath, $name]);
+    }
+
+    public static function name(DataProperty $property): string
+    {
+        return $property->inputMappedName ?? $property->name;
     }
 
     public static function list(ValidationContext $context, string ...$properties): string

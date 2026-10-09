@@ -6,6 +6,7 @@ namespace Akira\Efatura\Transformers;
 
 use Akira\Efatura\Exceptions\EfaturaValidationException;
 use Akira\Efatura\Money\DecimalFormatter;
+use Akira\Efatura\Support\FieldPath;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Illuminate\Validation\ValidationException;
@@ -19,7 +20,7 @@ final readonly class BigDecimalTransformer implements Transformer
 
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
-        $field = $property->name;
+        $field = FieldPath::name($property);
 
         if (! $value instanceof BigDecimal) {
             throw ValidationException::withMessages([$field => __('efatura::efatura.validation.invalid_decimal')]);
