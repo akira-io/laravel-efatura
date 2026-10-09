@@ -13,21 +13,34 @@ it('anchors fiscal time to Cabo Verde without daylight saving', function (): voi
         ->and($summer->getOffsetString())->toBe('-01:00');
 });
 
-it('round trips fiscal date, time and date time formats', function (string $format, string $value): void {
-    expect(CarbonImmutable::createFromFormat('!' . $format, $value, Fiscal::TIMEZONE)?->format($format))->toBe($value);
+it('parses fiscal date, time and date time formats in Cabo Verde', function (string $format, string $value): void {
+    $parsed = Fiscal::parse($value, $format);
+
+    expect($parsed?->format($format))->toBe($value)
+        ->and($parsed?->getTimezone()->getName())->toBe(Fiscal::TIMEZONE);
 })->with([
     'date'      => [Fiscal::DATE_FORMAT, '2026-10-02'],
     'time'      => [Fiscal::TIME_FORMAT, '23:30:00'],
     'date time' => [Fiscal::DATE_TIME_FORMAT, '2026-10-02T23:30:00'],
 ]);
 
-it('rejects fiscal dates before the earliest accepted date', function (): void {
-    $validator = validator(['date' => '2020-12-31'], ['date' => ['after_or_equal:' . Fiscal::EARLIEST_DATE]]);
+it('rejects dated values before the earliest accepted fiscal date', function (string $format, string $value): void {
+    expect(Fiscal::parse($value, $format))->toBeNull();
+})->with([
+    'date'      => [Fiscal::DATE_FORMAT, '2020-12-31'],
+    'date time' => [Fiscal::DATE_TIME_FORMAT, '2020-12-31T23:59:59'],
+]);
 
-    expect($validator->fails())->toBeTrue()
-        ->and($validator->errors()->first('date'))->toBe('The date field must be a date after or equal to 2021-01-01.');
-});
+it('accepts the first instant of the earliest accepted fiscal date', function (string $format, string $value): void {
+    expect(Fiscal::parse($value, $format)?->format($format))->toBe($value);
+})->with([
+    'date'      => [Fiscal::DATE_FORMAT, Fiscal::EARLIEST_DATE],
+    'date time' => [Fiscal::DATE_TIME_FORMAT, Fiscal::EARLIEST_DATE . 'T00:00:00'],
+]);
 
-it('accepts the earliest accepted fiscal date', function (): void {
-    expect(validator(['date' => Fiscal::EARLIEST_DATE], ['date' => ['after_or_equal:' . Fiscal::EARLIEST_DATE]])->passes())->toBeTrue();
-});
+it('rejects values that do not round trip through the fiscal format', function (string $value): void {
+    expect(Fiscal::parse($value, Fiscal::DATE_FORMAT))->toBeNull();
+})->with([
+    'overflowing day' => ['2026-02-30'],
+    'not a date'      => ['tomorrow'],
+]);
