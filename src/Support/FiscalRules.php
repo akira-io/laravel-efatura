@@ -56,6 +56,19 @@ final class FiscalRules
         return ['string', new NotBlank, 'max:20', 'regex:/\A' . self::SERIES . '\z/'];
     }
 
+    public static function isCvTaxId(string $value): bool
+    {
+        return Str::isMatch('/\A' . self::CV_TAX_ID . '\z/', $value);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function cvTaxId(): array
+    {
+        return ['regex:/\A' . self::CV_TAX_ID . '\z/'];
+    }
+
     public static function isIud(string $value): bool
     {
         return Str::isMatch('/\A' . self::IUD . '\z/', $value);

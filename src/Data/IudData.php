@@ -35,7 +35,7 @@ final class IudData extends FiscalData
     {
         return [
             'issueDate'      => [new FiscalDate(instant: true), 'before:' . Fiscal::IDENTIFIER_DATE_LIMIT],
-            'emitterTaxId'   => ['regex:/\A' . FiscalRules::CV_TAX_ID . '\z/'],
+            'emitterTaxId'   => FiscalRules::cvTaxId(),
             'ledCode'        => FiscalRules::ledCode(),
             'documentNumber' => FiscalRules::documentNumber(),
             'randomCode'     => ['regex:/\A[0-9]{10}\z/'],

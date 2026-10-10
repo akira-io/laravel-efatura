@@ -29,7 +29,7 @@ final class EventIdData extends FiscalData
     {
         return [
             'issueDateTime' => [new FiscalDate(Fiscal::DATE_TIME_FORMAT, instant: true), 'before:' . Fiscal::IDENTIFIER_DATE_LIMIT],
-            'taxId'         => ['regex:/\A' . FiscalRules::CV_TAX_ID . '\z/'],
+            'taxId'         => FiscalRules::cvTaxId(),
         ];
     }
 }
