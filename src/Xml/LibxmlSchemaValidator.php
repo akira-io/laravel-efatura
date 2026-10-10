@@ -21,7 +21,7 @@ use const LIBXML_RECOVER;
 
 final readonly class LibxmlSchemaValidator implements SchemaValidator
 {
-    private const array SCHEMA_PARSER_ERROR_CODES = [[1700, 1799], [3000, 3099]];
+    private const array SCHEMA_PARSER_ERROR_CODES = [[1700, 1800], [3000, 3099]];
 
     public function __construct(private OfficialArtifacts $artifacts) {}
 
