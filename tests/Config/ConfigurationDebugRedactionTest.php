@@ -49,6 +49,7 @@ it('reports absent secrets as null in debug output', function (): void {
         'certificatePath' => null,
         'privateKeyPath'  => null,
         'passphrase'      => null,
+        'caBundlePath'    => null,
     ])->and(new OAuthConfig('client', 'synthetic-client-secret')->__debugInfo())->toBe([
         'clientId'     => 'client',
         'clientSecret' => '[redacted]',
@@ -59,5 +60,5 @@ it('redacts the secrets of each configuration from its json form', function (): 
     expect(json_encode(new TransmitterConfig('100200300', 'Transmitter', 'synthetic-middleware-key', new OAuthConfig('client', 'synthetic-client-secret'))))
         ->toBe('{"taxId":"100200300","name":"Transmitter","middlewareKey":"[redacted]","oauth":{"clientId":"client","clientSecret":"[redacted]"}}')
         ->and(json_encode(new CertificateConfig('disk', 'cert.pem', 'key.pem', 'synthetic-passphrase')))
-        ->toBe('{"disk":"disk","certificatePath":"cert.pem","privateKeyPath":"key.pem","passphrase":"[redacted]"}');
+        ->toBe('{"disk":"disk","certificatePath":"cert.pem","privateKeyPath":"key.pem","passphrase":"[redacted]","caBundlePath":null}');
 });

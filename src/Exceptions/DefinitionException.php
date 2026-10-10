@@ -63,4 +63,9 @@ final class DefinitionException extends EfaturaException
             'A sequence scope needs a Cabo Verde tax id, a fiscal year from 2021 to 2099 and a LED code from 1 to 99999.',
         );
     }
+
+    public static function credentialsSerialization(): self
+    {
+        return new self('definition.credentials_serialization', 'Signing credentials hold a private key and cannot be serialized.');
+    }
 }

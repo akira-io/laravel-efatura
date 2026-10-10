@@ -23,6 +23,7 @@ it('resolves minimal host defaults without optional identities or secrets', func
         ->and($config->certificates->certificatePath)->toBeNull()
         ->and($config->certificates->privateKeyPath)->toBeNull()
         ->and($config->certificates->passphrase)->toBeNull()
+        ->and($config->certificates->caBundlePath)->toBeNull()
         ->and($config->storage->disk)->toBe('host-disk')
         ->and($config->storage->path)->toBe('efatura')
         ->and($config->cache->store)->toBe('host-cache')
@@ -93,12 +94,13 @@ it('normalizes configured identities infrastructure and client overrides', funct
             'oauth'  => ['client_id' => 'test-client', 'client_secret' => ' test-secret '],
         ],
         'software'     => ['code' => 'SW-1', 'name' => 'Fiscal software', 'version' => '1.0'],
-        'certificates' => ['disk' => 'secret-disk', 'certificate_path' => 'certs/public.pem', 'private_key_path' => 'certs/private.pem', 'passphrase' => ' test-passphrase '],
-        'storage'      => ['disk' => 'fiscal-disk', 'path' => 'tenant/fiscal'],
-        'cache'        => ['store' => 'fiscal-cache', 'prefix' => 'tenant:fiscal', 'exchange_rates_ttl_seconds' => '120'],
-        'database'     => ['connection' => 'fiscal-database', 'sequences_table' => 'tenant_sequences'],
-        'queue'        => ['connection' => 'fiscal-queue', 'queue' => 'fiscal-jobs'],
-        'http'         => [
+        'certificates' => ['disk' => 'secret-disk', 'certificate_path' => 'certs/public.pem', 'private_key_path' => 'certs/private.pem', 'passphrase' => ' test-passphrase ',
+            'ca_bundle_path'      => 'certs/icp-cv.pem'],
+        'storage'  => ['disk' => 'fiscal-disk', 'path' => 'tenant/fiscal'],
+        'cache'    => ['store' => 'fiscal-cache', 'prefix' => 'tenant:fiscal', 'exchange_rates_ttl_seconds' => '120'],
+        'database' => ['connection' => 'fiscal-database', 'sequences_table' => 'tenant_sequences'],
+        'queue'    => ['connection' => 'fiscal-queue', 'queue' => 'fiscal-jobs'],
+        'http'     => [
             'timeout_seconds'          => '45', 'connect_timeout_seconds' => 15, 'retries' => 0,
             'retry_delay_milliseconds' => 0, 'concurrency' => 3, 'verify_tls' => false,
             'middleware'               => ['base_url' => 'https://middleware.example.test/api/', 'timeout_seconds' => 90],
@@ -132,6 +134,7 @@ it('normalizes configured identities infrastructure and client overrides', funct
         ->and($config->certificates->certificatePath)->toBe('certs/public.pem')
         ->and($config->certificates->privateKeyPath)->toBe('certs/private.pem')
         ->and($config->certificates->passphrase)->toBe(' test-passphrase ')
+        ->and($config->certificates->caBundlePath)->toBe('certs/icp-cv.pem')
         ->and($config->storage->disk)->toBe('fiscal-disk')
         ->and($config->storage->path)->toBe('tenant/fiscal')
         ->and($config->cache->store)->toBe('fiscal-cache')

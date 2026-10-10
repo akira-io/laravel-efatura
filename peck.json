@@ -28,7 +28,16 @@
             "serializers",
             "dfe",
             "libxml",
-            "doctype"
+            "doctype",
+            "pem",
+            "der",
+            "pkcs",
+            "oid",
+            "rdn",
+            "rdns",
+            "tlv",
+            "unserialize",
+            "encodings"
         ],
         "paths": [
             "resources/catalogs/source",

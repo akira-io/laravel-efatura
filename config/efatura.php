@@ -109,6 +109,8 @@ return [
     | Keep private keys on a private disk and never serve or log their bytes.
     | The passphrase is a nullable secret string preserved exactly, including
     | whitespace. Signing operations validate missing material when needed.
+    | An optional PEM CA bundle on the same disk enables chain verification;
+    | production (repository 1) requires a certificate issued under ICP-CV.
     |
     */
     'certificates' => [
@@ -116,6 +118,7 @@ return [
         'certificate_path' => env('EFATURA_CERTIFICATE_PATH'),
         'private_key_path' => env('EFATURA_PRIVATE_KEY_PATH'),
         'passphrase'       => env('EFATURA_PRIVATE_KEY_PASSPHRASE'),
+        'ca_bundle_path'   => env('EFATURA_CA_BUNDLE_PATH'),
     ],
 
     /*

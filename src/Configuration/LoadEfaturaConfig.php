@@ -58,6 +58,7 @@ final readonly class LoadEfaturaConfig
                 $this->relativePath('efatura.certificates.certificate_path'),
                 $this->relativePath('efatura.certificates.private_key_path'),
                 $this->string('efatura.certificates.passphrase', secret: true),
+                $this->relativePath('efatura.certificates.ca_bundle_path'),
             ),
             storage: new StorageConfig(
                 $this->inherit('efatura.storage.disk', 'filesystems.default'),

@@ -33,6 +33,8 @@ final class Fiscal
 
     public const int MAX_DOCUMENT_NUMBER = 999_999_999;
 
+    public const int MIN_RSA_KEY_BITS = 2048;
+
     public const string EARLIEST_DATE = '2021-01-01';
 
     public const string IDENTIFIER_DATE_LIMIT = '2100-01-01';
