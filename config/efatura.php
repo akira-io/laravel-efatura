@@ -109,8 +109,9 @@ return [
     | Keep private keys on a private disk and never serve or log their bytes.
     | The passphrase is a nullable secret string preserved exactly, including
     | whitespace. Signing operations validate missing material when needed.
-    | An optional PEM CA bundle on the same disk enables chain verification;
-    | production (repository 1) requires a certificate issued under ICP-CV.
+    | An optional PEM CA bundle on the same disk enables chain verification
+    | against that bundle alone, never the system CA store; production
+    | (repository 1) requires a certificate issued under ICP-CV.
     |
     */
     'certificates' => [
@@ -165,7 +166,8 @@ return [
     | sync that have no queue name. Explicit names must be nonempty strings.
     | The published sequence migration reads the connection and the table
     | when it runs, so set them before migrating. SQLite connections shared by
-    | several workers need a busy_timeout in config/database.php.
+    | several workers need a busy_timeout in config/database.php. Numbers are
+    | never reserved while this connection is inside a transaction.
     |
     */
     'database' => [
