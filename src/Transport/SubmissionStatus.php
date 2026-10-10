@@ -6,7 +6,7 @@ namespace Akira\Efatura\Transport;
 
 use Akira\Efatura\Enums\TransportFailure;
 
-final class SubmissionStatus
+final readonly class SubmissionStatus
 {
     public static function failure(int $status): TransportFailure
     {

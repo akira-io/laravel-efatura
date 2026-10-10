@@ -2,7 +2,7 @@
 
 The authority receives signed XML inside a ZIP compressed with Deflate, sent as
 the `file` part of a `multipart/form-data` request (§10.2, p.67). This page
-covers the archive the package builds; sending it belongs to a later stage.
+covers the archive the package builds; [transport](transport.md) covers sending it.
 
 ## Building an archive
 

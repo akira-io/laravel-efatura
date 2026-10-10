@@ -86,7 +86,7 @@ authorization first (Manual v11, §10.5, p.71-73). Build a
 ID), `documentTypeCode` (FTE, FRE, RCE, NCE, NDE or DVE; the platform codes 1, 2,
 4, 5, 6 and 8), the seller `mobilePhoneNumber` and the CVE `totalAmount`, and pass
 it to `RequestSelfBillingAuthorizationAction::handle()`. The call goes through the
-configured transport and returns a
+configured [transport](transport.md#self-billing) and returns a
 `SelfBillingAuthorization` with `authorizationId`, `expiresInSeconds`, `iud`,
 `series` (`AUTOFATURA`), `ledCode` and `documentNumber`. The platform reserves
 that number; the package reserves nothing.

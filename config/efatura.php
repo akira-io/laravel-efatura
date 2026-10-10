@@ -207,7 +207,9 @@ return [
     | Timeouts are positive integer seconds. Retry delay is a nonnegative
     | integer in milliseconds; retries counts additional attempts, with zero
     | disabling retries. Concurrency is a positive integer. Automatic retries
-    | apply only to requests with a verified idempotency guarantee.
+    | apply only to reads (document lookups, OpenID discovery, remote
+    | readiness); a submission, a self-billing request or a token request
+    | is never repeated, since the platform offers no idempotency key.
     | TLS verification is a boolean, true by default. Disabling verification
     | exposes credentials and documents to interception; keep it on in production.
     | ca_bundle_path is an absolute path to a readable local PEM file; when set,
@@ -219,6 +221,9 @@ return [
     | middleware and platform URLs end with the API version (/v1). A null
     | base URL defers endpoint selection to its provider's later configuration.
     | Fiscal environment selection never replaces these endpoints.
+    | Requests go through the Laravel HTTP client, whose request events
+    | Telescope or Nightwatch may record: hide the authorization and
+    | cv-ef-mw-core-transmitter-key headers there.
     |
     */
     'http' => [

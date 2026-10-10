@@ -7,8 +7,9 @@ release was being built are not listed.
 
 ## Runtime
 
-The package needs PHP 8.5 and Laravel 13, and adds `psr/clock` and
-`illuminate/database` to its dependencies. Run `composer update akira/efatura`.
+The package needs PHP 8.5 and Laravel 13, and adds `psr/clock`,
+`illuminate/database` and `illuminate/http` (with Guzzle, already present in a
+Laravel application) to its dependencies. Run `composer update akira/efatura`.
 `php artisan efatura:install` skips a config file that already exists, so merge
 the new keys by hand as described under [configuration](#configuration).
 
@@ -229,6 +230,7 @@ that binds its own `ClockInterface` after the provider registers keeps it.
 | `efatura.transmitter.oauth.issuer_url` / `EFATURA_OAUTH_ISSUER_URL` | New: the OpenID issuer of the platform, `https://iam.efatura.cv/auth/realms/taxpayers` by default, with the same HTTPS rules as the base URLs |
 | `efatura.http.ca_bundle_path` and `efatura.http.<client>.ca_bundle_path` / `EFATURA_HTTP_CA_BUNDLE_PATH`, `EFATURA_MIDDLEWARE_CA_BUNDLE_PATH` | New: an absolute path to a readable local PEM file the client trusts instead of the system store, inherited like the other client options. A relative path fails with `configuration.unsafe_path`, a missing file with `configuration.unreadable_path`, and a bundle on a client whose `verify_tls` is false with `configuration.conflicting_tls` |
 | `efatura.cache` | The store may now hold platform access tokens, encrypted with the application key; refresh tokens, client secrets and the middleware key are never cached |
+| `efatura.http.retries`, `retry_delay_milliseconds` and their per-client overrides | Now used, and only for reads: document lookups, OpenID discovery and remote readiness. Submissions, self-billing requests and token requests are never retried (see [transport](transport.md#retries)) |
 | `efatura.database.connection`, `sequences_table` | Now used: the connection and table of the document number counters (see [document numbers and sequences](sequences.md)) |
 
 `EmitterConfig::$led` changes from `?string` to `?int`. `AddressConfig` and
@@ -247,6 +249,22 @@ consults `__debugInfo()` or `jsonSerialize()`; never pass these objects to them.
 Merge the new keys from the published [config](../config/efatura.php) into an
 application config file that was published before, then set the address code
 and address detail the emitter needs.
+
+## Sending documents
+
+The first release could validate a document but not send it. Sending is new and
+replaces nothing, so no code has to change: `IssueDocumentAction` and
+`IssueEventAction` prepare and submit, `ReconcileDocumentAction` resolves an
+unknown outcome, `RequestSelfBillingAuthorizationAction` asks for a self-billing
+authorization, and `CheckReadinessAction` checks the installation (see
+[issuance](issuance.md), [transport](transport.md) and [readiness](readiness.md)).
+To use the middleware, set `EFATURA_TRANSMITTER_KEY` and, for its self-signed
+certificate, `EFATURA_MIDDLEWARE_CA_BUNDLE_PATH`. To send directly to the
+platform, set `EFATURA_DRIVER=platform`, `EFATURA_EMITTER_TAX_ID`, the OAuth client
+of the transmitter and bind a `Contracts\RefreshTokenRepository`. Tests replace the
+driver with `Testing\FakeTransport`. An application that records outgoing HTTP
+requests (Telescope, Nightwatch) hides the `authorization` and
+`cv-ef-mw-core-transmitter-key` headers.
 
 ## Translations
 
