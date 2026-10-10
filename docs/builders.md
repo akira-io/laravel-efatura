@@ -51,9 +51,30 @@ date: they write the Carbon's own `Y-m-d`, with no timezone shift. `header()` re
 all header fields, including LED and dates. No numbering fields are generated.
 `DocumentBuilder::build()` also checks the emission window against the same
 clock and reports `header.issueDate` when the issue date and time fall outside it.
-Transmission software and transmitter configuration remain separate: only an
-explicit `emission()` sets transmission context at this stage. Credentials never
+Builders never read the transmitter or software configuration: only an explicit
+`emission()` sets transmission context on the built Data. Credentials never
 enter the fiscal Data graph.
+
+## Preparation
+
+`PrepareDocumentAction::handle($document, $isSpecimen, $profile)` and
+`PrepareEventAction::handle($event, $profile)` turn a built document or event
+into signed, packaged XML without sending, persisting or dispatching anything.
+When the Data carries no `emission`, `ResolveEmissionContextAction` fills it in
+online mode from `efatura.transmitter.tax_id` and `efatura.software.*`, and a
+missing key fails with `configuration.missing` on that key. An explicit
+`emission` is used as given and never mixed with the configuration.
+
+A document is numbered during preparation, after the signing credentials load,
+so a wrong certificate configuration never consumes a number. A document whose
+`header.documentNumber` is already set is resumed: nothing is reserved. Its
+unsigned XML is checked against the official schema before signing. Any failure
+after a reservation throws `PreparationException` (`preparation.failed_after_allocation`)
+with `documentNumber`, `iud`, emitter tax ID, fiscal year, LED and document type
+code in its context; the number stays consumed and the next call receives the
+next one, so close the gap with an UDN event. An event takes its ID from the
+repository, its issue date and time, and the transmitter tax ID of its emission
+context.
 
 ## Configured emitter
 
