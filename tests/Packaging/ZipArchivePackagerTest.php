@@ -6,11 +6,13 @@ use Akira\Efatura\Contracts\Packager;
 use Akira\Efatura\Enums\PackageKind;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\EfaturaException;
+use Akira\Efatura\Exceptions\PackagingException;
 use Akira\Efatura\Packaging\PackagedArchive;
 use Akira\Efatura\Packaging\ZipArchivePackager;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Tests\Support\PackageFixtures as P;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
+use Carbon\CarbonImmutable;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
@@ -85,7 +87,7 @@ it('refuses entries it cannot package without echoing them', function (Closure $
     'an unqualified dfe'  => [fn (): array => ['<Dfe Id="x"/>'], 'package.unsupported_root', ['entry' => 0]],
     'an empty detached'   => [fn (): array => ['<internally-detached/>'], 'package.unsupported_root', ['entry' => 0]],
     'a wrong check digit' => [
-        fn (): array => [P::withId(P::document(), fn (string $id): string => substr($id, 0, -1) . (((int) substr($id, -1) + 1) % 10))],
+        fn (): array => [P::withWrongCheckDigit(P::document())],
         'package.invalid_identifier',
         ['entry' => 0],
     ],
@@ -109,8 +111,27 @@ it('refuses entries it cannot package without echoing them', function (Closure $
         ['limit' => Fiscal::MAX_PACKAGE_ENTRIES, 'entries' => Fiscal::MAX_PACKAGE_ENTRIES + 1]],
     'too many bytes' => [fn (): array => [str_repeat('a', Fiscal::MAX_PACKAGE_BYTES - 1), 'ab'], 'package.too_large',
         ['limit' => Fiscal::MAX_PACKAGE_BYTES, 'bytes' => Fiscal::MAX_PACKAGE_BYTES + 1]],
-    'a document type' => [fn (): array => ['<!DOCTYPE Dfe [<!ENTITY a "b">]><Dfe>&a;</Dfe>'], 'xml.doctype_forbidden', ['violations' => 0]],
-    'a nul character' => [fn (): array => [P::withId(P::document(), fn (string $id): string => $id . "\0")], 'xml.malformed', null],
+    'a document type'           => [fn (): array => ['<!DOCTYPE Dfe [<!ENTITY a "b">]><Dfe>&a;</Dfe>'], 'xml.doctype_forbidden', ['violations' => 0]],
+    'a nul character'           => [fn (): array => [P::withId(P::document(), fn (string $id): string => $id . "\0")], 'xml.malformed', null],
+    'a qualified detached root' => [
+        static function (): array {
+            $detached = P::document(1, SignatureProfile::InternallyDetached);
+
+            return [Str::replaceFirst('<internally-detached>', '<internally-detached xmlns="urn:example">', $detached)];
+        },
+        'package.unsupported_root',
+        ['entry' => 0],
+    ],
+    'a signature in another namespace' => [
+        fn (): array => [str_replace('xmlns:ds="' . Fiscal::XMLDSIG_NAMESPACE . '"', 'xmlns:ds="urn:example"', P::document())],
+        'package.unsigned',
+        ['entry' => 0],
+    ],
+    'a nested signature' => [
+        fn (): array => [str_replace('</Dfe>', '<Wrapper xmlns="urn:example">' . P::EMPTY_SIGNATURE . '</Wrapper></Dfe>', S::unsigned())],
+        'package.unsigned',
+        ['entry' => 0],
+    ],
 ]);
 
 it('accepts entries that add up to exactly the byte limit', function (): void {
@@ -123,4 +144,34 @@ it('accepts entries that add up to exactly the byte limit', function (): void {
         ->and(strlen($padded))->toBe(Fiscal::MAX_PACKAGE_BYTES)
         ->and(P::entries($archive->bytes, $this->directory)[0]['contents'])->toBe($padded)
         ->and(strlen($archive->bytes))->toBeLessThan(Fiscal::MAX_PACKAGE_BYTES);
+});
+
+it('accepts exactly as many entries as the limit', function (): void {
+    $xml     = P::document();
+    $entries = array_map(fn (int $number): string => P::withId($xml, fn (string $iud): string => P::renumbered($iud, $number)), range(1, 1000));
+
+    expect(P::packager($this->directory)->package($entries)->entries)->toHaveCount(Fiscal::MAX_PACKAGE_ENTRIES)
+        ->and(scandir($this->directory))->toBe(['.', '..']);
+});
+
+it('stamps every entry with the same instant in any process timezone', function (string $timezone): void {
+    $original = getenv('TZ');
+    putenv('TZ=' . $timezone);
+
+    try {
+        $entries = P::entries(P::packager($this->directory)->package([P::document(1), P::document(2)])->bytes, $this->directory);
+    } finally {
+        putenv($original === false ? 'TZ' : 'TZ=' . $original);
+    }
+
+    expect(array_column($entries, 'mtime'))->each->toBe(CarbonImmutable::parse('1980-01-02T12:00:00Z')->getTimestamp());
+})->with(['UTC', 'Atlantic/Cape_Verde', 'Pacific/Honolulu', 'Pacific/Kiritimati']);
+
+it('reports an archive it cannot write without leaving a file behind', function (): void {
+    $packager = P::packager($this->directory . '/missing');
+
+    expect(fn (): PackagedArchive => $packager->package([P::document()]))->toThrow(function (PackagingException $exception): void {
+        expect($exception->errorCode)->toBe('package.write_failed')
+            ->and($exception->context)->toBe([]);
+    })->and(scandir($this->directory))->toBe(['.', '..']);
 });

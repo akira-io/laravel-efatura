@@ -29,8 +29,8 @@ and the list of entry names.
 
 ## What is refused
 
-Every failure is a `PackagingException` whose `context` names the position of
-the offending entry (`entry`) or the limit, never the XML:
+Every failure below is a `PackagingException` whose `context` names the
+position of the offending entry (`entry`) or the limit, never the XML:
 
 | Code | Cause |
 | --- | --- |
@@ -38,26 +38,37 @@ the offending entry (`entry`) or the limit, never the XML:
 | `package.too_many_entries` | More than 1000 entries (`Fiscal::MAX_PACKAGE_ENTRIES`) |
 | `package.too_large` | More than 10 MiB of XML in total, before compression (`Fiscal::MAX_PACKAGE_BYTES`) |
 | `package.unsupported_root` | A root that is not `Dfe`, `Event` or `internally-detached` holding one of them |
-| `package.unsigned` | A document without its `ds:Signature` |
+| `package.unsigned` | A root without a `ds:Signature` child in the XMLDSig namespace (a signature nested deeper or in another namespace does not count) |
 | `package.invalid_identifier` | An `Id` that is not a valid IUD (check digit included) or event ID |
 | `package.mixed_kinds` | DFE and events in the same archive |
 | `package.duplicate_entry` | Two entries with the same `Id` |
-| `package.write_failed` | ext-zip could not write the archive |
+| `package.write_failed` | ext-zip could not write the archive in the temporary directory |
 
 The Manual says several XML may share one ZIP but sets no count and no size, and
 names no ZIP file. The two limits are defensive package limits: 1000 matches
 the other list limits of the package, and the archive is never ZIP64. The XML
-is parsed with the hardened parser used by the signer and the schema validator.
+is parsed with the hardened parser used by the signer and the schema validator;
+XML it refuses fails with that parser's `SchemaValidationException`
+(`xml.doctype_forbidden` or `xml.malformed`, with the count of `violations` in
+`context`), not with a `PackagingException`.
+
+`package()` checks where the signature sits, not whether it is valid: it does
+not verify digests or the signature value, so a forged or altered signature is
+packaged as given. That guarantee comes from `XmlSigner::sign()`, which verifies
+every signature it writes; package only XML that comes from the signer.
 
 ## Determinism
 
-Every entry carries the same modification time (1 January 1980), so the same
-input packaged twice on the same host gives the same bytes. The compressed bytes
-still depend on the zlib and libzip versions, so do not compare archives built
-on different hosts; compare their entries.
+Every entry carries the same modification time, 2 January 1980 at 12:00 UTC,
+so the same input packaged twice on the same host gives the same bytes. ZIP
+stores the local wall-clock time of the process, and its format starts on
+1 January 1980: the instant sits a day and a half after that start, so every
+timezone, from UTC-12 to UTC+14, stores and reads it back unchanged. The
+compressed bytes still depend on the zlib and libzip versions, so do not compare
+archives built on different hosts; compare their entries.
 
-The archive is written to a temporary file in the system temporary directory
-and removed before `package()` returns.
+The archive is written to a new file with a random name in the system
+temporary directory and removed before `package()` returns.
 
 ## Preparation
 

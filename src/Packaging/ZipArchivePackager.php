@@ -12,12 +12,13 @@ use Akira\Efatura\Exceptions\PackagingException;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Xml\SafeXmlParser;
 use DOMElement;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use ZipArchive;
 
 final readonly class ZipArchivePackager implements Packager
 {
-    private const int ENTRY_TIMESTAMP = 315_532_800;
+    private const int ENTRY_TIMESTAMP = 315_662_400;
 
     public function __construct(
         private SafeXmlParser $parser,
@@ -116,12 +117,12 @@ final readonly class ZipArchivePackager implements Packager
      */
     private function write(array $entries): string
     {
-        $path = (string) tempnam($this->directory ?? sys_get_temp_dir(), 'efatura-zip-');
+        $path = ($this->directory ?? sys_get_temp_dir()) . '/efatura-zip-' . Str::random(32) . '.zip';
 
         try {
             $archive = new ZipArchive;
-            $opened  = $archive->open($path, ZipArchive::OVERWRITE) === true;
-            $written = $opened && self::add($archive, $entries) && $archive->close();
+            $opened  = @$archive->open($path, ZipArchive::CREATE | ZipArchive::EXCL) === true;
+            $written = $opened && self::add($archive, $entries) && @$archive->close();
             $bytes   = $written ? file_get_contents($path) : false;
 
             return \is_string($bytes) ? $bytes : throw new PackagingException('package.write_failed');

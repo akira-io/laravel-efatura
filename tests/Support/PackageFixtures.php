@@ -9,9 +9,11 @@ use Akira\Efatura\Contracts\Packager;
 use Akira\Efatura\Data\EventData;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\Environment;
+use Akira\Efatura\Enums\IudSegment;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Packaging\ZipArchivePackager;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\Luhn;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
 use Akira\Efatura\Tests\Support\XmlFixtures as X;
 use Carbon\CarbonImmutable;
@@ -20,6 +22,8 @@ use ZipArchive;
 
 final class PackageFixtures
 {
+    public const string EMPTY_SIGNATURE = '<ds:Signature xmlns:ds="' . Fiscal::XMLDSIG_NAMESPACE . '"/>';
+
     public static function document(int $number = 1, SignatureProfile $profile = SignatureProfile::Enveloped): string
     {
         CarbonImmutable::setTestNow(DocumentXmlGraphs::NOW);
@@ -52,6 +56,14 @@ final class PackageFixtures
         return str_replace('Id="' . $current . '"', 'Id="' . $id($current) . '"', $signedXml);
     }
 
+    public static function renumbered(string $iud, int $number): string
+    {
+        $segment = IudSegment::DocumentNumber;
+        $payload = substr_replace(substr($iud, 2, -1), $segment->padded($number), $segment->offset() - 2, $segment->length());
+
+        return Fiscal::COUNTRY . $payload . Luhn::checkDigit($payload);
+    }
+
     public static function withWrongCheckDigit(string $signedXml): string
     {
         return self::withId($signedXml, fn (string $id): string => substr($id, 0, -1) . (((int) substr($id, -1) + 1) % 10));
@@ -71,7 +83,7 @@ final class PackageFixtures
     }
 
     /**
-     * @return list<array{name: string, method: int, crc: int, contents: string}>
+     * @return list<array{name: string, method: int, crc: int, mtime: int, contents: string}>
      */
     public static function entries(string $bytes, string $directory): array
     {
@@ -87,6 +99,7 @@ final class PackageFixtures
                 'name'     => (string) $stat['name'],
                 'method'   => (int) $stat['comp_method'],
                 'crc'      => (int) $stat['crc'],
+                'mtime'    => (int) $stat['mtime'],
                 'contents' => (string) $archive->getFromIndex($index),
             ];
         }
