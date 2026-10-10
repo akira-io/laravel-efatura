@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Akira\Efatura\Testing;
 
 use Akira\Efatura\Contracts\Transport;
+use Akira\Efatura\Data\SelfBillingAuthorizationRequestData;
 use Akira\Efatura\Enums\TransportFailure;
+use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\TransportException;
 use Akira\Efatura\Packaging\PackagedArchive;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Transport\DocumentLookup;
 use Akira\Efatura\Transport\EntryResult;
 use Akira\Efatura\Transport\RemoteMessage;
+use Akira\Efatura\Transport\SelfBillingAuthorization;
 use Akira\Efatura\Transport\SubmissionResult;
 use Carbon\CarbonImmutable;
 use Psr\Clock\ClockInterface;
@@ -31,6 +34,12 @@ final class FakeTransport implements Transport
 
     /** @var array<string, string> */
     private array $documents = [];
+
+    /** @var list<SelfBillingAuthorization|list<RemoteMessage>> */
+    private array $selfBillingAnswers = [];
+
+    /** @var list<SelfBillingAuthorizationRequestData> */
+    private array $selfBillingRequests = [];
 
     public function __construct(private readonly ClockInterface $clock) {}
 
@@ -56,6 +65,20 @@ final class FakeTransport implements Transport
         return $this;
     }
 
+    public function grantSelfBilling(SelfBillingAuthorization $authorization): self
+    {
+        $this->selfBillingAnswers[] = $authorization;
+
+        return $this;
+    }
+
+    public function refuseSelfBilling(RemoteMessage $message, RemoteMessage ...$messages): self
+    {
+        $this->selfBillingAnswers[] = [$message, ...array_values($messages)];
+
+        return $this;
+    }
+
     public function submit(PackagedArchive $archive): SubmissionResult
     {
         $this->submitted[] = $archive;
@@ -77,6 +100,22 @@ final class FakeTransport implements Transport
         $xml              = $this->documents[$iud] ?? null;
 
         return new DocumentLookup($iud, $xml !== null, $xml);
+    }
+
+    public function authorizeSelfBilling(SelfBillingAuthorizationRequestData $request): SelfBillingAuthorization
+    {
+        $this->selfBillingRequests[] = $request;
+        $answer                      = array_shift($this->selfBillingAnswers) ?? throw DefinitionException::selfBillingNotQueued();
+
+        return $answer instanceof SelfBillingAuthorization ? $answer : throw TransportException::rejected($answer, self::STATUS);
+    }
+
+    /**
+     * @return list<SelfBillingAuthorizationRequestData>
+     */
+    public function selfBillingRequests(): array
+    {
+        return $this->selfBillingRequests;
     }
 
     /**

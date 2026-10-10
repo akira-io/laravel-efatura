@@ -93,4 +93,12 @@ final class DefinitionException extends EfaturaException
     {
         return new self('definition.token_serialization', 'An access token is a secret and cannot be serialized.');
     }
+
+    public static function selfBillingNotQueued(): self
+    {
+        return new self(
+            'definition.self_billing_not_queued',
+            'The fake transport holds no self-billing answer; queue one with grantSelfBilling() or refuseSelfBilling().',
+        );
+    }
 }

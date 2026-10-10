@@ -7,6 +7,7 @@ namespace Akira\Efatura\Transport;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Contracts\AccessTokenProvider;
 use Akira\Efatura\Contracts\Transport;
+use Akira\Efatura\Data\SelfBillingAuthorizationRequestData;
 use Akira\Efatura\Enums\OAuthScope;
 use Akira\Efatura\Enums\PackageKind;
 use Akira\Efatura\Enums\TransportFailure;
@@ -20,7 +21,12 @@ final readonly class PlatformTransport implements Transport
 {
     private const int UNAUTHORIZED = 401;
 
-    public function __construct(private TransportExchange $exchange, private AccessTokenProvider $tokens, private EfaturaConfig $config) {}
+    public function __construct(
+        private TransportExchange $exchange,
+        private SelfBillingExchange $selfBilling,
+        private AccessTokenProvider $tokens,
+        private EfaturaConfig $config,
+    ) {}
 
     public function submit(PackagedArchive $archive): SubmissionResult
     {
@@ -45,6 +51,20 @@ final readonly class PlatformTransport implements Transport
         );
 
         return $this->exchange->lookup($iud, $response);
+    }
+
+    public function authorizeSelfBilling(SelfBillingAuthorizationRequestData $request): SelfBillingAuthorization
+    {
+        $buyer = $this->config->emitter->taxId
+            ?? throw TransportException::because(TransportFailure::MissingCredentials, field: 'efatura.emitter.tax_id');
+        $repository = $this->config->environment->environment;
+        $response   = $this->authorized(
+            $buyer,
+            [OAuthScope::DfeSelfBillingAuthorize],
+            fn (array $headers): Response => $this->selfBilling->post($this->config->http->platform, $repository, $request, $headers),
+        );
+
+        return $this->selfBilling->authorization($request, $repository, $response);
     }
 
     /**

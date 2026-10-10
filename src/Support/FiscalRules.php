@@ -63,6 +63,11 @@ final class FiscalRules
         return ['string', new NotBlank, 'max:20', 'regex:/\A' . self::SERIES . '\z/'];
     }
 
+    public static function isSeries(string $value): bool
+    {
+        return mb_strlen($value) <= 20 && Str::isMatch('/\A' . self::SERIES . '\z/', $value);
+    }
+
     public static function isCvTaxId(string $value): bool
     {
         return Str::isMatch('/\A' . self::CV_TAX_ID . '\z/', $value);

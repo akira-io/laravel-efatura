@@ -17,6 +17,7 @@ enum TransportFailure: string
     case RepositoryMismatch = 'transport.repository_mismatch';
     case MissingCredentials = 'transport.missing_credentials';
     case MixedEmitters      = 'transport.mixed_emitters';
+    case Rejected           = 'transport.rejected';
 
     public function retryable(): bool
     {

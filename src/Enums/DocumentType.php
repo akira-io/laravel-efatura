@@ -70,6 +70,11 @@ enum DocumentType: string
         };
     }
 
+    public function isSelfBillable(): bool
+    {
+        return \in_array($this, [self::Invoice, self::InvoiceReceipt, self::Receipt, self::CreditNote, self::DebitNote, self::ReturnNote], true);
+    }
+
     public function requiresLinePricing(): bool
     {
         return $this !== self::Transport;

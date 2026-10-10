@@ -6,13 +6,15 @@ namespace Akira\Efatura\Exceptions;
 
 use Akira\Efatura\Enums\TransportFailure;
 use Akira\Efatura\Packaging\PackagedArchive;
+use Akira\Efatura\Transport\RemoteMessage;
 
 final class TransportException extends EfaturaException
 {
     /**
      * @param array<string, int|string> $context
+     * @param list<RemoteMessage>       $messages
      */
-    private function __construct(public readonly TransportFailure $failure, array $context, ?string $field)
+    private function __construct(public readonly TransportFailure $failure, array $context, ?string $field, public readonly array $messages = [])
     {
         parent::__construct($failure->value, $failure->value, $field, $context, retryable: $failure->retryable());
     }
@@ -32,5 +34,13 @@ final class TransportException extends EfaturaException
         ];
 
         return new self($failure, array_filter($context, static fn (int|string|null $value): bool => $value !== null), $field);
+    }
+
+    /**
+     * @param list<RemoteMessage> $messages
+     */
+    public static function rejected(array $messages, int $status): self
+    {
+        return new self(TransportFailure::Rejected, ['status' => $status], null, $messages);
     }
 }

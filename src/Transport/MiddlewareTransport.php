@@ -6,6 +6,7 @@ namespace Akira\Efatura\Transport;
 
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Contracts\Transport;
+use Akira\Efatura\Data\SelfBillingAuthorizationRequestData;
 use Akira\Efatura\Enums\TransportFailure;
 use Akira\Efatura\Exceptions\TransportException;
 use Akira\Efatura\Packaging\PackagedArchive;
@@ -13,7 +14,7 @@ use Akira\Efatura\Support\Fiscal;
 
 final readonly class MiddlewareTransport implements Transport
 {
-    public function __construct(private TransportExchange $exchange, private EfaturaConfig $config) {}
+    public function __construct(private TransportExchange $exchange, private SelfBillingExchange $selfBilling, private EfaturaConfig $config) {}
 
     public function submit(PackagedArchive $archive): SubmissionResult
     {
@@ -29,10 +30,18 @@ final readonly class MiddlewareTransport implements Transport
         return $this->exchange->lookup($iud, $response);
     }
 
+    public function authorizeSelfBilling(SelfBillingAuthorizationRequestData $request): SelfBillingAuthorization
+    {
+        $repository = $this->config->environment->environment;
+        $response   = $this->selfBilling->post($this->config->http->middleware, $repository, $request, $this->credentials(null));
+
+        return $this->selfBilling->authorization($request, $repository, $response);
+    }
+
     /**
      * @return array<string, string>
      */
-    private function credentials(PackagedArchive|string $subject): array
+    private function credentials(PackagedArchive|string|null $subject): array
     {
         $key = $this->config->transmitter->middlewareKey
             ?? throw TransportException::because(TransportFailure::MissingCredentials, $subject, field: 'efatura.transmitter.middleware_key');

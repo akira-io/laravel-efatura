@@ -18,7 +18,7 @@ final readonly class FailureClassifier
 
     private const array UNDELIVERED_ERRORS = [6, 7, 35, 60];
 
-    public function classify(#[SensitiveParameter] ConnectionException $exception, PackagedArchive|string $subject): TransportException
+    public function classify(#[SensitiveParameter] ConnectionException $exception, PackagedArchive|string|null $subject): TransportException
     {
         $failure = $this->undelivered($exception) ? TransportFailure::ConnectionFailed : TransportFailure::OutcomeUnknown;
 

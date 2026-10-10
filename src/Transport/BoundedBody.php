@@ -13,7 +13,7 @@ use SensitiveParameter;
 
 final readonly class BoundedBody
 {
-    public function read(#[SensitiveParameter] Response $response, PackagedArchive|string $subject): string
+    public function read(#[SensitiveParameter] Response $response, PackagedArchive|string|null $subject): string
     {
         $stream = $response->toPsrResponse()->getBody();
         if ($stream->isSeekable()) {

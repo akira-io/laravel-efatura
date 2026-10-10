@@ -16,13 +16,13 @@ final readonly class TransportRequests
 {
     public function __construct(private Factory $http) {}
 
-    public function for(HttpClientConfig $config, PackagedArchive|Environment $repository): PendingRequest
+    public function for(HttpClientConfig $config, PackagedArchive|Environment $repository, string $accept = 'application/xml'): PendingRequest
     {
         $environment = $repository instanceof PackagedArchive ? $repository->repository : $repository;
 
         return $this->plain($config)
             ->baseUrl($config->baseUrl ?? throw DefinitionException::transportEndpoint())
-            ->accept('application/xml')
+            ->accept($accept)
             ->withHeaders([Fiscal::REPOSITORY_HEADER => (string) $environment->code()]);
     }
 
