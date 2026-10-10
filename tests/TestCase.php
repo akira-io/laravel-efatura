@@ -7,6 +7,7 @@ namespace Akira\Efatura\Tests;
 use Akira\Efatura\EfaturaServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Http;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 
@@ -21,6 +22,8 @@ abstract class TestCase extends Orchestra
     protected function setUp(): void
     {
         parent::setUp();
+
+        Http::preventStrayRequests();
 
         Factory::guessFactoryNamesUsing(
             fn (string $modelName): string => 'Akira\Efatura\Database\Factories\\' . class_basename($modelName) . 'Factory',
