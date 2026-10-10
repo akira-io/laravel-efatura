@@ -43,6 +43,8 @@ final class Fiscal
 
     public const int TRANSMITTER_KEY_LENGTH = 64;
 
+    public const string REPOSITORY_HEADER = 'cv-ef-repository-code';
+
     public const string OAUTH_ISSUER_URL = 'https://iam.efatura.cv/auth/realms/taxpayers';
 
     public const string EARLIEST_DATE = '2021-01-01';

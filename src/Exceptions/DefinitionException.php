@@ -74,6 +74,11 @@ final class DefinitionException extends EfaturaException
         return new self('definition.submission_entry', \sprintf('The submission holds no entry for %s.', $identifier));
     }
 
+    public static function transportEndpoint(): self
+    {
+        return new self('definition.transport_endpoint', 'A fiscal request needs an HTTP client profile with a base URL.');
+    }
+
     public static function credentialsSerialization(): self
     {
         return new self('definition.credentials_serialization', 'Signing credentials hold a private key and cannot be serialized.');
