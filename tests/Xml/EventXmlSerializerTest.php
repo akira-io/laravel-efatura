@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Actions\BuildEventXmlAction;
+use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Data\EventData;
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Tests\Support\DocumentPayloads;
@@ -46,3 +47,16 @@ it('writes the issue date time in cabo verde time', function (): void {
         ->toStartWith('<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<Event xmlns="urn:cv:efatura:xsd:v1.0" Id="CV3261002233000123456789" Version="1.0" EventTypeCode="FDC">')
         ->toContain('<IssueDateTime>2026-10-02T23:30:00</IssueDateTime>');
 });
+
+it('writes the repository of the event id in every repository', function (Environment $repository): void {
+    $event   = EventData::from(E::transmitted(['iuds' => [E::iud()]]));
+    $eventId = E::eventId(['repositoryCode' => $repository->value]);
+
+    $xml = resolve(BuildEventXmlAction::class)->handle($event, $eventId, $repository);
+
+    expect($eventId)->toStartWith('CV' . $repository->value)
+        ->and($xml)->toContain('Id="' . $eventId . '"')
+        ->toEndWith('<RepositoryCode>' . $repository->value . '</RepositoryCode></Event>' . "\n");
+
+    resolve(SchemaValidator::class)->validate($xml);
+})->with([Environment::Production, Environment::Homologation]);
