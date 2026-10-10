@@ -5,10 +5,14 @@ declare(strict_types=1);
 use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\EfaturaManager;
+use Akira\Efatura\EfaturaServiceProvider;
 use Akira\Efatura\Tests\Support\InstallCommandFixture;
+use Akira\Efatura\Tests\Support\SequenceFixtures;
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
 use function Pest\Laravel\artisan;
@@ -174,4 +178,40 @@ it('resolves configured identities once the installed environment is filled in',
 
     expect($configured->transmitter->taxId)->toBe('123456789')
         ->and($configured->emitter->led)->toBe(123);
+});
+
+it('publishes the sequence migration when the application has none', function (): void {
+    CarbonImmutable::setTestNow('2026-10-10 09:30:15');
+    $this->files->put(config_path('efatura.php'), '');
+
+    artisan('efatura:install')
+        ->expectsOutputToContain('Sequence migration published.')
+        ->assertExitCode(0);
+
+    expect($this->files->get(database_path('migrations/2026_10_10_093015_create_efatura_sequences_table.php')))
+        ->toBe($this->files->get(SequenceFixtures::STUB));
+});
+
+it('keeps an already published sequence migration', function (): void {
+    $published = database_path('migrations/2025_01_01_000000_create_efatura_sequences_table.php');
+    $this->files->ensureDirectoryExists(dirname($published));
+    $this->files->put($published, 'customized');
+    $this->files->put(config_path('efatura.php'), '');
+
+    artisan('efatura:install')
+        ->expectsOutputToContain('Sequence migration already exists. Skipped publishing.')
+        ->doesntExpectOutputToContain('Sequence migration published.')
+        ->assertExitCode(0);
+    artisan('efatura:install')->assertExitCode(0);
+
+    expect($this->files->glob(database_path('migrations/*_create_efatura_sequences_table.php')))->toBe([$published])
+        ->and($this->files->get($published))->toBe('customized');
+});
+
+it('offers the sequence migration for publishing without running it', function (): void {
+    $paths = ServiceProvider::pathsToPublish(EfaturaServiceProvider::class, 'efatura-migrations');
+
+    expect(array_map(realpath(...), array_keys($paths)))->toBe([realpath(SequenceFixtures::STUB)])
+        ->and(array_first($paths))->toEndWith('_create_efatura_sequences_table.php')
+        ->and(resolve('migrator')->paths())->toBe([]);
 });

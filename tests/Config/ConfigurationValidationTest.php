@@ -62,6 +62,7 @@ it('rejects invalid configuration with stable safe field errors', function (stri
     ['efatura.cache.prefix', null, 'configuration.invalid_type'],
     ['efatura.certificates.private_key_path', 'certs/../secret.pem', 'configuration.unsafe_path'],
     ['efatura.certificates.certificate_path', 'C:\secret.pem', 'configuration.unsafe_path'],
+    ['efatura.certificates.ca_bundle_path', '../ca.pem', 'configuration.unsafe_path'],
     ['efatura.storage.path', "fiscal\0documents", 'configuration.unsafe_path'],
     ['efatura.database.sequences_table', 'table; DROP TABLE users', 'configuration.invalid_identifier'],
     ['efatura.software.name', ['invalid'], 'configuration.invalid_type'],

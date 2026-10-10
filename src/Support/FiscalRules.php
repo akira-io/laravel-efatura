@@ -26,6 +26,10 @@ final class FiscalRules
 
     private const string URL_TOKEN = '[A-Za-z0-9_-]';
 
+    private const string LIBXML_UNICODE_4_NON_WORD = '\x{166D}\x{17B4}\x{17B5}\x{23B4}-\x{23B6}';
+
+    private const string XSD_WORD = '[^\p{P}\p{Z}\p{C}' . self::LIBXML_UNICODE_4_NON_WORD . ']';
+
     private const string XML_NAME_START = 'A-Z_a-z\x{C0}-\x{D6}\x{D8}-\x{F6}\x{F8}-\x{2FF}\x{370}-\x{37D}\x{37F}-\x{1FFF}\x{200C}-\x{200D}'
         . '\x{2070}-\x{218F}\x{2C00}-\x{2FEF}\x{3001}-\x{D7FF}\x{F900}-\x{FDCF}\x{FDF0}-\x{FFFD}\x{10000}-\x{EFFFF}';
 
@@ -70,6 +74,11 @@ final class FiscalRules
     public static function cvTaxId(): array
     {
         return ['regex:/\A' . self::CV_TAX_ID . '\z/'];
+    }
+
+    public static function isLedCode(int $value): bool
+    {
+        return Str::isMatch('/\A' . self::LED . '\z/', (string) $value);
     }
 
     public static function isIud(string $value): bool
@@ -131,7 +140,7 @@ final class FiscalRules
      */
     public static function documentNumber(): array
     {
-        return ['integer', 'between:1,999999999'];
+        return ['integer', 'between:1,' . Fiscal::MAX_DOCUMENT_NUMBER];
     }
 
     /**
@@ -159,6 +168,27 @@ final class FiscalRules
 
         return ['string', new NotBlank, 'max:256', 'regex:~\A(?:https?://)?' . $token . '+(?:\.' . $token . '+)*(?::[0-9]+)?(?:/[-._A-Za-z0-9]+)*'
             . '(?:\?(?:' . $token . '+=[+%A-Za-z0-9_-]*)(?:&' . $token . '+=[+%A-Za-z0-9_-]*)*)?(?:\#[^\s]*)?\z~u'];
+    }
+
+    /**
+     * @return list<string|NotBlank>
+     */
+    public static function email(): array
+    {
+        $word = self::XSD_WORD;
+        $part = $word . '+(?:[-._]' . $word . '+)*';
+
+        return [new NotBlank, 'max:256', 'regex:/\A' . $part . '@' . $part . '\.' . $word . '+(?:\.' . $word . '+)*\z/u'];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function uuid(): array
+    {
+        $word = self::XSD_WORD;
+
+        return ['regex:/\A' . $word . '{8}-(?:' . $word . '{4}-){3}' . $word . '{12}\z/u'];
     }
 
     /**

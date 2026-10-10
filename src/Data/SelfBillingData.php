@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
+use Akira\Efatura\Support\FiscalRules;
+
 final class SelfBillingData extends FiscalData
 {
     public function __construct(
@@ -17,7 +19,7 @@ final class SelfBillingData extends FiscalData
     public static function rules(): array
     {
         return [
-            'authorizationId'   => ['regex:/\A\w{8}-(?:\w{4}-){3}\w{12}\z/u'],
+            'authorizationId'   => FiscalRules::uuid(),
             'authorizationCode' => ['regex:/\A[0-9]{4,10}\z/'],
         ];
     }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Data;
 
-use Akira\Efatura\Rules\NotBlank;
 use Akira\Efatura\Support\FiscalRules;
 
 final class ContactsData extends FiscalData
@@ -26,7 +25,7 @@ final class ContactsData extends FiscalData
             'telephone'   => FiscalRules::phone(),
             'mobilephone' => FiscalRules::phone(),
             'telefax'     => FiscalRules::phone(),
-            'email'       => [new NotBlank, 'max:256', 'regex:/\A\w+(?:[-._]\w+)*@\w+(?:[-._]\w+)*\.\w+(?:\.\w+)*\z/u'],
+            'email'       => FiscalRules::email(),
             'website'     => FiscalRules::website(),
         ];
     }

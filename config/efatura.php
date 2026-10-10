@@ -109,6 +109,9 @@ return [
     | Keep private keys on a private disk and never serve or log their bytes.
     | The passphrase is a nullable secret string preserved exactly, including
     | whitespace. Signing operations validate missing material when needed.
+    | An optional PEM CA bundle on the same disk enables chain verification
+    | against that bundle alone, never the system CA store; production
+    | (repository 1) requires a certificate issued under ICP-CV.
     |
     */
     'certificates' => [
@@ -116,6 +119,7 @@ return [
         'certificate_path' => env('EFATURA_CERTIFICATE_PATH'),
         'private_key_path' => env('EFATURA_PRIVATE_KEY_PATH'),
         'passphrase'       => env('EFATURA_PRIVATE_KEY_PASSPHRASE'),
+        'ca_bundle_path'   => env('EFATURA_CA_BUNDLE_PATH'),
     ],
 
     /*
@@ -160,6 +164,10 @@ return [
     | underscores, starting with a letter or underscore. A null queue inherits
     | the selected connection's queue name, remaining null for drivers such as
     | sync that have no queue name. Explicit names must be nonempty strings.
+    | The published sequence migration reads the connection and the table
+    | when it runs, so set them before migrating. SQLite connections shared by
+    | several workers need a busy_timeout in config/database.php. Numbers are
+    | never reserved while this connection is inside a transaction.
     |
     */
     'database' => [

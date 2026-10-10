@@ -18,5 +18,6 @@ final readonly class CertificateConfig implements JsonSerializable
         public ?string $privateKeyPath,
         #[SensitiveParameter]
         public ?string $passphrase,
+        public ?string $caBundlePath = null,
     ) {}
 }

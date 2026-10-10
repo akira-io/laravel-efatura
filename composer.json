@@ -22,6 +22,7 @@
         "illuminate/config": "^13.0",
         "illuminate/console": "^13.0",
         "illuminate/contracts": "^13.0",
+        "illuminate/database": "^13.0",
         "illuminate/filesystem": "^13.0",
         "illuminate/support": "^13.0",
         "illuminate/validation": "^13.0",
@@ -30,6 +31,7 @@
         "psr/clock": "^1.0"
     },
     "require-dev": {
+        "brianium/paratest": "!=7.26.1",
         "driftingly/rector-laravel": "^2.3",
         "fakerphp/faker": "^1.24",
         "larastan/larastan": "^3.10",
@@ -49,7 +51,8 @@
         "rector/rector": "^2.4",
         "roave/security-advisories": "dev-latest",
         "peckphp/peck": "^0.3.0",
-        "phpoffice/phpspreadsheet": "^5.10"
+        "phpoffice/phpspreadsheet": "^5.10",
+        "robrichards/xmlseclibs": "^4.0"
     },
     "autoload": {
         "psr-4": {

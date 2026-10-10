@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Sequence\NumberedDocument;
+use Akira\Efatura\Sequence\SequenceScope;
+use Akira\Efatura\Signing\SignedXml;
+use Akira\Efatura\Signing\SigningCredentials;
 use Illuminate\Filesystem\Filesystem;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
@@ -45,6 +49,22 @@ arch('xml receives its collaborators instead of locating them')
 arch('actions receive their collaborators instead of locating them')
     ->expect('Akira\Efatura\Actions')
     ->not->toUse(['Illuminate\Support\Facades', 'resolve', 'app']);
+
+arch('signing, sequences and packaging receive their collaborators and configuration')
+    ->expect(['Illuminate\Support\Facades', 'resolve', 'app', 'config'])
+    ->each->not->toBeUsedIn(['Akira\Efatura\Signing', 'Akira\Efatura\Sequence', 'Akira\Efatura\Packaging']);
+
+arch('signing never runs processes or writes logs')
+    ->expect('Akira\Efatura\Signing')
+    ->not->toUse(['exec', 'shell_exec', 'proc_open', 'system', 'passthru', 'popen', 'Symfony\Component\Process', 'error_log', 'Psr\Log']);
+
+arch('signing never dumps or serializes credentials')
+    ->expect('Akira\Efatura\Signing')
+    ->not->toUse(['serialize', 'var_export', 'var_dump', 'print_r']);
+
+arch('signing, sequence and packaging values are immutable')
+    ->expect([SigningCredentials::class, SignedXml::class, SequenceScope::class, NumberedDocument::class, 'Akira\Efatura\Packaging'])
+    ->toBeReadonly();
 
 arch('xml is written through the dom only')
     ->expect('Akira\Efatura\Xml')

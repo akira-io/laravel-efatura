@@ -37,6 +37,14 @@ abstract class DocumentData extends FiscalData
         return self::documentType();
     }
 
+    final public function withDocumentNumber(int $number): static
+    {
+        $payload = $this->toPayload();
+        data_set($payload, 'header.documentNumber', $number);
+
+        return self::from($payload);
+    }
+
     /**
      * @return array<string, list<mixed>>
      */

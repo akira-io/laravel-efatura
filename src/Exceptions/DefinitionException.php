@@ -55,4 +55,22 @@ final class DefinitionException extends EfaturaException
     {
         return new self('definition.serializer_type', \sprintf('%s cannot serialize %s.', $serializer, $document));
     }
+
+    public static function sequenceScope(): self
+    {
+        return new self(
+            'definition.sequence_scope',
+            'A sequence scope needs a Cabo Verde tax id, a fiscal year from 2021 to 2099 and a LED code from 1 to 99999.',
+        );
+    }
+
+    public static function sequencesInUse(string $table): self
+    {
+        return new self('definition.sequences_in_use', \sprintf('The %s table still holds fiscal sequence counters and is not dropped.', $table));
+    }
+
+    public static function credentialsSerialization(): self
+    {
+        return new self('definition.credentials_serialization', 'Signing credentials hold a private key and cannot be serialized.');
+    }
 }
