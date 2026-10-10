@@ -11,26 +11,20 @@ use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\OfficialArtifacts;
 use DOMDocument;
-use DOMDocumentType;
 use DOMElement;
 use LibXMLError;
 
 use const LIBXML_ERR_ERROR;
 use const LIBXML_NONET;
-use const LIBXML_RECOVER;
 
 final readonly class LibxmlSchemaValidator implements SchemaValidator
 {
     private const array SCHEMA_PARSER_ERROR_CODES = [[1700, 1800], [3000, 3099]];
 
-    public function __construct(private OfficialArtifacts $artifacts) {}
+    public function __construct(private OfficialArtifacts $artifacts, private SafeXmlParser $parser = new SafeXmlParser) {}
 
     public function validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped): void
     {
-        if (str_contains($xml, '<!DOCTYPE')) {
-            throw SchemaValidationException::doctypeForbidden();
-        }
-
         $schema         = $this->artifacts->xsdEntry($profile->value);
         $internalErrors = libxml_use_internal_errors(true);
         $pending        = \count(libxml_get_errors());
@@ -48,7 +42,7 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
         });
 
         try {
-            $document = $this->parse($xml, $pending);
+            $document = $this->parser->parse($xml);
             $valid    = @$document->schemaValidate($schema, LIBXML_NONET);
             if ($refusal?->errorCode === 'artifacts.unknown_or_unsafe_path') {
                 throw SchemaValidationException::externalResource();
@@ -75,29 +69,6 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
 
             libxml_use_internal_errors($internalErrors);
         }
-    }
-
-    private function parse(string $xml, int $pending): DOMDocument
-    {
-        $document = new DOMDocument;
-        if ($xml === '' || ! $document->loadXML($xml, LIBXML_NONET)) {
-            $violations = $this->violations($pending);
-
-            throw self::declaresDocumentType($xml) ? SchemaValidationException::doctypeForbidden() : SchemaValidationException::malformed($violations);
-        }
-
-        if ($document->doctype instanceof DOMDocumentType) {
-            throw SchemaValidationException::doctypeForbidden();
-        }
-
-        return $document;
-    }
-
-    private static function declaresDocumentType(string $xml): bool
-    {
-        $document = new DOMDocument;
-
-        return $xml !== '' && @$document->loadXML($xml, LIBXML_NONET | LIBXML_RECOVER) && $document->doctype instanceof DOMDocumentType;
     }
 
     private static function schemaFailedToLoad(int $pending): bool
