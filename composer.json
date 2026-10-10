@@ -50,7 +50,8 @@
         "rector/rector": "^2.4",
         "roave/security-advisories": "dev-latest",
         "peckphp/peck": "^0.3.0",
-        "phpoffice/phpspreadsheet": "^5.10"
+        "phpoffice/phpspreadsheet": "^5.10",
+        "robrichards/xmlseclibs": "^4.0"
     },
     "autoload": {
         "psr-4": {
