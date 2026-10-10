@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura;
 
+use Akira\Efatura\Actions\BuildIudAction;
 use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
@@ -37,7 +38,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $this->app->singleton(Catalogs::class);
         CatalogCurrency::resolveCatalogsUsing(fn (): Catalogs => $this->app->make(Catalogs::class));
         $this->app->singleton(ClockInterface::class, fn (): ClockInterface => new FactoryImmutable(['timezone' => Fiscal::TIMEZONE]));
-        $this->app->bind(Randomizer::class, fn (): Randomizer => new Randomizer(new Secure));
+        $this->app->when(BuildIudAction::class)->needs(Randomizer::class)->give(fn (): Randomizer => new Randomizer(new Secure));
         $this->app->bind(SchemaValidator::class, LibxmlSchemaValidator::class);
     }
 

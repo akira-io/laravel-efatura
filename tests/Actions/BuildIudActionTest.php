@@ -66,15 +66,29 @@ it('generates the random code from the injected randomizer', function (): void {
     $first  = new BuildIudAction(new Randomizer(new Mt19937(42)))->handle($payload);
     $second = new BuildIudAction(new Randomizer(new Mt19937(42)))->handle($payload);
 
-    expect($first)->toBe($second)
-        ->toHaveLength(45)
-        ->toMatch('/\ACV[0-9]{43}\z/')
+    expect($first)->toBe('CV3260208100200300001230100000000148667423748')
+        ->and($second)->toBe($first)
         ->and(Luhn::passes(substr($first, 2)))->toBeTrue()
-        ->and(resolve(ParseIudAction::class)->handle($first)->randomCode)->toBe(substr($first, 34, 10));
+        ->and(resolve(ParseIudAction::class)->handle($first)->randomCode)->toBe('4866742374');
 });
 
-it('binds a cryptographically secure randomizer', function (): void {
-    expect(resolve(Randomizer::class)->engine)->toBeInstanceOf(Secure::class);
+it('gives the identifier builder a cryptographically secure randomizer', function (): void {
+    $randomizer = new ReflectionProperty(BuildIudAction::class, 'randomizer')->getValue(resolve(BuildIudAction::class));
+
+    expect($randomizer->engine)->toBeInstanceOf(Secure::class);
+});
+
+it('keeps the secure randomizer when the application binds a seeded one', function (): void {
+    app()->bind(Randomizer::class, fn (): Randomizer => new Randomizer(new Mt19937(42)));
+    $payload = IudData::from(I::iudPayload(['randomCode' => null]));
+
+    $randomizer = new ReflectionProperty(BuildIudAction::class, 'randomizer')->getValue(resolve(BuildIudAction::class));
+    $first      = resolve(BuildIudAction::class)->handle($payload);
+    $second     = resolve(BuildIudAction::class)->handle($payload);
+
+    expect($randomizer->engine)->toBeInstanceOf(Secure::class)
+        ->and(resolve(Randomizer::class)->engine)->toBeInstanceOf(Mt19937::class)
+        ->and($first)->not->toBe($second);
 });
 
 it('rejects identifier components outside their official bounds', function (array $overrides, string $field, string $message): void {

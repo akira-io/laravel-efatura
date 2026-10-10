@@ -11,9 +11,11 @@ this stage.
 the repository code, the issue date as `ymd`, the emitter NIF, the LED with
 five digits, the two-digit document type code, the document number with nine
 digits, ten random digits and the Luhn check digit of Manual 11, computed over
-the 42 digits after `CV`. Without `randomCode` the random digits come from the
-container's `Random\Randomizer`, bound to the secure engine. The NIF is always
-the emitter's, never the transmitter's.
+the 42 digits after `CV`. Without `randomCode` the random digits come from a
+`Random\Randomizer` on the secure engine, which the container gives
+`BuildIudAction` through a contextual binding, so an application that binds
+`Randomizer` for itself never changes it. The issue date is an instant, taken
+on its Cabo Verde day. The NIF is always the emitter's, never the transmitter's.
 
 `ParseIudAction::handle(string $iud, string $field = 'iud')` returns the
 `IudData` an IUD encodes, and fails with a `ValidationException` on `$field`
