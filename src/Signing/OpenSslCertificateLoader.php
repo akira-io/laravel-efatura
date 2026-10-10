@@ -193,11 +193,11 @@ final readonly class OpenSslCertificateLoader implements CertificateLoader
                 && OpenSslErrors::drain() === [];
         } finally {
             if (is_file($file)) {
-                unlink($file);
+                @unlink($file);
             }
 
             if (is_dir($directory)) {
-                rmdir($directory);
+                @rmdir($directory);
             }
         }
 
