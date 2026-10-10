@@ -60,8 +60,11 @@ it('reports schema violations with the element but never the value', function (s
 it('rejects malformed xml without echoing it', function (string $xml, array $messages): void {
     expect(fn () => resolve(SchemaValidator::class)->validate($xml))
         ->toThrow(function (SchemaValidationException $exception) use ($messages): void {
+            $reported = array_column($exception->violations, 'message');
+
             expect($exception->errorCode)->toBe('xml.malformed')
-                ->and(array_column($exception->violations, 'message'))->toBe($messages)
+                ->and(array_slice($reported, 0, count($messages)))->toBe($messages)
+                ->and(array_slice($reported, count($messages)))->each->toBe('Extra content at the end of the document')
                 ->and(array_column($exception->violations, 'level'))->each->toBe(LIBXML_ERR_FATAL);
         });
 })->with([
