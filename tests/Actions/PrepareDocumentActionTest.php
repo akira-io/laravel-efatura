@@ -26,6 +26,7 @@ use Akira\Efatura\Tests\Support\PreparationFixtures as P;
 use Akira\Efatura\Tests\Support\SequenceFixtures;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
 use Akira\Efatura\Tests\Support\SignatureVerifier as V;
+use Akira\Efatura\Xml\LibxmlSchemaValidator;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -152,10 +153,26 @@ it('refuses to resume with an iud of another document', function (): void {
         ->and($this->store->current(SequenceFixtures::scope()))->toBe(1);
 });
 
-it('reports the consumed number when only the schema refuses the document', function (): void {
+it('refuses an email the schema rejects before reserving a number', function (): void {
     $emitter = [...F::payload()['emitter'], 'contacts' => ['email' => '_billing@example.cv', 'telephone' => '1234567']];
 
     expect(fn (): PreparedDocument => resolve(PrepareDocumentAction::class)->handle(P::invoice(overrides: ['emission' => null, 'emitter' => $emitter])))
+        ->toFailValidationOn('emitter.contacts.email', 'The emitter.contacts.email field format is invalid.')
+        ->and($this->store->current(SequenceFixtures::scope()))->toBe(0);
+});
+
+it('reports the consumed number when only the schema refuses the document', function (): void {
+    app()->instance(SchemaValidator::class, new readonly class (resolve(LibxmlSchemaValidator::class)) implements SchemaValidator
+    {
+        public function __construct(private LibxmlSchemaValidator $validator) {}
+
+        public function validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped): void
+        {
+            $this->validator->validate($xml, SignatureProfile::InternallyDetached);
+        }
+    });
+
+    expect(fn (): PreparedDocument => resolve(PrepareDocumentAction::class)->handle(P::invoice(overrides: ['emission' => null])))
         ->toThrow(function (PreparationException $exception): void {
             $previous = $exception->getPrevious();
 

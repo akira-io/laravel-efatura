@@ -150,6 +150,16 @@ and at most 100, as the Manual's PERC type and the XSD's
 `Value exceeds the allowed decimal precision.`; round it to three places before
 building the document. Amount discounts (`A`) keep five places.
 
+A contact `email` and a self-billing `authorizationId` follow the XSD's
+`stEmail` and `stUUID` patterns, where `\w` is any character except
+punctuation, separators and other characters, so the underscore is not a word
+character. `_billing@example.cv`, `billing__team@example.cv` and an
+`authorizationId` with an underscore inside a group used to validate and then
+failed the schema after a number was reserved; they now fail at `email` or
+`authorizationId` with Laravel's `regex` message. An underscore
+still separates two words, as in `billing_team@example.cv`. Symbols such as `+`
+are accepted.
+
 ## Document types and environments
 
 | Before | After |
