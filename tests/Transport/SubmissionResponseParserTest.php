@@ -71,7 +71,7 @@ it('reads the response to an event archive under the event identifier', function
 
 it('never turns a hostile or incomplete body into a result', function (Closure $body, array $identifiers): void {
     $archive  = T::archive($identifiers);
-    $hostile  = $body(T::response('accepted'));
+    $hostile  = (fn (): string => $body(T::response('accepted')))();
     $original = ini_set('zend.exception_ignore_args', '0');
 
     try {
