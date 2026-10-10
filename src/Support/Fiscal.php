@@ -51,6 +51,26 @@ final class Fiscal
 
     public const string XML_SCHEMA_VERSION = '1.0';
 
+    public const string XMLDSIG_NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#';
+
+    public const string XADES_NAMESPACE = 'http://uri.etsi.org/01903/v1.3.2#';
+
+    public const string C14N_ALGORITHM = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
+
+    public const string RSA_SHA256_ALGORITHM = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';
+
+    public const string SHA256_ALGORITHM = 'http://www.w3.org/2001/04/xmlenc#sha256';
+
+    public const string ENVELOPED_SIGNATURE_TRANSFORM = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature';
+
+    public const string SIGNED_PROPERTIES_TYPE = 'http://uri.etsi.org/01903#SignedProperties';
+
+    public const string SIGNATURE_ID = 'EmitterPartySignatureId';
+
+    public const string DATA_REFERENCE_ID = 'DataReferenceId';
+
+    public const string SIGNED_PROPERTIES_ID = 'SignedPropertiesId';
+
     public static function local(CarbonInterface $moment): CarbonImmutable
     {
         return $moment->toImmutable()->setTimezone(self::TIMEZONE);

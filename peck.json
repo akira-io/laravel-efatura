@@ -37,7 +37,12 @@
             "rdns",
             "tlv",
             "unserialize",
-            "encodings"
+            "encodings",
+            "ds",
+            "sha",
+            "xades",
+            "xmldsig",
+            "xpath"
         ],
         "paths": [
             "resources/catalogs/source",

@@ -56,6 +56,11 @@ final readonly class SigningCredentials implements JsonSerializable
         throw DefinitionException::credentialsSerialization();
     }
 
+    public function certificateDigest(): string
+    {
+        return base64_encode(hash('sha256', $this->certificateDer, true));
+    }
+
     public static function fromCertificate(OpenSSLCertificate $certificate, #[SensitiveParameter] OpenSSLAsymmetricKey $privateKey): self
     {
         $info = openssl_x509_parse($certificate) ?: [];

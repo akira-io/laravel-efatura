@@ -12,9 +12,11 @@ use Akira\Efatura\Configuration\LoadEfaturaConfig;
 use Akira\Efatura\Contracts\CertificateLoader;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Contracts\SequenceStore;
+use Akira\Efatura\Contracts\XmlSigner;
 use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\Sequence\DatabaseSequenceStore;
 use Akira\Efatura\Signing\OpenSslCertificateLoader;
+use Akira\Efatura\Signing\XadesBesXmlSigner;
 use Akira\Efatura\Support\Catalogs;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Xml\LibxmlSchemaValidator;
@@ -49,6 +51,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             ->give(fn (): DatabaseConfig => $this->app->make(EfaturaConfig::class)->database);
         $this->app->bind(SequenceStore::class, DatabaseSequenceStore::class);
         $this->app->bind(CertificateLoader::class, OpenSslCertificateLoader::class);
+        $this->app->bind(XmlSigner::class, XadesBesXmlSigner::class);
     }
 
     public function configurePackage(Package $package): void
