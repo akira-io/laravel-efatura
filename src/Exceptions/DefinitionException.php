@@ -55,4 +55,12 @@ final class DefinitionException extends EfaturaException
     {
         return new self('definition.serializer_type', \sprintf('%s cannot serialize %s.', $serializer, $document));
     }
+
+    public static function sequenceScope(): self
+    {
+        return new self(
+            'definition.sequence_scope',
+            'A sequence scope needs a Cabo Verde tax id, a fiscal year from 2021 to 2099 and a LED code from 1 to 99999.',
+        );
+    }
 }

@@ -35,6 +35,8 @@ return [
         'completed'                => 'akira/efatura installation complete.',
         'config_exists'            => 'Config file already exists. Skipped publishing.',
         'config_published'         => 'Config file published.',
+        'migration_exists'         => 'Sequence migration already exists. Skipped publishing.',
+        'migration_published'      => 'Sequence migration published.',
         'env_missing'              => '.env file not found. Skipped environment updates.',
         'env_add_confirm'          => 'Add :key to .env?',
         'env_skipped'              => 'Skipped :key.',

@@ -64,6 +64,7 @@ it('ships runtime resources and leaves development files out of dist archives', 
 })->with([
     ['src/Efatura.php', 'unspecified'],
     ['config/efatura.php', 'unspecified'],
+    ['database/migrations/create_efatura_sequences_table.php.stub', 'unspecified'],
     ['resources/lang/en/efatura.php', 'unspecified'],
     ['resources/catalogs/units.json', 'unspecified'],
     ['resources/official-artifacts.json', 'unspecified'],

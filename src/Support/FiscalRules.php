@@ -72,6 +72,11 @@ final class FiscalRules
         return ['regex:/\A' . self::CV_TAX_ID . '\z/'];
     }
 
+    public static function isLedCode(int $value): bool
+    {
+        return Str::isMatch('/\A' . self::LED . '\z/', (string) $value);
+    }
+
     public static function isIud(string $value): bool
     {
         return Str::isMatch('/\A' . self::IUD . '\z/', $value);
@@ -131,7 +136,7 @@ final class FiscalRules
      */
     public static function documentNumber(): array
     {
-        return ['integer', 'between:1,999999999'];
+        return ['integer', 'between:1,' . Fiscal::MAX_DOCUMENT_NUMBER];
     }
 
     /**

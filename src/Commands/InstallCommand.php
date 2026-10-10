@@ -22,9 +22,12 @@ use const PHP_EOL;
 #[Description('Install akira/efatura configuration')]
 final class InstallCommand extends Command
 {
+    private const string SEQUENCE_MIGRATION = 'create_efatura_sequences_table';
+
     public function handle(Filesystem $filesystem): int
     {
         $this->publishConfig($filesystem);
+        $this->publishSequenceMigration($filesystem);
         $this->updateEnvironmentFile($filesystem);
         $this->notifyOptionalPackages($filesystem);
 
@@ -49,6 +52,25 @@ final class InstallCommand extends Command
         $filesystem->copy($sourcePath, $configPath);
 
         info(__('efatura::efatura.install.config_published'));
+    }
+
+    private function publishSequenceMigration(Filesystem $filesystem): void
+    {
+        $directory = database_path('migrations');
+
+        if ($filesystem->glob($directory . '/*_' . self::SEQUENCE_MIGRATION . '.php') !== []) {
+            note(__('efatura::efatura.install.migration_exists'));
+
+            return;
+        }
+
+        $filesystem->ensureDirectoryExists($directory);
+        $filesystem->copy(
+            \dirname(__DIR__, 2) . '/database/migrations/' . self::SEQUENCE_MIGRATION . '.php.stub',
+            $directory . '/' . now()->format('Y_m_d_His') . '_' . self::SEQUENCE_MIGRATION . '.php',
+        );
+
+        info(__('efatura::efatura.install.migration_published'));
     }
 
     private function updateEnvironmentFile(Filesystem $filesystem): void
