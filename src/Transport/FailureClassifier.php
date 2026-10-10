@@ -20,13 +20,14 @@ final readonly class FailureClassifier
 
     public function classify(#[SensitiveParameter] ConnectionException $exception, PackagedArchive|string $subject): TransportException
     {
-        $failure = self::undelivered($exception->getPrevious()) ? TransportFailure::ConnectionFailed : TransportFailure::OutcomeUnknown;
+        $failure = $this->undelivered($exception) ? TransportFailure::ConnectionFailed : TransportFailure::OutcomeUnknown;
 
         return TransportException::because($failure, $subject);
     }
 
-    private static function undelivered(#[SensitiveParameter] ?Throwable $cause): bool
+    public function undelivered(#[SensitiveParameter] ConnectionException $exception): bool
     {
+        $cause   = $exception->getPrevious();
         $context = $cause instanceof Throwable && method_exists($cause, 'getHandlerContext') ? $cause->getHandlerContext() : [];
         $errno   = \is_array($context) ? ($context['errno'] ?? null) : null;
         if (! \is_int($errno)) {

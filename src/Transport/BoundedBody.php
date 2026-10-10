@@ -9,10 +9,11 @@ use Akira\Efatura\Exceptions\TransportException;
 use Akira\Efatura\Packaging\PackagedArchive;
 use Akira\Efatura\Support\Fiscal;
 use Illuminate\Http\Client\Response;
+use SensitiveParameter;
 
 final readonly class BoundedBody
 {
-    public function read(Response $response, PackagedArchive|string $subject): string
+    public function read(#[SensitiveParameter] Response $response, PackagedArchive|string $subject): string
     {
         $stream = $response->toPsrResponse()->getBody();
         if ($stream->isSeekable()) {
