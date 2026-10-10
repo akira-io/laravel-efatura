@@ -21,8 +21,6 @@ final class FiscalRules
 
     private const string EVENT_ID = 'CV[0-9][0-9]{2}(?:0[1-9]|1[012])(?:0[1-9]|[12][0-9]|3[01])[0-9]{6}[1-9][0-9]{8}';
 
-    private const string CLOCK_TIME = '(?:[01][0-9]|2[0-3])[0-5][0-9][0-5][0-9]';
-
     private const string URL_TOKEN = '[A-Za-z0-9_-]';
 
     private const string XML_NAME_START = 'A-Z_a-z\x{C0}-\x{D6}\x{D8}-\x{F6}\x{F8}-\x{2FF}\x{370}-\x{37D}\x{37F}-\x{1FFF}\x{200C}-\x{200D}'
@@ -65,7 +63,7 @@ final class FiscalRules
 
     public static function isEventId(string $value): bool
     {
-        return Str::isMatch('/\A' . self::EVENT_ID . '\z/', $value) && Str::isMatch('/\A' . self::CLOCK_TIME . '\z/', substr($value, 9, 6));
+        return Str::isMatch('/\A' . self::EVENT_ID . '\z/', $value);
     }
 
     public static function isXmlName(string $value): bool
