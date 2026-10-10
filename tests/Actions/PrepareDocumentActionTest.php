@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Akira\Efatura\Actions\BuildIudAction;
 use Akira\Efatura\Actions\ParseIudAction;
 use Akira\Efatura\Actions\PrepareDocumentAction;
 use Akira\Efatura\Contracts\Packager;
@@ -31,8 +30,6 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Random\Engine\Mt19937;
-use Random\Randomizer;
 
 beforeEach(function (): void {
     $this->store     = P::configure();
@@ -135,18 +132,24 @@ it('reports the consumed number and iud when preparation fails after the reserva
         ->and($store->current(SequenceFixtures::scope()))->toBe(2);
 });
 
-it('resumes a numbered document with the same unsigned xml and no reservation', function (): void {
-    app()->when(BuildIudAction::class)->needs(Randomizer::class)->give(fn (): Randomizer => new Randomizer(new Mt19937(42)));
-    $document = P::invoice(['serie' => 'A', 'documentNumber' => 5]);
+it('resumes a prepared document with its iud, the same unsigned xml and no reservation', function (): void {
+    $first   = resolve(PrepareDocumentAction::class)->handle(P::invoice());
+    $resumed = resolve(PrepareDocumentAction::class)->handle($first->document, iud: $first->iud);
 
-    $first  = resolve(PrepareDocumentAction::class)->handle($document);
-    $second = resolve(PrepareDocumentAction::class)->handle($document);
+    expect($first->allocated)->toBeTrue()
+        ->and($resumed->allocated)->toBeFalse()
+        ->and($resumed->document->header->documentNumber)->toBe(1)
+        ->and($resumed->iud)->toBe($first->iud)
+        ->and($resumed->unsignedXml)->toBe($first->unsignedXml)
+        ->and($this->store->current(SequenceFixtures::scope()))->toBe(1);
+});
 
-    expect($first->allocated)->toBeFalse()
-        ->and($first->document->header->documentNumber)->toBe(5)
-        ->and($second->unsignedXml)->toBe($first->unsignedXml)
-        ->and($second->iud)->toBe($first->iud)
-        ->and($this->store->current(SequenceFixtures::scope()))->toBe(0);
+it('refuses to resume with an iud of another document', function (): void {
+    $first = resolve(PrepareDocumentAction::class)->handle(P::invoice());
+
+    expect(fn (): PreparedDocument => resolve(PrepareDocumentAction::class)->handle($first->document->withDocumentNumber(2), iud: $first->iud))
+        ->toFailValidationOn('iud', 'The iud does not identify this document.')
+        ->and($this->store->current(SequenceFixtures::scope()))->toBe(1);
 });
 
 it('reports the consumed number when only the schema refuses the document', function (): void {

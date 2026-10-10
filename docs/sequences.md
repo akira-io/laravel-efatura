@@ -133,6 +133,16 @@ does not read the counter. The same applies to numbers allocated outside the
 package. The authority checks DN-SEQ later, so the package does not compare
 given numbers with the counter.
 
+Pass the IUD the document already received as well, so the resumed document
+keeps it: `PrepareDocumentAction::handle($document, iud: $iud)` (and
+`NumberDocumentAction::handle($document, $repository, $iud)`) reuses its random
+code, and fails validation on `iud` (`The iud does not identify this
+document.`) when the IUD is not one of this document: another number, date,
+emitter, LED, type or repository, or a document without a number. An IUD that
+is not an IUD fails on `iud` with the usual IUD message. Without the IUD a
+resumed document gets a new random code and therefore a new IUD, which is only
+right when the first IUD never left the process.
+
 ## Tests
 
 `Sequence\InMemorySequenceStore` implements the contract in memory with the same

@@ -57,7 +57,7 @@ enter the fiscal Data graph.
 
 ## Preparation
 
-`PrepareDocumentAction::handle($document, $isSpecimen, $profile)` and
+`PrepareDocumentAction::handle($document, $isSpecimen, $profile, $iud)` and
 `PrepareEventAction::handle($event, $profile)` turn a built document or event
 into signed, packaged XML without sending, persisting or dispatching anything.
 When the Data carries no `emission`, `ResolveEmissionContextAction` fills it in
@@ -67,9 +67,11 @@ missing key fails with `configuration.missing` on that key. An explicit
 
 A document is numbered during preparation, after the signing credentials load,
 so a wrong certificate configuration never consumes a number. A document whose
-`header.documentNumber` is already set is resumed: nothing is reserved. Its
-unsigned XML is checked against the official schema before signing. Any failure
-after a reservation, whatever its class, throws `PreparationException` (`preparation.failed_after_allocation`)
+`header.documentNumber` is already set is resumed: nothing is reserved, and the
+IUD it already received, passed as `$iud`, is reused after it is checked against
+the document (see [resuming](sequences.md#gaps-udn-and-resuming)). Its unsigned
+XML is checked against the official schema before signing. Any failure after a
+reservation, whatever its class, throws `PreparationException` (`preparation.failed_after_allocation`)
 with `documentNumber`, `iud`, emitter tax ID, fiscal year, LED and document type
 code in its context; the number stays consumed and the next call receives the
 next one, so close the gap with an UDN event. An event takes its ID from the

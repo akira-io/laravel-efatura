@@ -28,13 +28,17 @@ final readonly class PrepareDocumentAction
         private Packager $packager,
     ) {}
 
-    public function handle(DocumentData $document, bool $isSpecimen = false, SignatureProfile $profile = SignatureProfile::Enveloped): PreparedDocument
-    {
+    public function handle(
+        DocumentData $document,
+        bool $isSpecimen = false,
+        SignatureProfile $profile = SignatureProfile::Enveloped,
+        ?string $iud = null,
+    ): PreparedDocument {
         $validated   = $document::from($document);
         $document    = $validated::from([...$validated->toPayload(), 'emission' => $this->resolveEmission->handle($validated->emission)->toPayload()]);
         $credentials = $this->certificates->load($this->config->certificates);
         $repository  = $this->config->environment->environment;
-        $numbered    = $this->numberDocument->handle($document, $repository);
+        $numbered    = $this->numberDocument->handle($document, $repository, $iud);
 
         try {
             $unsignedXml = $this->buildXml->handle($numbered->document, $numbered->iud, $repository, $isSpecimen);
