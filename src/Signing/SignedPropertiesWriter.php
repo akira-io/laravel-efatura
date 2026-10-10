@@ -7,10 +7,11 @@ namespace Akira\Efatura\Signing;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use DOMElement;
+use SensitiveParameter;
 
 final readonly class SignedPropertiesWriter
 {
-    public function append(DOMElement $object, SigningCredentials $credentials, CarbonImmutable $signingTime): DOMElement
+    public function append(DOMElement $object, #[SensitiveParameter] SigningCredentials $credentials, CarbonImmutable $signingTime): DOMElement
     {
         $qualifying = self::xades($object, 'QualifyingProperties', attributes: ['Target' => '#' . Fiscal::SIGNATURE_ID]);
         $signed     = self::xades($qualifying, 'SignedProperties', attributes: ['Id' => Fiscal::SIGNED_PROPERTIES_ID]);

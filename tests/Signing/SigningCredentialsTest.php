@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Exceptions\DefinitionException;
+use Akira\Efatura\Signing\OpenSslCertificateLoader;
+use Akira\Efatura\Signing\SignedPropertiesWriter;
 use Akira\Efatura\Signing\SigningCredentials;
+use Akira\Efatura\Signing\XadesBesXmlSigner;
 use Akira\Efatura\Tests\Support\CertificateFixtures as C;
 
 beforeEach(function (): void {
@@ -36,4 +39,15 @@ it('refuses to be serialized or unserialized', function (): void {
 
     expect(fn (): string => serialize($this->credentials))->toThrow(DefinitionException::class, 'Signing credentials hold a private key and cannot be serialized.')
         ->and(fn (): mixed => unserialize($payload))->toThrow(DefinitionException::class, 'Signing credentials hold a private key and cannot be serialized.');
+});
+
+it('is a sensitive parameter of every signing method that takes it', function (): void {
+    $secretTypes = [SigningCredentials::class, OpenSSLAsymmetricKey::class];
+    $parameters  = collect([OpenSslCertificateLoader::class, SignedPropertiesWriter::class, XadesBesXmlSigner::class, SigningCredentials::class])
+        ->flatMap(fn (string $class): array => new ReflectionClass($class)->getMethods())
+        ->flatMap(fn (ReflectionMethod $method): array => $method->getParameters())
+        ->filter(fn (ReflectionParameter $parameter): bool => in_array((string) $parameter->getType(), $secretTypes, true));
+
+    expect($parameters)->not->toBeEmpty()
+        ->each(fn ($parameter) => $parameter->getAttributes(SensitiveParameter::class)->not->toBeEmpty());
 });
