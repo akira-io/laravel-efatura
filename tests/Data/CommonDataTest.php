@@ -157,8 +157,8 @@ it('rejects typed numeric bypasses through both Spatie entry points', function (
     'validateAndCreate' => ['validateAndCreate'],
 ])->with(FiscalValueFixtures::numericBypasses());
 
-it('models discount percentages with five digits', function (): void {
-    expect(new DiscountData(BigDecimal::of('12.34567'))->toArray()['value'])->toBe('12.34567');
+it('models discount percentages with three decimal places', function (): void {
+    expect(new DiscountData(BigDecimal::of('12.345'))->toArray()['value'])->toBe('12.345');
 });
 
 it('models discount amounts as exact money', function (): void {
@@ -171,6 +171,7 @@ it('models discount amounts as exact money', function (): void {
 it('rejects discounts outside their value type', function (array $payload, string $message): void {
     expect(fn (): DiscountData => DiscountData::from($payload))->toFailValidationOn('value', $message);
 })->with([
-    'percentage above one hundred' => [['value' => BigDecimal::of('100.00001')], 'The value is outside its permitted numeric bounds.'],
+    'percentage above one hundred' => [['value' => BigDecimal::of('100.001')], 'The value is outside its permitted numeric bounds.'],
+    'percentage with four places'  => [['value' => '12.3456'], 'Value exceeds the allowed decimal precision.'],
     'amount given as a decimal'    => [['value' => BigDecimal::of('1'), 'valueType' => DiscountValueType::Amount], 'Money amount or currency is invalid.'],
 ]);

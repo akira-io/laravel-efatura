@@ -17,6 +17,7 @@ use Akira\Efatura\Enums\EventType;
 use Akira\Efatura\Facades\Efatura;
 use Akira\Efatura\Tests\Support\BuilderFixtures as B;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
+use Akira\Efatura\Tests\Support\EventFixtures;
 use Carbon\CarbonImmutable;
 use Carbon\FactoryImmutable;
 use Illuminate\Support\Facades\Date;
@@ -47,7 +48,7 @@ it('converts the issuance instant to Cape Verde time and keeps calendar dates as
 it('formats event dates in Cape Verde time', function (): void {
     $event = Efatura::event()->type(EventType::FiscalDocumentCancellation)->emitter(new TaxIdData('100200300', 'CV'))
         ->issuedAt(CarbonImmutable::parse('2026-10-03 00:30', 'UTC'))->reason('Document cancelled by emitter')
-        ->iud('CV1261002100200300' . str_repeat('0', 27))->build();
+        ->iud(EventFixtures::iud())->build();
 
     expect($event->toArray()['issueDateTime'])->toBe('2026-10-02T23:30:00');
 });
@@ -57,7 +58,7 @@ it('defaults builder dates from a host timezone clock in Cape Verde time', funct
     $document = Efatura::efatura()->invoice()->emitter(B::emitter(), 1)
         ->receiver(PartyData::from(F::payload()['receiver']))->line(F::line())->totals(F::totals())->build();
     $event = Efatura::efatura()->event()->type(EventType::FiscalDocumentCancellation)->emitter(new TaxIdData('100200300', 'CV'))
-        ->reason('Document cancelled by emitter')->iud('CV1261002100200300' . str_repeat('0', 27))->build();
+        ->reason('Document cancelled by emitter')->iud(EventFixtures::iud())->build();
 
     expect($document->toArray()['header'])->toMatchArray(['issueDate' => '2026-10-02', 'issueTime' => '23:30:00'])
         ->and($event->toArray()['issueDateTime'])->toBe('2026-10-02T23:30:00');

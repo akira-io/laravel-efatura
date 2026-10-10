@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Akira\Efatura\Data;
 
 use Akira\Efatura\Data\Attributes\MayBeEmpty;
-use Akira\Efatura\Rules\NotBlank;
 use Akira\Efatura\Rules\UnreservedFiscalField;
-use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FiscalRules;
 
 final class ExtraFieldData extends FiscalData
 {
@@ -24,9 +23,9 @@ final class ExtraFieldData extends FiscalData
     public static function rules(): array
     {
         return [
-            'name'      => ['max:50', 'regex:/\A[\p{L}_][\p{L}\p{N}_.-]*\z/u', new UnreservedFiscalField],
+            'name'      => ['max:50', ...FiscalRules::xmlName(), new UnreservedFiscalField],
             'value'     => ['max:1000'],
-            'namespace' => [new NotBlank, 'max:256', 'regex:/\A[a-zA-Z][a-zA-Z0-9+.-]*:[^\s]+\z/', 'not_in:' . Fiscal::XML_NAMESPACE],
+            'namespace' => FiscalRules::xmlNamespace(),
         ];
     }
 }

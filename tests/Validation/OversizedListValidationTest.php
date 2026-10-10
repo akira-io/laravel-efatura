@@ -8,7 +8,10 @@ use Akira\Efatura\Data\EventData;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Akira\Efatura\Tests\Support\EventFixtures as E;
 use Akira\Efatura\Tests\Support\LimitFixtures;
+use Illuminate\Contracts\Translation\Translator;
+use Illuminate\Validation\Factory;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Validator;
 
 it('rejects an oversized nested list under its full path', function (array $payload, string $field, string $message): void {
     expect(fn (): DocumentData => ElectronicInvoiceData::from($payload))->toFailValidationOn($field, $message);
@@ -33,14 +36,19 @@ it('rejects an oversized nested list under its full path', function (array $payl
         'footer.extraFields', 'The footer.extra fields field must not have more than 100 items.'],
 ]);
 
-it('rejects an oversized list before validating its items', function (Closure $create, string $field, string $message): void {
-    $started = hrtime(true);
+it('rejects an oversized list before building a rule for its items', function (Closure $create, string $field, string $message): void {
+    $ruleSets = [];
+    resolve(Factory::class)->resolver(function (Translator $translator, array $data, array $rules, array ...$labels) use (&$ruleSets): Validator {
+        $ruleSets[] = array_keys($rules);
+
+        return new Validator($translator, $data, $rules, ...$labels);
+    });
 
     try {
         $create();
     } catch (ValidationException $validationException) {
         expect($validationException->errors())->toBe([$field => [$message]])
-            ->and((hrtime(true) - $started) / 1e9)->toBeLessThan(1.0);
+            ->and($ruleSets)->toBe([[$field]]);
 
         return;
     }

@@ -40,4 +40,19 @@ final class DefinitionException extends EfaturaException
     {
         return new self('definition.document_class', \sprintf('%s is not one of the nine official document classes.', $class));
     }
+
+    public static function luhnPayload(string $payload): self
+    {
+        return new self('definition.luhn_payload', \sprintf('A Luhn payload must contain only ASCII digits, %d characters given.', mb_strlen($payload)));
+    }
+
+    public static function xmlName(string $name): self
+    {
+        return new self('definition.xml_name', \sprintf('An XML element or attribute name must be an NCName, %d characters given.', mb_strlen($name)));
+    }
+
+    public static function serializerType(string $serializer, string $document): self
+    {
+        return new self('definition.serializer_type', \sprintf('%s cannot serialize %s.', $serializer, $document));
+    }
 }

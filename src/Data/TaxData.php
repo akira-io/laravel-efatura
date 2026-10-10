@@ -28,7 +28,7 @@ final class TaxData extends FiscalData
     public function __construct(
         #[MapName('taxTypeCode')]
         public readonly TaxType $taxType,
-        #[WithCastAndTransformer(BigDecimalCast::class, 3)]
+        #[WithCastAndTransformer(BigDecimalCast::class, Fiscal::PERCENTAGE_SCALE)]
         public readonly ?BigDecimal $taxPercentage = null,
         #[CveAmount]
         public readonly ?Money $taxAmount = null,
@@ -47,7 +47,7 @@ final class TaxData extends FiscalData
 
         return [
             ...FiscalRules::exactlyOneOf($context, [
-                'taxPercentage'          => [FiscalNumber::positive(3, '100')],
+                'taxPercentage'          => [FiscalNumber::positive(Fiscal::PERCENTAGE_SCALE, '100')],
                 'taxAmount'              => [FiscalNumber::positiveAmount(Fiscal::CURRENCY)],
                 'taxExemptionReasonCode' => [
                     new NotBlank,

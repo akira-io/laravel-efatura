@@ -113,6 +113,16 @@ final readonly class OfficialArtifacts
         return $path;
     }
 
+    public function located(#[SensitiveParameter] string $location): string
+    {
+        $location = Str::chopStart($location, 'file://');
+        if (! Str::startsWith($location, $this->root . '/')) {
+            throw new OfficialArtifactException('artifacts.unknown_or_unsafe_path', 'resolve');
+        }
+
+        return $this->path(Str::after($location, $this->root . '/'));
+    }
+
     private function checkedPath(#[SensitiveParameter] string $artifact): string
     {
         $path = $this->root;

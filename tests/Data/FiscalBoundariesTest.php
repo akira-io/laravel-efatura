@@ -38,14 +38,14 @@ it('rejects wrong typed currency and bounds on discounts and alternate amounts',
     expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, $message);
 })->with(FiscalValueFixtures::invalidDiscountsAndAlternateAmounts());
 
-it('accepts five decimal discounts through both Spatie entry points', function (string $method, array $payload, string $expected): void {
+it('accepts five decimal amount and three decimal percentage discounts through both Spatie entry points', function (string $method, array $payload, string $expected): void {
     expect(DiscountData::$method($payload)->toArray()['value'])->toBe($expected);
 })->with([
     'from'              => ['from'],
     'validateAndCreate' => ['validateAndCreate'],
 ])->with([
     'amount'     => [['value' => '1.23456', 'valueType' => 'A'], '1.23456'],
-    'percentage' => [['value' => '15.12345'], '15.12345'],
+    'percentage' => [['value' => '15.123'], '15.123'],
 ]);
 
 it('accepts an exemption reason from the catalog', function (): void {
@@ -77,7 +77,7 @@ it('rejects uncatalogued exemption and stamp tax codes', function (string $metho
 })->with(FiscalValueFixtures::uncataloguedTaxCodes());
 
 it('rejects untyped values inside data lists', function (string $class, array $payload, string $field): void {
-    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, "The {$field} field must be an array.");
+    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, sprintf('The %s field must be an array.', $field));
 })->with([
     'item extra properties' => [ItemData::class, ['description' => 'Item', 'emitterIdentification' => 'SKU', 'extraProperties' => [new stdClass]], 'extraProperties.0'],
     'payments'              => [PaymentsData::class, ['payments' => [new stdClass]], 'payments.0'],
@@ -105,14 +105,14 @@ it('accepts a reference with a single tax', function (): void {
 });
 
 it('accepts the official IUD shape with an optional old document flag', function (): void {
-    $iud = 'CV1261002123456789' . str_repeat('0', 27);
+    $iud = 'CV1261002123456789' . str_repeat('0', 26) . '2';
 
     expect((new FiscalDocumentData($iud, false))->value)->toBe($iud)
         ->and((new FiscalDocumentData($iud))->isOldDocument)->toBeNull();
 });
 
 it('rejects the old document flag on an official IUD', function (): void {
-    $payload = ['value' => 'CV1261002123456789' . str_repeat('0', 27), 'isOldDocument' => true];
+    $payload = ['value' => 'CV1261002123456789' . str_repeat('0', 26) . '2', 'isOldDocument' => true];
 
     expect(fn (): FiscalDocumentData => FiscalDocumentData::from($payload))->toFailValidationOn('isOldDocument', 'The is old document field is prohibited.');
 });
@@ -158,7 +158,7 @@ it('rejects the official namespace and malformed names on extension fields', fun
     expect(fn (): ExtraFieldData => ExtraFieldData::from($payload))->toFailValidationOn($field, $message);
 })->with([
     'official namespace' => [['name' => 'CustomNote', 'value' => 'value', 'namespace' => 'urn:cv:efatura:xsd:v1.0'], 'namespace', 'The selected namespace is invalid.'],
-    'prefixed name'      => [['name' => 'invalid:name', 'value' => 'value'], 'name', 'The name field format is invalid.'],
+    'prefixed name'      => [['name' => 'invalid:name', 'value' => 'value'], 'name', 'The name must be an XML 1.0 element name.'],
 ]);
 
 it('accepts a cataloged CV address', function (): void {

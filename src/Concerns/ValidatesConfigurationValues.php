@@ -16,7 +16,7 @@ trait ValidatesConfigurationValues
 {
     private function validatedTaxId(#[SensitiveParameter] ?string $taxId, string $path): ?string
     {
-        if ($taxId !== null && preg_match('/\A' . FiscalRules::CV_TAX_ID . '\z/', $taxId) !== 1) {
+        if ($taxId !== null && ! FiscalRules::isCvTaxId($taxId)) {
             throw new ConfigurationException('configuration.invalid_tax_id', $path);
         }
 

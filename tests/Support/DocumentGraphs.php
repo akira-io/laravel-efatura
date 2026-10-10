@@ -48,12 +48,12 @@ final class DocumentGraphs
 
     public static function registrationNote(DocumentBuilder $draft): DocumentBuilder
     {
-        return self::paid(self::referred(self::invoiced($draft)));
+        return self::paid(self::invoiced($draft));
     }
 
     public static function transport(DocumentBuilder $draft): DocumentBuilder
     {
-        return self::referred($draft->receiver(BuilderFixtures::receiver())->line(DocumentFixtures::line()))
+        return $draft->receiver(BuilderFixtures::receiver())->line(DocumentFixtures::line())
             ->transportDocumentType(TransportDocumentType::Dispatch)
             ->transportServiceProvider(PartyData::from(['reference' => 'EP']))
             ->transportRoute(TransportRouteData::from(DocumentFixtures::route()))

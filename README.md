@@ -95,6 +95,7 @@ as listed in the [renamed symbols](docs/migration.md#renamed-symbols) table.
 ## Documentation
 
 - [Documentation index](docs/README.md)
+- [Identifiers, XML and schema validation](docs/xml.md)
 - Configuration: [config/efatura.php](config/efatura.php)
 - API reference: [source API](https://github.com/akira-io/laravel-efatura/tree/main/src)
 

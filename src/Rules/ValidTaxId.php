@@ -16,9 +16,13 @@ final readonly class ValidTaxId implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $pattern = $this->countryCode === Fiscal::COUNTRY ? '/\A' . FiscalRules::CV_TAX_ID . '\z/u' : '/\A\S{5,20}\z/u';
-        if (! \is_string($value) || ! Str::isMatch($pattern, $value)) {
+        if (! \is_string($value) || ! $this->accepts($value)) {
             $fail('efatura::efatura.validation.tax_id')->translate();
         }
+    }
+
+    private function accepts(string $value): bool
+    {
+        return $this->countryCode === Fiscal::COUNTRY ? FiscalRules::isCvTaxId($value) : Str::isMatch('/\A\S{5,20}\z/u', $value);
     }
 }

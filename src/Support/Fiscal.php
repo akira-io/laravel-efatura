@@ -19,6 +19,8 @@ final class Fiscal
 
     public const int AMOUNT_SCALE = 5;
 
+    public const int PERCENTAGE_SCALE = 3;
+
     public const int INTEGER_DIGITS = 15;
 
     public const int MAX_LINES = 1000;
@@ -31,6 +33,8 @@ final class Fiscal
 
     public const string EARLIEST_DATE = '2021-01-01';
 
+    public const string IDENTIFIER_DATE_LIMIT = '2100-01-01';
+
     public const string DATE_FORMAT = 'Y-m-d';
 
     public const string TIME_FORMAT = 'H:i:s';
@@ -40,6 +44,8 @@ final class Fiscal
     public const string SALES_RECEIPT_IDENTIFIED_RECEIVER_AMOUNT = '20000';
 
     public const string XML_NAMESPACE = 'urn:cv:efatura:xsd:v1.0';
+
+    public const string XML_SCHEMA_VERSION = '1.0';
 
     public static function local(CarbonInterface $moment): CarbonImmutable
     {

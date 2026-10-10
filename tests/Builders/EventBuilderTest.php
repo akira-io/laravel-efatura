@@ -8,11 +8,12 @@ use Akira\Efatura\Data\EventNumberRangeData;
 use Akira\Efatura\Data\TaxIdData;
 use Akira\Efatura\Enums\EventType;
 use Akira\Efatura\Facades\Efatura;
+use Akira\Efatura\Tests\Support\EventFixtures;
 use Carbon\CarbonImmutable;
 
 beforeEach(function (): void {
     CarbonImmutable::setTestNow('2026-10-02T12:00:00-01:00');
-    $this->iud         = 'CV1261002100200300' . str_repeat('0', 27);
+    $this->iud         = EventFixtures::iud();
     $this->numberRange = EventNumberRangeData::from(['ledCode' => 2, 'serie' => 'A', 'documentTypeCode' => 'FTE', 'documentNumberStart' => 1, 'documentNumberEnd' => 3]);
 });
 

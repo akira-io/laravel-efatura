@@ -22,11 +22,18 @@
             "oversized",
             "unpriced",
             "durations",
-            "coercions"
+            "coercions",
+            "luhn",
+            "randomizer",
+            "serializers",
+            "dfe",
+            "libxml",
+            "doctype"
         ],
         "paths": [
             "resources/catalogs/source",
-            "resources/xsd"
+            "resources/xsd",
+            "tests/Fixtures/xml"
         ]
     }
 }

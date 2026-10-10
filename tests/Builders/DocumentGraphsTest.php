@@ -44,9 +44,9 @@ dataset('document graphs', [
     'return note'     => [DocumentType::ReturnNote, ReturnNoteData::class, G::returnNote(...), [
         'header', 'emitter', 'receiver', 'lines', 'totals', 'references', 'issueReasonCode', 'issueReasonDescription',
     ]],
-    'registration note' => [DocumentType::RegistrationNote, RegistrationNoteData::class, G::registrationNote(...), ['header', 'emitter', 'receiver', 'lines', 'totals', 'references', 'payments']],
+    'registration note' => [DocumentType::RegistrationNote, RegistrationNoteData::class, G::registrationNote(...), ['header', 'emitter', 'receiver', 'lines', 'totals', 'payments']],
     'transport'         => [DocumentType::Transport, TransportDocumentData::class, G::transport(...), [
-        'header', 'emitter', 'receiver', 'lines', 'references', 'transportDocumentTypeCode', 'transportServiceProvider', 'transportRoute', 'receiverTypeCode',
+        'header', 'emitter', 'receiver', 'lines', 'transportDocumentTypeCode', 'transportServiceProvider', 'transportRoute', 'receiverTypeCode',
     ]],
 ]);
 

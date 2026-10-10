@@ -29,13 +29,13 @@ final readonly class DiscountValueCast implements Cast, Transformer
 
         return $type === DiscountValueType::Amount || $type === 'A'
             ? new MoneyCast(Fiscal::CURRENCY, Fiscal::AMOUNT_SCALE, false)->cast($property, $value, $properties, $context)
-            : (new BigDecimalCast)->cast($property, $value, $properties, $context);
+            : new BigDecimalCast(Fiscal::PERCENTAGE_SCALE)->cast($property, $value, $properties, $context);
     }
 
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
         return $value instanceof Money
             ? new MoneyTransformer(Fiscal::AMOUNT_SCALE, false)->transform($property, $value, $context)
-            : (new BigDecimalTransformer)->transform($property, $value, $context);
+            : new BigDecimalTransformer(Fiscal::PERCENTAGE_SCALE)->transform($property, $value, $context);
     }
 }

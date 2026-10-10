@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Support;
 
+use Akira\Efatura\Rules\IudCheckDigit;
 use Akira\Efatura\Rules\NotBlank;
+use Akira\Efatura\Rules\XmlName;
+use DOMDocument;
+use DOMException;
+use Illuminate\Support\Str;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 final class FiscalRules
@@ -17,7 +22,18 @@ final class FiscalRules
 
     private const string IUD = 'CV[0-9][0-9]{2}(?:0[1-9]|1[012])(?:0[1-9]|[12][0-9]|3[01])[1-9][0-9]{35}';
 
+    private const string EVENT_ID = 'CV[0-9][0-9]{2}(?:0[1-9]|1[012])(?:0[1-9]|[12][0-9]|3[01])[0-9]{6}[1-9][0-9]{8}';
+
     private const string URL_TOKEN = '[A-Za-z0-9_-]';
+
+    private const string XML_NAME_START = 'A-Z_a-z\x{C0}-\x{D6}\x{D8}-\x{F6}\x{F8}-\x{2FF}\x{370}-\x{37D}\x{37F}-\x{1FFF}\x{200C}-\x{200D}'
+        . '\x{2070}-\x{218F}\x{2C00}-\x{2FEF}\x{3001}-\x{D7FF}\x{F900}-\x{FDCF}\x{FDF0}-\x{FFFD}\x{10000}-\x{EFFFF}';
+
+    private const string XML_NAME = '[' . self::XML_NAME_START . '][' . self::XML_NAME_START . '.0-9\x{B7}\x{300}-\x{36F}\x{203F}-\x{2040}-]*';
+
+    private const string NAMESPACE_URI = '[A-Za-z][A-Za-z0-9+.-]*:[^\s"<>{}|\\\^`\x00-\x1F\x7F\x{FFFE}\x{FFFF}]+';
+
+    private const array W3C_RESERVED_URIS = ['http://www.w3.org/2000/xmlns/', 'http://www.w3.org/XML/1998/namespace'];
 
     /**
      * @return list<string|NotBlank>
@@ -43,20 +59,71 @@ final class FiscalRules
         return ['string', new NotBlank, 'max:20', 'regex:/\A' . self::SERIES . '\z/'];
     }
 
-    /**
-     * @return list<string|NotBlank>
-     */
-    public static function iud(): array
+    public static function isCvTaxId(string $value): bool
     {
-        return ['string', new NotBlank, 'regex:/\A' . self::IUD . '\z/'];
+        return Str::isMatch('/\A' . self::CV_TAX_ID . '\z/', $value);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function cvTaxId(): array
+    {
+        return ['regex:/\A' . self::CV_TAX_ID . '\z/'];
+    }
+
+    public static function isIud(string $value): bool
+    {
+        return Str::isMatch('/\A' . self::IUD . '\z/', $value);
+    }
+
+    public static function isEventId(string $value): bool
+    {
+        return Str::isMatch('/\A' . self::EVENT_ID . '\z/', $value);
+    }
+
+    public static function isXmlName(string $value): bool
+    {
+        return self::libxmlAcceptsName($value) && Str::isMatch('/\A' . self::XML_NAME . '\z/u', $value);
+    }
+
+    public static function isXmlNamespace(string $value): bool
+    {
+        return Str::isMatch('/\A' . self::NAMESPACE_URI . '\z/u', $value) && ! \in_array($value, self::W3C_RESERVED_URIS, true);
+    }
+
+    /**
+     * @return list<XmlName>
+     */
+    public static function xmlName(): array
+    {
+        return [new XmlName];
     }
 
     /**
      * @return list<string|NotBlank>
      */
+    public static function xmlNamespace(): array
+    {
+        $reserved = implode(',', [Fiscal::XML_NAMESPACE, ...self::W3C_RESERVED_URIS]);
+
+        return [new NotBlank, 'max:256', 'regex:/\A' . self::NAMESPACE_URI . '\z/u', 'not_in:' . $reserved];
+    }
+
+    /**
+     * @return list<string|NotBlank|IudCheckDigit>
+     */
+    public static function iud(): array
+    {
+        return ['string', new NotBlank, 'regex:/\A' . self::IUD . '\z/', new IudCheckDigit];
+    }
+
+    /**
+     * @return list<string|NotBlank|IudCheckDigit>
+     */
     public static function fiscalDocumentReference(): array
     {
-        return ['string', new NotBlank, 'regex:~\A(?:' . self::IUD . '|[1-9]/[0-9]{4}/' . self::SERIES . '/[0-9]{1,9})\z~'];
+        return ['string', new NotBlank, 'regex:~\A(?:' . self::IUD . '|[1-9]/[0-9]{4}/' . self::SERIES . '/[0-9]{1,9})\z~', new IudCheckDigit];
     }
 
     /**
@@ -107,5 +174,16 @@ final class FiscalRules
 
             return ['required_without_all:' . $others, 'prohibits:' . $others, ...$rules];
         })->all();
+    }
+
+    private static function libxmlAcceptsName(string $value): bool
+    {
+        try {
+            new DOMDocument()->createElementNS(Fiscal::XML_NAMESPACE, $value);
+        } catch (DOMException) {
+            return false;
+        }
+
+        return true;
     }
 }

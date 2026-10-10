@@ -113,6 +113,30 @@ A document accepts at most 1000 `lines` and 1000 `references`, and the
 extension lists at most 100 entries each; Manual 11 sets no count, so these
 are defensive limits, listed in [fiscal domain validation](fiscal-domain.md).
 
+A received IUD, in an event's `iuds` or in `references[].fiscalDocument.value`,
+must carry the Luhn check digit of Manual 11. An identifier with the official
+shape and a wrong last digit now fails at that field with
+`validation.iud_invalid`; the authority refuses it anyway. Old document
+references such as `1/2021/A/1` are unaffected. Replace stored or fixture IUDs
+built by padding with zeros by real identifiers, or compute the last digit with
+`Akira\Efatura\Support\Luhn::checkDigit()` over the 42 digits between `CV` and the check digit.
+
+An extra field `name` follows the XML 1.0 name characters (NameStartChar and
+NameChar, without the colon): `a²`, `a½` or `aª`, which the previous pattern
+accepted and the XML writer then could not write, now fail at
+`footer.extraFields.N.name`. A `namespace` must be an absolute URI without
+whitespace or any of `"<>{}|\^` and the backtick, and the XML namespaces
+`http://www.w3.org/2000/xmlns/` and `http://www.w3.org/XML/1998/namespace` are
+refused like the official one, at `footer.extraFields.N.namespace`.
+Percent-encode those characters in a namespace that carries them.
+
+A percentage discount (`valueType` `P`) carries at most three decimal places
+and at most 100, as the Manual's PERC type and the XSD's
+`stDiscountPercentage` fix, and is written with three places. A value such as
+`12.3456` used to validate and now fails at its `value` field with
+`Value exceeds the allowed decimal precision.`; round it to three places before
+building the document. Amount discounts (`A`) keep five places.
+
 ## Document types and environments
 
 | Before | After |
