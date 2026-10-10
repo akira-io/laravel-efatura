@@ -52,7 +52,8 @@ arch('xml is written through the dom only')
 
 arch('actions expose a single handle entry point')
     ->expect('Akira\Efatura\Actions')
-    ->toHaveMethod('handle');
+    ->toHaveMethod('handle')
+    ->not->toHavePublicMethodsBesides(['__construct', 'handle']);
 
 it('keeps source and tooling lines within 160 characters', function (): void {
     $longLines = collect(new Filesystem()->allFiles(__DIR__ . '/../src'))
