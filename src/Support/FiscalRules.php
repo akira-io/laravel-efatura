@@ -28,7 +28,7 @@ final class FiscalRules
 
     private const string XML_NAME = '[' . self::XML_NAME_START . '][' . self::XML_NAME_START . '.0-9\x{B7}\x{300}-\x{36F}\x{203F}-\x{2040}-]*';
 
-    private const string NAMESPACE_URI = '[A-Za-z][A-Za-z0-9+.-]*:[^\s"<>{}|\\\^`]+';
+    private const string NAMESPACE_URI = '[A-Za-z][A-Za-z0-9+.-]*:[^\s"<>{}|\\\^`\x00-\x1F\x7F\x{FFFE}\x{FFFF}]+';
 
     private const array W3C_RESERVED_URIS = ['http://www.w3.org/2000/xmlns/', 'http://www.w3.org/XML/1998/namespace'];
 
@@ -86,7 +86,7 @@ final class FiscalRules
 
     public static function isXmlNamespace(string $value): bool
     {
-        return Str::isMatch('/\A' . self::NAMESPACE_URI . '\z/', $value) && ! \in_array($value, self::W3C_RESERVED_URIS, true);
+        return Str::isMatch('/\A' . self::NAMESPACE_URI . '\z/u', $value) && ! \in_array($value, self::W3C_RESERVED_URIS, true);
     }
 
     /**
@@ -104,7 +104,7 @@ final class FiscalRules
     {
         $reserved = implode(',', [Fiscal::XML_NAMESPACE, ...self::W3C_RESERVED_URIS]);
 
-        return [new NotBlank, 'max:256', 'regex:/\A' . self::NAMESPACE_URI . '\z/', 'not_in:' . $reserved];
+        return [new NotBlank, 'max:256', 'regex:/\A' . self::NAMESPACE_URI . '\z/u', 'not_in:' . $reserved];
     }
 
     /**

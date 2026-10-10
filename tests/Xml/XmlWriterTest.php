@@ -203,6 +203,10 @@ it('rejects a foreign namespace the XML document cannot declare on its field pat
     'backtick'        => ['urn:x`y'],
     'whitespace'      => ['urn:x y'],
     'relative'        => ['fields/extra'],
+    'invalid utf-8'   => ["urn:x\xFF"],
+    'noncharacter'    => ["urn:\u{FFFE}"],
+    'control'         => ["urn:x\x01y"],
+    'delete'          => ["urn:x\x7Fy"],
 ]);
 
 it('keeps the rejected name out of the definition error', function (): void {

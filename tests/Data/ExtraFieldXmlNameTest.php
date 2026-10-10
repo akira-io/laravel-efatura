@@ -29,6 +29,10 @@ it('rejects an extra field namespace the XML document cannot declare on its docu
     'backslash'       => ['urn:x\y', 'The footer.extra fields.1.namespace field format is invalid.'],
     'caret'           => ['urn:x^y', 'The footer.extra fields.1.namespace field format is invalid.'],
     'backtick'        => ['urn:x`y', 'The footer.extra fields.1.namespace field format is invalid.'],
+    'invalid utf-8'   => ["urn:x\xFF", 'The footer.extra fields.1.namespace field format is invalid.'],
+    'noncharacter'    => ["urn:\u{FFFE}", 'The footer.extra fields.1.namespace field format is invalid.'],
+    'control'         => ["urn:x\x01y", 'The footer.extra fields.1.namespace field format is invalid.'],
+    'delete'          => ["urn:x\x7Fy", 'The footer.extra fields.1.namespace field format is invalid.'],
 ]);
 
 it('accepts the XML 1.0 name characters and an ordinary namespace', function (string $name): void {
