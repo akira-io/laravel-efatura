@@ -31,6 +31,13 @@ archive belongs to one repository, because the request names it once in the
 `cv-ef-repository-code` header (§10.2, p.67): the repository is the third
 character of every IUD and event ID, never a value of the caller.
 
+`emitters` lists, once each and in order of appearance, the tax IDs of the
+emitters whose documents or events the archive holds: the emitter NIF of each
+IUD, and the `EmitterTaxId` of each event (the event ID names the transmitter,
+not the emitter). An archive may hold several emitters; sending it directly to
+the platform needs exactly one, because the access token belongs to the
+taxpayer who consented to it.
+
 ## What is refused
 
 Every failure below is a `PackagingException` whose `context` names the
@@ -46,6 +53,7 @@ position of the offending entry (`entry`) or the limit, never the XML:
 | `package.invalid_identifier` | An `Id` that is not a valid IUD (check digit included) or event ID |
 | `package.mixed_kinds` | DFE and events in the same archive |
 | `package.mixed_repositories` | Identifiers of more than one repository in the same archive |
+| `package.missing_emitter` | An event without a non-empty `EmitterTaxId` |
 | `package.duplicate_entry` | Two entries with the same `Id` |
 | `package.write_failed` | ext-zip could not write the archive in the temporary directory |
 

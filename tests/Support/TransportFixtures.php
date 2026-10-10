@@ -17,14 +17,19 @@ final class TransportFixtures
     public const string THIRD_IUD = 'CV3260208100200300001230100000000312345678905';
 
     /**
-     * @param list<string> $identifiers
+     * @param list<string>      $identifiers
+     * @param list<string>|null $emitters
      */
     public static function archive(
         array $identifiers = [self::FIRST_IUD],
         PackageKind $kind = PackageKind::Documents,
         Environment $repository = Environment::Test,
+        ?array $emitters = null,
     ): PackagedArchive {
-        return new PackagedArchive('zip-bytes', $kind, array_map(static fn (string $identifier): string => $identifier . '.xml', $identifiers), $repository);
+        $entries = array_map(static fn (string $identifier): string => $identifier . '.xml', $identifiers);
+        $derived = array_values(array_unique(array_map(static fn (string $identifier): string => substr($identifier, 9, 9), $identifiers)));
+
+        return new PackagedArchive('zip-bytes', $kind, $entries, $repository, $emitters ?? $derived);
     }
 
     public static function response(string $name): string

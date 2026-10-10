@@ -11,6 +11,7 @@ use Akira\Efatura\Exceptions\PackagingException;
 use Akira\Efatura\Packaging\PackagedArchive;
 use Akira\Efatura\Packaging\ZipArchivePackager;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FiscalRules;
 use Akira\Efatura\Tests\Support\PackageFixtures as P;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
 use Carbon\CarbonImmutable;
@@ -71,6 +72,19 @@ it('records the repository the identifiers of its entries name', function (Closu
     'production events'      => [fn (): array => [P::inRepository(P::event(), Environment::Production)], Environment::Production],
 ]);
 
+it('records each emitter once, from the iud of a dfe and from the xml of an event', function (Closure $xml): void {
+    $entries  = $xml();
+    $expected = collect($entries)->map(fn (string $signed): string => FiscalRules::isIud(P::id($signed))
+        ? substr(P::id($signed), 9, 9)
+        : (string) S::document($signed)->getElementsByTagName('EmitterTaxId')->item(0)?->textContent)->unique()->values()->all();
+
+    expect(P::packager($this->directory)->package($entries)->emitters)->toBe($expected)->toHaveCount(1)
+        ->and($expected[0])->not->toBe(substr(P::id($entries[0]), -9));
+})->with([
+    'documents of one emitter' => [fn (): array => [P::document(1), P::document(2)]],
+    'events'                   => [fn (): array => [P::event('2026-10-02T12:00:00'), P::event('2026-10-02T12:00:01')]],
+]);
+
 it('writes the same bytes for the same entries', function (): void {
     $xml = [P::document(1), P::document(2)];
 
@@ -115,6 +129,16 @@ it('refuses entries it cannot package without echoing them', function (Closure $
     'an event without date' => [
         fn (): array => [P::withId(P::event(), fn (string $id): string => substr($id, 0, 3) . '000000000000' . substr($id, 15))],
         'package.invalid_identifier',
+        ['entry' => 0],
+    ],
+    'an event without emitter' => [
+        fn (): array => [preg_replace('#<EmitterTaxId[^>]*>[^<]*</EmitterTaxId>#', '', P::event())],
+        'package.missing_emitter',
+        ['entry' => 0],
+    ],
+    'an event with an empty emitter' => [
+        fn (): array => [preg_replace('#(<EmitterTaxId[^>]*>)[^<]*(</EmitterTaxId>)#', '$1 $2', P::event())],
+        'package.missing_emitter',
         ['entry' => 0],
     ],
     'two repositories' => [

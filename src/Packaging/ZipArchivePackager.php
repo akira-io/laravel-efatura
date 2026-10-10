@@ -33,10 +33,11 @@ final readonly class ZipArchivePackager implements Packager
         self::guardLimits($signedXml);
 
         $entries    = [];
+        $emitters   = [];
         $kind       = null;
         $repository = null;
         foreach ($signedXml as $position => $xml) {
-            [$entryKind, $id, $entryRepository] = $this->identify($xml, $position);
+            [$entryKind, $id, $entryRepository, $emitters[]] = $this->identify($xml, $position);
             $kind ??= $entryKind;
             $repository ??= $entryRepository;
 
@@ -55,7 +56,13 @@ final readonly class ZipArchivePackager implements Packager
             $entries[$id . '.xml'] = $xml;
         }
 
-        return new PackagedArchive($this->write($entries), $kind ?? PackageKind::Documents, array_keys($entries), $repository ?? Environment::Test);
+        return new PackagedArchive(
+            $this->write($entries),
+            $kind ?? PackageKind::Documents,
+            array_keys($entries),
+            $repository ?? Environment::Test,
+            array_values(array_unique($emitters)),
+        );
     }
 
     /**
@@ -78,7 +85,7 @@ final readonly class ZipArchivePackager implements Packager
     }
 
     /**
-     * @return array{PackageKind, string, Environment}
+     * @return array{PackageKind, string, Environment, string}
      */
     private function identify(string $xml, int $position): array
     {
@@ -96,7 +103,7 @@ final readonly class ZipArchivePackager implements Packager
 
         $id = (string) $root?->getAttribute('Id');
 
-        return [$kind, $id, $this->repository($kind, $id, $position)];
+        return [$kind, $id, ...$this->origin($kind, $id, $root, $position)];
     }
 
     private static function signed(DOMElement $outer): bool
@@ -110,13 +117,37 @@ final readonly class ZipArchivePackager implements Packager
         return false;
     }
 
-    private function repository(PackageKind $kind, string $id, int $position): Environment
+    /**
+     * @return array{Environment, string}
+     */
+    private function origin(PackageKind $kind, string $id, ?DOMElement $root, int $position): array
     {
         try {
-            return $kind === PackageKind::Documents ? $this->parseIud->handle($id)->repository : $this->parseEventId->handle($id)->repository;
+            if ($kind === PackageKind::Documents) {
+                $iud = $this->parseIud->handle($id);
+
+                return [$iud->repository, $iud->emitterTaxId];
+            }
+
+            $repository = $this->parseEventId->handle($id)->repository;
         } catch (ValidationException) {
             throw new PackagingException('package.invalid_identifier', ['entry' => $position]);
         }
+
+        return [$repository, self::eventEmitter($root) ?? throw new PackagingException('package.missing_emitter', ['entry' => $position])];
+    }
+
+    private static function eventEmitter(?DOMElement $root): ?string
+    {
+        foreach ($root->childNodes ?? [] as $child) {
+            if ($child instanceof DOMElement && $child->namespaceURI === Fiscal::XML_NAMESPACE && $child->localName === 'EmitterTaxId') {
+                $taxId = Str::trim($child->textContent);
+
+                return $taxId === '' ? null : $taxId;
+            }
+        }
+
+        return null;
     }
 
     /**

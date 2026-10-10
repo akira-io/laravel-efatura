@@ -12,12 +12,14 @@ final readonly class PackagedArchive
 {
     /**
      * @param list<string> $entries
+     * @param list<string> $emitters
      */
     public function __construct(
         public string $bytes,
         public PackageKind $kind,
         public array $entries,
         public Environment $repository,
+        public array $emitters,
     ) {}
 
     /**
