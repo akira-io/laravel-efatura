@@ -63,7 +63,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             ->name('efatura')
             ->hasConfigFile()
             ->hasTranslations()
-            ->hasMigration('create_efatura_sequences_table')
+            ->hasMigration(InstallCommand::SEQUENCE_MIGRATION)
             ->hasCommand(InstallCommand::class);
     }
 }

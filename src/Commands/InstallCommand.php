@@ -22,7 +22,7 @@ use const PHP_EOL;
 #[Description('Install akira/efatura configuration')]
 final class InstallCommand extends Command
 {
-    private const string SEQUENCE_MIGRATION = 'create_efatura_sequences_table';
+    public const string SEQUENCE_MIGRATION = 'create_efatura_sequences_table';
 
     public function handle(Filesystem $filesystem): int
     {
