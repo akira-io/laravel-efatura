@@ -24,6 +24,11 @@ final class SequenceException extends EfaturaException
         return new self('sequence.exhausted', $scope);
     }
 
+    public static function insideTransaction(SequenceScope $scope): self
+    {
+        return new self('sequence.inside_transaction', $scope);
+    }
+
     public static function unavailable(SequenceScope $scope, ?Throwable $previous = null): self
     {
         return new self('sequence.unavailable', $scope, $previous, retryable: true);

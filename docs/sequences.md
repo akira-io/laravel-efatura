@@ -49,21 +49,33 @@ so the stored value stays at 999 999 999.
 
 ### Contention and outages
 
-When the store owns the transaction it retries a reservation the database
-reports as a deadlock, a lock timeout or `database is locked`, up to
-`DatabaseSequenceStore::ATTEMPTS` (5) times. Any other database failure, or a
+The store retries a reservation the database reports as a deadlock, a lock
+timeout or `database is locked`, up to `DatabaseSequenceStore::ATTEMPTS` (5)
+times. Any other database failure, or a
 lock that outlasts the attempts, fails with `SequenceException`
 `sequence.unavailable`, with `retryable` set to true, the scope (emitter NIF,
 fiscal year, LED and document type code) in `context` and the database
 exception as `previous`. The message is the code, never the SQL. A failed
 reservation rolls back, so it neither consumes nor skips a number.
 
-When `next()` runs inside a transaction of the caller, the reservation is a
-savepoint of that transaction. A lock failure then fails at once with
-`sequence.unavailable` instead of retrying, because the database may already
-have rolled back the caller's whole transaction: retry the caller's unit of
-work, not the reservation. A caller that rolls back its own transaction also
-rolls back the number.
+A database that fails while it commits the reservation (the connection drops
+during `COMMIT`, for instance) also gives `sequence.unavailable`, but the
+package cannot tell whether the number was stored. When it was, the retry
+receives the next number and the first one is a gap: close it with an UDN event
+as described below.
+
+### Transactions of the caller
+
+`next()` refuses to run while its connection is already inside a transaction,
+with `SequenceException` `sequence.inside_transaction` (`retryable` false, the
+scope in `context`). Inside the caller's transaction the reservation would only
+be a savepoint: a failure after it would roll the counter back while the
+caller still holds the number, and the next document would reuse it, which the
+authority refuses as a broken sequence (DN-SEQ). Reserve, and prepare, before
+opening a transaction on the sequence connection, or keep the sequences on a
+connection of their own (`efatura.database.connection`); a transaction on
+another connection does not matter. `PrepareDocumentAction` fails the same way,
+before it reserves anything.
 
 ### SQLite
 
@@ -96,6 +108,12 @@ migration reads `efatura.database.connection` and
 has `emitter_tax_id` (`char(9)`), `fiscal_year`, `led_code`,
 `document_type_code`, `current_number` (default 0) and timestamps, with the
 four scope columns as its primary key. Then run `php artisan migrate`.
+
+Rolling the migration back drops the table only while it is empty. A table that
+still holds counters makes the rollback fail with `DefinitionException`
+(`definition.sequences_in_use`) and stays as it is, because dropping it would
+restart every scope at 1 and hand out numbers already issued. Drop it by hand
+when the counters are no longer needed.
 
 ## Gaps, UDN and resuming
 

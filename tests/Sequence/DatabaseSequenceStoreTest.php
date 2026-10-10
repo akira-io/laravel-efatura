@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Contracts\SequenceStore;
+use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Exceptions\SequenceException;
 use Akira\Efatura\Sequence\DatabaseSequenceStore;
 use Akira\Efatura\Sequence\SequenceScope;
@@ -87,14 +88,38 @@ it('reports a missing table as a retryable outage without the sql', function ():
     });
 });
 
-it('follows the transaction of its caller', function (): void {
+it('refuses to reserve inside a transaction of its connection', function (): void {
     S::migrate();
     $store = resolve(SequenceStore::class);
 
-    expect(fn (): mixed => DB::transaction(function () use ($store): void {
-        $store->next(S::scope());
-
-        throw new RuntimeException('caller failed');
-    }))->toThrow(RuntimeException::class, 'caller failed')
+    expect(fn (): int => DB::transaction(fn (): int => $store->next(S::scope())))->toThrow(function (SequenceException $exception): void {
+        expect($exception->errorCode)->toBe('sequence.inside_transaction')
+            ->and($exception->getMessage())->toBe('sequence.inside_transaction')
+            ->and($exception->retryable)->toBeFalse()
+            ->and($exception->getPrevious())->toBeNull()
+            ->and($exception->context)->toBe(['emitterTaxId' => '100200300', 'fiscalYear' => 2026, 'ledCode' => 1, 'documentTypeCode' => 1]);
+    })->and(DB::table('efatura_sequences')->count())->toBe(0)
         ->and($store->next(S::scope()))->toBe(1);
+});
+
+it('reserves while another connection holds a transaction', function (): void {
+    S::useConnection('ledger');
+    $store = resolve(SequenceStore::class);
+
+    expect(DB::connection('testing')->transaction(fn (): int => $store->next(S::scope())))->toBe(1);
+});
+
+it('keeps the sequence table when it is rolled back with counters in it', function (): void {
+    S::migrate();
+    resolve(SequenceStore::class)->next(S::scope());
+
+    expect(fn () => S::rollback())->toThrow(DefinitionException::class, 'The efatura_sequences table still holds fiscal sequence counters and is not dropped.')
+        ->and(DB::table('efatura_sequences')->value('current_number'))->toBe(1);
+});
+
+it('drops the sequence table when it is rolled back empty', function (): void {
+    S::migrate();
+    S::rollback();
+
+    expect(Schema::hasTable('efatura_sequences'))->toBeFalse();
 });

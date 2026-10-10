@@ -57,13 +57,23 @@ final class SequenceFixtures
 
     public static function migrate(): void
     {
+        self::runMigration('migrate');
+    }
+
+    public static function rollback(): void
+    {
+        self::runMigration('migrate:rollback');
+    }
+
+    private static function runMigration(string $command): void
+    {
         $files     = new Filesystem;
         $directory = sys_get_temp_dir() . '/efatura-sequences-' . Str::uuid()->toString();
         $files->ensureDirectoryExists($directory);
 
         try {
             $files->copy(self::STUB, $directory . '/2026_10_10_000000_create_efatura_sequences_table.php');
-            Artisan::call('migrate', ['--path' => $directory, '--realpath' => true]);
+            Artisan::call($command, ['--path' => $directory, '--realpath' => true]);
         } finally {
             $files->deleteDirectory($directory);
         }

@@ -25,6 +25,9 @@ final readonly class DatabaseSequenceStore implements SequenceStore
     public function next(SequenceScope $scope): int
     {
         $connection = $this->connections->connection($this->config->connection);
+        if ($connection->transactionLevel() > 0) {
+            throw SequenceException::insideTransaction($scope);
+        }
 
         try {
             return $connection->transaction(fn (): int => $this->reserve($connection, $scope), self::ATTEMPTS);

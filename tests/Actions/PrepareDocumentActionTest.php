@@ -13,7 +13,9 @@ use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\CertificateException;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Exceptions\PreparationException;
+use Akira\Efatura\Exceptions\SequenceException;
 use Akira\Efatura\Packaging\PreparedDocument;
+use Akira\Efatura\Sequence\DatabaseSequenceStore;
 use Akira\Efatura\Sequence\InMemorySequenceStore;
 use Akira\Efatura\Tests\Support\CertificateFixtures as C;
 use Akira\Efatura\Tests\Support\PackageFixtures;
@@ -22,6 +24,7 @@ use Akira\Efatura\Tests\Support\SequenceFixtures;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
 use Akira\Efatura\Tests\Support\SignatureVerifier as V;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Random\Engine\Mt19937;
@@ -146,4 +149,13 @@ it('lets a failure of a resumed document through unchanged', function (): void {
     expect(fn (): PreparedDocument => resolve(PrepareDocumentAction::class)->handle(P::invoice(['documentNumber' => 5])))
         ->toFailValidationOn('header.serie', 'The header.serie is required to write the XML document.')
         ->and($this->store->current(SequenceFixtures::scope()))->toBe(0);
+});
+
+it('reserves no number inside a transaction of the sequence connection', function (): void {
+    app()->instance(SequenceStore::class, resolve(DatabaseSequenceStore::class));
+    SequenceFixtures::migrate();
+
+    expect(fn (): PreparedDocument => DB::transaction(fn (): PreparedDocument => resolve(PrepareDocumentAction::class)->handle(P::invoice())))
+        ->toThrow(SequenceException::class, 'sequence.inside_transaction')
+        ->and(DB::table('efatura_sequences')->count())->toBe(0);
 });
