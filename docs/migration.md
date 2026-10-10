@@ -224,12 +224,20 @@ that binds its own `ClockInterface` after the provider registers keeps it.
 | `efatura.emitter.contacts.telefax`, `website` | New, from `EFATURA_EMITTER_TELEFAX` and `EFATURA_EMITTER_WEBSITE` |
 | `efatura.certificates.ca_bundle_path` | New, from `EFATURA_CA_BUNDLE_PATH`: an optional PEM file of CA certificates on the certificates disk; when set, the signing certificate must chain to it (see [signing](signing.md#icp-cv-and-the-ca-bundle)) |
 | `efatura.http.middleware.base_url` / `EFATURA_MIDDLEWARE_BASE_URL` | The default changes from `https://localhost:3443` to `https://localhost:3443/v1`. Base URLs now carry the API version on both profiles, as the platform default already did, and requests use resources relative to them (`dfe`, `event`). An application that set `https://localhost:3443` explicitly, in its config or its `.env`, appends `/v1` |
+| `efatura.driver` / `EFATURA_DRIVER` | New: `middleware` (the default) or `platform`, in any letter case, or a `TransportDriver` case; anything else fails with `configuration.invalid_driver` |
+| `efatura.transmitter.middleware_key` / `EFATURA_TRANSMITTER_KEY` | When set, it must have exactly 64 characters (Manual 11.4.1); any other length fails loading with `configuration.invalid_length`, whose message never contains the key |
+| `efatura.transmitter.oauth.issuer_url` / `EFATURA_OAUTH_ISSUER_URL` | New: the OpenID issuer of the platform, `https://iam.efatura.cv/auth/realms/taxpayers` by default, with the same HTTPS rules as the base URLs |
+| `efatura.http.ca_bundle_path` and `efatura.http.<client>.ca_bundle_path` / `EFATURA_HTTP_CA_BUNDLE_PATH`, `EFATURA_MIDDLEWARE_CA_BUNDLE_PATH` | New: an absolute path to a readable local PEM file the client trusts instead of the system store, inherited like the other client options. A relative path fails with `configuration.unsafe_path`, a missing file with `configuration.unreadable_path`, and a bundle on a client whose `verify_tls` is false with `configuration.conflicting_tls` |
+| `efatura.cache` | The store may now hold platform access tokens, encrypted with the application key; refresh tokens, client secrets and the middleware key are never cached |
 | `efatura.database.connection`, `sequences_table` | Now used: the connection and table of the document number counters (see [document numbers and sequences](sequences.md)) |
 
 `EmitterConfig::$led` changes from `?string` to `?int`. `AddressConfig` and
 `ContactsConfig` gain the new fields as optional trailing constructor
 arguments, so existing positional calls keep working. `CertificateConfig` gains
-`caBundlePath` as an optional trailing constructor argument. `CertificateConfig`,
+`caBundlePath` as an optional trailing constructor argument. `HttpClientConfig` gains `caBundlePath` and `verify()`,
+`OAuthConfig` gains `issuerUrl` and `EfaturaConfig` gains `driver`, each as an
+optional trailing constructor argument; the JSON form of `OAuthConfig` now
+includes `issuerUrl`. `CertificateConfig`,
 `OAuthConfig` and `TransmitterConfig` redact their secrets from `dump()`,
 `var_dump()` and `print_r()` output, and implement `JsonSerializable` with the
 same redaction, so `json_encode()` and Monolog's normalizer write `[redacted]`.

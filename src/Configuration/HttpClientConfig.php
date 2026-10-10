@@ -14,5 +14,11 @@ final readonly class HttpClientConfig
         public int $retryDelayMilliseconds,
         public int $concurrency,
         public bool $verifyTls,
+        public ?string $caBundlePath = null,
     ) {}
+
+    public function verify(): bool|string
+    {
+        return $this->caBundlePath ?? $this->verifyTls;
+    }
 }

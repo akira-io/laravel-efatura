@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Akira\Efatura\Configuration;
 
 use Akira\Efatura\Concerns\ReadsConfigurationValues;
+use Akira\Efatura\Exceptions\ConfigurationException;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Support\Str;
 use SensitiveParameter;
 
 final readonly class LoadHttpConfig
@@ -42,6 +44,8 @@ final readonly class LoadHttpConfig
 
     private function client(string $path, #[SensitiveParameter] HttpClientConfig $defaults, #[SensitiveParameter] ?string $baseUrl = null): HttpClientConfig
     {
+        $verifyTls = $this->boolean($path . '.verify_tls', $defaults->verifyTls);
+
         return new HttpClientConfig(
             $this->url($path . '.base_url', $baseUrl),
             $this->integer($path . '.timeout_seconds', $defaults->timeoutSeconds),
@@ -49,7 +53,30 @@ final readonly class LoadHttpConfig
             $this->integer($path . '.retries', $defaults->retries, 0),
             $this->integer($path . '.retry_delay_milliseconds', $defaults->retryDelayMilliseconds, 0),
             $this->integer($path . '.concurrency', $defaults->concurrency),
-            $this->boolean($path . '.verify_tls', $defaults->verifyTls),
+            $verifyTls,
+            $this->caBundle($path . '.ca_bundle_path', $defaults->caBundlePath, $verifyTls),
         );
+    }
+
+    private function caBundle(string $path, #[SensitiveParameter] ?string $inherited, bool $verifyTls): ?string
+    {
+        $bundle = $this->string($path) ?? $inherited;
+        if ($bundle === null) {
+            return null;
+        }
+
+        if (! Str::startsWith($bundle, '/') || preg_match('/[\x00-\x1f]/', $bundle) === 1) {
+            throw new ConfigurationException('configuration.unsafe_path', $path);
+        }
+
+        if (! is_file($bundle) || ! is_readable($bundle)) {
+            throw new ConfigurationException('configuration.unreadable_path', $path);
+        }
+
+        if (! $verifyTls) {
+            throw new ConfigurationException('configuration.conflicting_tls', $path);
+        }
+
+        return $bundle;
     }
 }

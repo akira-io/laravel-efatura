@@ -6,8 +6,11 @@ namespace Akira\Efatura\Configuration;
 
 use Akira\Efatura\Concerns\ReadsConfigurationValues;
 use Akira\Efatura\Enums\Environment;
+use Akira\Efatura\Enums\TransportDriver;
 use Akira\Efatura\Exceptions\ConfigurationException;
+use Akira\Efatura\Support\Fiscal;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Support\Str;
 use SensitiveParameter;
 
 final readonly class LoadEfaturaConfig
@@ -41,8 +44,13 @@ final readonly class LoadEfaturaConfig
             transmitter: new TransmitterConfig(
                 $this->taxId('efatura.transmitter.tax_id'),
                 $this->string('efatura.transmitter.name'),
-                $this->string('efatura.transmitter.middleware_key', secret: true),
-                new OAuthConfig($this->string('efatura.transmitter.oauth.client_id'), $this->string('efatura.transmitter.oauth.client_secret', secret: true)),
+                $this->middlewareKey(),
+                new OAuthConfig(
+                    $this->string('efatura.transmitter.oauth.client_id'),
+                    $this->string('efatura.transmitter.oauth.client_secret', secret: true),
+                    $this->url('efatura.transmitter.oauth.issuer_url', Fiscal::OAUTH_ISSUER_URL)
+                        ?? throw new ConfigurationException('configuration.invalid_type', 'efatura.transmitter.oauth.issuer_url'),
+                ),
             ),
             software: new SoftwareConfig(
                 $this->string('efatura.software.code'),
@@ -76,12 +84,35 @@ final readonly class LoadEfaturaConfig
                 $this->string('efatura.queue.queue') ?? $this->string('queue.connections.' . $queueConnection . '.queue'),
             ),
             http: (new LoadHttpConfig($this->repository))(),
+            driver: $this->driver(),
         );
     }
 
     private function repository(): Repository
     {
         return $this->repository;
+    }
+
+    private function driver(): TransportDriver
+    {
+        $value = $this->repository->get('efatura.driver', TransportDriver::Middleware);
+        if ($value instanceof TransportDriver) {
+            return $value;
+        }
+
+        $name = \is_string($value) ? TransportDriver::tryFrom(Str::lower(Str::trim($value, " \n\r\t\v\0"))) : null;
+
+        return $name ?? throw new ConfigurationException('configuration.invalid_driver', 'efatura.driver');
+    }
+
+    private function middlewareKey(): ?string
+    {
+        $key = $this->string('efatura.transmitter.middleware_key', secret: true);
+        if ($key !== null && Str::length($key) !== Fiscal::TRANSMITTER_KEY_LENGTH) {
+            throw new ConfigurationException('configuration.invalid_length', 'efatura.transmitter.middleware_key');
+        }
+
+        return $key;
     }
 
     private function inherit(string $path, string $hostPath): string
