@@ -6,6 +6,9 @@ namespace Akira\Efatura\Support;
 
 use Akira\Efatura\Rules\IudCheckDigit;
 use Akira\Efatura\Rules\NotBlank;
+use Akira\Efatura\Rules\XmlName;
+use DOMDocument;
+use DOMException;
 use Illuminate\Support\Str;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -81,7 +84,7 @@ final class FiscalRules
 
     public static function isXmlName(string $value): bool
     {
-        return Str::isMatch('/\A' . self::XML_NAME . '\z/u', $value);
+        return self::libxmlAcceptsName($value) && Str::isMatch('/\A' . self::XML_NAME . '\z/u', $value);
     }
 
     public static function isXmlNamespace(string $value): bool
@@ -90,11 +93,11 @@ final class FiscalRules
     }
 
     /**
-     * @return list<string>
+     * @return list<XmlName>
      */
     public static function xmlName(): array
     {
-        return ['regex:/\A' . self::XML_NAME . '\z/u'];
+        return [new XmlName];
     }
 
     /**
@@ -171,5 +174,16 @@ final class FiscalRules
 
             return ['required_without_all:' . $others, 'prohibits:' . $others, ...$rules];
         })->all();
+    }
+
+    private static function libxmlAcceptsName(string $value): bool
+    {
+        try {
+            new DOMDocument()->createElementNS(Fiscal::XML_NAMESPACE, $value);
+        } catch (DOMException) {
+            return false;
+        }
+
+        return true;
     }
 }

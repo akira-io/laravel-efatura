@@ -179,7 +179,23 @@ it('accepts the XML 1.0 name characters the DOM accepts', function (string $name
 
     expect($xml->toXml())->toContain('<' . $name . '/>')
         ->and(FiscalRules::isXmlName($name))->toBeTrue();
-})->with(['accented start' => ['Ângulo'], 'middle dot' => ['a·b'], 'combining mark' => ['á'], 'undertie' => ['a‿b'], 'astral' => ["\u{10000}a"]]);
+})->with(['accented start' => ['Ângulo'], 'middle dot' => ['a·b'], 'combining mark' => ['á'], 'cedilla' => ['ção']]);
+
+it('writes a fifth edition name only when the installed libxml accepts it', function (string $name): void {
+    $xml  = new XmlWriter;
+    $root = $xml->document('Dfe');
+
+    if (FiscalRules::isXmlName($name)) {
+        expect($xml->toXml())->not->toContain($name)
+            ->and($xml->foreign($root, $name, null, 'v', 'footer.extraFields.3'))->toBeInstanceOf(DOMElement::class)
+            ->and($xml->toXml())->toContain('<' . $name . '>v</' . $name . '>');
+
+        return;
+    }
+
+    expect(fn (): DOMElement => $xml->foreign($root, $name, null, 'v', 'footer.extraFields.3'))
+        ->toFailValidationOn('footer.extraFields.3.name', 'The footer.extraFields.3.name must be an XML 1.0 element name.');
+})->with(['undertie' => ['a‿b'], 'astral' => ["\u{10000}a"]]);
 
 it('rejects a foreign element name the XML document cannot carry on its field path', function (string $name): void {
     $xml  = new XmlWriter;

@@ -14,7 +14,7 @@ beforeEach(function (): void {
 
 it('rejects an extra field name outside the XML 1.0 name characters on its document path', function (string $name): void {
     expect(fn (): ElectronicInvoiceData => ($this->document)(['name' => $name, 'value' => 'v']))
-        ->toFailValidationOn('footer.extraFields.1.name', 'The footer.extra fields.1.name field format is invalid.');
+        ->toFailValidationOn('footer.extraFields.1.name', 'The footer.extra fields.1.name must be an XML 1.0 element name.');
 })->with(['superscript' => ['a²'], 'fraction' => ['a½'], 'ordinal' => ['aª'], 'leading digit' => ['1a'], 'leading dot' => ['.a']]);
 
 it('rejects an extra field namespace the XML document cannot declare on its document path', function (string $namespace, string $message): void {
@@ -39,4 +39,4 @@ it('accepts the XML 1.0 name characters and an ordinary namespace', function (st
     $field = ExtraFieldData::from(['name' => $name, 'value' => 'v', 'namespace' => 'https://example.cv/fields?v=1#extra']);
 
     expect($field->name)->toBe($name);
-})->with(['accented start' => ['Ângulo'], 'middle dot' => ['a·b'], 'combining mark' => ['á'], 'astral' => ["\u{10000}a"]]);
+})->with(['accented start' => ['Ângulo'], 'middle dot' => ['a·b'], 'combining mark' => ['á'], 'cedilla' => ['ção']]);

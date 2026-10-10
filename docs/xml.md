@@ -67,7 +67,12 @@ Values:
   `ValidationException` at the field path, without the value in the message.
 - An extra field whose name is not an XML 1.0 name, or whose namespace the
   document cannot declare, fails at `footer.extraFields.N.name` or
-  `footer.extraFields.N.namespace`.
+  `footer.extraFields.N.namespace`. A name must match the XML 1.0 (fifth
+  edition) name pattern and be accepted by the installed libxml. Older
+  libxml releases (2.9.x) follow the fourth edition and refuse some names
+  the fifth edition allows, such as `a‿b` or names with characters above
+  U+FFFF; on those hosts such names fail validation instead of reaching
+  the writer.
 
 Fields the XSD requires but the staged Data allows to be absent are required
 here: `header.serie`, `header.documentNumber`, `emission`,

@@ -158,7 +158,7 @@ it('rejects the official namespace and malformed names on extension fields', fun
     expect(fn (): ExtraFieldData => ExtraFieldData::from($payload))->toFailValidationOn($field, $message);
 })->with([
     'official namespace' => [['name' => 'CustomNote', 'value' => 'value', 'namespace' => 'urn:cv:efatura:xsd:v1.0'], 'namespace', 'The selected namespace is invalid.'],
-    'prefixed name'      => [['name' => 'invalid:name', 'value' => 'value'], 'name', 'The name field format is invalid.'],
+    'prefixed name'      => [['name' => 'invalid:name', 'value' => 'value'], 'name', 'The name must be an XML 1.0 element name.'],
 ]);
 
 it('accepts a cataloged CV address', function (): void {
