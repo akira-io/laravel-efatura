@@ -6,6 +6,7 @@ namespace Akira\Efatura\Actions;
 
 use Akira\Efatura\Data\IudData;
 use Akira\Efatura\Enums\DocumentType;
+use Akira\Efatura\Enums\IudSegment;
 use Akira\Efatura\Support\FiscalRules;
 use Akira\Efatura\Support\Luhn;
 use Illuminate\Validation\ValidationException;
@@ -20,13 +21,13 @@ final readonly class ParseIudAction
 
         try {
             return IudData::from([
-                'repositoryCode'   => (int) substr($iud, 2, 1),
-                'issueDate'        => '20' . substr($iud, 3, 2) . '-' . substr($iud, 5, 2) . '-' . substr($iud, 7, 2),
-                'emitterTaxId'     => substr($iud, 9, 9),
-                'ledCode'          => (int) substr($iud, 18, 5),
-                'documentTypeCode' => self::documentType((int) substr($iud, 23, 2)),
-                'documentNumber'   => (int) substr($iud, 25, 9),
-                'randomCode'       => substr($iud, 34, 10),
+                'repositoryCode'   => (int) IudSegment::Repository->of($iud),
+                'issueDate'        => '20' . implode('-', str_split(IudSegment::IssueDate->of($iud), 2)),
+                'emitterTaxId'     => IudSegment::EmitterTaxId->of($iud),
+                'ledCode'          => (int) IudSegment::LedCode->of($iud),
+                'documentTypeCode' => self::documentType((int) IudSegment::DocumentType->of($iud)),
+                'documentNumber'   => (int) IudSegment::DocumentNumber->of($iud),
+                'randomCode'       => IudSegment::RandomCode->of($iud),
             ]);
         } catch (ValidationException) {
             throw self::invalid($field);
