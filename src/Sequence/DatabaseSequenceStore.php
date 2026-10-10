@@ -9,11 +9,13 @@ use Akira\Efatura\Contracts\SequenceStore;
 use Akira\Efatura\Exceptions\SequenceException;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\ConnectionResolverInterface;
-use Illuminate\Database\QueryException;
+use PDOException;
 use Psr\Clock\ClockInterface;
 
 final readonly class DatabaseSequenceStore implements SequenceStore
 {
+    public const int ATTEMPTS = 5;
+
     public function __construct(
         private ConnectionResolverInterface $connections,
         private DatabaseConfig $config,
@@ -25,9 +27,9 @@ final readonly class DatabaseSequenceStore implements SequenceStore
         $connection = $this->connections->connection($this->config->connection);
 
         try {
-            return $connection->transaction(fn (): int => $this->reserve($connection, $scope));
-        } catch (QueryException $queryException) {
-            throw SequenceException::unavailable($scope, $queryException);
+            return $connection->transaction(fn (): int => $this->reserve($connection, $scope), self::ATTEMPTS);
+        } catch (PDOException $pdoException) {
+            throw SequenceException::unavailable($scope, $pdoException);
         }
     }
 
