@@ -31,7 +31,11 @@ final class DecimalFormatter
     {
         self::checkScale($scale);
 
-        return $value->getScale() <= $scale || $value->isEqualTo($value->toScale($scale, RoundingMode::Down));
+        if ($value->getScale() <= $scale) {
+            return true;
+        }
+
+        return $value->isEqualTo($value->toScale($scale, RoundingMode::Down));
     }
 
     public static function fitsIntegerDigits(BigDecimal $value): bool
