@@ -13,6 +13,7 @@ use Akira\Efatura\Signing\SigningCredentials;
 use Akira\Efatura\Signing\XadesBesXmlSigner;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Tests\Support\CertificateFixtures as C;
+use Akira\Efatura\Tests\Support\PackageFixtures as P;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
 use Akira\Efatura\Tests\Support\SignatureVerifier as V;
 
@@ -112,6 +113,7 @@ it('refuses xml it must not sign without echoing it', function (Closure $xml, st
     'unqualified dfe'      => [fn (string $xml): string => '<Dfe Id="x"/>', 'signature.unsupported_root'],
     'dfe without id'       => [fn (string $xml): string => preg_replace('/ Id="[^"]+"/', '', $xml, 1), 'signature.missing_id'],
     'dfe with an event id' => [fn (string $xml): string => preg_replace('/ Id="[^"]+"/', ' Id="CV3261002120000123456789"', $xml, 1), 'signature.missing_id'],
+    'dfe with a bad digit' => [P::withWrongCheckDigit(...), 'signature.missing_id'],
     'event with an iud'    => [fn (string $xml): string => '<Event xmlns="urn:cv:efatura:xsd:v1.0" Id="CV3261002100200300000010100000000112345678902"/>', 'signature.missing_id'],
     'already signed'       => [fn (string $xml): string => S::sign($xml)->xml, 'signature.already_signed'],
     'document type'        => [fn (string $xml): string => '<!DOCTYPE Dfe [<!ENTITY a "b">]><Dfe>&a;</Dfe>', 'xml.doctype_forbidden'],

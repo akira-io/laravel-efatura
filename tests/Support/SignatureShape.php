@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Tests\Support;
 
+use Akira\Efatura\Support\Fiscal;
 use DOMDocument;
 use DOMElement;
 
@@ -25,7 +26,7 @@ final class SignatureShape
         $document->loadXML($xml);
 
         $signature = SignatureVerifier::xpath($document)->query('//ds:Signature')?->item(0);
-        $root      = $signature?->parentNode?->nodeName === 'internally-detached' ? $signature->nextSibling : $signature?->parentNode;
+        $root      = $signature?->parentNode?->nodeName === Fiscal::DETACHED_SIGNATURE_ROOT ? $signature->nextSibling : $signature?->parentNode;
         while ($root !== null && ! $root instanceof DOMElement) {
             $root = $root->nextSibling;
         }

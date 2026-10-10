@@ -9,6 +9,7 @@ use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\SignatureException;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
+use Akira\Efatura\Support\Luhn;
 use Akira\Efatura\Xml\SafeXmlParser;
 use Carbon\CarbonImmutable;
 use DOMDocument;
@@ -21,8 +22,6 @@ use const OPENSSL_ALGO_SHA256;
 
 final readonly class XadesBesXmlSigner implements XmlSigner
 {
-    private const string DETACHED_ROOT = 'internally-detached';
-
     public function __construct(private SafeXmlParser $parser, private SignedPropertiesWriter $properties, private ClockInterface $clock) {}
 
     public function sign(
@@ -80,7 +79,7 @@ final readonly class XadesBesXmlSigner implements XmlSigner
         }
 
         $id = $root->getAttribute('Id');
-        if (! ($name === 'Dfe' ? FiscalRules::isIud($id) : FiscalRules::isEventId($id))) {
+        if (! ($name === 'Dfe' ? FiscalRules::isIud($id) && Luhn::passes(substr($id, 2)) : FiscalRules::isEventId($id))) {
             throw new SignatureException('signature.missing_id');
         }
 
@@ -97,7 +96,7 @@ final readonly class XadesBesXmlSigner implements XmlSigner
     private static function detached(DOMElement $root): array
     {
         $document  = new DOMDocument('1.0', 'UTF-8');
-        $container = new DOMElement(self::DETACHED_ROOT);
+        $container = new DOMElement(Fiscal::DETACHED_SIGNATURE_ROOT);
         $document->appendChild($container);
         $signed = $document->importNode($root, true);
         $container->appendChild($signed);

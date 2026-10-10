@@ -17,8 +17,6 @@ use ZipArchive;
 
 final readonly class ZipArchivePackager implements Packager
 {
-    private const string DETACHED_ROOT = 'internally-detached';
-
     private const int ENTRY_TIMESTAMP = 315_532_800;
 
     public function __construct(
@@ -77,7 +75,7 @@ final readonly class ZipArchivePackager implements Packager
     private function identify(string $xml, int $position): array
     {
         $outer = $this->parser->parse($xml)->documentElement;
-        $root  = $outer?->localName === self::DETACHED_ROOT && $outer->namespaceURI === null ? $outer->lastElementChild : $outer;
+        $root  = $outer?->localName === Fiscal::DETACHED_SIGNATURE_ROOT && $outer->namespaceURI === null ? $outer->lastElementChild : $outer;
         $kind  = match ($root?->namespaceURI === Fiscal::XML_NAMESPACE ? $root->localName : null) {
             'Dfe'   => PackageKind::Documents,
             'Event' => PackageKind::Events,

@@ -93,14 +93,16 @@ same hardened parser as the schema validator (no network, no DTD) and refuses:
 
 - a root other than `Dfe` or `Event` in the e-Fatura namespace
   (`signature.unsupported_root`);
-- a root whose `Id` is not an IUD (for `Dfe`) or an event ID (for `Event`)
-  (`signature.missing_id`);
+- a root whose `Id` is not an IUD with a valid check digit (for `Dfe`) or an
+  event ID (for `Event`) (`signature.missing_id`);
 - a document that already contains a `ds:Signature`
   (`signature.already_signed`).
 
 After signing, the signer verifies the `SignatureValue` against the certificate
 and fails with `signature.failed` when it does not verify. These are
-`SignatureException`s.
+`SignatureException`s. XML the parser refuses fails before any of these checks
+with the parser's `SchemaValidationException`: `xml.doctype_forbidden` for a
+document type declaration and `xml.malformed` for XML that is not well formed.
 
 `SignedXml` carries the signed XML, the signed `Id`, the profile, the signing
 time and the certificate digest, issuer and serial written in the signature.

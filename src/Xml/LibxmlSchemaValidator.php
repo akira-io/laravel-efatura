@@ -84,7 +84,7 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
 
         $roots = match ($profile) {
             SignatureProfile::Enveloped          => ['{' . Fiscal::XML_NAMESPACE . '}Dfe', '{' . Fiscal::XML_NAMESPACE . '}Event'],
-            SignatureProfile::InternallyDetached => ['{}internally-detached'],
+            SignatureProfile::InternallyDetached => ['{}' . Fiscal::DETACHED_SIGNATURE_ROOT],
         };
 
         if (! \in_array($name, $roots, true)) {

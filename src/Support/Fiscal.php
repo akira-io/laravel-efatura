@@ -75,6 +75,8 @@ final class Fiscal
 
     public const string SIGNED_PROPERTIES_ID = 'SignedPropertiesId';
 
+    public const string DETACHED_SIGNATURE_ROOT = 'internally-detached';
+
     public static function local(CarbonInterface $moment): CarbonImmutable
     {
         return $moment->toImmutable()->setTimezone(self::TIMEZONE);

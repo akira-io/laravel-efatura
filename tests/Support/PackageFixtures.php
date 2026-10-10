@@ -11,6 +11,7 @@ use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Packaging\ZipArchivePackager;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
 use Akira\Efatura\Tests\Support\XmlFixtures as X;
 use Carbon\CarbonImmutable;
@@ -39,7 +40,7 @@ final class PackageFixtures
     public static function id(string $signedXml): string
     {
         $outer = S::document($signedXml)->documentElement;
-        $root  = $outer?->localName === 'internally-detached' ? $outer->lastElementChild : $outer;
+        $root  = $outer?->localName === Fiscal::DETACHED_SIGNATURE_ROOT ? $outer->lastElementChild : $outer;
 
         return (string) $root?->getAttribute('Id');
     }
@@ -49,6 +50,11 @@ final class PackageFixtures
         $current = self::id($signedXml);
 
         return str_replace('Id="' . $current . '"', 'Id="' . $id($current) . '"', $signedXml);
+    }
+
+    public static function withWrongCheckDigit(string $signedXml): string
+    {
+        return self::withId($signedXml, fn (string $id): string => substr($id, 0, -1) . (((int) substr($id, -1) + 1) % 10));
     }
 
     public static function padded(string $xml, int $bytes): string
