@@ -65,6 +65,9 @@ Values:
   always written.
 - Text outside the XML 1.0 character set, or invalid UTF-8, fails with a
   `ValidationException` at the field path, without the value in the message.
+- An extra field whose name is not an XML 1.0 name, or whose namespace the
+  document cannot declare, fails at `footer.extraFields.N.name` or
+  `footer.extraFields.N.namespace`.
 
 Fields the XSD requires but the staged Data allows to be absent are required
 here: `header.serie`, `header.documentNumber`, `emission`,
@@ -75,7 +78,9 @@ the Off mode, because the published XSD requires it. In an UDN event, `Year` is
 written only when `numberRange.year` is given; the XSD leaves it optional.
 
 An event's `EmitterTaxId` is the NIF of the DFE emitter, never the
-transmitter's, as node-efatura settled in #72. A DTE has no `Totals`. FDC and UDN share one serializer: FDC lists one or more
+transmitter's, as node-efatura settled in #72.
+
+A DTE has no `Totals`. FDC and UDN share one serializer: FDC lists one or more
 `IUD`, UDN the number range.
 
 ## Schema validation
@@ -87,7 +92,9 @@ profile (`Enveloped` or `InternallyDetached`). The container binds it to
 
 - refuses any document type declaration with `xml.doctype_forbidden`, before
   parsing when it can see it and after parsing in other encodings, so external
-  and recursive entities are never expanded;
+  and recursive entities are never expanded. When a document in another
+  encoding fails to parse, a recovering parse looks for the declaration, so a
+  recursive entity is refused as a declaration and not reported as malformed;
 - parses with `LIBXML_NONET` only, and reports malformed XML as
   `xml.malformed`;
 - resolves the entry XSD through `OfficialArtifacts::xsdEntry()` and every
@@ -97,7 +104,13 @@ profile (`Enveloped` or `InternallyDetached`). The container binds it to
   fails with `xml.external_resource`; a listed file whose bytes changed fails
   with the `OfficialArtifactException` of the manifest check, so validation
   never runs against a modified schema;
-- reports schema failures as `xml.schema_invalid`.
+- fails with `OfficialArtifactException` (`artifacts.invalid_schema`) when a
+  listed schema matches the manifest but does not compile, since the fault is
+  in the bundle and not in the document;
+- reports schema failures as `xml.schema_invalid`, and so does a valid element
+  that is not a root of the profile: `Dfe` or `Event` in the e-Fatura namespace
+  for `Enveloped`, `internally-detached` without a namespace for
+  `InternallyDetached`.
 
 Every failure is a `SchemaValidationException` in the `EfaturaException`
 hierarchy. Its `violations` are `Xml\SchemaViolation` values with the line,
@@ -111,7 +124,9 @@ the caller left pending stay in the buffer, and the validator only reports the
 errors of its own call, so two validations never share errors. When the caller
 had no pending error, the buffer is cleared after the call. When it had some,
 the validator cannot remove its own errors without removing the caller's, so
-they stay after the caller's errors.
+they stay after the caller's errors. Those are libxml's raw errors, not the
+redacted violations, so a caller that keeps errors pending across a validation
+should clear the buffer itself before logging it.
 
 The test suite validates the minimal and maximal graph of every document type,
 an invoice in the Online, Offline and Off modes, a specimen in each repository,
