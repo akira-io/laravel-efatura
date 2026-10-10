@@ -83,4 +83,9 @@ final class DefinitionException extends EfaturaException
     {
         return new self('definition.credentials_serialization', 'Signing credentials hold a private key and cannot be serialized.');
     }
+
+    public static function tokenSerialization(): self
+    {
+        return new self('definition.token_serialization', 'An access token is a secret and cannot be serialized.');
+    }
 }

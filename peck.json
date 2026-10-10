@@ -42,7 +42,9 @@
             "sha",
             "xades",
             "xmldsig",
-            "xpath"
+            "xpath",
+            "encrypter",
+            "lockless"
         ],
         "paths": [
             "resources/catalogs/source",

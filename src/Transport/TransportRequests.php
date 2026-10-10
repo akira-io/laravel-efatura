@@ -20,13 +20,18 @@ final readonly class TransportRequests
     {
         $environment = $repository instanceof PackagedArchive ? $repository->repository : $repository;
 
-        return $this->http->createPendingRequest()
+        return $this->plain($config)
             ->baseUrl($config->baseUrl ?? throw DefinitionException::transportEndpoint())
+            ->accept('application/xml')
+            ->withHeaders([Fiscal::REPOSITORY_HEADER => (string) $environment->code()]);
+    }
+
+    public function plain(HttpClientConfig $config): PendingRequest
+    {
+        return $this->http->createPendingRequest()
             ->timeout($config->timeoutSeconds)
             ->connectTimeout($config->connectTimeoutSeconds)
             ->withoutRedirecting()
-            ->withOptions(['verify' => $config->verify(), 'stream' => true])
-            ->accept('application/xml')
-            ->withHeaders([Fiscal::REPOSITORY_HEADER => (string) $environment->code()]);
+            ->withOptions(['verify' => $config->verify(), 'stream' => true]);
     }
 }
