@@ -89,7 +89,7 @@ final readonly class InstallCommandFixture
             'EFATURA_TRANSMITTER_TAX_ID'  => '123456789',
             'EFATURA_EMITTER_LED'         => '123',
             'EFATURA_TRANSMITTER_KEY'     => 'secret',
-            'EFATURA_MIDDLEWARE_BASE_URL' => 'https://localhost:3443',
+            'EFATURA_MIDDLEWARE_BASE_URL' => 'https://localhost:3443/v1',
             'EFATURA_ENVIRONMENT'         => 'test',
         ];
     }

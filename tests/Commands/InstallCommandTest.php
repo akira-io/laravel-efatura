@@ -79,7 +79,7 @@ it('appends missing env variables when confirmed', function (): void {
         ->and($contents)->toContain('EFATURA_TRANSMITTER_TAX_ID=')
         ->and($contents)->toContain('EFATURA_EMITTER_LED=')
         ->and($contents)->toContain('EFATURA_TRANSMITTER_KEY=')
-        ->and($contents)->toContain('EFATURA_MIDDLEWARE_BASE_URL=https://localhost:3443')
+        ->and($contents)->toContain('EFATURA_MIDDLEWARE_BASE_URL=https://localhost:3443/v1')
         ->and($contents)->toContain('EFATURA_ENVIRONMENT=test');
 });
 
@@ -160,7 +160,7 @@ it('resolves the manager without identities from the freshly installed environme
         ->and($config->transmitter->middlewareKey)->toBeNull()
         ->and($config->transmitter->oauth->clientSecret)->toBeNull()
         ->and($config->environment->repositoryCode())->toBe(3)
-        ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443');
+        ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443/v1');
 });
 
 it('resolves configured identities once the installed environment is filled in', function (): void {

@@ -191,7 +191,8 @@ return [
     | TLS verification is a boolean, true by default. Disabling verification
     | exposes credentials and documents to interception; keep it on in production.
     | Each client's null tuning option inherits the global default. Base URLs
-    | must use HTTPS without credentials, query strings or fragments. A null
+    | must use HTTPS without credentials, query strings or fragments, and the
+    | middleware and platform URLs end with the API version (/v1). A null
     | base URL defers endpoint selection to its provider's later configuration.
     | Fiscal environment selection never replaces these endpoints.
     |
@@ -204,7 +205,7 @@ return [
         'concurrency'              => env('EFATURA_HTTP_CONCURRENCY', 5),
         'verify_tls'               => env('EFATURA_HTTP_VERIFY_TLS', true),
         'middleware'               => [
-            'base_url'                 => env('EFATURA_MIDDLEWARE_BASE_URL', 'https://localhost:3443'),
+            'base_url'                 => env('EFATURA_MIDDLEWARE_BASE_URL', 'https://localhost:3443/v1'),
             'timeout_seconds'          => null,
             'connect_timeout_seconds'  => null,
             'retries'                  => null,

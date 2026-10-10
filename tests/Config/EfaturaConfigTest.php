@@ -33,7 +33,7 @@ it('resolves minimal host defaults without optional identities or secrets', func
         ->and($config->database->sequencesTable)->toBe('efatura_sequences')
         ->and($config->queue->connection)->toBe('host-queue')
         ->and($config->queue->queue)->toBe('host-jobs')
-        ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443')
+        ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443/v1')
         ->and($config->http->platform->baseUrl)->toBe('https://services.efatura.cv/v1')
         ->and($config->http->bcv->baseUrl)->toBeNull()
         ->and($config->http->worldBank->baseUrl)->toBeNull();

@@ -21,7 +21,7 @@ final readonly class LoadHttpConfig
 
         return new HttpConfig(
             $defaults,
-            $this->profile('middleware', $defaults, 'https://localhost:3443'),
+            $this->profile('middleware', $defaults, 'https://localhost:3443/v1'),
             $this->profile('platform', $defaults, 'https://services.efatura.cv/v1'),
             $this->profile('bcv', $defaults),
             $this->profile('world_bank', $defaults),

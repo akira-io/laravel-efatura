@@ -223,6 +223,7 @@ that binds its own `ClockInterface` after the provider registers keeps it.
 | `efatura.emitter.address.address_detail`, `address_code`, `state`, `street_detail`, `building_name`, `building_number`, `building_floor` | New, from `EFATURA_EMITTER_ADDRESS_DETAIL`, `EFATURA_EMITTER_ADDRESS_CODE`, `EFATURA_EMITTER_STATE`, `EFATURA_EMITTER_STREET_DETAIL`, `EFATURA_EMITTER_BUILDING_NAME`, `EFATURA_EMITTER_BUILDING_NUMBER`, `EFATURA_EMITTER_BUILDING_FLOOR` |
 | `efatura.emitter.contacts.telefax`, `website` | New, from `EFATURA_EMITTER_TELEFAX` and `EFATURA_EMITTER_WEBSITE` |
 | `efatura.certificates.ca_bundle_path` | New, from `EFATURA_CA_BUNDLE_PATH`: an optional PEM file of CA certificates on the certificates disk; when set, the signing certificate must chain to it (see [signing](signing.md#icp-cv-and-the-ca-bundle)) |
+| `efatura.http.middleware.base_url` / `EFATURA_MIDDLEWARE_BASE_URL` | The default changes from `https://localhost:3443` to `https://localhost:3443/v1`. Base URLs now carry the API version on both profiles, as the platform default already did, and requests use resources relative to them (`dfe`, `event`). An application that set `https://localhost:3443` explicitly, in its config or its `.env`, appends `/v1` |
 | `efatura.database.connection`, `sequences_table` | Now used: the connection and table of the document number counters (see [document numbers and sequences](sequences.md)) |
 
 `EmitterConfig::$led` changes from `?string` to `?int`. `AddressConfig` and

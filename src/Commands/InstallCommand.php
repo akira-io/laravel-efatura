@@ -89,7 +89,7 @@ final class InstallCommand extends Command
             'EFATURA_TRANSMITTER_TAX_ID'  => 'null',
             'EFATURA_EMITTER_LED'         => 'null',
             'EFATURA_TRANSMITTER_KEY'     => 'null',
-            'EFATURA_MIDDLEWARE_BASE_URL' => 'https://localhost:3443',
+            'EFATURA_MIDDLEWARE_BASE_URL' => 'https://localhost:3443/v1',
             'EFATURA_ENVIRONMENT'         => 'test',
         ];
 
