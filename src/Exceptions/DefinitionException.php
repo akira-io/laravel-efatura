@@ -79,6 +79,11 @@ final class DefinitionException extends EfaturaException
         return new self('definition.transport_endpoint', 'A fiscal request needs an HTTP client profile with a base URL.');
     }
 
+    public static function transportDriver(string $name): self
+    {
+        return new self('definition.transport_driver', \sprintf('%s is not a transport driver; use middleware or platform.', $name));
+    }
+
     public static function credentialsSerialization(): self
     {
         return new self('definition.credentials_serialization', 'Signing credentials hold a private key and cannot be serialized.');

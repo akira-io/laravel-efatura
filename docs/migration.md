@@ -205,7 +205,7 @@ document, raise `Exceptions\DefinitionException`, which extends
 | Before | After |
 | --- | --- |
 | `new Efatura($config)` | `new Efatura($config, $clock)` with a `Psr\Clock\ClockInterface`; resolve it from the container instead |
-| `new EfaturaManager($config)` | `new EfaturaManager($config, $clock)`; resolve it from the container instead |
+| `new EfaturaManager($config)` | `new EfaturaManager($config, $clock, $transports)` with a `Transport\TransportResolver`; resolve it from the container instead |
 | `Efatura::config()`, `efatura()`, `withConfig()` | Unchanged |
 | none | `Efatura::invoice()` and `Efatura::event()` return builders |
 
