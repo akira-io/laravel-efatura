@@ -32,7 +32,11 @@ final readonly class OpenSslCertificateLoader implements CertificateLoader
 
     private const string CA_BUNDLE = 'efatura.certificates.ca_bundle_path';
 
-    public function __construct(private Factory $disks, private ClockInterface $clock) {}
+    private const string FILE_REFERENCE = 'file://';
+
+    private const string PEM_CERTIFICATE = '/-----BEGIN CERTIFICATE-----\r?\n[A-Za-z0-9+\/=\r\n]+-----END CERTIFICATE-----/';
+
+    public function __construct(private Factory $disks, private ClockInterface $clock, private ?string $directory = null) {}
 
     public function load(#[SensitiveParameter] CertificateConfig $config): SigningCredentials
     {
@@ -78,6 +82,10 @@ final readonly class OpenSslCertificateLoader implements CertificateLoader
 
         if ($contents === null || $contents === '') {
             throw new CertificateException('certificate.unreadable', $field);
+        }
+
+        if (str_starts_with($contents, self::FILE_REFERENCE)) {
+            throw new CertificateException('certificate.invalid', $field);
         }
 
         return $contents;
@@ -171,17 +179,40 @@ final readonly class OpenSslCertificateLoader implements CertificateLoader
         }
 
         $bundle = $this->read($disk, $bundlePath, self::CA_BUNDLE);
-        $file   = (string) tempnam(sys_get_temp_dir(), 'efatura');
-
-        try {
-            file_put_contents($file, $bundle);
-            $trusted = openssl_x509_checkpurpose($certificate, X509_PURPOSE_ANY, [$file]);
-        } finally {
-            @unlink($file);
-        }
-
-        if ($trusted !== true) {
+        if (! self::isCertificateBundle($bundle)) {
             throw new CertificateException('certificate.untrusted', self::CA_BUNDLE);
         }
+
+        $directory = ($this->directory ?? sys_get_temp_dir()) . '/efatura-ca-' . Str::random(32);
+        $file      = $directory . '/bundle.pem';
+
+        try {
+            $trusted = @mkdir($directory, 0o700)
+                && file_put_contents($file, $bundle) !== false
+                && @openssl_x509_checkpurpose($certificate, X509_PURPOSE_ANY, [$file, $directory]) === true
+                && OpenSslErrors::drain() === [];
+        } finally {
+            if (is_file($file)) {
+                unlink($file);
+            }
+
+            if (is_dir($directory)) {
+                rmdir($directory);
+            }
+        }
+
+        if (! $trusted) {
+            throw new CertificateException('certificate.untrusted', self::CA_BUNDLE);
+        }
+    }
+
+    private static function isCertificateBundle(string $bundle): bool
+    {
+        $count = preg_match_all(self::PEM_CERTIFICATE, $bundle, $blocks);
+        if ($count === 0 || $count !== substr_count($bundle, '-----BEGIN ')) {
+            return false;
+        }
+
+        return collect($blocks[0])->every(static fn (string $block): bool => @openssl_x509_read($block) instanceof OpenSSLCertificate);
     }
 }

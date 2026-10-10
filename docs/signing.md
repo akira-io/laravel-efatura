@@ -26,7 +26,9 @@ EFATURA_PRIVATE_KEY_PASSPHRASE=...
 ```
 
 Paths are relative to the disk, without traversal. Keep the files on a private
-disk.
+disk. The files hold the credentials themselves: a file whose content is a
+`file://` reference to another location fails with `certificate.invalid`, so
+OpenSSL never reads outside the disk.
 
 The loader then checks that:
 
@@ -61,6 +63,16 @@ certificates in one PEM file on the same disk and set
 the bundle does not trust fails with `certificate.untrusted`. Without a bundle
 no chain is checked, and a production certificate outside ICP-CV is only
 refused by the authority.
+
+The bundle is the only trust anchor. The system certificate locations
+(`/etc/ssl/certs`, `SSL_CERT_DIR`, `SSL_CERT_FILE`) are never consulted, so a
+certificate from a public CA is not trusted because the host trusts it. The
+bundle may hold several certificates and text between them, but every PEM block
+in it must be a certificate that OpenSSL reads; a bundle with no certificate, a
+damaged certificate or another kind of block (a private key, for instance) fails
+closed with `certificate.untrusted`. The loader copies the bundle into a private
+directory under the system temporary directory for OpenSSL and removes it
+before it returns.
 
 ### Handling the credentials
 

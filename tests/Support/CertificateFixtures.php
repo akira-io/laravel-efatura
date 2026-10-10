@@ -13,6 +13,7 @@ use OpenSSLAsymmetricKey;
 use RuntimeException;
 
 use const OPENSSL_ALGO_SHA256;
+use const OPENSSL_KEYTYPE_DSA;
 use const OPENSSL_KEYTYPE_EC;
 use const OPENSSL_KEYTYPE_RSA;
 
@@ -49,6 +50,12 @@ final class CertificateFixtures
     public static function ecKey(): OpenSSLAsymmetricKey
     {
         return self::$keys['ec'] ??= openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1'])
+            ?: throw new RuntimeException('Test key generation failed.');
+    }
+
+    public static function digitalSignatureAlgorithmKey(): OpenSSLAsymmetricKey
+    {
+        return self::$keys['digital-signature-algorithm'] ??= openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_DSA, 'private_key_bits' => 2048])
             ?: throw new RuntimeException('Test key generation failed.');
     }
 
@@ -116,6 +123,14 @@ final class CertificateFixtures
             ->mapWithKeys(fn (?string $value, string $key): array => ['efatura.certificates.' . $key => $value])
             ->all());
         app()->forgetInstance(EfaturaConfig::class);
+    }
+
+    public static function outsideKey(): string
+    {
+        $path = sys_get_temp_dir() . '/efatura-outside-signer.key';
+        file_put_contents($path, self::signer()->keyPem());
+
+        return $path;
     }
 
     public static function load(): SigningCredentials

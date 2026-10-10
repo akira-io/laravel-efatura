@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Contracts\CertificateLoader;
 use Akira\Efatura\Exceptions\CertificateException;
 use Akira\Efatura\Signing\OpenSslCertificateLoader;
 use Akira\Efatura\Signing\SigningCredentials;
 use Akira\Efatura\Tests\Support\CertificateFixtures as C;
 use Brick\Math\BigInteger;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 beforeEach(function (): void {
     C::moment(C::VALID_FROM, 86_400);
@@ -63,10 +66,77 @@ it('accepts a key usage limited to non repudiation', function (): void {
     expect(C::load()->issuerName)->toBe(C::CA_NAME);
 });
 
+it('accepts a key usage limited to digital signature', function (): void {
+    C::store(certificate: C::issue(keyUsage: ["\x80", 7]));
+
+    expect(C::load()->issuerName)->toBe(C::CA_NAME);
+});
+
 it('verifies the chain against the configured ca bundle', function (): void {
     C::store(config: ['ca_bundle_path' => 'ca.pem']);
 
     expect(C::load()->issuerName)->toBe(C::CA_NAME);
+});
+
+it('finds the issuer among several certificates and the text around them', function (): void {
+    C::store(config: ['ca_bundle_path' => 'bundle.pem']);
+    Storage::disk(C::DISK)->put('bundle.pem', "# other\n" . C::ca('other')->pem . "subject=e-Fatura Test CA\r\n" . str_replace("\n", "\r\n", C::ca()->pem));
+
+    expect(C::load()->issuerName)->toBe(C::CA_NAME);
+});
+
+it('trusts the ca bundle alone and never the system certificate locations', function (): void {
+    $directory = sys_get_temp_dir() . '/efatura-system-ca-' . Str::uuid()->toString();
+    new Filesystem()->ensureDirectoryExists($directory);
+    $hash = (string) (openssl_x509_parse(C::ca()->pem) ?: [])['hash'];
+    file_put_contents($directory . '/' . $hash . '.0', C::ca()->pem);
+    file_put_contents($directory . '/ca.pem', C::ca()->pem);
+    putenv('SSL_CERT_DIR=' . $directory);
+    putenv('SSL_CERT_FILE=' . $directory . '/ca.pem');
+    C::store(config: ['ca_bundle_path' => 'other-ca.pem']);
+    Storage::disk(C::DISK)->put('other-ca.pem', C::ca('other')->pem);
+
+    try {
+        expect(fn (): SigningCredentials => C::load())->toThrow(CertificateException::class, 'certificate.untrusted: efatura.certificates.ca_bundle_path')
+            ->and(openssl_error_string())->toBeFalse();
+    } finally {
+        putenv('SSL_CERT_DIR');
+        putenv('SSL_CERT_FILE');
+        new Filesystem()->deleteDirectory($directory);
+    }
+});
+
+it('removes the copy of the ca bundle whether or not it trusts the certificate', function (string $bundle): void {
+    $directory = sys_get_temp_dir() . '/efatura-loader-' . Str::uuid()->toString();
+    new Filesystem()->ensureDirectoryExists($directory);
+    C::store(config: ['ca_bundle_path' => $bundle]);
+    Storage::disk(C::DISK)->put('other-ca.pem', C::ca('other')->pem);
+    $loader = resolve(OpenSslCertificateLoader::class, ['directory' => $directory]);
+
+    try {
+        rescue(fn (): SigningCredentials => $loader->load(resolve(EfaturaConfig::class)->certificates), report: false);
+
+        expect(scandir($directory))->toBe(['.', '..']);
+    } finally {
+        new Filesystem()->deleteDirectory($directory);
+    }
+})->with(['trusted' => 'ca.pem', 'untrusted' => 'other-ca.pem']);
+
+it('refuses to trust a certificate when it cannot copy the ca bundle', function (): void {
+    C::store(config: ['ca_bundle_path' => 'ca.pem']);
+    $loader = resolve(OpenSslCertificateLoader::class, ['directory' => '/dev/null']);
+
+    expect(fn (): SigningCredentials => $loader->load(resolve(EfaturaConfig::class)->certificates))
+        ->toThrow(CertificateException::class, 'certificate.untrusted: efatura.certificates.ca_bundle_path');
+});
+
+it('classifies a failure by its own openssl errors, not by an earlier one', function (): void {
+    C::store('pkcs12');
+    Storage::disk(C::DISK)->put('signer.p12', substr(C::signer()->pkcs12(C::PASSPHRASE), 0, 200));
+    openssl_pkcs12_read(C::signer()->pkcs12(C::PASSPHRASE), $bundle, 'wrong');
+
+    expect(fn (): SigningCredentials => C::load())->toThrow(CertificateException::class, 'certificate.invalid: efatura.certificates.certificate_path')
+        ->and(openssl_error_string())->toBeFalse();
 });
 
 it('accepts the certificate from its first second and refuses it from its last', function (): void {
@@ -118,8 +188,14 @@ it('refuses unusable signing material with a stable code and field', function (C
         C::store();
         Storage::disk(C::DISK)->put('signer.key', C::issue(C::key('other'))->keyPem());
     }, 'certificate.key_mismatch', 'certificate_path'],
-    'elliptic curve key'      => [fn () => C::store(certificate: C::issue(C::ecKey())), 'certificate.key_unsupported', 'certificate_path'],
+    'elliptic curve key'       => [fn () => C::store(certificate: C::issue(C::ecKey())), 'certificate.key_unsupported', 'certificate_path'],
+    'non rsa key of 2048 bits' => [
+        fn () => C::store(certificate: C::issue(C::digitalSignatureAlgorithmKey())),
+        'certificate.key_unsupported',
+        'certificate_path',
+    ],
     'short rsa key'           => [fn () => C::store(certificate: C::issue(C::key('short', 1024))), 'certificate.key_unsupported', 'certificate_path'],
+    'rsa key of 2047 bits'    => [fn () => C::store(certificate: C::issue(C::key('short', 2047))), 'certificate.key_unsupported', 'certificate_path'],
     'encipherment only usage' => [fn () => C::store(certificate: C::issue(keyUsage: ["\x20", 5])), 'certificate.usage_invalid', 'certificate_path'],
     'not yet valid'           => [static function (): void {
         C::store();
@@ -133,7 +209,23 @@ it('refuses unusable signing material with a stable code and field', function (C
         C::store(config: ['ca_bundle_path' => 'other-ca.pem']);
         Storage::disk(C::DISK)->put('other-ca.pem', C::ca('other')->pem);
     }, 'certificate.untrusted', 'ca_bundle_path'],
-    'missing ca bundle' => [fn () => C::store(config: ['ca_bundle_path' => 'absent.pem']), 'certificate.unreadable', 'ca_bundle_path'],
+    'missing ca bundle'               => [fn () => C::store(config: ['ca_bundle_path' => 'absent.pem']), 'certificate.unreadable', 'ca_bundle_path'],
+    'ca bundle without a certificate' => [static function (): void {
+        C::store(config: ['ca_bundle_path' => 'junk.pem']);
+        Storage::disk(C::DISK)->put('junk.pem', "not a certificate\n");
+    }, 'certificate.untrusted', 'ca_bundle_path'],
+    'ca bundle with a broken certificate' => [static function (): void {
+        C::store(config: ['ca_bundle_path' => 'broken.pem']);
+        Storage::disk(C::DISK)->put('broken.pem', C::ca()->pem . "-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n");
+    }, 'certificate.untrusted', 'ca_bundle_path'],
+    'ca bundle with a private key' => [static function (): void {
+        C::store(config: ['ca_bundle_path' => 'keyed.pem']);
+        Storage::disk(C::DISK)->put('keyed.pem', C::ca()->pem . C::ca()->keyPem());
+    }, 'certificate.untrusted', 'ca_bundle_path'],
+    'key read from outside the disk' => [static function (): void {
+        C::store();
+        Storage::disk(C::DISK)->put('signer.key', 'file://' . C::outsideKey());
+    }, 'certificate.invalid', 'private_key_path'],
 ]);
 
 it('keeps the passphrase, the private key and the pkcs12 bytes out of every failure', function (string $format, ?string $passphrase): void {
