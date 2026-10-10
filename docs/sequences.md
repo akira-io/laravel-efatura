@@ -156,6 +156,15 @@ $this->app->instance(SequenceStore::class, new InMemorySequenceStore);
 It is not shared between processes or requests; never use it to issue real
 documents.
 
+Reservations refuse to run inside a transaction on the sequence connection
+(`sequence.inside_transaction`). A test suite that wraps each test in a
+transaction (`RefreshDatabase`, `DatabaseTransactions`) on that connection
+therefore needs one of two setups: bind `InMemorySequenceStore` as above, or
+point `efatura.database.connection` at a connection outside
+`$connectionsToTransact`, backed by a file or a server database migrated on that
+connection. An in-memory SQLite connection is a separate database per
+connection and does not see the migrated table.
+
 ---
 
 [Documentation index](README.md) · [Signing](signing.md) · [Packaging](packaging.md)
