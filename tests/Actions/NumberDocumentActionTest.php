@@ -12,6 +12,7 @@ use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\IudSegment;
 use Akira\Efatura\Sequence\InMemorySequenceStore;
 use Akira\Efatura\Sequence\NumberedDocument;
+use Akira\Efatura\Tests\Support\DocumentPayloads;
 use Akira\Efatura\Tests\Support\SequenceFixtures as S;
 use Carbon\CarbonImmutable;
 
@@ -41,9 +42,9 @@ it('reserves consecutive numbers and binds each one to its iud', function (): vo
 });
 
 it('keeps the transmitter out of the scope and the iud', function (): void {
-    $own   = $this->action->handle(S::invoice(), Environment::Test);
-    $other = S::invoice(overrides: ['emission' => ['transmitterTaxId' => ['value' => '900800700', 'countryCode' => 'CV'],
-        'software'                                                       => ['code' => 'APP', 'name' => 'Fiscal App', 'version' => '1.0']]]);
+    $own      = $this->action->handle(S::invoice(), Environment::Test);
+    $relay    = [...DocumentPayloads::transmission(), 'transmitterTaxId' => ['value' => '900800700', 'countryCode' => 'CV']];
+    $other    = S::invoice(overrides: ['emission' => $relay]);
     $relayed  = $this->action->handle($other, Environment::Test);
     $segments = fn (NumberedDocument $numbered): string => IudSegment::EmitterTaxId->of($numbered->iud) . IudSegment::LedCode->of($numbered->iud);
 

@@ -22,7 +22,8 @@ afterEach(function (): void {
 });
 
 it('never hands the same number to two processes', function (): void {
-    $workers = collect(range(1, 8))->map(fn (): Process => new Process([PHP_BINARY, __DIR__ . '/../Fixtures/sequence-worker.php', $this->database, '50']));
+    $command = [PHP_BINARY, '-d', 'display_errors=stderr', __DIR__ . '/../Fixtures/sequence-worker.php', $this->database, '50'];
+    $workers = collect(range(1, 8))->map(fn (): Process => new Process($command));
     $workers->each(fn (Process $worker): null => $worker->start());
 
     $exitCodes = $workers->map(fn (Process $worker): int => $worker->wait())->unique()->all();
