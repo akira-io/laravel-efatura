@@ -46,7 +46,7 @@ it('identifies, writes, validates, signs and packages an event with the transmit
         ->and($prepared->archive->entries)->toBe([$prepared->eventId . '.xml'])
         ->and(array_column($entries, 'contents'))->toBe([$prepared->signed->xml]);
 })->with([
-    'cancellation'   => [fn (): EventData => P::event()],
+    'cancellation'   => [fn (): EventData => P::event([])],
     'unused numbers' => [P::unusedNumbers(...)],
 ])->with(SignatureProfile::cases());
 

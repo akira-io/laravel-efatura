@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Actions;
 
 use Akira\Efatura\Configuration\EfaturaConfig;
-use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\EmissionContextData;
-use Akira\Efatura\Data\EventData;
 use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Support\Fiscal;
@@ -16,21 +14,15 @@ final readonly class ResolveEmissionContextAction
 {
     public function __construct(private EfaturaConfig $config) {}
 
-    /**
-     * @template TData of DocumentData|EventData
-     *
-     * @param  TData $data
-     * @return TData
-     */
-    public function handle(DocumentData|EventData $data): DocumentData|EventData
+    public function handle(?EmissionContextData $emission): EmissionContextData
     {
-        if ($data->emission instanceof EmissionContextData) {
-            return $data;
+        if ($emission instanceof EmissionContextData) {
+            return $emission;
         }
 
-        $transmitter         = self::configured($this->config->transmitter->taxId, 'efatura.transmitter.tax_id');
-        $payload             = $data->toPayload();
-        $payload['emission'] = [
+        $transmitter = self::configured($this->config->transmitter->taxId, 'efatura.transmitter.tax_id');
+
+        return EmissionContextData::from([
             'issueMode'        => EmissionMode::Online->value,
             'transmitterTaxId' => ['value' => $transmitter, 'countryCode' => Fiscal::COUNTRY],
             'software'         => [
@@ -38,9 +30,7 @@ final readonly class ResolveEmissionContextAction
                 'name'    => self::configured($this->config->software->name, 'efatura.software.name'),
                 'version' => self::configured($this->config->software->version, 'efatura.software.version'),
             ],
-        ];
-
-        return $data::from($payload);
+        ]);
     }
 
     private static function configured(?string $value, string $path): string

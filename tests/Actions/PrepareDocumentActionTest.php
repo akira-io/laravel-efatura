@@ -61,6 +61,17 @@ it('numbers, writes, validates, signs and packages a document without sending it
         ->and($this->store->current(SequenceFixtures::scope()))->toBe(1);
 })->with(SignatureProfile::cases());
 
+it('keeps an explicit emission context out of reach of the configuration', function (): void {
+    $relay = [
+        'transmitterTaxId' => ['value' => '900800700', 'countryCode' => 'CV'],
+        'software'         => ['code' => 'RELAY', 'name' => 'Relay App', 'version' => '2'],
+    ];
+    $prepared = resolve(PrepareDocumentAction::class)->handle(P::invoice(overrides: ['emission' => $relay]));
+
+    expect($prepared->document->emission?->transmitterTaxId?->value)->toBe('900800700')
+        ->and($prepared->unsignedXml)->toContain('RELAY')->not->toContain('Fiscal App');
+});
+
 it('writes a specimen when asked to', function (): void {
     $prepared = resolve(PrepareDocumentAction::class)->handle(P::invoice(), isSpecimen: true);
 

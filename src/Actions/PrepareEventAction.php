@@ -31,7 +31,8 @@ final readonly class PrepareEventAction
 
     public function handle(EventData $event, SignatureProfile $profile = SignatureProfile::Enveloped): PreparedEvent
     {
-        $event       = $this->resolveEmission->handle(EventData::from($event));
+        $validated   = EventData::from($event);
+        $event       = EventData::from([...$validated->toPayload(), 'emission' => $this->resolveEmission->handle($validated->emission)->toPayload()]);
         $transmitter = $event->emission?->transmitterTaxId->value ?? throw ValidationException::withMessages([
             'emission.transmitterTaxId' => __('efatura::efatura.validation.xml_required', ['attribute' => 'emission.transmitterTaxId']),
         ]);

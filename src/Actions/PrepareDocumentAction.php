@@ -31,7 +31,8 @@ final readonly class PrepareDocumentAction
 
     public function handle(DocumentData $document, bool $isSpecimen = false, SignatureProfile $profile = SignatureProfile::Enveloped): PreparedDocument
     {
-        $document    = $this->resolveEmission->handle($document::from($document));
+        $validated   = $document::from($document);
+        $document    = $validated::from([...$validated->toPayload(), 'emission' => $this->resolveEmission->handle($validated->emission)->toPayload()]);
         $credentials = $this->certificates->load($this->config->certificates);
         $repository  = $this->config->environment->environment;
         $numbered    = $this->numberDocument->handle($document, $repository);
