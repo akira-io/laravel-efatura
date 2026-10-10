@@ -49,7 +49,7 @@ it('refuses a document of another type', function (DocumentType $type, string $s
         ->toThrow(DefinitionException::class, $serializer . ' cannot serialize ' . $other::class . '.');
 })->with('serializers');
 
-it('fills every section of the maximal document and writes each one', function (DocumentType $type): void {
+it('fills every section the fields map allows on the maximal document and writes each one', function (DocumentType $type): void {
     $elements = [
         'header'                   => 'LedCode', 'emitter' => 'EmitterParty', 'receiver' => 'ReceiverParty', 'paymentParty' => 'PaymentParty',
         'transportServiceProvider' => 'TransportServiceProviderParty', 'lines' => 'Lines', 'totals' => 'Totals', 'references' => 'References',
@@ -66,7 +66,8 @@ it('fills every section of the maximal document and writes each one', function (
     $xpath = new DOMXPath($dom);
     $xpath->registerNamespace('e', Fiscal::XML_NAMESPACE);
 
-    $sections = array_keys($document->toPayload());
+    $excluded = in_array($type, [DocumentType::Transport, DocumentType::RegistrationNote], true) ? ['references'] : [];
+    $sections = array_values(array_diff(array_keys($document->toPayload()), $excluded));
     $filled   = array_keys(array_filter($document->toPayload(), fn (mixed $value): bool => $value !== null && $value !== []));
     $missing  = array_filter($sections, fn (string $section): bool => $xpath->query('/e:Dfe/e:' . $type->xmlElement() . '/e:' . $elements[$section]
         . ' | /e:Dfe/e:' . $elements[$section])->length === 0);

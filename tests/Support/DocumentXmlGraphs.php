@@ -33,8 +33,10 @@ final class DocumentXmlGraphs
 
     public static function document(DocumentType $type): DocumentData
     {
-        $draft = Efatura::invoice()->type($type)->emitter(BuilderFixtures::emitter())
-            ->header(DocumentHeaderData::from(DocumentPayloads::allocatedHeader(['selfBilling' => DocumentPayloads::selfBilling()])))
+        $selfBilled  = ! \in_array($type, [DocumentType::SalesReceipt, DocumentType::Transport, DocumentType::RegistrationNote], true);
+        $selfBilling = $selfBilled ? ['selfBilling' => DocumentPayloads::selfBilling()] : [];
+        $draft       = Efatura::invoice()->type($type)->emitter(BuilderFixtures::emitter())
+            ->header(DocumentHeaderData::from(DocumentPayloads::allocatedHeader($selfBilling)))
             ->emission(EmissionContextData::from(DocumentPayloads::transmission()))
             ->footer(DocumentFooterData::from(['note' => 'Customer delivery note', 'extraFields' => [
                 ['name' => 'CustomerHint', 'value' => 'Ready'],
