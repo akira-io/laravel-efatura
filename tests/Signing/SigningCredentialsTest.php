@@ -19,7 +19,7 @@ beforeEach(function (): void {
 it('shows only the issuer, the serial number and the validity when dumped', function (): void {
     ob_start();
     var_dump($this->credentials);
-    $dump = (string) ob_get_clean();
+    $dump = ob_get_clean();
 
     expect($this->credentials->__debugInfo())->toBe($this->summary)
         ->and($dump)->not->toContain('privateKey')
