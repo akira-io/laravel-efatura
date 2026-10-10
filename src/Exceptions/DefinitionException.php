@@ -69,6 +69,11 @@ final class DefinitionException extends EfaturaException
         return new self('definition.sequences_in_use', \sprintf('The %s table still holds fiscal sequence counters and is not dropped.', $table));
     }
 
+    public static function submissionEntry(string $identifier): self
+    {
+        return new self('definition.submission_entry', \sprintf('The submission holds no entry for %s.', $identifier));
+    }
+
     public static function credentialsSerialization(): self
     {
         return new self('definition.credentials_serialization', 'Signing credentials hold a private key and cannot be serialized.');

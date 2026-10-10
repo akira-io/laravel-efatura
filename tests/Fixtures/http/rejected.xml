@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Responses>
+    <Response Succeeded="false">
+        <EntryName>CV3260208100200300001230100000000112345678909.xml</EntryName>
+        <Messages>
+            <Message>
+                <Source>BIZ</Source>
+                <Type>ERROR</Type>
+                <DateTime>2026-02-08 10:15:30</DateTime>
+                <Code>BIZ-001</Code>
+                <Description>The emitter is not registered.</Description>
+                <Location>/Dfe/EmitterParty/TaxId</Location>
+            </Message>
+            <Message>
+                <Source>XSD</Source>
+                <Type>WARNING</Type>
+                <Code>XSD-014</Code>
+            </Message>
+        </Messages>
+    </Response>
+</Responses>

@@ -39,6 +39,8 @@ final class Fiscal
 
     public const int MAX_PACKAGE_BYTES = 10 * 1024 * 1024;
 
+    public const int MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+
     public const int TRANSMITTER_KEY_LENGTH = 64;
 
     public const string OAUTH_ISSUER_URL = 'https://iam.efatura.cv/auth/realms/taxpayers';

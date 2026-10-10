@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Responses>
+    <Response Succeeded="true">
+        <EntryName>CV3260208100200300001230100000000112345678909.xml</EntryName>
+        <AuthorizationCode>AUTH-0001</AuthorizationCode>
+        <SignatureTimeStamp>2026-02-08 10:15:30</SignatureTimeStamp>
+    </Response>
+</Responses>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Responses>
+    <Response Succeeded="true">
+        <EntryName>CV3260208100200300001230100000000312345678905.xml</EntryName>
+        <AuthorizationCode>AUTH-0003</AuthorizationCode>
+        <SignatureTimeStamp>2026-02-08 10:15:32</SignatureTimeStamp>
+    </Response>
+    <Response Succeeded="false">
+        <EntryName>CV3260208100200300001230100000000212345678907.xml</EntryName>
+        <Messages>
+            <Message>
+                <Source>BIZ</Source>
+                <Type>ERROR</Type>
+                <DateTime>2026-02-08 10:15:31</DateTime>
+                <Code>BIZ-002</Code>
+                <Description>The document number is already authorized.</Description>
+            </Message>
+        </Messages>
+    </Response>
+    <Response Succeeded="true">
+        <EntryName>CV3260208100200300001230100000000112345678909.xml</EntryName>
+        <AuthorizationCode>AUTH-0001</AuthorizationCode>
+        <SignatureTimeStamp>2026-02-08 10:15:30</SignatureTimeStamp>
+    </Response>
+</Responses>
