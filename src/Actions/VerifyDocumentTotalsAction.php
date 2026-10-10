@@ -192,7 +192,11 @@ final readonly class VerifyDocumentTotalsAction
 
     private function roundsTo(BigDecimal $candidate, BigDecimal $actual): bool
     {
-        return $actual->isEqualTo($candidate) || collect(self::ACCEPTED_SCALES)->contains(
+        if ($actual->isEqualTo($candidate)) {
+            return true;
+        }
+
+        return collect(self::ACCEPTED_SCALES)->contains(
             static fn (int $scale): bool => $actual->isEqualTo($candidate->toScale($scale, DecimalFormatter::fiscalRounding())),
         );
     }

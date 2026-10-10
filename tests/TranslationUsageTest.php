@@ -13,5 +13,5 @@ it('references every packaged translation key from the source', function (string
 
     $leaf = Str::afterLast($key, '.');
 
-    expect(Str::contains($source, ["efatura::efatura.{$key}", "'{$leaf}'"]))->toBeTrue();
+    expect(Str::contains($source, ['efatura::efatura.' . $key, var_export($leaf, true)]))->toBeTrue();
 })->with(fn (): array => array_keys(Arr::dot(require __DIR__ . '/../resources/lang/en/efatura.php')));

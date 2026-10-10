@@ -35,7 +35,7 @@ it('doubles the rightmost payload digit and sums the digits of each product', fu
 
 it('refuses a payload that is not made of digits without revealing it', function (string $payload, int $length): void {
     expect(fn (): int => Luhn::checkDigit($payload))
-        ->toThrow(DefinitionException::class, "A Luhn payload must contain only ASCII digits, {$length} characters given.");
+        ->toThrow(DefinitionException::class, sprintf('A Luhn payload must contain only ASCII digits, %d characters given.', $length));
 })->with([
     'letter'        => ['12a', 3],
     'empty'         => ['', 0],

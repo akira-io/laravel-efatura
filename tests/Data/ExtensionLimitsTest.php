@@ -33,7 +33,7 @@ it('accepts extension text at its limits', function (): void {
 });
 
 it('bounds the number of entries in extension and payment lists', function (string $class, array $payload, string $field, string $label): void {
-    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, "The {$label} field must not have more than 100 items.");
+    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, sprintf('The %s field must not have more than 100 items.', $label));
 })->with([
     'extra fields'     => [DocumentFooterData::class, ['extraFields' => array_fill(0, 101, ['name' => 'CustomerTag', 'value' => 'v'])], 'extraFields', 'extra fields'],
     'extra properties' => [ItemData::class, ['description' => 'Item', 'emitterIdentification' => 'SKU', 'extraProperties' => array_fill(0, 101, ['name' => 'Colour', 'value' => 'Blue'])],

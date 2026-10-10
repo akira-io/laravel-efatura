@@ -77,7 +77,7 @@ it('rejects uncatalogued exemption and stamp tax codes', function (string $metho
 })->with(FiscalValueFixtures::uncataloguedTaxCodes());
 
 it('rejects untyped values inside data lists', function (string $class, array $payload, string $field): void {
-    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, "The {$field} field must be an array.");
+    expect(fn (): mixed => $class::from($payload))->toFailValidationOn($field, sprintf('The %s field must be an array.', $field));
 })->with([
     'item extra properties' => [ItemData::class, ['description' => 'Item', 'emitterIdentification' => 'SKU', 'extraProperties' => [new stdClass]], 'extraProperties.0'],
     'payments'              => [PaymentsData::class, ['payments' => [new stdClass]], 'payments.0'],

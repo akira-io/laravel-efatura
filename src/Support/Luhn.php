@@ -22,7 +22,7 @@ final class Luhn
 
     public static function passes(string $digitsWithCheckDigit): bool
     {
-        if (Str::isMatch('/\A[0-9]?\z/', $digitsWithCheckDigit)) {
+        if (Str::isMatch('/\A\d?\z/', $digitsWithCheckDigit)) {
             return false;
         }
 
@@ -33,7 +33,7 @@ final class Luhn
 
     private static function assertDigits(string $digits): void
     {
-        if (! Str::isMatch('/\A[0-9]+\z/', $digits)) {
+        if (! Str::isMatch('/\A\d+\z/', $digits)) {
             throw DefinitionException::luhnPayload($digits);
         }
     }

@@ -109,7 +109,7 @@ it('accepts only the root elements of the signature profile', function (string $
             expect($exception->errorCode)->toBe('xml.schema_invalid')
                 ->and($exception->violations)->toHaveCount(1)
                 ->and($exception->violations[0]->level)->toBe(LIBXML_ERR_ERROR)
-                ->and($exception->violations[0]->message)->toEndWith(" is not a root element of the {$profile->value} profile.")
+                ->and($exception->violations[0]->message)->toEndWith(sprintf(' is not a root element of the %s profile.', $profile->value))
                 ->and(print_r($exception->violations, true))->not->toContain('SECRET');
         });
 })->with([

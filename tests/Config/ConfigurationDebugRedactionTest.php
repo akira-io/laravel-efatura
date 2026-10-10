@@ -14,7 +14,7 @@ dataset('debug outputs', [
         ob_start();
         var_dump($value);
 
-        return (string) ob_get_clean();
+        return ob_get_clean();
     }],
     'json_encode'        => [static fn (object $value): string => (string) json_encode($value)],
     'monolog normalizer' => [static fn (object $value): string => (string) json_encode(new NormalizerFormatter()->normalizeValue($value))],
