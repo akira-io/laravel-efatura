@@ -2,8 +2,10 @@
 
 This page covers the official identifiers, the XML the package writes for the
 nine DFE and the two fiscal events, and the validation of that XML against the
-bundled XSD of 2024-05-27. Signing, packaging and transmission are not part of
-this stage.
+bundled XSD of 2024-05-27. The XML written here is unsigned: see
+[signing](signing.md) for the signature, [packaging](packaging.md) for the ZIP
+and [document numbers and sequences](sequences.md) for where the document number
+of the IUD comes from. Transmission is not part of this stage.
 
 ## Identifiers
 

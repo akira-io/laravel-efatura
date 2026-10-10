@@ -26,16 +26,23 @@ composer require akira/efatura
 }
 ```
 
-Publish the package configuration and prepare the required environment keys:
+Publish the package configuration and the sequence migration, and prepare the
+required environment keys:
 
 ```sh
 php artisan efatura:install
+php artisan migrate
 ```
 
 The command offers `EFATURA_TRANSMITTER_TAX_ID`, `EFATURA_EMITTER_LED`,
 `EFATURA_TRANSMITTER_KEY`, `EFATURA_MIDDLEWARE_BASE_URL` and `EFATURA_ENVIRONMENT`,
 and never overwrites an existing key. The remaining `EFATURA_EMITTER_*` keys are
-optional; `config/efatura.php` lists them.
+optional; `config/efatura.php` lists them. The migration creates the table that
+holds the document number counters; set `EFATURA_DATABASE_CONNECTION` and
+`EFATURA_SEQUENCES_TABLE` before running it if the defaults do not fit (see
+[document numbers and sequences](docs/sequences.md)). Signing reads the
+certificate from `EFATURA_CERTIFICATES_DISK` and `EFATURA_CERTIFICATE_PATH`
+(see [signing](docs/signing.md)).
 
 ## Quick Start
 
@@ -96,6 +103,9 @@ as listed in the [renamed symbols](docs/migration.md#renamed-symbols) table.
 
 - [Documentation index](docs/README.md)
 - [Identifiers, XML and schema validation](docs/xml.md)
+- [Document numbers and sequences](docs/sequences.md)
+- [Signing](docs/signing.md)
+- [Packaging](docs/packaging.md)
 - Configuration: [config/efatura.php](config/efatura.php)
 - API reference: [source API](https://github.com/akira-io/laravel-efatura/tree/main/src)
 

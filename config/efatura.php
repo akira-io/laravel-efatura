@@ -163,6 +163,9 @@ return [
     | underscores, starting with a letter or underscore. A null queue inherits
     | the selected connection's queue name, remaining null for drivers such as
     | sync that have no queue name. Explicit names must be nonempty strings.
+    | The published sequence migration reads the connection and the table
+    | when it runs, so set them before migrating. SQLite connections shared by
+    | several workers need a busy_timeout in config/database.php.
     |
     */
     'database' => [

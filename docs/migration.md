@@ -7,10 +7,23 @@ release was being built are not listed.
 
 ## Runtime
 
-The package needs PHP 8.5 and Laravel 13, and adds `psr/clock` to its
-dependencies. Run `composer update akira/efatura`. `php artisan
-efatura:install` skips a config file that already exists, so merge the new
-keys by hand as described under [configuration](#configuration).
+The package needs PHP 8.5 and Laravel 13, and adds `psr/clock` and
+`illuminate/database` to its dependencies. Run `composer update akira/efatura`.
+`php artisan efatura:install` skips a config file that already exists, so merge
+the new keys by hand as described under [configuration](#configuration).
+
+Document numbers are now reserved in a database table. Publish its migration
+and run it, after setting `efatura.database.connection` and
+`efatura.database.sequences_table` if the defaults do not fit:
+
+```sh
+php artisan vendor:publish --tag=efatura-migrations
+php artisan migrate
+```
+
+`efatura:install` publishes the same migration, and skips it when a migration
+named `*_create_efatura_sequences_table.php` already exists. The package never
+runs it on its own. See [document numbers and sequences](sequences.md).
 
 ## Documents
 
@@ -199,10 +212,13 @@ that binds its own `ClockInterface` after the provider registers keeps it.
 | `efatura.emitter.led` | An integer or a string matching `[1-9][0-9]{0,4}`; anything else fails with `configuration.invalid_led` |
 | `efatura.emitter.address.address_detail`, `address_code`, `state`, `street_detail`, `building_name`, `building_number`, `building_floor` | New, from `EFATURA_EMITTER_ADDRESS_DETAIL`, `EFATURA_EMITTER_ADDRESS_CODE`, `EFATURA_EMITTER_STATE`, `EFATURA_EMITTER_STREET_DETAIL`, `EFATURA_EMITTER_BUILDING_NAME`, `EFATURA_EMITTER_BUILDING_NUMBER`, `EFATURA_EMITTER_BUILDING_FLOOR` |
 | `efatura.emitter.contacts.telefax`, `website` | New, from `EFATURA_EMITTER_TELEFAX` and `EFATURA_EMITTER_WEBSITE` |
+| `efatura.certificates.ca_bundle_path` | New, from `EFATURA_CA_BUNDLE_PATH`: an optional PEM file of CA certificates on the certificates disk; when set, the signing certificate must chain to it (see [signing](signing.md#icp-cv-and-the-ca-bundle)) |
+| `efatura.database.connection`, `sequences_table` | Now used: the connection and table of the document number counters (see [document numbers and sequences](sequences.md)) |
 
 `EmitterConfig::$led` changes from `?string` to `?int`. `AddressConfig` and
 `ContactsConfig` gain the new fields as optional trailing constructor
-arguments, so existing positional calls keep working. `CertificateConfig`,
+arguments, so existing positional calls keep working. `CertificateConfig` gains
+`caBundlePath` as an optional trailing constructor argument. `CertificateConfig`,
 `OAuthConfig` and `TransmitterConfig` redact their secrets from `dump()`,
 `var_dump()` and `print_r()` output, and implement `JsonSerializable` with the
 same redaction, so `json_encode()` and Monolog's normalizer write `[redacted]`.
@@ -232,7 +248,8 @@ These keys are gone, because nothing produces those messages any more:
 `software_code_required`, `software_name_required`,
 `software_version_required`, `middleware_base_url_required`,
 `environment_invalid`; `install.command_description`; `general.package`. The
-`install.*` keys the command prints are unchanged. The new `validation.*` keys
+`install.*` keys the command printed before are unchanged; it adds
+`install.migration_published` and `install.migration_exists`. The new `validation.*` keys
 are listed in [resources/lang/en/efatura.php](../resources/lang/en/efatura.php).
 
 ## Renamed symbols
@@ -273,4 +290,7 @@ the official name in PHP too.
   `from()` whatever its age.
 - Building Data with `new` does not validate; use `from()` for untrusted input.
 - Validation, building and verification never allocate numbers or IUDs, sign,
-  transmit or issue a document.
+  transmit or issue a document. `PrepareDocumentAction` and
+  `PrepareEventAction` number, sign and package a document or event without
+  sending it (see [packaging](packaging.md#preparation)); a number they reserve
+  stays consumed when a later step fails.
