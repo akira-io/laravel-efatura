@@ -24,8 +24,12 @@ given in, sit at the root of the archive (no directories), and are compressed
 with Deflate.
 
 `PackagedArchive` carries the ZIP `bytes`, its `kind` (`PackageKind::Documents`
-or `PackageKind::Events`, which tells the caller which resource to send it to)
-and the list of entry names.
+or `PackageKind::Events`, which tells the caller which resource to send it to),
+the list of entry names (`identifiers()` returns them without `.xml`) and the
+`repository` (an `Environment`) read from the identifiers of its entries. An
+archive belongs to one repository, because the request names it once in the
+`cv-ef-repository-code` header (§10.2, p.67): the repository is the third
+character of every IUD and event ID, never a value of the caller.
 
 ## What is refused
 
@@ -41,6 +45,7 @@ position of the offending entry (`entry`) or the limit, never the XML:
 | `package.unsigned` | A root without a `ds:Signature` child in the XMLDSig namespace (a signature nested deeper or in another namespace does not count) |
 | `package.invalid_identifier` | An `Id` that is not a valid IUD (check digit included) or event ID |
 | `package.mixed_kinds` | DFE and events in the same archive |
+| `package.mixed_repositories` | Identifiers of more than one repository in the same archive |
 | `package.duplicate_entry` | Two entries with the same `Id` |
 | `package.write_failed` | ext-zip could not write the archive in the temporary directory |
 

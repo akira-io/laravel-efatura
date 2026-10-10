@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\PackageKind;
 use Akira\Efatura\Enums\SubmissionOutcome;
 use Akira\Efatura\Enums\TransportFailure;
@@ -62,7 +63,7 @@ it('reports each entry of a partial acceptance in the order of the archive', fun
 
 it('reads the response to an event archive under the event identifier', function (): void {
     $body   = str_replace(T::FIRST_IUD, IdentifierFixtures::OFFICIAL_EVENT_ID, T::response('accepted'));
-    $result = $this->parser->parse(T::archive([IdentifierFixtures::OFFICIAL_EVENT_ID], PackageKind::Events), 200, $body);
+    $result = $this->parser->parse(T::archive([IdentifierFixtures::OFFICIAL_EVENT_ID], PackageKind::Events, Environment::Production), 200, $body);
 
     expect($result->kind)->toBe(PackageKind::Events)
         ->and($result->entry(IdentifierFixtures::OFFICIAL_EVENT_ID)->authorizationCode)->toBe('AUTH-0001');

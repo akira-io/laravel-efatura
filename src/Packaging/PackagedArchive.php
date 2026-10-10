@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Packaging;
 
+use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\PackageKind;
 use Illuminate\Support\Str;
 
@@ -16,6 +17,7 @@ final readonly class PackagedArchive
         public string $bytes,
         public PackageKind $kind,
         public array $entries,
+        public Environment $repository,
     ) {}
 
     /**

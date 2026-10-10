@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Contracts\Packager;
+use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\PackageKind;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\EfaturaException;
@@ -60,6 +61,16 @@ it('names each event entry after its event id', function (SignatureProfile $prof
         ->and(array_map(strlen(...), $archive->entries))->each->toBe(28);
 })->with(SignatureProfile::cases());
 
+it('records the repository the identifiers of its entries name', function (Closure $xml, Environment $repository): void {
+    $archive = P::packager($this->directory)->package($xml());
+
+    expect($archive->repository)->toBe($repository);
+})->with([
+    'test documents'         => [fn (): array => [P::document(1), P::document(2)], Environment::Test],
+    'homologation documents' => [fn (): array => [P::inRepository(P::document(1), Environment::Homologation)], Environment::Homologation],
+    'production events'      => [fn (): array => [P::inRepository(P::event(), Environment::Production)], Environment::Production],
+]);
+
 it('writes the same bytes for the same entries', function (): void {
     $xml = [P::document(1), P::document(2)];
 
@@ -105,6 +116,11 @@ it('refuses entries it cannot package without echoing them', function (Closure $
         fn (): array => [P::withId(P::event(), fn (string $id): string => substr($id, 0, 3) . '000000000000' . substr($id, 15))],
         'package.invalid_identifier',
         ['entry' => 0],
+    ],
+    'two repositories' => [
+        fn (): array => [P::document(1), P::inRepository(P::document(2), Environment::Homologation)],
+        'package.mixed_repositories',
+        ['entry' => 1],
     ],
     'the same dfe twice' => [fn (): array => [P::document(), P::document(2), P::document()], 'package.duplicate_entry', ['entry' => 2]],
     'too many entries'   => [fn (): array => array_fill(0, Fiscal::MAX_PACKAGE_ENTRIES + 1, ''), 'package.too_many_entries',

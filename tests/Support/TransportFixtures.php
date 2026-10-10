@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Tests\Support;
 
+use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\PackageKind;
 use Akira\Efatura\Packaging\PackagedArchive;
 
@@ -18,9 +19,12 @@ final class TransportFixtures
     /**
      * @param list<string> $identifiers
      */
-    public static function archive(array $identifiers = [self::FIRST_IUD], PackageKind $kind = PackageKind::Documents): PackagedArchive
-    {
-        return new PackagedArchive('zip-bytes', $kind, array_map(static fn (string $identifier): string => $identifier . '.xml', $identifiers));
+    public static function archive(
+        array $identifiers = [self::FIRST_IUD],
+        PackageKind $kind = PackageKind::Documents,
+        Environment $repository = Environment::Test,
+    ): PackagedArchive {
+        return new PackagedArchive('zip-bytes', $kind, array_map(static fn (string $identifier): string => $identifier . '.xml', $identifiers), $repository);
     }
 
     public static function response(string $name): string

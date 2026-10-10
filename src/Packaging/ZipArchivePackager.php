@@ -7,6 +7,7 @@ namespace Akira\Efatura\Packaging;
 use Akira\Efatura\Actions\ParseEventIdAction;
 use Akira\Efatura\Actions\ParseIudAction;
 use Akira\Efatura\Contracts\Packager;
+use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\PackageKind;
 use Akira\Efatura\Exceptions\PackagingException;
 use Akira\Efatura\Support\Fiscal;
@@ -31,14 +32,20 @@ final readonly class ZipArchivePackager implements Packager
     {
         self::guardLimits($signedXml);
 
-        $entries = [];
-        $kind    = null;
+        $entries    = [];
+        $kind       = null;
+        $repository = null;
         foreach ($signedXml as $position => $xml) {
-            [$entryKind, $id] = $this->identify($xml, $position);
+            [$entryKind, $id, $entryRepository] = $this->identify($xml, $position);
             $kind ??= $entryKind;
+            $repository ??= $entryRepository;
 
             if ($entryKind !== $kind) {
                 throw new PackagingException('package.mixed_kinds', ['entry' => $position]);
+            }
+
+            if ($entryRepository !== $repository) {
+                throw new PackagingException('package.mixed_repositories', ['entry' => $position]);
             }
 
             if (isset($entries[$id . '.xml'])) {
@@ -48,7 +55,7 @@ final readonly class ZipArchivePackager implements Packager
             $entries[$id . '.xml'] = $xml;
         }
 
-        return new PackagedArchive($this->write($entries), $kind ?? PackageKind::Documents, array_keys($entries));
+        return new PackagedArchive($this->write($entries), $kind ?? PackageKind::Documents, array_keys($entries), $repository ?? Environment::Test);
     }
 
     /**
@@ -71,7 +78,7 @@ final readonly class ZipArchivePackager implements Packager
     }
 
     /**
-     * @return array{PackageKind, string}
+     * @return array{PackageKind, string, Environment}
      */
     private function identify(string $xml, int $position): array
     {
@@ -87,7 +94,9 @@ final readonly class ZipArchivePackager implements Packager
             throw new PackagingException('package.unsigned', ['entry' => $position]);
         }
 
-        return [$kind, $this->identifier($kind, (string) $root?->getAttribute('Id'), $position)];
+        $id = (string) $root?->getAttribute('Id');
+
+        return [$kind, $id, $this->repository($kind, $id, $position)];
     }
 
     private static function signed(DOMElement $outer): bool
@@ -101,15 +110,13 @@ final readonly class ZipArchivePackager implements Packager
         return false;
     }
 
-    private function identifier(PackageKind $kind, string $id, int $position): string
+    private function repository(PackageKind $kind, string $id, int $position): Environment
     {
         try {
-            $kind === PackageKind::Documents ? $this->parseIud->handle($id) : $this->parseEventId->handle($id);
+            return $kind === PackageKind::Documents ? $this->parseIud->handle($id)->repository : $this->parseEventId->handle($id)->repository;
         } catch (ValidationException) {
             throw new PackagingException('package.invalid_identifier', ['entry' => $position]);
         }
-
-        return $id;
     }
 
     /**
