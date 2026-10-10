@@ -33,7 +33,7 @@ final class DocumentHeaderData extends FiscalData
     public static function rules(): array
     {
         return [
-            'issueDate'           => [new FiscalDate(instant: true)],
+            'issueDate'           => [new FiscalDate(instant: true), 'before:' . Fiscal::IDENTIFIER_DATE_LIMIT],
             'issueTime'           => [new FiscalDate(Fiscal::TIME_FORMAT, instant: true)],
             'ledCode'             => FiscalRules::ledCode(),
             'serie'               => FiscalRules::series(),

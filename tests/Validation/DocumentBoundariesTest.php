@@ -164,3 +164,11 @@ it('detects duplicates of the zero line id', function (): void {
     expect(fn (): ElectronicInvoiceData => ElectronicInvoiceData::from($payload))
         ->toFailValidationOn('lines.1.id', 'The lines.1.id field has a duplicate value.');
 });
+
+it('limits the issue date to the years an identifier can carry', function (): void {
+    $header = fn (string $issueDate): array => F::payload(['header' => ['issueDate' => $issueDate, 'issueTime' => '12:00:00', 'ledCode' => 1]]);
+
+    expect(ElectronicInvoiceData::from($header('2099-12-31'))->header->issueDate->year)->toBe(2099)
+        ->and(fn (): DocumentData => ElectronicInvoiceData::from($header('2100-01-01')))
+        ->toFailValidationOn('header.issueDate', 'The header.issue date field must be a date before 2100-01-01.');
+});
