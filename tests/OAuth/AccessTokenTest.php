@@ -14,9 +14,9 @@ beforeEach(function (): void {
 it('keeps its value out of dumps and json', function (): void {
     ob_start();
     var_dump($this->token);
-    $dumped = (string) ob_get_clean();
 
-    expect($dumped . print_r($this->token, true) . json_encode($this->token))->not->toContain($this->secret)
+    expect(ob_get_clean())->not->toContain($this->secret)
+        ->and(print_r($this->token, true) . json_encode($this->token))->not->toContain($this->secret)
         ->and($this->token->jsonSerialize()['value'])->toBe('[redacted]')
         ->and($this->token->value)->toBe($this->secret);
 });
