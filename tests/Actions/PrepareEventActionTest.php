@@ -10,11 +10,13 @@ use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\PackageKind;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\CertificateException;
+use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Packaging\PreparedEvent;
 use Akira\Efatura\Tests\Support\EventFixtures;
 use Akira\Efatura\Tests\Support\PackageFixtures;
 use Akira\Efatura\Tests\Support\PreparationFixtures as P;
 use Akira\Efatura\Tests\Support\SignatureVerifier as V;
+use Akira\Efatura\Xml\LibxmlSchemaValidator;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
@@ -71,4 +73,19 @@ it('refuses credentials that cannot sign', function (): void {
 
     expect(fn (): PreparedEvent => resolve(PrepareEventAction::class)->handle(EventData::from(EventFixtures::transmitted(['iuds' => [EventFixtures::iud()]]))))
         ->toThrow(CertificateException::class, 'certificate.expired');
+});
+
+it('lets the schema refuse an event before it is signed', function (): void {
+    app()->instance(SchemaValidator::class, new readonly class (resolve(LibxmlSchemaValidator::class)) implements SchemaValidator
+    {
+        public function __construct(private LibxmlSchemaValidator $validator) {}
+
+        public function validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped): void
+        {
+            $this->validator->validate($xml, SignatureProfile::InternallyDetached);
+        }
+    });
+
+    expect(fn (): PreparedEvent => resolve(PrepareEventAction::class)->handle(P::event()))
+        ->toThrow(SchemaValidationException::class, 'xml.schema_invalid');
 });

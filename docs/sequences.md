@@ -120,7 +120,8 @@ when the counters are no longer needed.
 A reserved number is consumed. `PrepareDocumentAction` loads the signing
 credentials before it reserves, so a wrong certificate configuration never
 consumes a number; any failure after the reservation (XML, schema, signature,
-packaging) throws `PreparationException`
+packaging, or an error that is not a package exception at all) throws
+`PreparationException`
 (`preparation.failed_after_allocation`) with the `documentNumber`, the `iud`
 and the scope in `context`. The next call receives the next number. Close the
 gap with an UDN event for that number (see [identifiers, XML and schema

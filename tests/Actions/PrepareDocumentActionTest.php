@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Akira\Efatura\Actions\BuildIudAction;
 use Akira\Efatura\Actions\ParseIudAction;
 use Akira\Efatura\Actions\PrepareDocumentAction;
+use Akira\Efatura\Contracts\Packager;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Contracts\SequenceStore;
 use Akira\Efatura\Enums\Environment;
@@ -13,11 +14,14 @@ use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\CertificateException;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Exceptions\PreparationException;
+use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Exceptions\SequenceException;
+use Akira\Efatura\Packaging\PackagedArchive;
 use Akira\Efatura\Packaging\PreparedDocument;
 use Akira\Efatura\Sequence\DatabaseSequenceStore;
 use Akira\Efatura\Sequence\InMemorySequenceStore;
 use Akira\Efatura\Tests\Support\CertificateFixtures as C;
+use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Akira\Efatura\Tests\Support\PackageFixtures;
 use Akira\Efatura\Tests\Support\PreparationFixtures as P;
 use Akira\Efatura\Tests\Support\SequenceFixtures;
@@ -143,6 +147,35 @@ it('resumes a numbered document with the same unsigned xml and no reservation', 
         ->and($second->unsignedXml)->toBe($first->unsignedXml)
         ->and($second->iud)->toBe($first->iud)
         ->and($this->store->current(SequenceFixtures::scope()))->toBe(0);
+});
+
+it('reports the consumed number when only the schema refuses the document', function (): void {
+    $emitter = [...F::payload()['emitter'], 'contacts' => ['email' => '_billing@example.cv', 'telephone' => '1234567']];
+
+    expect(fn (): PreparedDocument => resolve(PrepareDocumentAction::class)->handle(P::invoice(overrides: ['emission' => null, 'emitter' => $emitter])))
+        ->toThrow(function (PreparationException $exception): void {
+            $previous = $exception->getPrevious();
+
+            expect($previous)->toBeInstanceOf(SchemaValidationException::class)
+                ->and($previous?->getMessage())->toBe('xml.schema_invalid')
+                ->and($exception->context['documentNumber'])->toBe(1);
+        })->and($this->store->current(SequenceFixtures::scope()))->toBe(1);
+});
+
+it('reports the consumed number for any failure after the reservation', function (): void {
+    app()->instance(Packager::class, new class implements Packager
+    {
+        public function package(array $signedXml): PackagedArchive
+        {
+            throw new RuntimeException('disk full');
+        }
+    });
+
+    expect(fn (): PreparedDocument => resolve(PrepareDocumentAction::class)->handle(P::invoice()))
+        ->toThrow(function (PreparationException $exception): void {
+            expect($exception->getPrevious())->toBeInstanceOf(RuntimeException::class)
+                ->and($exception->context['documentNumber'])->toBe(1);
+        })->and($this->store->current(SequenceFixtures::scope()))->toBe(1);
 });
 
 it('lets a failure of a resumed document through unchanged', function (): void {

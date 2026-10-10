@@ -69,7 +69,7 @@ A document is numbered during preparation, after the signing credentials load,
 so a wrong certificate configuration never consumes a number. A document whose
 `header.documentNumber` is already set is resumed: nothing is reserved. Its
 unsigned XML is checked against the official schema before signing. Any failure
-after a reservation throws `PreparationException` (`preparation.failed_after_allocation`)
+after a reservation, whatever its class, throws `PreparationException` (`preparation.failed_after_allocation`)
 with `documentNumber`, `iud`, emitter tax ID, fiscal year, LED and document type
 code in its context; the number stays consumed and the next call receives the
 next one, so close the gap with an UDN event. An event takes its ID from the

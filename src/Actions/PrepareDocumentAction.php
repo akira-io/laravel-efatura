@@ -11,10 +11,9 @@ use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Contracts\XmlSigner;
 use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Enums\SignatureProfile;
-use Akira\Efatura\Exceptions\EfaturaException;
 use Akira\Efatura\Exceptions\PreparationException;
 use Akira\Efatura\Packaging\PreparedDocument;
-use Illuminate\Validation\ValidationException;
+use Throwable;
 
 final readonly class PrepareDocumentAction
 {
@@ -42,8 +41,8 @@ final readonly class PrepareDocumentAction
             $this->schemas->validate($unsignedXml);
             $signed  = $this->signer->sign($unsignedXml, $credentials, $profile);
             $archive = $this->packager->package([$signed->xml]);
-        } catch (EfaturaException|ValidationException $exception) {
-            throw $numbered->allocated ? PreparationException::failedAfterAllocation($numbered, $exception) : $exception;
+        } catch (Throwable $throwable) {
+            throw $numbered->allocated ? PreparationException::failedAfterAllocation($numbered, $throwable) : $throwable;
         }
 
         return new PreparedDocument($numbered->document, $numbered->iud, $unsignedXml, $signed, $archive, $numbered->allocated);
