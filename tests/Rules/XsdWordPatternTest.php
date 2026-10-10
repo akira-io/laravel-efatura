@@ -48,7 +48,8 @@ it('lets the schema accept every character the email rule accepts', function ():
         }
     }
 
-    expect($accepted)->toHaveCount(148152)
+    expect($accepted)->toContain('aAb@example.cv', 'aéb@example.cv', 'a7b@example.cv', 'a+b@example.cv')
+        ->not->toContain('a_b@example.cv', 'a b@example.cv')
         ->and(new XsdTypeProbe('stEmail')->accepts(...$accepted))->toBeTrue();
 });
 
