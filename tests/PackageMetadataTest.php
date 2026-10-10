@@ -18,6 +18,7 @@ it('declares the runtime platform and imported Laravel components', function ():
         'illuminate/config'     => '^13.0',
         'illuminate/console'    => '^13.0',
         'illuminate/contracts'  => '^13.0',
+        'illuminate/database'   => '^13.0',
         'illuminate/filesystem' => '^13.0',
         'illuminate/support'    => '^13.0',
         'illuminate/validation' => '^13.0',
