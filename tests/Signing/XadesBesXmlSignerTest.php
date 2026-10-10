@@ -16,6 +16,9 @@ use Akira\Efatura\Tests\Support\CertificateFixtures as C;
 use Akira\Efatura\Tests\Support\PackageFixtures as P;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
 use Akira\Efatura\Tests\Support\SignatureVerifier as V;
+use Carbon\CarbonImmutable;
+use Carbon\FactoryImmutable;
+use Psr\Clock\ClockInterface;
 
 it('is the xml signer the container resolves', function (): void {
     expect(resolve(XmlSigner::class))->toBeInstanceOf(XadesBesXmlSigner::class);
@@ -86,6 +89,21 @@ it('writes the signature structure of the official examples', function (string $
         ->and(S::document($signed->xml)->documentElement?->namespaceURI)->toBeNull()
         ->and($names('/*/*'))->toBe(['ds:Signature', $kind === 'FDC' ? 'Event' : 'Dfe']);
 })->with(S::documentsAndProfiles());
+
+it('stamps the signing time from the clock it was given', function (): void {
+    $unsigned    = S::unsigned();
+    $credentials = C::credentials();
+    $clock       = new FactoryImmutable(['timezone' => 'UTC']);
+    $clock->setTestNow(CarbonImmutable::parse('2027-03-04T05:06:07Z'));
+
+    app()->instance(ClockInterface::class, $clock);
+
+    $signed = resolve(XmlSigner::class)->sign($unsigned, $credentials);
+
+    expect($signed->signingTime->format(Fiscal::DATE_TIME_FORMAT))->toBe('2027-03-04T04:06:07')
+        ->and($signed->signingTime->getTimezone()->getName())->toBe(Fiscal::TIMEZONE)
+        ->and(V::text(V::xpath(S::document($signed->xml)), '//xades:SigningTime'))->toBe('2027-03-04T04:06:07');
+});
 
 it('produces the same bytes for the same document, clock and key', function (SignatureProfile $profile): void {
     $unsigned = S::unsigned();
