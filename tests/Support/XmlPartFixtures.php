@@ -74,7 +74,7 @@ final class XmlPartFixtures
             'payableRoundingAmount'     => '-0.01',
             'payableAmount'             => '104.99',
             'payableAlternativeAmounts' => [
-                ['value' => '0.95218', 'currencyCode' => 'EUR', 'exchangeRate' => '110.265'],
+                ['value' => '0.95218', 'currencyCode' => 'EUR', 'exchangeRate' => '110.26512'],
                 ['value' => '1.04468', 'currencyCode' => 'USD', 'exchangeRate' => '100.50000'],
             ],
         ]);

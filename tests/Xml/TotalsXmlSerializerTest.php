@@ -28,7 +28,7 @@ it('writes withholding, a negative rounding and alternative amounts in schema or
             . '<DiscountTotalAmount>5.5</DiscountTotalAmount><NetTotalAmount>100</NetTotalAmount><Discount ValueType="P">5.5</Discount>'
             . '<TaxTotalAmount>15</TaxTotalAmount><WithholdingTaxTotalAmount>10</WithholdingTaxTotalAmount>'
             . '<PayableRoundingAmount>-0.01</PayableRoundingAmount><PayableAmount>104.99</PayableAmount>'
-            . '<PayableAlternativeAmount CurrencyCode="EUR" ExchangeRate="110.265">0.95218</PayableAlternativeAmount>'
+            . '<PayableAlternativeAmount CurrencyCode="EUR" ExchangeRate="110.26512">0.95218</PayableAlternativeAmount>'
             . '<PayableAlternativeAmount CurrencyCode="USD" ExchangeRate="100.5">1.04468</PayableAlternativeAmount></Totals>',
         );
 });
