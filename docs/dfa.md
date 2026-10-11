@@ -70,7 +70,10 @@ entries, a `Conversão cambial` block lists each currency, amount and rate
 
 CVE amounts are written as the Manual prints them: thousands separated by a
 space and `$` as the decimal separator, always with two decimals (`1 400$00`,
-`-0$01`). Foreign amounts use a decimal comma and keep their significant
+`-0$01`). A unit price keeps its significant decimals, up to the five the
+document allows (`0$11027`, `560$00`), so the line reads as it was priced. A
+deduction line (`lineTypeCode` D) prints its total with a minus sign
+(`-1 234$50`). Foreign amounts use a decimal comma and keep their significant
 decimals (`14,60 EUR`, `2 166 JPY`). Quantities and percentages drop
 non-significant zeros (`2,5`, `15%`). A line tax is its percentage, its
 absolute amount for a stamp tax, or its exemption reason code.

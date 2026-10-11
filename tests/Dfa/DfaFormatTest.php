@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Akira\Efatura\Dfa\DfaFormat;
 use Brick\Math\BigDecimal;
+use Brick\Money\Context\CustomContext;
 use Brick\Money\Money;
 
 it('writes CVE amounts the way the Manual prints them', function (string $amount, string $expected): void {
@@ -16,6 +17,17 @@ it('writes CVE amounts the way the Manual prints them', function (string $amount
     'cents'     => ['0.05', '0$05'],
     'negative'  => ['-0.01', '-0$01'],
     'large'     => ['-1000000', '-1 000 000$00'],
+]);
+
+it('writes a unit price with its significant decimals, between two and five', function (string $price, string $expected): void {
+    expect(DfaFormat::unitPrice(Money::of($price, 'CVE', new CustomContext(5))))->toBe($expected);
+})->with([
+    'whole'          => ['560', '560$00'],
+    'cents'          => ['0.5', '0$50'],
+    'three decimals' => ['0.125', '0$125'],
+    'five decimals'  => ['0.00123', '0$00123'],
+    'trailing zeros' => ['1400.12300', '1 400$123'],
+    'negative'       => ['-2.50010', '-2$5001'],
 ]);
 
 it('writes foreign amounts with a decimal comma and their currency', function (Money $amount, string $expected): void {

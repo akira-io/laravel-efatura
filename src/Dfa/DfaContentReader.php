@@ -12,6 +12,7 @@ use Akira\Efatura\Data\PayableAlternativeAmountData;
 use Akira\Efatura\Data\TaxData;
 use Akira\Efatura\Data\TotalsData;
 use Akira\Efatura\Data\TransportDocumentData;
+use Akira\Efatura\Enums\LineType;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 
@@ -64,10 +65,15 @@ final readonly class DfaContentReader
             $line->item->description,
             DfaFormat::quantity($line->quantity->value),
             $line->quantity->unitCode,
-            self::optionalCve($line->price),
+            $line->price instanceof Money ? DfaFormat::unitPrice($line->price) : '',
             collect($line->taxes)->map(self::tax(...))->implode(' + '),
-            self::optionalCve($line->netTotal ?? $line->priceExtension),
+            self::optionalCve(self::signed($line, $line->netTotal ?? $line->priceExtension)),
         );
+    }
+
+    private static function signed(LineItemData $line, ?Money $total): ?Money
+    {
+        return $line->lineType === LineType::Deduction ? $total?->negated() : $total;
     }
 
     private static function tax(TaxData $tax): string

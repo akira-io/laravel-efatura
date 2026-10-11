@@ -11,9 +11,21 @@ use Illuminate\Support\Str;
 
 final readonly class DfaFormat
 {
+    private const int CVE_SCALE = 2;
+
+    private const int UNIT_PRICE_SCALE = 5;
+
     public static function cve(Money $amount): string
     {
-        return self::grouped($amount->getAmount()->toScale(2, DecimalFormatter::fiscalRounding()), '$');
+        return self::grouped($amount->getAmount()->toScale(self::CVE_SCALE, DecimalFormatter::fiscalRounding()), '$');
+    }
+
+    public static function unitPrice(Money $amount): string
+    {
+        $rounded = $amount->getAmount()->toScale(self::UNIT_PRICE_SCALE, DecimalFormatter::fiscalRounding());
+        $value   = BigDecimal::of(DecimalFormatter::decimal($rounded, self::UNIT_PRICE_SCALE));
+
+        return self::grouped($value->toScale(max($value->getScale(), self::CVE_SCALE)), '$');
     }
 
     public static function foreign(Money $amount): string

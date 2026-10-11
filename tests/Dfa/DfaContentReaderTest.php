@@ -68,6 +68,20 @@ it('lists every line, the totals and each alternative amount to pay', function (
         ->and($content->issuedAtLabel())->toBe('02/10/2026 12:00:00');
 });
 
+it('prints a unit price with its significant decimals and a deduction line as negative', function (): void {
+    $content = new DfaContentReader()->read(dfaInvoice([
+        F::linePayload(['quantity' => ['value' => '10000', 'unitCode' => 'C62'], 'price' => '0.11027', 'priceExtension' => '1102.7', 'netTotal' => '1102.7']),
+        F::linePayload(['lineTypeCode' => 'D', 'price' => '1234.5', 'priceExtension' => '1234.5', 'netTotal' => '1234.5']),
+        F::linePayload(['lineTypeCode' => 'D', 'netTotal' => null, 'priceExtension' => '30']),
+    ], []), 7, true);
+
+    expect(collect($content->lines)->map(fn (DfaLine $line): array => [$line->unitPrice, $line->total])->all())->toBe([
+        ['0$11027', '1 102$70'],
+        ['1 234$50', '-1 234$50'],
+        ['100$00', '-30$00'],
+    ]);
+});
+
 it('leaves zero withholding and rounding out of the totals', function (): void {
     $totals = new DfaContentReader()->read(dfaInvoice([F::linePayload()], ['withholdingTaxTotalAmount' => '0', 'payableRoundingAmount' => '0']), 7, true)->totals;
 
