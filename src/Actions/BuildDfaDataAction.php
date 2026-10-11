@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class BuildDfaDataAction
 {
-    private const string IUC = '/\A[0-9]{4}\/[0-9]+\z/';
+    private const string IUC = '/\A\d{4}\/\d+\z/';
 
     public function __construct(
         private EfaturaConfig $config,
