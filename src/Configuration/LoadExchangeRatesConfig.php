@@ -8,7 +8,9 @@ use Akira\Efatura\Concerns\ReadsConfigurationValues;
 use Akira\Efatura\Enums\ExchangeRateSource;
 use Akira\Efatura\Enums\ExchangeRateType;
 use Akira\Efatura\Exceptions\ConfigurationException;
+use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\Money\DecimalFormatter;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Str;
@@ -19,6 +21,8 @@ final readonly class LoadExchangeRatesConfig
     use ReadsConfigurationValues;
 
     private const string PATH = 'efatura.exchange_rates';
+
+    private const string CAPE_VERDE_ECONOMY = 'CPV';
 
     public function __construct(#[SensitiveParameter] private Repository $repository) {}
 
@@ -35,7 +39,7 @@ final readonly class LoadExchangeRatesConfig
             $provider,
             $this->rateType('.bcv.rate_type', $defaults->bcvRateType, [ExchangeRateType::Buy, ExchangeRateType::Sell]),
             $this->integer(self::PATH . '.bcv.max_publication_age_days', $defaults->bcvMaxPublicationAgeDays, 0),
-            $this->codeMap('.world_bank.economies', '/\A[A-Za-z0-9]{2,3}\z/'),
+            $this->economies(),
             $this->codeMap('.fixed.rates', null),
             $this->rateType('.fixed.rate_type', $defaults->fixedRateType, ExchangeRateType::cases()),
             $this->requiredString(self::PATH . '.fixed.name', $defaults->fixedName),
@@ -87,15 +91,33 @@ final readonly class LoadExchangeRatesConfig
 
         $normalized = [];
         foreach ($map as $code => $value) {
-            $value = \is_int($value) ? (string) $value : $value;
-            if (! \is_string($code) || preg_match('/\A[A-Za-z]{3}\z/', $code) !== 1 || ! \is_string($value) || ! $this->acceptable($value, $valuePattern)) {
+            $currency = \is_string($code) ? Str::upper(Str::trim($code)) : '';
+            $value    = \is_int($value) ? (string) $value : $value;
+            $value    = \is_string($value) && $valuePattern !== null ? Str::upper(Str::trim($value)) : $value;
+
+            if (preg_match('/\A[A-Z]{3}\z/', $currency) !== 1 || ! CatalogCurrency::isOfficial($currency)
+                || ! \is_string($value) || ! $this->acceptable($value, $valuePattern)) {
                 throw new ConfigurationException('configuration.invalid_type', self::PATH . $path);
             }
 
-            $normalized[$code] = $value;
+            $normalized[$currency] = $value;
         }
 
         return $normalized;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function economies(): array
+    {
+        $economies = $this->codeMap('.world_bank.economies', '/\A[A-Z0-9]{2,3}\z/');
+
+        if (($economies[Fiscal::CURRENCY] ?? self::CAPE_VERDE_ECONOMY) !== self::CAPE_VERDE_ECONOMY) {
+            throw new ConfigurationException('configuration.invalid_type', self::PATH . '.world_bank.economies');
+        }
+
+        return $economies;
     }
 
     private function acceptable(string $value, ?string $pattern): bool
