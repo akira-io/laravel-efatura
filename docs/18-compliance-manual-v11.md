@@ -65,7 +65,7 @@ follows.
 | --- | --- | --- | --- | --- |
 | EP-R, EP-TID-CC-V, EP-TID-F, p.36-37 | Emitter required, NIF country `CV`, CV NIF format | `Data\PartyData`, `Rules\ValidTaxId` | `tests/Data/EmitterTaxCountryTest.php`, `tests/Rules/FiscalRulesTest.php` | Supported (format only) |
 | EP-CTT-EM-R, EP-CTT-AL1T-R, p.37; §6.3.12, p.24 | Emitter has a CV address, an email and a telephone or mobile | `Data\PartyData`, `Data\ContactsData` | `tests/Data/CommonDataTest.php` | Supported |
-| RP-R, p.37; §6.3.13, p.24 | Receiver required, except TVE below 20 000 CVE, DVE, and DTE with an undetermined receiver | `Support\Fiscal`, document rules | `tests/Validation/DataValidationTest.php`, `tests/Validation/DocumentCompatibilityRulesTest.php`, `tests/Validation/ReceiverRequirementTest.php` | Supported (DVE follows §6.3.13 and the XSD over RP-R) |
+| RP-R, p.37; §6.3.13, p.24 | Receiver required, except TVE below 20 000 CVE and DTE with an undetermined receiver | `Support\Fiscal`, document rules, `Data\ReturnNoteData` | `tests/Validation/DataValidationTest.php`, `tests/Validation/DocumentCompatibilityRulesTest.php`, `tests/Validation/ReceiverRequirementTest.php` | Supported (a DVE requires its receiver under RP-R, although §6.3.13 and the XSD make it optional) |
 | RP-TID-F, p.37 | Receiver NIF in CV format when the country is `CV` | `Rules\ValidTaxId` | `tests/Data/CommonDataTest.php`, `tests/Rules/FiscalRulesTest.php` | Supported (format only) |
 | DTE-RTC-GB-NRP, p.36 | No receiver on a DTE with an undetermined receiver | `Data\TransportDocumentData` | `tests/Validation/WrapperDataValidationTest.php`, `tests/Validation/ReceiverRequirementTest.php` | Supported |
 
@@ -274,8 +274,9 @@ The rows above marked "Partial" or "Not supported" come from the gaps below.
   XSD Read Me rather than the formula of §6.3.18 (p.28); the tax of an I line
   counts toward the total to pay under LN-LTC-E (p.47); the signature uses
   `ds:` and `xades:` prefixes as the examples do, against the text of §9.2
-  (p.64); `IssueTime` is required in OFF because the XSD requires it; DVE
-  accepts no receiver under §6.3.13 (p.24) despite RP-R (p.37); an FTE refuses
+  (p.64); `IssueTime` is required in OFF because the XSD requires it; a DVE
+  requires its receiver under RP-R (p.37) although §6.3.13 (p.24) and the XSD
+  make it optional; an FTE refuses
   settled payment entries; the IUC format is assumed.
 - **Extension content.** Extra fields (§7.17, p.55) and extra item properties
   (`PROP-V-F`, p.44) accept any XML in the Manual. The package accepts plain

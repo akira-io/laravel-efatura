@@ -23,27 +23,12 @@ beforeEach(function (): void {
 
 dataset('canonical factories', ['from', 'validateAndCreate']);
 
-it('accepts a return note without a receiver', function (string $factory): void {
-    $payload = P::correction();
-    unset($payload['receiver']);
-
-    expect(ReturnNoteData::$factory($payload)->receiver)->toBeNull();
-})->with('canonical factories');
-
 it('keeps a supplied return receiver', function (string $factory, array $payload): void {
     expect(ReturnNoteData::$factory($payload)->receiver?->taxId?->countryCode)->toBe('CV');
 })->with('canonical factories')->with([
     'without self billing' => [P::correction()],
     'with self billing'    => [P::selfBilled(P::correction())],
 ]);
-
-it('requires a receiver on a self billed return note', function (string $factory): void {
-    $payload = P::selfBilled(P::correction());
-    unset($payload['receiver']);
-
-    expect(fn (): ReturnNoteData => ReturnNoteData::$factory($payload))
-        ->toFailValidationOn('receiver', 'The receiver field is required.');
-})->with('canonical factories');
 
 it('accepts transport receivers with a Cabo Verde identity or an emitter reference', function (string $factory, string $type, array $receiver): void {
     $payload = P::transport(['receiver' => $receiver, 'receiverTypeCode' => $type]);
@@ -63,12 +48,14 @@ it('rejects a foreign identity for a transport taxpayer receiver', function (str
 })->with('canonical factories');
 
 dataset('documents requiring a receiver', [
-    'invoice'         => [ElectronicInvoiceData::class, F::payload()],
-    'invoice receipt' => [ReceiptInvoiceData::class, F::payload(['payments' => F::payments()])],
-    'receipt'         => [ReceiptData::class, F::receiptPayload('1')],
-    'credit note'     => [CreditNoteData::class, P::correction(['issueReasonCode' => 'DRP'])],
-    'debit note'      => [DebitNoteData::class, P::correction(['issueReasonCode' => 'DD'])],
-    'registration'    => [RegistrationNoteData::class, F::payload()],
+    'invoice'                 => [ElectronicInvoiceData::class, F::payload()],
+    'invoice receipt'         => [ReceiptInvoiceData::class, F::payload(['payments' => F::payments()])],
+    'receipt'                 => [ReceiptData::class, F::receiptPayload('1')],
+    'credit note'             => [CreditNoteData::class, P::correction(['issueReasonCode' => 'DRP'])],
+    'debit note'              => [DebitNoteData::class, P::correction(['issueReasonCode' => 'DD'])],
+    'return note'             => [ReturnNoteData::class, P::correction()],
+    'self billed return note' => [ReturnNoteData::class, P::selfBilled(P::correction())],
+    'registration'            => [RegistrationNoteData::class, F::payload()],
 ]);
 
 it('reports a missing receiver once at the receiver field', function (string $class, array $payload, Closure $missing): void {
