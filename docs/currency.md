@@ -2,9 +2,10 @@
 
 A fiscal document is always issued in CVE. Another currency can only appear in the
 amount to pay, as a `PayableAlternativeAmount` with its `CurrencyCode` and
-`ExchangeRate` (Manual v11, p.30-32). The `ExchangeRate` is the BCV rate at the
-moment of issue, in CVE per one unit of the foreign currency, with at most five
-decimals and greater than zero.
+`ExchangeRate` (Manual v11, printed pages 19 and 51-52). The `ExchangeRate` is the
+BCV rate at the moment of issue, in CVE per one unit of the foreign currency,
+greater than zero and with at most five decimals, the `DECIMAL` type of the Manual
+(printed page 58).
 
 `ConvertDocumentCurrencyAction` turns a document written in a foreign currency
 into the CVE document the platform accepts, and records the original amount to
@@ -169,9 +170,10 @@ the source currency is the second argument.
    a misconfigured provider does not stop those conversions.
 5. Only the independent inputs are converted from the source currency, by
    multiplying by the rate. The unit `price` of each line is rounded half up to
-   five decimals, the most the Manual allows for an amount, so that a sub-cent
-   price times a large quantity keeps its value (10 000 units of 0.001 EUR at
-   110.265 give 0.11027 CVE each and an extension of 1102.70, not 0.00). Amount
+   five decimals, the most the Manual's `DECIMAL` type allows (printed page 58),
+   so that a sub-cent price times a large quantity keeps its value (10 000 units
+   of 0.001 EUR at 110.265 give 0.11027 CVE each and an extension of 1102.70,
+   where a price rounded to cents would give 1100.00). Amount
    line discounts, absolute `taxAmount` values, an amount global discount, the
    amount to pay, reference `paymentAmount` values and their taxes, and payment
    `paymentAmount` values are rounded half up to two decimals. Quantities,
