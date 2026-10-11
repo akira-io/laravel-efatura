@@ -7,6 +7,7 @@ namespace Akira\Efatura\Actions;
 use Akira\Efatura\Enums\SignatureFailure;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Signing\SignatureCertificate;
+use Akira\Efatura\Signing\SignatureDigests;
 use Akira\Efatura\Signing\SignatureVerification;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Xml\SafeXmlParser;
@@ -53,7 +54,7 @@ final readonly class VerifyXmlSignatureAction
 
         $signedInfo = self::elements($xpath, 'ds:SignedInfo', $signature)[0] ?? null;
         $value      = base64_decode(self::text($xpath, 'ds:SignatureValue', $signature), true);
-        if ($algorithms && $certificate?->hasRsaKey() && ! $certificate->verifies((string) $signedInfo?->C14N(false, false), (string) $value)) {
+        if ($algorithms && $certificate?->hasRsaKey() && ! $certificate->verifies($signedInfo instanceof DOMElement ? SignatureDigests::canonical($signedInfo) : '', (string) $value)) {
             $failures[] = SignatureFailure::ValueInvalid;
         }
 
@@ -162,7 +163,7 @@ final readonly class VerifyXmlSignatureAction
     {
         $nodes = $enveloped ? ['query' => self::ENVELOPED_NODES, 'namespaces' => ['ds' => Fiscal::XMLDSIG_NAMESPACE]] : null;
 
-        return base64_encode(hash('sha256', (string) $target->C14N(false, false, $nodes), true));
+        return SignatureDigests::of((string) $target->C14N(false, false, $nodes));
     }
 
     /**

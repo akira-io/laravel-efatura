@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Signing;
 
-use Brick\Math\BigInteger;
 use Illuminate\Support\Str;
 use OpenSSLCertificate;
 
@@ -38,12 +37,12 @@ final readonly class SignatureCertificate
     {
         $serial = (openssl_x509_parse($this->certificate) ?: [])['serialNumberHex'] ?? '0';
 
-        return BigInteger::fromBase(\is_string($serial) ? $serial : '0', 16)->toBase(10);
+        return SignatureDigests::serialNumber(\is_string($serial) ? $serial : '0');
     }
 
     public function digest(): string
     {
-        return base64_encode(hash('sha256', $this->der, true));
+        return SignatureDigests::of($this->der);
     }
 
     public function hasRsaKey(): bool
