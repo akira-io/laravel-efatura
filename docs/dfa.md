@@ -98,7 +98,11 @@ level M. The base URL is configured in `config/efatura.php`:
 
 It must use HTTPS without credentials, query strings or fragments, and trailing
 slashes are removed (`configuration.unsafe_url`, `configuration.empty_string`
-or `configuration.invalid_type` otherwise, when the configuration loads). The
+or `configuration.invalid_type` otherwise, when the configuration loads). Any
+HTTPS host is accepted, so the QR code can point at a test viewer; the package
+does not check that the host belongs to the platform. Keep the default in
+production: every printed DFA carries this address, and a customer who scans
+it trusts whatever page it opens. The
 Manual makes the document public for one hour after its authorization; after
 that, the viewer asks for authentication.
 
