@@ -75,6 +75,7 @@ return [
             'violation'         => 'Line :line, column :column: :message',
             'signature_valid'   => 'Signature: valid.',
             'signature_invalid' => 'Signature: invalid.',
+            'signature_skipped' => 'Signature: not checked, because the schema validation failed.',
             'certificate'       => 'Certificate in KeyInfo: :subject, serial number :serial, SHA-256 :digest.',
             'trust_chain'       => 'The certificate chain was not verified against ICP-CV or any other authority.',
             'valid'             => 'The document is valid.',

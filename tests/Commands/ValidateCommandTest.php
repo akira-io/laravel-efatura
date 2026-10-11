@@ -103,7 +103,10 @@ it('validates against the profile it is told to use', function (): void {
     artisan('efatura:validate', ['path' => validationFile(S::sign(S::unsigned(), SignatureProfile::InternallyDetached)->xml), '--profile' => 'enveloped'])
         ->expectsOutputToContain('Schema (enveloped): invalid (xml.schema_invalid).')
         ->expectsOutputToContain('No matching global declaration available for the validation root.')
-        ->expectsOutputToContain('Signature: valid.')
+        ->expectsOutputToContain('Signature: not checked, because the schema validation failed.')
+        ->doesntExpectOutputToContain('Signature: valid.')
+        ->doesntExpectOutputToContain('Certificate in KeyInfo')
+        ->expectsOutputToContain('The document is not valid.')
         ->assertExitCode(1);
 });
 
@@ -147,15 +150,23 @@ it('prints a stable json document', function (): void {
         ]);
 });
 
-it('prints the violations and failures of an invalid document as json', function (): void {
-    $xml = E::edit(S::sign(S::unsigned(), SignatureProfile::InternallyDetached)->xml, E::replaceCertificate('%%%'));
-
-    [$exitCode, $document] = validationJson(validationFile($xml), ['--profile' => 'enveloped']);
+it('prints the violations of a document the schema refuses as json, without checking its signature', function (): void {
+    [$exitCode, $document] = validationJson(validationFile(S::sign(S::unsigned(), SignatureProfile::InternallyDetached)->xml), ['--profile' => 'enveloped']);
 
     expect($exitCode)->toBe(1)
         ->and($document['valid'])->toBeFalse()
         ->and($document['schema']['valid'])->toBeFalse()
         ->and(array_keys($document['schema']['violations'][0]))->toBe(['line', 'column', 'message'])
+        ->and($document['signature'])->toBeNull();
+});
+
+it('prints the failures of a signature the schema accepts as json', function (): void {
+    $xml = E::edit(S::sign(S::unsigned())->xml, E::replaceCertificate(base64_encode('not a certificate')));
+
+    [$exitCode, $document] = validationJson(validationFile($xml));
+
+    expect($exitCode)->toBe(1)
+        ->and($document['schema'])->toBe(['valid' => true, 'code' => null, 'violations' => []])
         ->and($document['signature'])->toBe(['valid' => false, 'failures' => ['signature.certificate_invalid'], 'certificate' => null]);
 });
 

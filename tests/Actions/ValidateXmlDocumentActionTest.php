@@ -28,14 +28,15 @@ it('detects the profile from the root element and accepts a signed document', fu
         ->and($validation->signature?->valid)->toBeTrue();
 })->with(S::documentsAndProfiles());
 
-it('validates against the profile it is given', function (): void {
+it('validates against the profile it is given and leaves the signature unchecked when the schema fails', function (): void {
     $validation = validateXmlDocument(S::sign(S::unsigned(), SignatureProfile::InternallyDetached)->xml, SignatureProfile::Enveloped);
 
     expect($validation->valid())->toBeFalse()
         ->and($validation->profile)->toBe(SignatureProfile::Enveloped)
         ->and($validation->schemaCode)->toBe('xml.schema_invalid')
         ->and($validation->violations)->not->toBe([])
-        ->and($validation->signature?->valid)->toBeTrue();
+        ->and($validation->signature)->toBeNull()
+        ->and($validation->toArray())->toMatchArray(['valid' => false, 'profile' => 'enveloped', 'signature' => null]);
 });
 
 it('refuses xml the hardened parser does not accept without verifying a signature', function (string $xml, string $code): void {
@@ -63,6 +64,7 @@ it('keeps only the code of a package exception raised by the schema validator', 
     $validation = validateXmlDocument(S::sign(S::unsigned())->xml);
 
     expect($validation->valid())->toBeFalse()
+        ->and($validation->signature)->toBeNull()
         ->and($validation->toArray()['schema'])->toBe(['valid' => false, 'code' => 'configuration.invalid_type', 'violations' => []])
         ->and(json_encode($validation->toArray(), JSON_THROW_ON_ERROR))->not->toContain('passphrase');
 });

@@ -76,7 +76,9 @@ returns the same document as `efatura:validate --json`:
 
 The certificate chain is never verified against ICP-CV, which
 `trust_chain_verified` states. A document the hardened parser refuses has a
-`null` profile and signature and the refusal code in `schema.code`.
+`null` profile and signature and the refusal code in `schema.code`. A document
+the schema refuses has a `null` signature: the signature is only checked once
+the schema accepts the document.
 
 An upload that cannot be validated (missing, too large, of another type, or
 with an unknown profile) answers 422 with `valid: false` and the Laravel

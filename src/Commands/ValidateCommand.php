@@ -88,6 +88,10 @@ final class ValidateCommand extends Command
             $this->presentSignature($validation->signature);
         }
 
+        if ($validation->profile !== null && ! $validation->signature instanceof SignatureVerification) {
+            $this->line(__('efatura::efatura.console.validate.signature_skipped'));
+        }
+
         $valid ? info(__('efatura::efatura.console.validate.valid')) : error(__('efatura::efatura.console.validate.invalid'));
 
         return $valid ? self::SUCCESS : self::FAILURE;

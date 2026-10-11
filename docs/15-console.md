@@ -114,7 +114,10 @@ certificate chain was not verified against ICP-CV. With `--json` it prints:
 `schema.code` is the package code of the failure (`xml.schema_invalid`,
 `xml.malformed`, `xml.doctype_forbidden`...), and each violation has its `line`,
 `column` and redacted `message`. XML refused by the parser has a `null`
-`profile` and `signature`. A refused path or profile prints only
+`profile` and `signature`. A document the schema refuses keeps its `profile` and
+has a `null` `signature`: the signature is not checked, so a document built to
+make verification slow costs no more than its schema validation, and the text
+output says "Signature: not checked". A refused path or profile prints only
 `{"valid": false, "error": "<reason>"}`, with `file_missing`,
 `file_not_regular`, `file_unreadable`, `file_too_large` or `profile_invalid`.
 

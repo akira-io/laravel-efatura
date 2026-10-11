@@ -62,7 +62,7 @@ it('answers 422 with the failures of an invalid document', function (string $xml
     'the wrong profile'    => [
         fn (): string => S::sign(S::unsigned(), SignatureProfile::InternallyDetached)->xml,
         ['profile' => 'enveloped'],
-        ['profile' => 'enveloped', 'schema' => ['valid' => false, 'code' => 'xml.schema_invalid']],
+        ['profile' => 'enveloped', 'schema' => ['valid' => false, 'code' => 'xml.schema_invalid'], 'signature' => null],
     ],
     'an xxe attempt' => [
         '<?xml version="1.0"?><!DOCTYPE Dfe [<!ENTITY x SYSTEM "file:///etc/passwd">]><Dfe>&x;</Dfe>',

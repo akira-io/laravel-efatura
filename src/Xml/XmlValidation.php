@@ -33,7 +33,7 @@ final readonly class XmlValidation
         return new self(null, $exception->errorCode, $exception->violations, null);
     }
 
-    public static function checked(SignatureProfile $profile, ?EfaturaException $failure, SignatureVerification $signature): self
+    public static function checked(SignatureProfile $profile, ?EfaturaException $failure, ?SignatureVerification $signature): self
     {
         $violations = $failure instanceof SchemaValidationException ? $failure->violations : [];
 

@@ -75,6 +75,7 @@ return [
             'violation'         => 'Linha :line, coluna :column: :message',
             'signature_valid'   => 'Assinatura: válida.',
             'signature_invalid' => 'Assinatura: inválida.',
+            'signature_skipped' => 'Assinatura: não verificada, porque a validação do esquema falhou.',
             'certificate'       => 'Certificado no KeyInfo: :subject, número de série :serial, SHA-256 :digest.',
             'trust_chain'       => 'A cadeia de certificação não foi verificada junto da ICP-CV nem de qualquer outra autoridade.',
             'valid'             => 'O documento é válido.',

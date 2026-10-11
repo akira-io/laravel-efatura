@@ -37,6 +37,6 @@ final readonly class ValidateXmlDocumentAction
             $failure = $efaturaException;
         }
 
-        return XmlValidation::checked($profile, $failure, $this->signatures->handle($document));
+        return XmlValidation::checked($profile, $failure, $failure === null ? $this->signatures->handle($document) : null);
     }
 }

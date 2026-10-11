@@ -195,8 +195,8 @@ it('validates a document already parsed exactly as its source', function (string
     $outcome   = static function (Closure $validate): ?string {
         try {
             $validate();
-        } catch (SchemaValidationException $exception) {
-            return $exception->errorCode . ':' . count($exception->violations);
+        } catch (SchemaValidationException $schemaValidationException) {
+            return $schemaValidationException->errorCode . ':' . count($schemaValidationException->violations);
         }
 
         return null;
