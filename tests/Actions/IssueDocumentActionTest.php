@@ -24,7 +24,10 @@ use Akira\Efatura\Tests\Support\InMemoryRefreshTokens;
 use Akira\Efatura\Tests\Support\PreparationFixtures as P;
 use Akira\Efatura\Tests\Support\SequenceFixtures;
 use Akira\Efatura\Tests\Support\TransportFixtures as T;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
@@ -129,6 +132,17 @@ it('announces a token failure of the platform driver as a submission that was ne
             && $event->prepared->iud === $this->iud,
     );
     Http::assertNothingSent();
+});
+
+it('announces a document that never left as retryable and never processed', function (): void {
+    Event::fake([DocumentSubmissionFailed::class]);
+    Http::fake(fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest())));
+
+    expect(fn (): IssuedDocument => resolve(IssueDocumentAction::class)->handle(P::invoice()))->toThrow(TransportException::class, 'transport.connection_failed');
+    Event::assertDispatched(
+        DocumentSubmissionFailed::class,
+        fn (DocumentSubmissionFailed $event): bool => $event->errorCode === 'transport.connection_failed' && $event->retryable && ! $event->mayHaveBeenProcessed,
+    );
 });
 
 it('issues through a transport bound by the application', function (): void {

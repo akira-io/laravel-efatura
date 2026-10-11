@@ -51,3 +51,24 @@ it('reports a partial answer to a lookup as unexpected', function (): void {
     expect($exception->failure)->toBe(TransportFailure::UnexpectedResponse)
         ->and($exception->context['status'])->toBe(206);
 });
+
+it('repeats a lookup only after the statuses a read may retry', function (int $status, int $requests, bool $found): void {
+    $dfe = '<Dfe xmlns="' . Fiscal::XML_NAMESPACE . '" Id="' . T::FIRST_IUD . '"/>';
+    Http::fake(['*' => Http::sequence()->push('', $status)->push($dfe, 200)]);
+
+    try {
+        $lookup = resolve(MiddlewareTransport::class)->lookupDocument(T::FIRST_IUD)->found;
+    } catch (TransportException) {
+        $lookup = false;
+    }
+
+    expect($lookup)->toBe($found);
+    Http::assertSentCount($requests);
+})->with([
+    'too many requests'     => [429, 2, true],
+    'bad gateway'           => [502, 2, true],
+    'service unavailable'   => [503, 2, true],
+    'gateway timeout'       => [504, 2, true],
+    'internal server error' => [500, 1, false],
+    'not implemented'       => [501, 1, false],
+]);
