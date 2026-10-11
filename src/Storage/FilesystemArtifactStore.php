@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace Akira\Efatura\Storage;
 
 use Akira\Efatura\Actions\ParseIudAction;
+use Akira\Efatura\Configuration\CacheConfig;
 use Akira\Efatura\Configuration\StorageConfig;
 use Akira\Efatura\Contracts\ArtifactStore;
 use Akira\Efatura\Enums\ArtifactKind;
 use Akira\Efatura\Exceptions\StorageException;
+use Closure;
+use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Contracts\Cache\LockProvider;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Filesystem\Factory;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +23,16 @@ final readonly class FilesystemArtifactStore implements ArtifactStore
 {
     private const string CHECKSUM = 'sha256';
 
-    public function __construct(private Factory $disks, private StorageConfig $config, private ParseIudAction $parseIud) {}
+    private const int LOCK_SECONDS = 60;
+
+    public function __construct(
+        private Factory $disks,
+        private StorageConfig $config,
+        private ParseIudAction $parseIud,
+        private CacheFactory $caches,
+        private CacheConfig $cache,
+        private int $lockWaitSeconds = 10,
+    ) {}
 
     public function put(string $iud, ArtifactKind $kind, string $contents): StoredArtifact
     {
@@ -26,15 +40,7 @@ final readonly class FilesystemArtifactStore implements ArtifactStore
         $disk     = $this->disk();
         $artifact = new StoredArtifact($iud, $kind, $this->config->disk, $path, \strlen($contents), hash(self::CHECKSUM, $contents));
 
-        if (! $this->exists($disk, $path)) {
-            $this->write($disk, $path, $contents);
-
-            return $artifact;
-        }
-
-        return hash_equals($artifact->checksum, hash(self::CHECKSUM, $this->read($disk, $path)))
-            ? $artifact
-            : throw StorageException::conflict($path);
+        return $this->locked($path, fn (): StoredArtifact => $this->store($disk, $artifact, $contents));
     }
 
     public function get(StoredArtifact $artifact): string
@@ -49,6 +55,40 @@ final readonly class FilesystemArtifactStore implements ArtifactStore
         $contents = $this->read($disk, $path);
 
         return hash_equals($artifact->checksum, hash(self::CHECKSUM, $contents)) ? $contents : throw StorageException::corrupted($path);
+    }
+
+    /**
+     * @param Closure(): StoredArtifact $store
+     */
+    private function locked(string $path, Closure $store): StoredArtifact
+    {
+        $locks = $this->caches->store($this->cache->store)->getStore();
+
+        if (! $locks instanceof LockProvider) {
+            return $store();
+        }
+
+        try {
+            $stored = $locks->lock($this->cache->prefix . ':artifact:' . hash(self::CHECKSUM, $this->config->disk . ':' . $path), self::LOCK_SECONDS)
+                ->block($this->lockWaitSeconds, $store);
+        } catch (LockTimeoutException $exception) {
+            throw StorageException::unavailable($path, $exception);
+        }
+
+        return $stored instanceof StoredArtifact ? $stored : $store();
+    }
+
+    private function store(Filesystem $disk, StoredArtifact $artifact, string $contents): StoredArtifact
+    {
+        if (! $this->exists($disk, $artifact->path)) {
+            $this->write($disk, $artifact->path, $contents);
+
+            return $artifact;
+        }
+
+        return hash_equals($artifact->checksum, hash(self::CHECKSUM, $this->read($disk, $artifact->path)))
+            ? $artifact
+            : throw StorageException::conflict($artifact->path);
     }
 
     private function path(string $iud, ArtifactKind $kind): string

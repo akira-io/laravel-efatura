@@ -6,6 +6,7 @@ namespace Akira\Efatura;
 
 use Akira\Efatura\Actions\BuildIudAction;
 use Akira\Efatura\Commands\InstallCommand;
+use Akira\Efatura\Configuration\CacheConfig;
 use Akira\Efatura\Configuration\DatabaseConfig;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
@@ -73,6 +74,8 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $this->app->bind(DfaRenderer::class, DompdfDfaRenderer::class);
         $this->app->when(FilesystemArtifactStore::class)->needs(StorageConfig::class)
             ->give(fn (): StorageConfig => $this->app->make(EfaturaConfig::class)->storage);
+        $this->app->when(FilesystemArtifactStore::class)->needs(CacheConfig::class)
+            ->give(fn (): CacheConfig => $this->app->make(EfaturaConfig::class)->cache);
         $this->app->bind(ArtifactStore::class, FilesystemArtifactStore::class);
         $this->app->bind(Transport::class, fn (Application $app): Transport => $app->make(TransportResolver::class)->driver());
         $this->app->bind(

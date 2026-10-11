@@ -94,9 +94,15 @@ XML would otherwise hold the canonical path and the authorized attempt would
 conflict with it. Keep the evidence of a rejection in the application's own
 records.
 
-The existence check and the write are two disk calls: two processes storing
-different bytes for the same IUD at the same moment are not serialized by the
-store. Run the storage of one document from one job at a time.
+The existence check and the write run under a lock on the path, taken from the
+package cache store (`efatura.cache.store`, keyed under `efatura.cache.prefix`),
+so two processes storing the same artifact at the same moment are serialized:
+the second sees the first one's file and returns it, or fails with
+`storage.conflict` when its bytes differ. A process that waits more than ten
+seconds for the lock fails with `storage.unavailable`, which is retryable. The
+lock is only as wide as the cache store: use a shared store (redis, database,
+memcached) when several servers write to the same disk. A store without locks
+stores without one.
 
 ## Reading
 
@@ -137,7 +143,7 @@ and message are the code below.
 | `storage.conflict` | | `path` | no | Different bytes already exist at the path |
 | `storage.missing` | | `path` | no | The artifact is not on the disk, or does not belong to the configured disk and path |
 | `storage.corrupted` | | `path` | no | The stored bytes no longer match the checksum |
-| `storage.unavailable` | | `path` | yes | The disk failed to check, read or write; the filesystem exception, when there is one, is `previous` |
+| `storage.unavailable` | | `path` | yes | The disk failed to check, read or write, or the lock on the path was not obtained in time; the filesystem exception or the `LockTimeoutException`, when there is one, is `previous` |
 
 ---
 
