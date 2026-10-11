@@ -33,6 +33,7 @@ use Akira\Efatura\Currency\ExchangeRateProviderResolver;
 use Akira\Efatura\Dfa\BaconQrCodeRenderer;
 use Akira\Efatura\Dfa\DompdfDfaRenderer;
 use Akira\Efatura\Dfa\DompdfOptions;
+use Akira\Efatura\Http\Middleware\EnsureDiagnosticsRoutesEnabled;
 use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\OAuth\RefreshTokenAccessTokenProvider;
 use Akira\Efatura\Packaging\ZipArchivePackager;
@@ -129,7 +130,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         }
 
         $this->app->make(Registrar::class)->group(
-            ['prefix' => $routes->prefix, 'as' => $routes->name, 'middleware' => $routes->middleware],
+            ['prefix' => $routes->prefix, 'as' => $routes->name, 'middleware' => [EnsureDiagnosticsRoutesEnabled::class, ...$routes->middleware]],
             __DIR__ . '/../routes/efatura.php',
         );
     }

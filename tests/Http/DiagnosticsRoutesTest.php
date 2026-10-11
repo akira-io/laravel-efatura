@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Akira\Efatura\EfaturaServiceProvider;
 use Akira\Efatura\Exceptions\ConfigurationException;
+use Akira\Efatura\Http\Middleware\EnsureDiagnosticsRoutesEnabled;
 use Akira\Efatura\Tests\Support\DiagnosticsGuard;
 use Akira\Efatura\Tests\Support\RouteFixtures;
 use Illuminate\Routing\Route;
@@ -34,7 +35,8 @@ it('registers the diagnostics routes with the configured prefix, name and middle
         ->and($routes['internal.efatura.readiness']->methods())->toBe(['GET', 'HEAD'])
         ->and($routes['internal.efatura.validate']->uri())->toBe('internal/efatura/validate')
         ->and($routes['internal.efatura.validate']->methods())->toBe(['POST'])
-        ->and($routes['internal.efatura.validate']->gatherMiddleware())->toBe([DiagnosticsGuard::class, 'throttle:10,1']);
+        ->and($routes['internal.efatura.validate']->gatherMiddleware())
+        ->toBe([EnsureDiagnosticsRoutesEnabled::class, DiagnosticsGuard::class, 'throttle:10,1']);
 });
 
 it('refuses to boot with routes enabled and no middleware', function (): void {

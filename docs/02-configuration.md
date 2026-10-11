@@ -193,10 +193,10 @@ Optional JSON routes for readiness and XML validation, off by default (see
 
 | Key | Type | Default | Environment | Meaning |
 | --- | --- | --- | --- | --- |
-| `routes.enabled` | bool | `false` | `EFATURA_ROUTES_ENABLED` | Registers `GET {prefix}/readiness` and `POST {prefix}/validate`. |
+| `routes.enabled` | bool | `false` | `EFATURA_ROUTES_ENABLED` | Registers `GET {prefix}/readiness` and `POST {prefix}/validate`. Must be `true` or `false`; `1`, `0`, `yes` and `on` fail with `configuration.invalid_type` at `efatura.routes.enabled`. While false, the other keys are not read at boot and readiness reports their errors as warnings. |
 | `routes.prefix` | string | `efatura` | - | URI path prefix without parameters. |
 | `routes.name` | string | `efatura.` | - | Route name prefix, ending with a dot. |
-| `routes.middleware` | list | `[]` | - | Middleware that authenticates and authorizes the caller. Enabling the routes with an empty list fails with `configuration.unprotected_routes`. |
+| `routes.middleware` | list | `[]` | - | Middleware that authenticates and authorizes the caller, with a `throttle`. Enabling the routes with an empty list fails with `configuration.unprotected_routes`. |
 | `routes.max_upload_kilobytes` | int | `5120` | - | Upload limit of the validation route, at most 5120 (5 MiB). |
 | `routes.remote_readiness` | bool | `false` | - | Lets the readiness route reach the configured endpoint too; off so an HTTP request never triggers outbound traffic. |
 

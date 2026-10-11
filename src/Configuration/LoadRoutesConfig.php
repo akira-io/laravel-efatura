@@ -23,6 +23,13 @@ final readonly class LoadRoutesConfig
     public function __invoke(): RoutesConfig
     {
         $this->section(self::PATH);
+
+        return $this->boolean(self::PATH . '.enabled', false) ? $this->inspect() : new RoutesConfig;
+    }
+
+    public function inspect(): RoutesConfig
+    {
+        $this->section(self::PATH);
         $defaults   = new RoutesConfig;
         $enabled    = $this->boolean(self::PATH . '.enabled', $defaults->enabled);
         $middleware = $this->middleware();

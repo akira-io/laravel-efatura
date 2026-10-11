@@ -25,9 +25,16 @@ authorizes itself.
 ```
 
 - `middleware` is mandatory once the routes are enabled. The package has no
-  notion of who may call them, so the application authenticates and authorizes
-  the caller. An empty list fails configuration loading with
-  `configuration.unprotected_routes`, and the application does not boot.
+  notion of who may call them, so the list must authenticate the caller (for
+  example `auth:sanctum`) and authorize it (`can:...`); the package only checks
+  that the list is not empty, so a list of middleware that do neither leaves the
+  routes open. Add `throttle` as well (for example `throttle:10,1`): validation
+  parses and verifies uploads of up to 5 MiB, and readiness may load the
+  certificate and reach the database. An empty list fails configuration loading
+  with `configuration.unprotected_routes`, and the application does not boot.
+- `enabled` must be the boolean `true` or `false`. `EFATURA_ROUTES_ENABLED=true`
+  is read as a boolean; `1`, `0`, `yes` or `on` are strings and fail with
+  `configuration.invalid_type` at `efatura.routes.enabled`.
 - `prefix` is a URI path without parameters; surrounding slashes are removed.
   Anything else fails with `configuration.invalid_route_prefix`.
 - `name` is the route name prefix and ends with a dot, otherwise
@@ -38,8 +45,18 @@ authorizes itself.
   configured driver. It is off by default, so a request never causes outbound
   traffic; there is no query parameter to switch it on.
 
-The section is validated on every boot, enabled or not. With cached routes the
-package registers nothing and the cached ones are used.
+Only `enabled` is read while the routes are disabled, so a mistake in the rest
+of the section never stops the application from booting; `efatura:doctor` and
+the readiness report show it as a `Warning` of the configuration check with its
+code and field. Once enabled, the whole section is validated on every boot and
+an error stops the boot.
+
+With cached routes the package registers nothing and the cached ones are used.
+Run `php artisan route:cache` again after changing any `efatura.routes` value,
+including the switch itself. Every package route also checks
+`efatura.routes.enabled` on each request and answers 404 while it is false, so
+routes left in a stale cache stop answering as soon as the configuration turns
+them off.
 
 ## Readiness
 

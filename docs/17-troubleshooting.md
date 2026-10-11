@@ -21,15 +21,18 @@ cached configuration keeps the old values.
 ## Configuration
 
 `ConfigurationException` is raised while the package configuration loads: the
-`routes` section on every boot, the rest the first time the package resolves
-`EfaturaConfig` (any action, `efatura:doctor`). The `field` names the key, for
+`routes` switch on every boot and the rest of that section on every boot while
+the routes are enabled, the rest of the configuration the first time the
+package resolves `EfaturaConfig` (any action, `efatura:doctor`). A disabled
+`routes` section with an error does not stop the boot; readiness reports its
+code as a `Warning` of the configuration check. The `field` names the key, for
 example `efatura.transmitter.middleware_key`. See
 [Configuration](02-configuration.md) for every key and its variable.
 
 | Code | Meaning | Fix |
 | --- | --- | --- |
 | `configuration.missing` | A key an operation needs is null: `efatura.transmitter.tax_id` or `efatura.software.code`, `name`, `version` when the emission context comes from the configuration, or a credential key reported by readiness | Set the key named by `field` (`EFATURA_TRANSMITTER_TAX_ID`, `EFATURA_SOFTWARE_*`), or pass an explicit emission context to the builder |
-| `configuration.invalid_type` | A value of the wrong type: a section that is not an array, a boolean that is not a boolean, a middleware list that is not a list of nonempty strings, a bad exchange-rate map, a `callback` that is not an existing class | Correct the value at `field`; boolean variables such as `EFATURA_HTTP_VERIFY_TLS` must read `true` or `false`, not `1`, `0` or `yes` |
+| `configuration.invalid_type` | A value of the wrong type: a section that is not an array, a boolean that is not a boolean, a middleware list that is not a list of nonempty strings, a bad exchange-rate map, a `callback` that is not an existing class | Correct the value at `field`; boolean variables such as `EFATURA_HTTP_VERIFY_TLS` and `EFATURA_ROUTES_ENABLED` must read `true` or `false`, not `1`, `0`, `yes` or `on` |
 | `configuration.empty_string` | A string that is empty after trimming | Remove the variable to fall back to the default, or give it a value |
 | `configuration.invalid_integer` | An integer below its minimum (timeouts, concurrency and the cache TTL at least 1, retries and retry delay at least 0, `bcv.max_publication_age_days` at least 0), or `routes.max_upload_kilobytes` above 5120 | Use digits only (`30`, not `30.0` or `-1`) within the limit |
 | `configuration.invalid_environment` | `efatura.environment` is not `test`, `homologation`, `production`, `3`, `2`, `1` or an `Environment` case | Fix `EFATURA_ENVIRONMENT` |
@@ -47,7 +50,7 @@ example `efatura.transmitter.middleware_key`. See
 | `configuration.invalid_exchange_rate_provider` | `exchange_rates.provider` is not `bcv`, `world_bank`, `fixed` or `callback` | Fix `EFATURA_EXCHANGE_RATE_PROVIDER` |
 | `configuration.invalid_rate_type` | `bcv.rate_type` is not `buy` or `sell`, or `fixed.rate_type` is not an `ExchangeRateType` value | Fix `EFATURA_BCV_RATE_TYPE` or the fixed section |
 | `configuration.invalid_observation_year` | `world_bank.observation_year` is not `previous` or `request` | Fix `EFATURA_WORLD_BANK_OBSERVATION_YEAR` |
-| `configuration.unprotected_routes` | The diagnostics routes are enabled with an empty `routes.middleware` list; the application does not boot | Add the middleware that authenticates and authorizes the caller, or set `EFATURA_ROUTES_ENABLED=false` |
+| `configuration.unprotected_routes` | The diagnostics routes are enabled with an empty `routes.middleware` list; the application does not boot | Add the middleware that authenticates and authorizes the caller, and a `throttle`, or set `EFATURA_ROUTES_ENABLED=false` |
 | `configuration.invalid_route_prefix` | `routes.prefix` is not a URI path of segments starting with a letter or digit (no parameters) | Use a value such as `efatura` or `internal/efatura` |
 | `configuration.invalid_route_name` | `routes.name` does not end with a dot, or holds other characters than letters, digits, `_`, `-` and dots | Use a value such as `efatura.` |
 

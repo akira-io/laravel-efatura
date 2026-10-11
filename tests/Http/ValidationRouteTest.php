@@ -111,7 +111,8 @@ it('keeps only the code of a package exception and never its message', function 
 
     $response = postXml(UploadedFile::fake()->createWithContent('document.xml', S::sign(S::unsigned())->xml));
 
-    $response->assertUnprocessable()->assertJsonPath('schema', ['valid' => false, 'code' => 'configuration.invalid_type', 'violations' => [], 'violations_total' => 0]);
+    $response->assertUnprocessable()
+        ->assertJsonPath('schema', ['valid' => false, 'code' => 'configuration.invalid_type', 'violations' => [], 'violations_total' => 0]);
     expect($response->getContent())->not->toContain('passphrase')->not->toContain('ConfigurationException')->not->toContain('trace');
 });
 
