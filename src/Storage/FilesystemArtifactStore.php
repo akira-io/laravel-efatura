@@ -16,6 +16,7 @@ use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Filesystem\Factory;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -37,7 +38,7 @@ final readonly class FilesystemArtifactStore implements ArtifactStore
     public function put(string $iud, ArtifactKind $kind, string $contents): StoredArtifact
     {
         $path     = $this->path($iud, $kind);
-        $disk     = $this->disk();
+        $disk     = $this->privateDisk();
         $artifact = new StoredArtifact($iud, $kind, $this->config->disk, $path, \strlen($contents), hash(self::CHECKSUM, $contents));
 
         return $this->locked($path, fn (): StoredArtifact => $this->store($disk, $artifact, $contents));
@@ -108,6 +109,17 @@ final readonly class FilesystemArtifactStore implements ArtifactStore
             $iud,
             $kind->fileName($iud),
         ]);
+    }
+
+    private function privateDisk(): Filesystem
+    {
+        $disk = $this->disk();
+
+        if ($disk instanceof FilesystemAdapter && ($disk->getConfig()['visibility'] ?? null) === Filesystem::VISIBILITY_PUBLIC) {
+            throw StorageException::publicDisk($this->config->disk);
+        }
+
+        return $disk;
     }
 
     private function disk(): Filesystem

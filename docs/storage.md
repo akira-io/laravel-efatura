@@ -123,9 +123,16 @@ Bind another implementation in the container to keep artifacts elsewhere.
 
 ## Privacy
 
-Fiscal documents carry personal data of customers. Use a private disk that is
-never served publicly; the store does not set a visibility and follows the
-configuration of the disk. No artifact contains a secret: the signed XML holds
+Fiscal documents carry personal data of customers: names, tax numbers,
+addresses and what they bought. A disk that is served publicly, such as
+Laravel's `public` disk linked under `public/storage`, would publish every
+stored invoice to anyone who guesses or learns a path, and the paths are
+predictable from the IUD. The store refuses to write to a disk whose
+configuration sets `'visibility' => 'public'` (`storage.public_disk`). It
+cannot see how a disk is exposed otherwise, for example a bucket with a public
+policy or a web server pointed at the root of a local disk, so keep the disk
+private outside the package as well. The store does not set a visibility on
+the files and follows the configuration of the disk. No artifact contains a secret: the signed XML holds
 the public certificate only, and the evidence holds no token, middleware key,
 client secret, passphrase, header or configuration value.
 
@@ -140,6 +147,7 @@ and message are the code below.
 | `storage.dfa_mismatch` | `dfa` | `iud`, `dfaIud`, `model` | no | The DFA was rendered for another IUD, or is not the ONLINE model |
 | `storage.invalid_iud` | `iud` | | no | The IUD is not an official IUD with a valid check digit |
 | `storage.disk_invalid` | `efatura.storage.disk` | `disk` | no | The configured disk cannot be resolved |
+| `storage.public_disk` | `efatura.storage.disk` | `disk` | no | The configured disk sets `visibility` to `public` |
 | `storage.conflict` | | `path` | no | Different bytes already exist at the path |
 | `storage.missing` | | `path` | no | The artifact is not on the disk, or does not belong to the configured disk and path |
 | `storage.corrupted` | | `path` | no | The stored bytes no longer match the checksum |

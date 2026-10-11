@@ -36,6 +36,11 @@ final class StorageException extends EfaturaException
         return new self('storage.disk_invalid', 'efatura.storage.disk', ['disk' => $disk], $previous);
     }
 
+    public static function publicDisk(string $disk): self
+    {
+        return new self('storage.public_disk', 'efatura.storage.disk', ['disk' => $disk]);
+    }
+
     public static function unavailable(string $path, ?Throwable $previous = null): self
     {
         return new self('storage.unavailable', context: ['path' => $path], previous: $previous, retryable: true);

@@ -187,3 +187,22 @@ function storedZip(): StoredArtifact
 {
     return new StoredArtifact(S::iud(), ArtifactKind::Archive, 'archive', 'efatura/3/100200300/2026/10/' . S::iud() . '/' . S::iud() . '.zip', 3, hash('sha256', 'zip'));
 }
+
+it('refuses to write to a disk whose files are public', function (): void {
+    Storage::fake('public-archive', ['visibility' => 'public']);
+
+    expect(fn (): StoredArtifact => S::store('public-archive')->put(S::iud(), ArtifactKind::SignedXml, '<Dfe/>'))
+        ->toThrow(function (StorageException $exception): void {
+            expect($exception->errorCode)->toBe('storage.public_disk')
+                ->and($exception->field)->toBe('efatura.storage.disk')
+                ->and($exception->context)->toBe(['disk' => 'public-archive'])
+                ->and($exception->retryable)->toBeFalse();
+        })
+        ->and(Storage::disk('public-archive')->allFiles())->toBe([]);
+});
+
+it('writes to a disk whose files are private', function (): void {
+    Storage::fake('private-archive', ['visibility' => 'private']);
+
+    expect(S::store('private-archive')->put(S::iud(), ArtifactKind::SignedXml, '<Dfe/>')->disk)->toBe('private-archive');
+});
