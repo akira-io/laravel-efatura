@@ -240,7 +240,11 @@ Every failure is an `ExchangeRateException` (an `EfaturaException`) whose
 `errorCode` and message are the code below and whose `failure` is the
 `ExchangeRateFailure` case. Its `context` holds only the source (`bcv`,
 `world_bank`, `callback`) and an HTTP status; it never holds a response body, a
-URL with credentials or a redirect location.
+URL with credentials or a redirect location. A callback that throws something
+other than an `ExchangeRateException` keeps that exception, unchanged, as
+`previous`, so its message and trace reach whatever logs the failure. The
+package cannot see inside it: keep tokens, keys and response bodies out of the
+messages your callback throws.
 
 | Code | Retryable | When |
 | --- | --- | --- |
