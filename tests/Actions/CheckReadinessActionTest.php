@@ -226,7 +226,10 @@ it('obtains a platform token when asked to and keeps every secret out of the rep
 it('fails a remote token check when no provider can be bound', function (): void {
     Http::fake(['*' => Http::response('', 404, ['Date' => 'Fri, 02 Oct 2026 13:00:00 GMT'])]);
 
-    $report = readiness(platformReadiness(), remote: true);
+    $config = platformReadiness();
+    app()->offsetUnset(RefreshTokenRepository::class);
+
+    $report = readiness($config, remote: true);
 
     expect(readinessOutcome($report, ReadinessCheck::Credentials))->toBe([[ReadinessStatus::Failed, 'transport.missing_credentials', 'efatura.transmitter.oauth']]);
 });

@@ -31,8 +31,10 @@ and asks for the scopes on their behalf (§11.5, p.79-81), which is why it is th
 default. `Efatura::driver('platform')` and `EfaturaManager::driver()` return either
 driver explicitly; `TransportResolver::driver(TransportDriver::Platform)` does the
 same from the container. An application that binds its own `Contracts\Transport`
-replaces the configured driver everywhere. There is no `extend()`: a custom driver
-is a container binding.
+replaces the configured driver in every action and wherever the contract is
+injected; `Efatura::driver()`, `EfaturaManager::driver()` and `TransportResolver`
+still build the package drivers. There is no `extend()`: a custom driver is a
+container binding.
 
 Both base URLs carry the API version, and every request names a resource
 relative to it. URLs come only from the configuration, never from an argument,
@@ -138,8 +140,10 @@ self-billed one, whose token is always the buyer's.
 Scopes per operation: `cv_ef_dfe_create`, `cv_ef_event_create`,
 `cv_ef_dfe_read_iud` and `cv_ef_dfe_self_billing_authorize` (table 22, p.66).
 
-The package ships `OAuth\RefreshTokenAccessTokenProvider`, bound automatically when
-the application binds `Contracts\RefreshTokenRepository`:
+The package ships `OAuth\RefreshTokenAccessTokenProvider`, used whenever the
+application binds no `Contracts\AccessTokenProvider` of its own but binds a
+`Contracts\RefreshTokenRepository`, in any provider and at any time before the
+first platform request:
 
 ```php
 $this->app->bind(RefreshTokenRepository::class, EncryptedRefreshTokens::class);

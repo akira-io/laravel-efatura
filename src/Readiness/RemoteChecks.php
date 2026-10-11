@@ -5,19 +5,17 @@ declare(strict_types=1);
 namespace Akira\Efatura\Readiness;
 
 use Akira\Efatura\Configuration\EfaturaConfig;
-use Akira\Efatura\Contracts\AccessTokenProvider;
 use Akira\Efatura\Enums\OAuthScope;
 use Akira\Efatura\Enums\ReadinessCheck;
 use Akira\Efatura\Enums\TransportDriver;
-use Akira\Efatura\Enums\TransportFailure;
 use Akira\Efatura\Exceptions\DefinitionException;
+use Akira\Efatura\OAuth\AccessTokenProviderResolver;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Transport\FailureClassifier;
 use Akira\Efatura\Transport\ReadRetries;
 use Akira\Efatura\Transport\TransportRequests;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
-use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Psr\Clock\ClockInterface;
@@ -31,7 +29,7 @@ final readonly class RemoteChecks
         private TransportRequests $requests,
         private ReadRetries $retries,
         private FailureClassifier $failures,
-        private Container $container,
+        private AccessTokenProviderResolver $tokens,
         private ClockInterface $clock,
     ) {}
 
@@ -53,8 +51,13 @@ final readonly class RemoteChecks
             ];
         }
 
+        $context  = ['status' => $response->status()];
+        $endpoint = $response->serverError()
+            ? ReadinessResult::warning(ReadinessCheck::Endpoint, 'readiness.endpoint_unavailable', null, $context)
+            : ReadinessResult::passed(ReadinessCheck::Endpoint, 'readiness.endpoint_reachable', $context);
+
         return [
-            ReadinessResult::passed(ReadinessCheck::Endpoint, 'readiness.endpoint_reachable', ['status' => $response->status()]),
+            $endpoint,
             $this->clock($response),
             $this->credentials($config),
         ];
@@ -88,12 +91,8 @@ final readonly class RemoteChecks
             return ReadinessResult::skipped(ReadinessCheck::Credentials, false);
         }
 
-        if (! $this->container->bound(AccessTokenProvider::class)) {
-            return ReadinessResult::failed(ReadinessCheck::Credentials, TransportFailure::MissingCredentials->value, 'efatura.transmitter.oauth');
-        }
-
         try {
-            $this->container->make(AccessTokenProvider::class)->token((string) $config->emitter?->taxId, [OAuthScope::DfeCreate]);
+            $this->tokens->provider()->token((string) $config->emitter?->taxId, [OAuthScope::DfeCreate]);
         } catch (Throwable $throwable) {
             return ReadinessResult::failure(ReadinessCheck::Credentials, $throwable);
         }
