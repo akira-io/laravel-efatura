@@ -42,12 +42,12 @@ Only with `handle(remote: true)`; otherwise they are `Skipped` and not required.
 | --- | --- | --- |
 | Endpoint | `GET` on the base URL of the driver, with the read retries and no credentials | Any HTTP answer below 500 is `Passed` (`status` in `context`); a 5xx still there after the retries is `Warning` `readiness.endpoint_unavailable`; a connection failure is `Failed` with `transport.connection_failed` or `transport.outcome_unknown` |
 | Clock | The `Date` header of that answer | `Passed` within 5 minutes; `Warning` `readiness.clock_skew` above 5 minutes; `Failed` above one hour, the online lead the platform accepts (IDT-IMO-LE, p.35); `Warning` `readiness.clock_unverified` without a readable `Date`; `Skipped` and required when the endpoint failed |
+| Credentials | Platform driver: an access token for the configured emitter with `cv_ef_dfe_create`, from the bound `AccessTokenProvider` or, failing that, from a bound `RefreshTokenRepository` | `Passed` `readiness.token_obtained`, or `Failed` with the OAuth or transport error code (`transport.missing_credentials` on `efatura.transmitter.oauth` when neither is bound); the middleware driver skips it, since the middleware holds the taxpayer credentials |
 
 The clock thresholds apply in both directions. That is stricter than the
 platform, which accepts an issue time up to 24 hours behind (IDT-IMO-GE, p.35): a
 local clock an hour slow is still accepted there, but it already eats into the
 window a resend or a reconciliation has, so the package reports it.
-| Credentials | Platform driver: an access token for the configured emitter with `cv_ef_dfe_create`, from the bound `AccessTokenProvider` or, failing that, from a bound `RefreshTokenRepository` | `Passed` `readiness.token_obtained`, or `Failed` with the OAuth or transport error code (`transport.missing_credentials` on `efatura.transmitter.oauth` when neither is bound); the middleware driver skips it, since the middleware holds the taxpayer credentials |
 
 The remote checks never call taxpayer, software or authorization registries:
 the Manual documents no such endpoints.
