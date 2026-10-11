@@ -51,8 +51,8 @@ it('installs without a question and leaves the environment file alone without th
     expect($this->files->get(base_path('.env')))->toBe("APP_ENV=testing\n")
         ->and(config_path('efatura.php'))->toBeFile();
 })->with([
-    'without interaction' => [['--no-interaction' => true]],
-    'with another option' => [['--views' => true]],
+    'without interaction'   => [['--no-interaction' => true]],
+    'with another option'   => [['--views' => true]],
     'with the force option' => [['--force' => true]],
 ]);
 

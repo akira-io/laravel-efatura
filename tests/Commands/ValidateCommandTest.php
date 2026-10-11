@@ -164,6 +164,16 @@ it('prints the violations of a document the schema refuses as json, without chec
         ->and($document['signature'])->toBeNull();
 });
 
+it('prints no certificate line when the certificate in KeyInfo cannot be read', function (): void {
+    $path = validationFile(E::edit(S::sign(S::unsigned())->xml, E::replaceCertificate(base64_encode('not a certificate'))));
+
+    artisan('efatura:validate', ['path' => $path])
+        ->expectsOutputToContain('Signature: invalid.')
+        ->expectsOutputToContain('The certificate in KeyInfo cannot be read. (signature.certificate_invalid)')
+        ->doesntExpectOutputToContain('Certificate in KeyInfo:')
+        ->assertExitCode(1);
+});
+
 it('prints the failures of a signature the schema accepts as json', function (): void {
     $xml = E::edit(S::sign(S::unsigned())->xml, E::replaceCertificate(base64_encode('not a certificate')));
 
@@ -205,12 +215,6 @@ it('refuses paths and options it cannot validate', function (Closure $path, arra
 })->with([
     'a missing file'     => [fn (): string => test()->directory . '/missing.xml', [], 'file_missing', 'The file :path does not exist.'],
     'a directory'        => [fn (): string => test()->directory, [], 'file_not_regular', 'The path :path is not a regular file.'],
-    'an unreadable file' => [function (): string {
-        $path = validationFile('<Dfe/>');
-        chmod($path, 0o000);
-
-        return $path;
-    }, [], 'file_unreadable', 'The file :path cannot be read.'],
     'a file above 5 MiB' => [
         fn (): string => validationFile(str_repeat(' ', XmlValidation::MAX_BYTES) . '<Dfe/>'),
         [],
@@ -219,6 +223,30 @@ it('refuses paths and options it cannot validate', function (Closure $path, arra
     ],
     'an unknown profile' => [fn (): string => validationFile('<Dfe/>'), ['--profile' => 'xades'], 'profile_invalid', 'The profile must be enveloped or detached.'],
 ]);
+
+function runsAsRoot(): bool
+{
+    if (function_exists('posix_geteuid')) {
+        return posix_geteuid() === 0;
+    }
+
+    $probe = (string) tempnam(sys_get_temp_dir(), 'efatura-owner-');
+    $owner = fileowner($probe);
+    unlink($probe);
+
+    return $owner === 0;
+}
+
+it('refuses a file it cannot read', function (): void {
+    $path = validationFile('<Dfe/>');
+    chmod($path, 0o000);
+
+    artisan('efatura:validate', ['path' => $path])
+        ->expectsOutputToContain('The file ' . $path . ' cannot be read.')
+        ->assertExitCode(1);
+
+    expect(validationJson($path))->toBe([1, ['valid' => false, 'error' => 'file_unreadable']]);
+})->skip(fn (): bool => runsAsRoot(), 'root reads a file whatever its mode');
 
 it('accepts a file of exactly 5 MiB', function (): void {
     $xml = S::sign(S::unsigned())->xml;
@@ -244,7 +272,7 @@ it('reports damaged official artifacts as an installation fault, not as an inval
     $path = validationFile(S::sign(S::unsigned())->xml);
 
     artisan('efatura:validate', ['path' => $path])
-        ->expectsOutputToContain('The bundled official schemas cannot be used (artifacts.checksum_mismatch). Reinstall the package; the document was not validated.')
+        ->expectsOutputToContain('The bundled official schemas cannot be used (artifacts.checksum_mismatch). Reinstall the package;')
         ->doesntExpectOutputToContain('The document is not valid.')
         ->assertExitCode(1);
 

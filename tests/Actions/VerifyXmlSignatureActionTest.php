@@ -51,15 +51,20 @@ it('reports a change to the signed content, its properties or the signature', fu
     ],
 ]);
 
-it('reports a certificate it cannot read or whose key is not rsa', function (string $certificate, SignatureFailure $failure): void {
+it('reports a certificate it cannot read or whose key is not rsa', function (string $certificate, array $failures, bool $presented): void {
     $verification = verifySignature(E::edit(S::sign(S::unsigned())->xml, E::replaceCertificate($certificate)));
 
-    expect($verification->failures)->toContain($failure)
-        ->and($verification->valid)->toBeFalse();
+    expect($verification->failures)->toBe($failures)
+        ->and($verification->valid)->toBeFalse()
+        ->and($verification->certificateSubject !== null)->toBe($presented);
 })->with([
-    'not base64'        => ['%%%', SignatureFailure::CertificateInvalid],
-    'not a certificate' => [base64_encode('not a certificate'), SignatureFailure::CertificateInvalid],
-    'an ec key'         => [fn (): string => base64_encode(C::issue(key: C::ecKey())->der()), SignatureFailure::KeyUnsupported],
+    'not base64'        => ['%%%', [SignatureFailure::CertificateInvalid], false],
+    'not a certificate' => [base64_encode('not a certificate'), [SignatureFailure::CertificateInvalid], false],
+    'an ec key'         => [
+        fn (): string => base64_encode(C::issue(key: C::ecKey())->der()),
+        [SignatureFailure::KeyUnsupported, SignatureFailure::CertificateMismatch],
+        true,
+    ],
 ]);
 
 it('reports a document without a signature or with more than one', function (): void {
