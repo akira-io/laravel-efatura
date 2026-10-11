@@ -4,16 +4,10 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Commands;
 
-use Akira\Efatura\Actions\VerifyXmlSignatureAction;
-use Akira\Efatura\Contracts\SchemaValidator;
-use Akira\Efatura\Enums\SignatureFailure;
-use Akira\Efatura\Enums\SignatureProfile;
-use Akira\Efatura\Exceptions\EfaturaException;
-use Akira\Efatura\Exceptions\SchemaValidationException;
+use Akira\Efatura\Actions\ValidateXmlDocumentAction;
 use Akira\Efatura\Signing\SignatureVerification;
-use Akira\Efatura\Support\Fiscal;
-use Akira\Efatura\Xml\SafeXmlParser;
 use Akira\Efatura\Xml\SchemaViolation;
+use Akira\Efatura\Xml\XmlValidation;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -26,9 +20,6 @@ use const JSON_PRETTY_PRINT;
 use const JSON_THROW_ON_ERROR;
 use const JSON_UNESCAPED_SLASHES;
 
-/**
- * @phpstan-type SchemaOutcome array{valid: bool, code: string|null, violations: list<array{line: int, column: int, message: string}>}
- */
 #[Signature('efatura:validate {path : The signed XML file}
     {--profile= : enveloped or detached, detected from the root element when omitted}
     {--json : Print the result as a JSON document}')]
@@ -37,9 +28,7 @@ final class ValidateCommand extends Command
 {
     public const int MAX_BYTES = 5 * 1024 * 1024;
 
-    private const array PROFILES = ['enveloped' => SignatureProfile::Enveloped, 'detached' => SignatureProfile::InternallyDetached];
-
-    public function handle(SafeXmlParser $parser, SchemaValidator $schemas, VerifyXmlSignatureAction $signatures): int
+    public function handle(ValidateXmlDocumentAction $validate): int
     {
         $path    = $this->argument('path');
         $option  = $this->option('profile');
@@ -53,25 +42,17 @@ final class ValidateCommand extends Command
             return $this->refuse('file_too_large', $path);
         }
 
-        try {
-            $root = $parser->parse($xml)->documentElement?->localName;
-        } catch (SchemaValidationException $schemaValidationException) {
-            return $this->report(null, self::schemaFailure($schemaValidationException), null);
-        }
-
-        $name = \is_string($option) ? $option : ($root === Fiscal::DETACHED_SIGNATURE_ROOT ? 'detached' : 'enveloped');
-
-        return $this->report($name, self::schema($schemas, $xml, self::PROFILES[$name]), $signatures->handle($xml));
+        return $this->report($validate->handle($xml, \is_string($option) ? XmlValidation::PROFILES[$option] : null));
     }
 
     private function refusal(string $path, ?string $profile): ?string
     {
         return match (true) {
-            $profile !== null && ! \array_key_exists($profile, self::PROFILES) => 'profile_invalid',
-            ! file_exists($path)                                               => 'file_missing',
-            ! is_file($path)                                                   => 'file_not_regular',
-            ! is_readable($path)                                               => 'file_unreadable',
-            default                                                            => null,
+            $profile !== null && ! \array_key_exists($profile, XmlValidation::PROFILES) => 'profile_invalid',
+            ! file_exists($path)                                                        => 'file_missing',
+            ! is_file($path)                                                            => 'file_not_regular',
+            ! is_readable($path)                                                        => 'file_unreadable',
+            default                                                                     => null,
         };
     }
 
@@ -88,32 +69,23 @@ final class ValidateCommand extends Command
         return self::FAILURE;
     }
 
-    /**
-     * @param SchemaOutcome $schema
-     */
-    private function report(?string $profile, array $schema, ?SignatureVerification $signature): int
+    private function report(XmlValidation $validation): int
     {
-        $valid = $schema['valid'] && $signature?->valid === true;
+        $valid = $validation->valid();
 
         if ((bool) $this->option('json')) {
-            $this->line(json_encode([
-                'valid'                => $valid,
-                'profile'              => $profile,
-                'schema'               => $schema,
-                'signature'            => $signature instanceof SignatureVerification ? self::signature($signature) : null,
-                'trust_chain_verified' => false,
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+            $this->line(json_encode($validation->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
 
             return $valid ? self::SUCCESS : self::FAILURE;
         }
 
-        $this->line(self::schemaLine($schema, $profile));
-        foreach ($schema['violations'] as $violation) {
-            $this->line('  ' . __('efatura::efatura.console.validate.violation', $violation));
+        $this->line(self::schemaLine($validation));
+        foreach ($validation->violations as $violation) {
+            $this->line('  ' . self::violationLine($violation));
         }
 
-        if ($signature instanceof SignatureVerification) {
-            $this->presentSignature($signature);
+        if ($validation->signature instanceof SignatureVerification) {
+            $this->presentSignature($validation->signature);
         }
 
         $valid ? info(__('efatura::efatura.console.validate.valid')) : error(__('efatura::efatura.console.validate.invalid'));
@@ -140,65 +112,26 @@ final class ValidateCommand extends Command
         note(__('efatura::efatura.console.validate.trust_chain'));
     }
 
-    /**
-     * @param SchemaOutcome $schema
-     */
-    private static function schemaLine(array $schema, ?string $profile): string
+    private static function schemaLine(XmlValidation $validation): string
     {
+        $profile = $validation->profileName();
+        $code    = (string) $validation->schemaCode;
+
         if ($profile === null) {
-            return __('efatura::efatura.console.validate.xml_refused', ['code' => (string) $schema['code']]);
+            return __('efatura::efatura.console.validate.xml_refused', ['code' => $code]);
         }
 
-        return $schema['valid']
+        return $validation->schemaCode === null
             ? __('efatura::efatura.console.validate.schema_valid', ['profile' => $profile])
-            : __('efatura::efatura.console.validate.schema_invalid', ['profile' => $profile, 'code' => (string) $schema['code']]);
+            : __('efatura::efatura.console.validate.schema_invalid', ['profile' => $profile, 'code' => $code]);
     }
 
-    /**
-     * @return SchemaOutcome
-     */
-    private static function schema(SchemaValidator $schemas, string $xml, SignatureProfile $profile): array
+    private static function violationLine(SchemaViolation $violation): string
     {
-        try {
-            $schemas->validate($xml, $profile);
-        } catch (EfaturaException $efaturaException) {
-            return self::schemaFailure($efaturaException);
-        }
-
-        return ['valid' => true, 'code' => null, 'violations' => []];
-    }
-
-    /**
-     * @return SchemaOutcome
-     */
-    private static function schemaFailure(EfaturaException $exception): array
-    {
-        $violations = $exception instanceof SchemaValidationException ? $exception->violations : [];
-
-        return [
-            'valid'      => false,
-            'code'       => $exception->errorCode,
-            'violations' => array_map(static fn (SchemaViolation $violation): array => [
-                'line'    => $violation->line,
-                'column'  => $violation->column,
-                'message' => $violation->message,
-            ], $violations),
-        ];
-    }
-
-    /**
-     * @return array{valid: bool, failures: list<string>, certificate: array{subject: string, serial_number: string, digest: string}|null}
-     */
-    private static function signature(SignatureVerification $verification): array
-    {
-        return [
-            'valid'       => $verification->valid,
-            'failures'    => array_map(static fn (SignatureFailure $failure): string => $failure->code(), $verification->failures),
-            'certificate' => $verification->certificateSubject === null ? null : [
-                'subject'       => $verification->certificateSubject,
-                'serial_number' => (string) $verification->certificateSerialNumber,
-                'digest'        => (string) $verification->certificateDigest,
-            ],
-        ];
+        return __('efatura::efatura.console.validate.violation', [
+            'line'    => (string) $violation->line,
+            'column'  => (string) $violation->column,
+            'message' => $violation->message,
+        ]);
     }
 }
