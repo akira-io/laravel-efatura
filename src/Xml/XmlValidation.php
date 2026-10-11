@@ -18,6 +18,8 @@ final readonly class XmlValidation
 {
     public const array PROFILES = ['enveloped' => SignatureProfile::Enveloped, 'detached' => SignatureProfile::InternallyDetached];
 
+    public const int MAX_BYTES = 5 * 1024 * 1024;
+
     public const int MAX_PRESENTED_VIOLATIONS = 100;
 
     /**

@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Commands\ValidateCommand;
+use Akira\Efatura\Configuration\RoutesConfig;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Tests\Support\CertificateFixtures as C;
 use Akira\Efatura\Tests\Support\SignatureEdits as E;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
+use Akira\Efatura\Xml\XmlValidation;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Filesystem\Filesystem;
@@ -208,7 +210,7 @@ it('refuses paths and options it cannot validate', function (Closure $path, arra
         return $path;
     }, [], 'file_unreadable', 'The file :path cannot be read.'],
     'a file above 5 MiB' => [
-        fn (): string => validationFile(str_repeat(' ', ValidateCommand::MAX_BYTES) . '<Dfe/>'),
+        fn (): string => validationFile(str_repeat(' ', XmlValidation::MAX_BYTES) . '<Dfe/>'),
         [],
         'file_too_large',
         'The file :path is larger than 5242880 bytes.',
@@ -219,7 +221,12 @@ it('refuses paths and options it cannot validate', function (Closure $path, arra
 it('accepts a file of exactly 5 MiB', function (): void {
     $xml = S::sign(S::unsigned())->xml;
 
-    artisan('efatura:validate', ['path' => validationFile($xml . str_repeat(' ', ValidateCommand::MAX_BYTES - strlen($xml)))])
+    artisan('efatura:validate', ['path' => validationFile($xml . str_repeat(' ', XmlValidation::MAX_BYTES - strlen($xml)))])
         ->expectsOutputToContain('The document is valid.')
         ->assertExitCode(0);
+});
+
+it('shares one size limit between the command and the validate route', function (): void {
+    expect(XmlValidation::MAX_BYTES)->toBe(5 * 1024 * 1024)
+        ->and(RoutesConfig::MAX_UPLOAD_KILOBYTES * 1024)->toBe(XmlValidation::MAX_BYTES);
 });

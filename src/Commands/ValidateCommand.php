@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Commands;
 
 use Akira\Efatura\Actions\ValidateXmlDocumentAction;
+use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Signing\SignatureVerification;
 use Akira\Efatura\Xml\SchemaViolation;
 use Akira\Efatura\Xml\XmlValidation;
@@ -26,8 +27,6 @@ use const JSON_UNESCAPED_SLASHES;
 #[Description('Validate a signed e-Fatura XML file against the XSD and verify its signature')]
 final class ValidateCommand extends Command
 {
-    public const int MAX_BYTES = 5 * 1024 * 1024;
-
     public function handle(ValidateXmlDocumentAction $validate): int
     {
         $path    = $this->argument('path');
@@ -37,8 +36,8 @@ final class ValidateCommand extends Command
             return $this->refuse($refusal, $path);
         }
 
-        $xml = (string) file_get_contents($path, length: self::MAX_BYTES + 1);
-        if (\strlen($xml) > self::MAX_BYTES) {
+        $xml = (string) file_get_contents($path, length: XmlValidation::MAX_BYTES + 1);
+        if (\strlen($xml) > XmlValidation::MAX_BYTES) {
             return $this->refuse('file_too_large', $path);
         }
 
@@ -47,13 +46,19 @@ final class ValidateCommand extends Command
 
     private function refusal(string $path, ?string $profile): ?string
     {
-        return match (true) {
-            $profile !== null && ! \array_key_exists($profile, XmlValidation::PROFILES) => 'profile_invalid',
-            ! file_exists($path)                                                        => 'file_missing',
-            ! is_file($path)                                                            => 'file_not_regular',
-            ! is_readable($path)                                                        => 'file_unreadable',
-            default                                                                     => null,
-        };
+        if ($profile !== null && ! \array_key_exists($profile, XmlValidation::PROFILES)) {
+            return 'profile_invalid';
+        }
+
+        if (! file_exists($path)) {
+            return 'file_missing';
+        }
+
+        if (! is_file($path)) {
+            return 'file_not_regular';
+        }
+
+        return is_readable($path) ? null : 'file_unreadable';
     }
 
     private function refuse(string $reason, string $path): int
@@ -64,7 +69,7 @@ final class ValidateCommand extends Command
             return self::FAILURE;
         }
 
-        error(__('efatura::efatura.console.validate.' . $reason, ['path' => $path, 'limit' => self::MAX_BYTES]));
+        error(__('efatura::efatura.console.validate.' . $reason, ['path' => $path, 'limit' => XmlValidation::MAX_BYTES]));
 
         return self::FAILURE;
     }
@@ -93,7 +98,7 @@ final class ValidateCommand extends Command
             $this->presentSignature($validation->signature);
         }
 
-        if ($validation->profile !== null && ! $validation->signature instanceof SignatureVerification) {
+        if ($validation->profile instanceof SignatureProfile && ! $validation->signature instanceof SignatureVerification) {
             $this->line(__('efatura::efatura.console.validate.signature_skipped'));
         }
 

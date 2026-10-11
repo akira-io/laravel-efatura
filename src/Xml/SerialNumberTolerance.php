@@ -8,8 +8,8 @@ use LibXMLError;
 
 final class SerialNumberTolerance
 {
-    private const string LONG_SERIAL_NUMBER = '/\\AElement \'\\{http:\\/\\/www\\.w3\\.org\\/2000\\/09\\/xmldsig#\\}X509SerialNumber\': \'[+-]?\\d+\''
-        . ' is not a valid value of the atomic type \'xs:integer\'\\.\\s*\\z/';
+    private const string LONG_SERIAL_NUMBER = '/\AElement \'\{http:\/\/www\.w3\.org\/2000\/09\/xmldsig#\}X509SerialNumber\': \'[+-]?\d+\''
+        . ' is not a valid value of the atomic type \'xs:integer\'\.\s*\z/';
 
     /**
      * @param  list<LibXMLError> $errors

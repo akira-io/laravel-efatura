@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Configuration;
 
-use Akira\Efatura\Commands\ValidateCommand;
+use Akira\Efatura\Xml\XmlValidation;
 
 final readonly class RoutesConfig
 {
-    public const int MAX_UPLOAD_KILOBYTES = ValidateCommand::MAX_BYTES / 1024;
+    public const int MAX_UPLOAD_KILOBYTES = XmlValidation::MAX_BYTES / 1024;
 
     /**
      * @param list<string> $middleware
