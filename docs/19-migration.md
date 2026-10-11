@@ -338,12 +338,16 @@ These keys are gone, because nothing produces those messages any more:
 `config.transmitter_nif_required`, `transmitter_led_required`,
 `software_code_required`, `software_name_required`,
 `software_version_required`, `middleware_base_url_required`,
-`environment_invalid`; `install.command_description`; `general.package`. The
-`install.*` keys the command printed before are unchanged except
-`install.optional_packages_notice`, which now reads "Optional DFA packages not
+`environment_invalid`; `install.command_description`; `general.package`. Every
+string of the console commands now lives under `console.*`: the `install.*` keys
+moved to `console.install.*` with the same names (`completed`, `config_exists`,
+`config_published`, `env_missing`, `env_add_confirm`, `env_skipped`,
+`env_added`, `optional_packages_notice`), so move an override of them there.
+`console.install.optional_packages_notice` now reads "Optional DFA packages not
 detected: :packages. Install them to render the Documento Fiscal Auxiliar as a
-PDF with its QR code."; update an override of it. The command adds
-`install.migration_published` and `install.migration_exists`. The new `validation.*` keys
+PDF with its QR code.", and the command adds `console.install.migration_published`,
+`console.install.migration_exists` and the other `console.install.*` keys. The
+new `validation.*` keys
 are listed in [resources/lang/en/efatura.php](../resources/lang/en/efatura.php).
 
 ## Renamed symbols

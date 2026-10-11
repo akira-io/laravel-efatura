@@ -53,6 +53,7 @@ it('installs without a question and leaves the environment file alone without th
 })->with([
     'without interaction' => [['--no-interaction' => true]],
     'with another option' => [['--views' => true]],
+    'with the force option' => [['--force' => true]],
 ]);
 
 it('appends every missing variable without a question with the write-env option', function (array $options): void {

@@ -51,7 +51,7 @@ final class InstallCommand extends Command
 
         $this->notifyOptionalPackages($libraries);
 
-        note(__('efatura::efatura.install.completed'));
+        note(__('efatura::efatura.console.install.completed'));
 
         return self::SUCCESS;
     }
@@ -63,7 +63,7 @@ final class InstallCommand extends Command
         $exists = $filesystem->exists($configPath);
 
         if ($exists && ! (bool) $this->option('force')) {
-            note(__('efatura::efatura.install.config_exists'));
+            note(__('efatura::efatura.console.install.config_exists'));
 
             return;
         }
@@ -73,7 +73,7 @@ final class InstallCommand extends Command
         $filesystem->ensureDirectoryExists(\dirname($configPath));
         $filesystem->copy($sourcePath, $configPath);
 
-        info(__($exists ? 'efatura::efatura.console.install.config_overwritten' : 'efatura::efatura.install.config_published'));
+        info(__($exists ? 'efatura::efatura.console.install.config_overwritten' : 'efatura::efatura.console.install.config_published'));
     }
 
     private function publishSequenceMigration(Filesystem $filesystem): void
@@ -81,7 +81,7 @@ final class InstallCommand extends Command
         $directory = database_path('migrations');
 
         if ($filesystem->glob($directory . '/*_' . self::SEQUENCE_MIGRATION . '.php') !== []) {
-            note(__('efatura::efatura.install.migration_exists'));
+            note(__('efatura::efatura.console.install.migration_exists'));
 
             return;
         }
@@ -92,7 +92,7 @@ final class InstallCommand extends Command
             $directory . '/' . now()->format('Y_m_d_His') . '_' . self::SEQUENCE_MIGRATION . '.php',
         );
 
-        info(__('efatura::efatura.install.migration_published'));
+        info(__('efatura::efatura.console.install.migration_published'));
     }
 
     private function publishDirectory(Filesystem $filesystem, string $source, string $target): void
@@ -128,7 +128,7 @@ final class InstallCommand extends Command
         }
 
         if (! $filesystem->exists(base_path('.env'))) {
-            $append ? error(__('efatura::efatura.console.install.env_required')) : warning(__('efatura::efatura.install.env_missing'));
+            $append ? error(__('efatura::efatura.console.install.env_required')) : warning(__('efatura::efatura.console.install.env_missing'));
 
             return ! $append;
         }
@@ -160,8 +160,8 @@ final class InstallCommand extends Command
                 continue;
             }
 
-            if ($prompts && ! confirm(__('efatura::efatura.install.env_add_confirm', ['key' => $key]))) {
-                note(__('efatura::efatura.install.env_skipped', ['key' => $key]));
+            if ($prompts && ! confirm(__('efatura::efatura.console.install.env_add_confirm', ['key' => $key]))) {
+                note(__('efatura::efatura.console.install.env_skipped', ['key' => $key]));
 
                 continue;
             }
@@ -172,7 +172,7 @@ final class InstallCommand extends Command
 
             $appendLines[] = $key . '=' . $value;
 
-            info(__('efatura::efatura.install.env_added', ['key' => $key]));
+            info(__('efatura::efatura.console.install.env_added', ['key' => $key]));
         }
 
         if ($appendLines !== []) {
@@ -189,7 +189,7 @@ final class InstallCommand extends Command
             return;
         }
 
-        info(__('efatura::efatura.install.optional_packages_notice', ['packages' => implode(', ', $missing)]));
+        info(__('efatura::efatura.console.install.optional_packages_notice', ['packages' => implode(', ', $missing)]));
     }
 
     private function environmentVariableExists(string $contents, string $key): bool
