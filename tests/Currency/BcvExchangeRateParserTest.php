@@ -45,6 +45,8 @@ it('accepts the shapes the BCV page has used', function (string $html, string $c
     'a lower case currency'       => [fn (): string => bcvPage(['<td>EUR</td>' => '<td> eur </td>']), 'EUR', '110.26500'],
     'a latin-1 page that says so' => [fn (): string => mb_convert_encoding('<meta charset="iso-8859-1">' . bcvPage(), 'ISO-8859-1', 'UTF-8'), 'EUR', '110.26500'],
     'a row of an unknown code'    => [fn (): string => bcvPage([BCV_EUR_ROW => BCV_EUR_ROW . '<tr><td>X</td><td>???</td><td>1</td><td>1</td><td>1</td></tr>']), 'EUR', '110.26500'],
+    'a half unit rounded up'      => [fn (): string => bcvPage(['<td>59,72700</td>' => '<td>59,72750</td>']), 'JPY', '0.59728'],
+    'a third of a unit'           => [fn (): string => bcvPage(['<td>100</td><td>59,72700</td>' => '<td>3</td><td>1,00000</td>']), 'JPY', '0.33333'],
 ]);
 
 it('refuses a page it cannot read with certainty', function (string $html): void {
@@ -54,6 +56,7 @@ it('refuses a page it cannot read with certainty', function (string $html): void
     'an html error page'            => ['<html><body><h1>Erro 500</h1><p>Serviço indisponível</p></body></html>'],
     'not html at all'               => ["\xff\xfe\0garbage<<<>>>"],
     'a missing column'              => [fn (): string => bcvPage(['<th>Venda</th>' => '<th>Outro</th>'])],
+    'a duplicated column'           => [fn (): string => bcvPage(['<th>Moeda</th>' => '<th>Moeda</th><th>Moeda</th>'])],
     'two rate tables'               => [fn (): string => bcvPage(['</main>' => BCV_TABLE_OPENER . BCV_HEADING . BCV_HEADER_ROW . BCV_EUR_ROW . '</table></main>'])],
     'two header rows'               => [fn (): string => bcvPage([BCV_HEADER_ROW => BCV_HEADER_ROW . BCV_HEADER_ROW])],
     'a suffixed heading'            => [fn (): string => bcvPage(['21/07/2026</th>' => '21/07/2026 - informação provisória</th>'])],
