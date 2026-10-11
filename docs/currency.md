@@ -164,7 +164,12 @@ the source currency is the second argument.
 8. The amount to pay is the source amount to pay converted directly. The
    difference against net total + taxes - withholding goes to
    `PayableRoundingAmount`, which stays null when the source had none and the
-   difference is zero.
+   difference is zero. When the source payments add up exactly to the source
+   amount to pay, the converted payments add up exactly to the converted amount
+   to pay: each is converted and truncated to cents, and the cents still missing
+   go one each to the payments with the largest remainders (0.15 and 1.00 EUR at
+   110.265 give 16.54 and 110.26, not 16.54 and 110.27). Otherwise each payment
+   is rounded on its own.
 9. One `PayableAlternativeAmount` is appended with the source amount to pay, the
    source currency and the rate. The XML writes it without non-significant zeros,
    for a currency without decimals as well (`1150` JPY).

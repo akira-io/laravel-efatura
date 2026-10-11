@@ -29,19 +29,23 @@ final readonly class CveConversion
      */
     public function payload(array $payload, HasTotals $document): array
     {
+        $source = $payload;
+
         foreach (self::SECTIONS as $section) {
             if (\is_array($payload[$section] ?? null)) {
                 $payload[$section] = $this->converted($payload[$section]);
             }
         }
 
-        $lines = $this->lines->convert($document->lines, $document->totals->discount);
-
-        return [
+        $lines     = $this->lines->convert($document->lines, $document->totals->discount);
+        $converted = [
             ...$payload,
             'lines'  => array_map(static fn (ConvertedLine $line): array => $line->payload, $lines),
             'totals' => $this->totals($document, $lines),
         ];
+        $payable = $document->totals->payableAmount->getAmount();
+
+        return new CvePayments($this->quote->rate)->balanced($source, $converted, $payable, $this->lines->amount($payable));
     }
 
     /**

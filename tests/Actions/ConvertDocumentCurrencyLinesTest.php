@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Akira\Efatura\Actions\ConvertDocumentCurrencyAction;
 use Akira\Efatura\Data\ElectronicInvoiceData;
+use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Tests\Support\CurrencyFixtures as C;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Carbon\CarbonImmutable;
@@ -86,3 +87,22 @@ it('signs the withholding of deduction and information lines as the totals verif
         'payableRoundingAmount'     => null,
     ]);
 });
+
+it('spreads the converted payments over the converted amount to pay by their largest remainders', function (array $amounts, array $expected): void {
+    $payments = array_map(static fn (string $amount): array => ['paymentMeansCode' => '10', 'paymentAmount' => $amount], $amounts);
+    $receipt  = ReceiptInvoiceData::from(F::payload([
+        'lines'    => [F::linePayload(['price' => '1', 'priceExtension' => '1', 'netTotal' => '1', 'taxes' => [['taxTypeCode' => 'IVA', 'taxPercentage' => '15', 'taxTotal' => '0.15']]])],
+        'totals'   => F::totalsPayload(['priceExtensionTotalAmount' => '1', 'netTotalAmount' => '1', 'taxTotalAmount' => '0.15', 'payableAmount' => '1.15']),
+        'payments' => ['payments' => $payments],
+    ]));
+    $quote = C::quote(['effectiveAt' => CarbonImmutable::parse('2026-10-02T00:00:00-01:00'), 'retrievedAt' => CarbonImmutable::parse('2026-10-02T10:00:00-01:00')]);
+
+    $converted = resolve(ConvertDocumentCurrencyAction::class)->handle($receipt, 'EUR', $quote)->toPayload();
+
+    expect(array_column($converted['payments']['payments'], 'paymentAmount'))->toBe($expected)
+        ->and($converted['totals']['payableAmount'])->toBe('126.80000');
+})->with([
+    'two payments that would pass the amount to pay by a cent' => [['0.15', '1'], ['16.54000', '110.26000']],
+    'three payments that settle it exactly'                    => [['0.02', '0.03', '1.1'], ['2.20000', '3.31000', '121.29000']],
+    'payments that do not add up to the amount to pay'         => [['0.15', '0.9'], ['16.54000', '99.24000']],
+]);
