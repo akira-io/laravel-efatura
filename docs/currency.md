@@ -186,8 +186,10 @@ ends in `PayableRoundingAmount`.
 
 The conversion still fails with `exchange_rate.invoice_invalid` when a converted
 input cannot be represented: an absolute tax amount or a payment amount that
-rounds to zero at the rate, or an amount global discount combined with a
-percentage line discount whose base has more than five decimals.
+rounds to zero at the rate, an amount global discount combined with a
+percentage line discount whose base has more than five decimals, or an amount
+global discount whose converted line shares differ from it by more than one
+cent per line (checked before any cent is moved).
 
 ## Errors
 

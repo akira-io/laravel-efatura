@@ -8,8 +8,10 @@ use Akira\Efatura\Data\DiscountData;
 use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Data\TaxData;
 use Akira\Efatura\Enums\DiscountValueType;
+use Akira\Efatura\Enums\ExchangeRateFailure;
 use Akira\Efatura\Enums\LineType;
 use Akira\Efatura\Enums\TaxType;
+use Akira\Efatura\Exceptions\ExchangeRateException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
@@ -144,6 +146,10 @@ final readonly class CveLines
 
         $residual = $target->minus(BigDecimal::sum(BigDecimal::zero(), ...array_values($allocations)));
         $cent     = BigDecimal::of(self::CENT)->multipliedBy($residual->getSign());
+
+        if ($residual->abs()->isGreaterThan(BigDecimal::of(self::CENT)->multipliedBy(\count($allocations)))) {
+            throw ExchangeRateException::because(ExchangeRateFailure::InvoiceInvalid);
+        }
 
         while (! $residual->isZero() && $allocations !== []) {
             $index               = self::largest($cent->isPositive() ? $room : $allocations);
