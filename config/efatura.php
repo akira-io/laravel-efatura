@@ -176,6 +176,40 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Exchange Rates
+    |--------------------------------------------------------------------------
+    |
+    | Rates are CVE per one unit of the foreign currency, kept at five
+    | decimals. One provider is selected explicitly and there is no fallback:
+    | bcv (the Banco de Cabo Verde page, the default), world_bank (annual
+    | average, reference rate), fixed (the rates below) or callback (a class
+    | with __invoke resolved from the container). BCV rate_type is buy or
+    | sell; a publication of an earlier Cabo Verde day is accepted only when
+    | max_publication_age_days is positive. World Bank economies map a
+    | currency to an economy code (EUR => EMU); CVE is always CPV. Fixed
+    | rates map a currency to a positive decimal string. Quotes are cached
+    | for cache.exchange_rates_ttl_seconds.
+    |
+    */
+    'exchange_rates' => [
+        'provider' => env('EFATURA_EXCHANGE_RATE_PROVIDER', 'bcv'),
+        'bcv'      => [
+            'rate_type'                => env('EFATURA_BCV_RATE_TYPE', 'buy'),
+            'max_publication_age_days' => env('EFATURA_BCV_MAX_PUBLICATION_AGE_DAYS', 0),
+        ],
+        'world_bank' => [
+            'economies' => [],
+        ],
+        'fixed' => [
+            'rates'     => [],
+            'rate_type' => 'custom',
+            'name'      => 'Fixed rate',
+        ],
+        'callback' => null,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Sequence Database And Queue
     |--------------------------------------------------------------------------
     |

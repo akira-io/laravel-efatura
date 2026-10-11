@@ -85,6 +85,7 @@ final readonly class LoadEfaturaConfig
             ),
             http: (new LoadHttpConfig($this->repository))(),
             driver: $this->driver(),
+            exchangeRates: (new LoadExchangeRatesConfig($this->repository))(),
         );
     }
 
