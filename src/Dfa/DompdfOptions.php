@@ -13,15 +13,17 @@ final readonly class DompdfOptions
 {
     public const string PAPER = 'a4';
 
-    private const string DEFAULT_DIRECTORY = 'efatura-dompdf';
-
     private const int PERMISSIONS = 0o700;
 
-    public function __construct(private EfaturaConfig $config) {}
+    private const int SHARED_WRITE = 0o022;
+
+    public function __construct(private EfaturaConfig $config, private string $defaultRoot) {}
 
     public function make(): Options
     {
-        $root = $this->config->dfa->cachePath ?? sys_get_temp_dir() . '/' . self::DEFAULT_DIRECTORY;
+        $root  = $this->config->dfa->cachePath ?? $this->defaultRoot;
+        $owner = $this->effectiveOwner();
+        $this->directory($root, $owner);
 
         return new Options([
             'defaultPaperSize'    => self::PAPER,
@@ -30,20 +32,30 @@ final readonly class DompdfOptions
             'isPhpEnabled'        => false,
             'isJavascriptEnabled' => false,
             'allowedProtocols'    => ['data://'],
-            'fontCache'           => $this->directory($root . '/fonts'),
-            'tempDir'             => $this->directory($root . '/tmp'),
-            'chroot'              => [$this->directory($root . '/chroot')],
+            'fontCache'           => $this->directory($root . '/fonts', $owner),
+            'tempDir'             => $this->directory($root . '/tmp', $owner),
+            'chroot'              => [$this->directory($root . '/chroot', $owner)],
         ]);
     }
 
-    private function directory(string $path): string
+    private function effectiveOwner(): int
+    {
+        $probe  = tmpfile() ?: throw DfaException::cacheUnavailable();
+        $status = fstat($probe);
+        fclose($probe);
+
+        return $status === false ? throw DfaException::cacheUnavailable() : $status['uid'];
+    }
+
+    private function directory(string $path, int $owner): string
     {
         try {
-            $ready = is_dir($path) || mkdir($path, self::PERMISSIONS, true) || is_dir($path);
+            $ready   = is_dir($path) || mkdir($path, self::PERMISSIONS, true) || is_dir($path);
+            $private = $ready && fileowner($path) === $owner && (fileperms($path) & self::SHARED_WRITE) === 0;
         } catch (Throwable $throwable) {
             throw DfaException::cacheUnavailable($throwable);
         }
 
-        return $ready ? $path : throw DfaException::cacheUnavailable();
+        return $private ? $path : throw DfaException::cacheUnavailable();
     }
 }

@@ -226,8 +226,10 @@ return [
     | base URL must use HTTPS without credentials, query strings or
     | fragments; trailing slashes are removed. The cache path is an absolute
     | directory, without traversal, where dompdf keeps its font metrics and
-    | temporary files and finds an empty chroot; null uses efatura-dompdf
-    | under the system temp directory. It is created when missing.
+    | temporary files and finds an empty chroot; null uses
+    | storage/framework/cache/efatura-dompdf. It is created when missing; an
+    | existing one must belong to the PHP user and be closed to group and
+    | others.
     |
     */
     'dfa' => [

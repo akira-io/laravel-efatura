@@ -43,11 +43,53 @@ it('keeps the font cache, the temporary files and the chroot in the configured d
         ->and(decoct(fileperms($this->cache) & 0o777))->toBe('700');
 });
 
-it('falls back to a directory of its own under the system temp directory', function (): void {
+it('falls back to a directory of its own under the application storage', function (): void {
     config()->set('efatura.dfa.cache_path');
+    $default = storage_path('framework/cache/efatura-dompdf');
 
-    expect(resolve(DompdfOptions::class)->make()->getFontCache())->toBe(sys_get_temp_dir() . '/efatura-dompdf/fonts')
-        ->and(is_dir(sys_get_temp_dir() . '/efatura-dompdf/chroot'))->toBeTrue();
+    try {
+        expect(resolve(DompdfOptions::class)->make()->getFontCache())->toBe($default . '/fonts')
+            ->and(is_dir($default . '/chroot'))->toBeTrue()
+            ->and(decoct(fileperms($default) & 0o777))->toBe('700');
+    } finally {
+        new Filesystem()->deleteDirectory($default);
+    }
+});
+
+it('accepts an existing cache directory private to the current user', function (): void {
+    mkdir($this->cache . '/fonts', 0o700, true);
+    chmod($this->cache, 0o700);
+
+    expect(resolve(DompdfOptions::class)->make()->getFontCache())->toBe($this->cache . '/fonts');
+});
+
+it('refuses an existing cache directory other users can write to', function (string $directory, int $permissions): void {
+    mkdir($this->cache . '/' . $directory, 0o700, true);
+    chmod($this->cache . '/' . $directory, $permissions);
+
+    expect(fn (): Options => resolve(DompdfOptions::class)->make())
+        ->toThrow(function (DfaException $exception): void {
+            expect($exception->errorCode)->toBe('dfa.cache_unavailable')
+                ->and($exception->field)->toBe('efatura.dfa.cache_path')
+                ->and($exception->getPrevious())->toBeNull();
+        });
+})->with([
+    'the root open to all'      => ['', 0o777],
+    'the root open to a group'  => ['', 0o770],
+    'the fonts open to all'     => ['fonts', 0o777],
+    'the temp files to a group' => ['tmp', 0o720],
+    'the chroot open to others' => ['chroot', 0o702],
+]);
+
+it('refuses an existing cache directory another user owns', function (): void {
+    config()->set('efatura.dfa.cache_path', '/usr');
+
+    expect(fn (): Options => resolve(DompdfOptions::class)->make())
+        ->toThrow(function (DfaException $exception): void {
+            expect($exception->errorCode)->toBe('dfa.cache_unavailable')
+                ->and($exception->getPrevious())->toBeNull();
+        })
+        ->and(is_dir('/usr/fonts'))->toBeFalse();
 });
 
 it('turns off remote resources, embedded PHP and JavaScript and accepts data URIs only', function (): void {

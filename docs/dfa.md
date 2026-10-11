@@ -178,13 +178,18 @@ application can write to, with an empty `chroot` beside them.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `efatura.dfa.cache_path` (`EFATURA_DFA_CACHE_PATH`) | null | An absolute directory without `..`, `.` or empty segments; null uses `efatura-dompdf` under `sys_get_temp_dir()` |
+| `efatura.dfa.cache_path` (`EFATURA_DFA_CACHE_PATH`) | null | An absolute directory without `..`, `.` or empty segments; null uses `storage/framework/cache/efatura-dompdf` of the application |
 
-The renderer creates `fonts/`, `tmp/` and `chroot/` under it (mode 0700) when
-they are missing. A path that is not absolute fails with
-`configuration.unsafe_path` when the configuration loads; a directory that
-cannot be created fails with `dfa.cache_unavailable` when a DFA is rendered.
-On a read-only filesystem, point it at a writable volume.
+The renderer creates the directory and `fonts/`, `tmp/` and `chroot/` under it
+(mode 0700) when they are missing. A path that is not absolute fails with
+`configuration.unsafe_path` when the configuration loads. When a DFA is
+rendered, the directory and each of the three fail with `dfa.cache_unavailable`
+when one cannot be created, is owned by another user than the one PHP runs as,
+or can be written by its group or by others: another user could otherwise
+plant font metrics or swap the QR code temporary file. The effective user is
+read from a file PHP creates with `tmpfile()`, so no extension is needed; the
+check relies on POSIX ownership and permission bits. On a read-only filesystem,
+point it at a writable volume.
 
 ## Errors
 
@@ -198,7 +203,7 @@ message are the code below.
 | `dfa.iuc_required` | `iuc` | `iud` | An OFF document without IUC, and none given |
 | `dfa.invalid_iuc` | `iuc` | | An IUC that is not four digits, a slash and digits |
 | `dfa.iuc_mismatch` | `iuc` | `iud` | A given IUC that differs from the one on the document |
-| `dfa.cache_unavailable` | `efatura.dfa.cache_path` | | The dompdf cache directory cannot be created; the filesystem error, when there is one, is `previous` |
+| `dfa.cache_unavailable` | `efatura.dfa.cache_path` | | The dompdf cache directory, or `fonts/`, `tmp/` or `chroot/` under it, cannot be created, belongs to another user or can be written by its group or others; the filesystem error, when there is one, is `previous` |
 | `dfa.renderer_unavailable` | | `package` | `dompdf/dompdf` or `bacon/bacon-qr-code` is not installed |
 
 ---

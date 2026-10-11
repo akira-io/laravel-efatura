@@ -28,6 +28,7 @@ use Akira\Efatura\Currency\DeferredExchangeRateProvider;
 use Akira\Efatura\Currency\ExchangeRateProviderResolver;
 use Akira\Efatura\Dfa\BaconQrCodeRenderer;
 use Akira\Efatura\Dfa\DompdfDfaRenderer;
+use Akira\Efatura\Dfa\DompdfOptions;
 use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\OAuth\RefreshTokenAccessTokenProvider;
 use Akira\Efatura\Packaging\ZipArchivePackager;
@@ -74,6 +75,8 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $this->app->bind(Packager::class, ZipArchivePackager::class);
         $this->app->bind(QrCodeRenderer::class, BaconQrCodeRenderer::class);
         $this->app->bind(DfaRenderer::class, DompdfDfaRenderer::class);
+        $this->app->when(DompdfOptions::class)->needs('$defaultRoot')
+            ->give(fn (Application $app): string => $app->storagePath('framework/cache/efatura-dompdf'));
         $this->app->when(FilesystemArtifactStore::class)->needs(StorageConfig::class)
             ->give(fn (): StorageConfig => $this->app->make(EfaturaConfig::class)->storage);
         $this->app->when(FilesystemArtifactStore::class)->needs(CacheConfig::class)
