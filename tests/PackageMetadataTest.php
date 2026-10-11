@@ -10,19 +10,32 @@ it('declares the runtime platform and imported Laravel components', function ():
     $requirements = ComposerMetadata::read()['require'];
 
     expect($requirements)->toMatchArray([
-        'php'                   => '^8.5',
-        'ext-curl'              => '*',
-        'ext-dom'               => '*',
-        'ext-libxml'            => '*',
-        'ext-openssl'           => '*',
-        'ext-zip'               => '*',
-        'illuminate/config'     => '^13.0',
-        'illuminate/console'    => '^13.0',
-        'illuminate/contracts'  => '^13.0',
-        'illuminate/database'   => '^13.0',
-        'illuminate/filesystem' => '^13.0',
-        'illuminate/support'    => '^13.0',
-        'illuminate/validation' => '^13.0',
+        'php'                    => '^8.5',
+        'ext-curl'               => '*',
+        'ext-dom'                => '*',
+        'ext-libxml'             => '*',
+        'ext-openssl'            => '*',
+        'ext-zip'                => '*',
+        'illuminate/cache'       => '^13.0',
+        'illuminate/config'      => '^13.0',
+        'illuminate/console'     => '^13.0',
+        'illuminate/contracts'   => '^13.0',
+        'illuminate/database'    => '^13.0',
+        'illuminate/encryption'  => '^13.0',
+        'illuminate/events'      => '^13.0',
+        'illuminate/filesystem'  => '^13.0',
+        'illuminate/http'        => '^13.0',
+        'illuminate/routing'     => '^13.0',
+        'illuminate/support'     => '^13.0',
+        'illuminate/translation' => '^13.0',
+        'illuminate/validation'  => '^13.0',
+        'illuminate/view'        => '^13.0',
+    ]);
+});
+
+it('declares the HTTP client its transport drives through the cURL handler', function (): void {
+    expect(ComposerMetadata::read()['require'])->toMatchArray([
+        'guzzlehttp/guzzle' => '^7.15.2 || ^8.2',
     ]);
 });
 
