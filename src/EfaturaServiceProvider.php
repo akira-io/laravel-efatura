@@ -11,12 +11,14 @@ use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
 use Akira\Efatura\Contracts\AccessTokenProvider;
 use Akira\Efatura\Contracts\CertificateLoader;
+use Akira\Efatura\Contracts\ExchangeRateProvider;
 use Akira\Efatura\Contracts\Packager;
 use Akira\Efatura\Contracts\RefreshTokenRepository;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Contracts\SequenceStore;
 use Akira\Efatura\Contracts\Transport;
 use Akira\Efatura\Contracts\XmlSigner;
+use Akira\Efatura\Currency\ExchangeRateProviderResolver;
 use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\OAuth\RefreshTokenAccessTokenProvider;
 use Akira\Efatura\Packaging\ZipArchivePackager;
@@ -61,6 +63,10 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $this->app->bind(XmlSigner::class, XadesBesXmlSigner::class);
         $this->app->bind(Packager::class, ZipArchivePackager::class);
         $this->app->bind(Transport::class, fn (Application $app): Transport => $app->make(TransportResolver::class)->driver());
+        $this->app->bind(
+            ExchangeRateProvider::class,
+            fn (Application $app): ExchangeRateProvider => $app->make(ExchangeRateProviderResolver::class)->provider(),
+        );
     }
 
     #[Override]

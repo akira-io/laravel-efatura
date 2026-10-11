@@ -30,7 +30,7 @@ final readonly class ExchangeRateQuote
     public array $evidence;
 
     /**
-     * @param array<string, string> $evidence
+     * @param array<array-key, mixed> $evidence
      */
     public function __construct(
         string $sourceCurrency,
@@ -86,21 +86,20 @@ final readonly class ExchangeRateQuote
     }
 
     /**
-     * @param  array<string, string> $evidence
+     * @param  array<array-key, mixed> $evidence
      * @return array<string, string>
      */
     private static function evidence(array $evidence): array
     {
+        $validated = [];
         foreach ($evidence as $key => $value) {
-            if (Str::trim($key) === '' || Str::trim($value) === '') {
+            if (! \is_string($key) || ! \is_string($value) || Str::trim($key) === '' || Str::trim($value) === '') {
                 throw ExchangeRateException::because(ExchangeRateFailure::ResponseInvalid);
             }
 
-            if (Str::endsWith($key, '_url')) {
-                SourceUrl::validated($value);
-            }
+            $validated[$key] = Str::endsWith($key, '_url') ? SourceUrl::validated($value) : $value;
         }
 
-        return $evidence;
+        return $validated;
     }
 }

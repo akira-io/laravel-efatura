@@ -91,6 +91,8 @@ it('refuses evidence that is empty or carries a credential url', function (array
     expect(C::failure(fn (): ExchangeRateQuote => C::quote(['evidence' => $evidence])))->toBe($failure);
 })->with([
     'an empty value'   => [['indicator' => ' '], ExchangeRateFailure::ResponseInvalid],
+    'a numeric value'  => [['indicator' => 1], ExchangeRateFailure::ResponseInvalid],
+    'a listed value'   => [['PA.NUS.FCRF'], ExchangeRateFailure::ResponseInvalid],
     'an empty key'     => [['' => 'PA.NUS.FCRF'], ExchangeRateFailure::ResponseInvalid],
     'a credential url' => [['source_url' => 'https://user:SECRET@api.worldbank.org'], ExchangeRateFailure::SourceRequired],
     'a plain http url' => [['source_url' => 'http://api.worldbank.org'], ExchangeRateFailure::SourceRequired],
