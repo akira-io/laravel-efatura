@@ -60,6 +60,10 @@
         "dompdf/php-svg-lib": "^1.0.2",
         "bacon/bacon-qr-code": "^3.1"
     },
+    "conflict": {
+        "dompdf/dompdf": "<3.1",
+        "bacon/bacon-qr-code": "<3.1"
+    },
     "suggest": {
         "dompdf/dompdf": "Required to render the Documento Fiscal Auxiliar (DFA) as a PDF (^3.1).",
         "bacon/bacon-qr-code": "Required to draw the DFA QR code as SVG, without gd or imagick (^3.1)."

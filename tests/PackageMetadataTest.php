@@ -56,6 +56,13 @@ it('suggests the DFA renderers and installs them for development', function (): 
         ]);
 });
 
+it('conflicts with DFA renderer versions older than the ones it supports', function (): void {
+    expect(ComposerMetadata::read()['conflict'] ?? null)->toBe([
+        'dompdf/dompdf'       => '<3.1',
+        'bacon/bacon-qr-code' => '<3.1',
+    ]);
+});
+
 it('runs the clear script as a registered Testbench command', function (): void {
     $clearHelp = new Process(['composer', 'run', 'clear', '--', '--help'], __DIR__ . '/..');
     $clearHelp->run();
