@@ -234,7 +234,10 @@ signed document of 1 000 lines verifies in a fraction of a second.
 `Enums\SignatureFailure`, each with a stable `code()` such as
 `signature.digest_mismatch`), the detected `profile`, and the subject, decimal
 serial number and SHA-256 digest of the certificate in `KeyInfo`. Nothing private
-is read or returned.
+is read or returned. The subject is written as RFC 4514 text, with every C0 and C1
+control character escaped as `\XX` per UTF-8 byte, so a crafted name cannot
+drive a terminal or a log. A certificate whose DER holds anything after the
+certificate, or a length the input cannot hold, is `signature.certificate_invalid`.
 
 | Failure | When |
 | --- | --- |

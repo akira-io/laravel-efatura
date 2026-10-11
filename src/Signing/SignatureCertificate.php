@@ -17,7 +17,7 @@ final readonly class SignatureCertificate
     public static function fromBase64(string $encoded): ?self
     {
         $der = base64_decode(Str::of($encoded)->replaceMatches('/\s+/', '')->value(), true);
-        if ($der === false) {
+        if ($der === false || ! DistinguishedName::isSingleElement($der)) {
             return null;
         }
 

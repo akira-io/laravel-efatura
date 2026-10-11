@@ -30,6 +30,8 @@ final class DistinguishedName
 
     private const int VERSION_TAG = 0xA0;
 
+    private const int MAX_LENGTH_OCTETS = 4;
+
     private const int ISSUER_FIELD = 2;
 
     private const int SUBJECT_FIELD = 4;
@@ -56,9 +58,20 @@ final class DistinguishedName
 
     public static function escape(string $value): string
     {
-        $escaped = str_replace("\0", '\00', (string) preg_replace('/[,+"\\\<>;]/', '\\\$0', $value));
+        $escaped = (string) preg_replace_callback(
+            '/[\x00-\x1F\x7F]|\xC2[\x80-\x9F]/',
+            static fn (array $control): string => '\\' . implode('\\', str_split(strtoupper(bin2hex($control[0])), 2)),
+            (string) preg_replace('/[,+"\\\<>;]/', '\\\$0', $value),
+        );
 
         return (string) preg_replace('/\A[ #]| \z/', '\\\$0', $escaped);
+    }
+
+    public static function isSingleElement(string $der): bool
+    {
+        $elements = self::elements($der);
+
+        return \count($elements) === 1 && $elements[0]['encoded'] === $der;
     }
 
     private static function nameAt(string $certificateDer, int $field): string
@@ -112,12 +125,22 @@ final class DistinguishedName
     {
         $elements = [];
         $offset   = 0;
-        while ($offset < \strlen($der)) {
-            $length = \ord(($der[$offset + 1] ?? "\0")[0]);
+        $size     = \strlen($der);
+        while ($offset < $size) {
+            $length = \ord(($der[$offset + 1] ?? "\x80")[0]);
             $header = 2;
             if ($length > 0x7F) {
-                $header += $length & 0x7F;
-                $length = (int) hexdec(bin2hex(substr($der, $offset + 2, $length & 0x7F)));
+                $octets = $length & 0x7F;
+                if ($octets === 0 || $octets > self::MAX_LENGTH_OCTETS || $offset + 2 + $octets > $size) {
+                    return [];
+                }
+
+                $header += $octets;
+                $length = (int) hexdec(bin2hex(substr($der, $offset + 2, $octets)));
+            }
+
+            if ($offset + $header + $length > $size) {
+                return [];
             }
 
             $elements[] = [

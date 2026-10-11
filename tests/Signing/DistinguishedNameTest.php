@@ -64,6 +64,10 @@ it('escapes the characters rfc 4514 reserves', function (string $value, string $
     'trailing space'  => ['a ', 'a\ '],
     'single space'    => [' ', '\ '],
     'nul'             => ["a\0b", 'a\00b'],
+    'c0 controls'     => ["a\x1B[31mb\nc\td", 'a\1B[31mb\0Ac\09d'],
+    'delete'          => ["a\x7Fb", 'a\7Fb'],
+    'c1 controls'     => ["a\u{85}b\u{9B}c", 'a\C2\85b\C2\9Bc'],
+    'printable utf-8' => ['São Vicente', 'São Vicente'],
     'inner hash'      => ['a#b c', 'a#b c'],
 ]);
 
@@ -79,4 +83,24 @@ it('writes the subject of a certificate in rfc 4514 order', function (): void {
     expect(DistinguishedName::subjectOf(C::signer()->der()))->toBe('CN=e-Fatura Test Signer,O=e-Fatura Test,C=CV')
         ->and(DistinguishedName::subjectOf(C::ca()->der()))->toBe(C::CA_NAME)
         ->and(DistinguishedName::subjectOf(Der::sequence($tbs)))->toBe('CN=Legacy Subject,C=CV');
+});
+
+it('reads nothing from der that is truncated, oversized or not der at all', function (string $der): void {
+    expect(DistinguishedName::subjectOf($der))->toBe('')
+        ->and(DistinguishedName::issuerOf($der))->toBe('')
+        ->and(DistinguishedName::isSingleElement($der))->toBeFalse();
+})->with([
+    'a certificate followed by an element with nine length octets' => fn (): string => C::signer()->der() . "\x30\x89" . str_repeat("\xff", 9),
+    'a certificate followed by any byte'                           => fn (): string => C::signer()->der() . "\x00",
+    'five length octets'                                           => ["\x30\x85\x00\x00\x00\x00\x01\x00"],
+    'an indefinite length'                                         => ["\x30\x80\x00\x00"],
+    'length octets beyond the input'                               => ["\x30\x84\x00\x01"],
+    'content beyond the input'                                     => ["\x30\x05\x02\x01"],
+    'a lone tag'                                                   => ["\x30"],
+]);
+
+it('recognizes a single complete der element', function (): void {
+    expect(DistinguishedName::isSingleElement(C::signer()->der()))->toBeTrue()
+        ->and(DistinguishedName::isSingleElement(Der::sequence()))->toBeTrue()
+        ->and(DistinguishedName::isSingleElement(''))->toBeFalse();
 });

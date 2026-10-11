@@ -8,6 +8,7 @@ use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Signing\SignatureDigests;
 use Akira\Efatura\Signing\SignatureVerification;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Tests\Support\CertificateFixtures as C;
 use Akira\Efatura\Tests\Support\SignatureEdits as E;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
 
@@ -160,3 +161,14 @@ it('verifies a document the caller already parsed without reading it again', fun
     expect(resolve(VerifyXmlSignatureAction::class)->handle($document))->toEqual(verifyStructure($signed))
         ->and($document->saveXML())->toBe(S::document($signed)->saveXML());
 });
+
+it('reports a certificate carrying trailing der as unreadable instead of failing', function (string $suffix): void {
+    $certificate = base64_encode(C::signer()->der() . $suffix);
+    $edited      = E::edit(S::sign(S::unsigned())->xml, E::replaceCertificate($certificate));
+
+    expect(verifyStructure($edited)->failures)->toBe([SignatureFailure::CertificateInvalid])
+        ->and(verifyStructure($edited)->certificateSubject)->toBeNull();
+})->with([
+    'an element with nine length octets' => ["\x30\x89" . str_repeat("\xff", 9)],
+    'a single zero byte'                 => ["\x00"],
+]);
