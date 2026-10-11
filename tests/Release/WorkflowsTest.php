@@ -10,7 +10,7 @@ it('pins every third party action to a full commit SHA', function (string $workf
     expect($actions)->not->toBeEmpty()
         ->each->toMatch('/^[\w.-]+\/[\w.\/-]+@[a-f\d]{40}$/')
         ->and(Workflows::source($workflow))->toMatch('/uses: [^\s@]+@[a-f\d]{40} # v\d/');
-})->with(['tests', 'release', 'dependabot-auto-merge']);
+})->with(fn (): array => Workflows::names());
 
 it('declares the permissions of every workflow', function (string $workflow): void {
     expect(Workflows::read($workflow))->toHaveKey('permissions');
@@ -32,7 +32,17 @@ it('publishes a release only after the tag check and both test variants pass', f
 
     expect($jobs['gates']['uses'])->toBe('./.github/workflows/tests.yml')
         ->and($jobs['gates']['needs'])->toBe('verify')
-        ->and($jobs['release']['needs'])->toBe(['verify', 'gates']);
+        ->and($jobs['release']['needs'])->toBe(['verify', 'gates'])
+        ->and($jobs['release'])->not->toHaveKey('if');
+});
+
+it('commits the changelog before announcing the release, and never fails the release on the announcement', function (): void {
+    $steps = array_column(Workflows::read('release')['jobs']['release']['steps'], null, 'name');
+    $names = array_keys($steps);
+
+    expect(array_search('Commit CHANGELOG', $names, true))->toBeLessThan(array_search('Send GitHub Release to Discord', $names, true))
+        ->and($steps['Send GitHub Release to Discord']['continue-on-error'] ?? null)->toBeTrue()
+        ->and(collect($steps)->except('Send GitHub Release to Discord')->pluck('continue-on-error')->filter()->all())->toBe([]);
 });
 
 it('grants each release job only the access it needs', function (): void {
@@ -57,8 +67,11 @@ it('refuses a tag outside main and never replaces a published release', function
 });
 
 it('lets dependabot merge only through the pull request scopes it needs', function (): void {
-    expect(Workflows::read('dependabot-auto-merge')['permissions'])->toBe([
-        'pull-requests' => 'write',
-        'contents'      => 'write',
-    ]);
+    $workflow = Workflows::read('dependabot-auto-merge');
+
+    expect($workflow['jobs']['dependabot']['if'])->toBe('${{ github.event.pull_request.user.login == \'dependabot[bot]\' }}')
+        ->and($workflow['permissions'])->toBe([
+            'pull-requests' => 'write',
+            'contents'      => 'write',
+        ]);
 });

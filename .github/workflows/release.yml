@@ -165,21 +165,6 @@ jobs:
             --latest="${LATEST}" \
             --prerelease="${PRERELEASE}"
 
-      - name: Send GitHub Release to Discord
-        uses: SethCohen/github-releases-to-discord@24d166886aee4646d448c8a389ff9e1ebcab3682 # v1.20.0
-        with:
-          webhook_url: ${{ secrets.DISCORD }}
-          release_name: ${{ github.ref_name }}
-          release_body: ${{ steps.notes.outputs.body }}
-          release_html_url: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
-          color: "2105893"
-          username: "Akira E-Fatura"
-          avatar_url: "https://avatars.githubusercontent.com/u/116525492?s=96&v=4"
-          content: "||@everyone||"
-          footer_title: "Akira E-Fatura"
-          footer_icon_url: "https://avatars.githubusercontent.com/u/116525492?s=96&v=4"
-          footer_timestamp: true
-
       - name: Commit CHANGELOG
         env:
           NEWEST: ${{ steps.flags.outputs.newest }}
@@ -198,3 +183,19 @@ jobs:
           git add CHANGELOG.md
           git diff --cached --quiet || git commit -m "chore(changelog): ${TAG_NAME}"
           git push origin HEAD:refs/heads/main
+
+      - name: Send GitHub Release to Discord
+        continue-on-error: true
+        uses: SethCohen/github-releases-to-discord@24d166886aee4646d448c8a389ff9e1ebcab3682 # v1.20.0
+        with:
+          webhook_url: ${{ secrets.DISCORD }}
+          release_name: ${{ github.ref_name }}
+          release_body: ${{ steps.notes.outputs.body }}
+          release_html_url: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+          color: "2105893"
+          username: "Akira E-Fatura"
+          avatar_url: "https://avatars.githubusercontent.com/u/116525492?s=96&v=4"
+          content: "||@everyone||"
+          footer_title: "Akira E-Fatura"
+          footer_icon_url: "https://avatars.githubusercontent.com/u/116525492?s=96&v=4"
+          footer_timestamp: true
