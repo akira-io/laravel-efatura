@@ -206,6 +206,12 @@ It accepts exactly what the signer emits and nothing else:
 Each reference digest is recomputed, the `SignatureValue` is verified against
 the RSA key of the `X509Certificate` in `KeyInfo`, and the `CertDigest` of the
 signing certificate must be the SHA-256 of that certificate.
+The `enveloped-signature` transform is applied by canonicalizing a copy of the
+document from which the `ds:Signature` was removed, and every element is
+canonicalized as a standalone document that carries its in-scope namespaces and
+inherited `xml:` attributes. The result is byte for byte the C14N of the
+transform's node-set, at a cost that grows with the size of the document: a
+signed document of 1 000 lines verifies in a fraction of a second.
 
 `Signing\SignatureVerification` carries `valid`, the `failures` (a list of
 `Enums\SignatureFailure`, each with a stable `code()` such as

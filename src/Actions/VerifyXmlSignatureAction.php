@@ -18,8 +18,6 @@ use DOMXPath;
 
 final readonly class VerifyXmlSignatureAction
 {
-    private const string ENVELOPED_NODES = '(.//. | .//@* | .//namespace::*)[not(ancestor-or-self::ds:Signature)]';
-
     private const array TRANSFORMS = [Fiscal::ENVELOPED_SIGNATURE_TRANSFORM, Fiscal::C14N_ALGORITHM];
 
     public function __construct(private SafeXmlParser $parser) {}
@@ -48,7 +46,7 @@ final readonly class VerifyXmlSignatureAction
         $algorithms         = self::algorithmsSupported($xpath, $signature);
         $failures           = [
             ...($algorithms ? [] : [SignatureFailure::AlgorithmUnsupported]),
-            ...self::references($xpath, $signature, $signed, $properties),
+            ...self::references($document, $xpath, $signature, $signed, $properties),
             ...self::certificate($xpath, $certificate, $properties),
         ];
 
@@ -101,7 +99,7 @@ final readonly class VerifyXmlSignatureAction
      * @param  list<DOMElement>       $properties
      * @return list<SignatureFailure>
      */
-    private static function references(DOMXPath $xpath, DOMElement $signature, DOMElement $signed, array $properties): array
+    private static function references(DOMDocument $document, DOMXPath $xpath, DOMElement $signature, DOMElement $signed, array $properties): array
     {
         $references = self::elements($xpath, 'ds:SignedInfo/ds:Reference', $signature);
         $expected   = \count($references) === 2 && \count($properties) === 1
@@ -121,7 +119,7 @@ final readonly class VerifyXmlSignatureAction
             }
 
             $enveloped = \in_array(Fiscal::ENVELOPED_SIGNATURE_TRANSFORM, $transforms, true);
-            if (self::digest($target, $enveloped) !== self::text($xpath, 'ds:DigestValue', $reference)) {
+            if (self::digest($document, $target, $signature, $enveloped) !== self::text($xpath, 'ds:DigestValue', $reference)) {
                 $failures[] = SignatureFailure::DigestMismatch;
             }
         }
@@ -159,11 +157,19 @@ final readonly class VerifyXmlSignatureAction
             && ($reference->hasAttribute('Type') ? $reference->getAttribute('Type') : null) === $type;
     }
 
-    private static function digest(DOMElement $target, bool $enveloped): string
+    private static function digest(DOMDocument $document, DOMElement $target, DOMElement $signature, bool $enveloped): string
     {
-        $nodes = $enveloped ? ['query' => self::ENVELOPED_NODES, 'namespaces' => ['ds' => Fiscal::XMLDSIG_NAMESPACE]] : null;
+        if (! $enveloped || ! $target->contains($signature)) {
+            return SignatureDigests::node($target);
+        }
 
-        return SignatureDigests::of((string) $target->C14N(false, false, $nodes));
+        $copy     = clone $document;
+        $envelope = $copy->getElementsByTagNameNS(Fiscal::XMLDSIG_NAMESPACE, 'Signature')->item(0);
+        if ($envelope instanceof DOMElement) {
+            $envelope->parentNode?->removeChild($envelope);
+        }
+
+        return SignatureDigests::node($copy->documentElement ?? $copy);
     }
 
     /**

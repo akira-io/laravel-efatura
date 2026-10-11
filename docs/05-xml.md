@@ -104,11 +104,13 @@ profile (`Enveloped` or `InternallyDetached`). The container binds it to
 - parses with `LIBXML_NONET` only, and reports malformed XML as
   `xml.malformed`;
 - reads the document once with `XMLReader` before building it, and refuses
-  with `xml.too_complex` a document of more than 250 000 elements
-  (`XmlComplexity::MAX_ELEMENTS`) or more than 1 000 namespace declarations
-  (`XmlComplexity::MAX_NAMESPACE_DECLARATIONS`). A signed document of 1 000
-  lines holds 10 000 to 30 000 elements and a handful of declarations, so the limits
-  only stop documents built to make canonicalization or XPath slow;
+  with `xml.too_complex` a document of more than 100 000 elements
+  (`XmlComplexity::MAX_ELEMENTS`) or with an element that has more than 16
+  namespace declarations on itself and its ancestors together
+  (`XmlComplexity::MAX_NAMESPACES_IN_SCOPE`). A signed document of 1 000 lines
+  holds 10 000 to 30 000 elements and three declarations in scope at most, so
+  the limits only stop documents built to make canonicalization slow, whose
+  cost grows with the elements times the square of the namespaces in scope;
 - resolves the entry XSD through `OfficialArtifacts::xsdEntry()` and every
   `include` and `import` through an entity loader that accepts only files listed
   in `resources/official-artifacts.json`, after checking their size and

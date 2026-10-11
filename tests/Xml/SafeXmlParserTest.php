@@ -54,25 +54,31 @@ it('leaves no error behind when the caller had none', function (): void {
         ->and(libxml_use_internal_errors())->toBeFalse();
 });
 
-it('refuses a document over the element or namespace declaration limits before building it', function (string $xml): void {
+function namespaceDeclarations(int $count, string $prefix = 'n'): string
+{
+    return implode('', array_map(static fn (int $index): string => ' xmlns:' . $prefix . $index . '="urn:' . $index . '"', range(1, $count)));
+}
+
+it('refuses a document over the element or namespace limits before building it', function (string $xml): void {
     expect(fn (): DOMDocument => new SafeXmlParser()->parse($xml))->toThrow(function (SchemaValidationException $exception): void {
         expect($exception->errorCode)->toBe('xml.too_complex')
             ->and($exception->violations)->toBe([]);
     });
 })->with([
-    'too many elements'               => fn (): string => '<Dfe>' . str_repeat('<a/>', XmlComplexity::MAX_ELEMENTS) . '</Dfe>',
-    'too many namespace declarations' => fn (): string => '<Dfe' . implode('', array_map(
-        static fn (int $index): string => ' xmlns:n' . $index . '="urn:' . $index . '"',
-        range(0, XmlComplexity::MAX_NAMESPACE_DECLARATIONS),
-    )) . '/>',
-    'declarations spread over elements' => fn (): string => '<Dfe>' . str_repeat('<a xmlns="urn:a"/>', XmlComplexity::MAX_NAMESPACE_DECLARATIONS + 1) . '</Dfe>',
+    'too many elements'                   => fn (): string => '<Dfe>' . str_repeat('<a/>', XmlComplexity::MAX_ELEMENTS) . '</Dfe>',
+    'too many namespaces on an element'   => fn (): string => '<Dfe' . namespaceDeclarations(XmlComplexity::MAX_NAMESPACES_IN_SCOPE + 1) . '/>',
+    'namespaces piling up over ancestors' => fn (): string => '<Dfe' . namespaceDeclarations(XmlComplexity::MAX_NAMESPACES_IN_SCOPE)
+        . '><a xmlns="urn:a"/></Dfe>',
+    'redeclared on every level' => fn (): string => str_repeat('<a xmlns="urn:a">', XmlComplexity::MAX_NAMESPACES_IN_SCOPE + 1)
+        . str_repeat('</a>', XmlComplexity::MAX_NAMESPACES_IN_SCOPE + 1),
 ]);
 
-it('accepts a document exactly at both limits', function (): void {
-    $declarations = implode('', array_map(static fn (int $index): string => ' xmlns:n' . $index . '="urn:' . $index . '"', range(1, XmlComplexity::MAX_NAMESPACE_DECLARATIONS)));
-    $xml          = '<Dfe' . $declarations . '>' . str_repeat('<a/>', XmlComplexity::MAX_ELEMENTS - 1) . '</Dfe>';
+it('accepts a document exactly at both limits and counts siblings apart', function (): void {
+    $siblings = str_repeat('<b xmlns="urn:b"/>', 10);
+    $xml      = '<Dfe' . namespaceDeclarations(XmlComplexity::MAX_NAMESPACES_IN_SCOPE - 1) . '>' . $siblings
+        . str_repeat('<a/>', XmlComplexity::MAX_ELEMENTS - 11) . '</Dfe>';
 
-    expect(new SafeXmlParser()->parse($xml)->getElementsByTagName('a')->length)->toBe(XmlComplexity::MAX_ELEMENTS - 1)
+    expect(new SafeXmlParser()->parse($xml)->getElementsByTagName('a')->length)->toBe(XmlComplexity::MAX_ELEMENTS - 11)
         ->and(libxml_get_errors())->toBe([]);
 });
 
