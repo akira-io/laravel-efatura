@@ -20,6 +20,7 @@ final class StorageFixtures
     {
         config()->set('efatura.storage.disk', $disk);
         config()->set('efatura.storage.path', $path);
+        config()->set('efatura.cache.store', 'array');
 
         return resolve(ArtifactStore::class);
     }
