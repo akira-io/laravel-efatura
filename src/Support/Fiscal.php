@@ -57,6 +57,8 @@ final class Fiscal
 
     public const string OAUTH_ISSUER_URL = 'https://iam.efatura.cv/auth/realms/taxpayers';
 
+    public const string DFA_BASE_URL = 'https://pe.efatura.cv/dfe/view';
+
     public const string EARLIEST_DATE = '2021-01-01';
 
     public const string IDENTIFIER_DATE_LIMIT = '2100-01-01';

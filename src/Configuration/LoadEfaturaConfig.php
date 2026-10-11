@@ -27,6 +27,7 @@ final readonly class LoadEfaturaConfig
         'efatura.cache',
         'efatura.database',
         'efatura.queue',
+        'efatura.dfa',
     ];
 
     public function __construct(#[SensitiveParameter] private Repository $repository) {}
@@ -86,6 +87,10 @@ final readonly class LoadEfaturaConfig
             http: (new LoadHttpConfig($this->repository))(),
             driver: $this->driver(),
             exchangeRates: (new LoadExchangeRatesConfig($this->repository))(),
+            dfa: new DfaConfig(
+                $this->url('efatura.dfa.base_url', Fiscal::DFA_BASE_URL)
+                    ?? throw new ConfigurationException('configuration.invalid_type', 'efatura.dfa.base_url'),
+            ),
         );
     }
 

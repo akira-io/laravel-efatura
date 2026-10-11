@@ -210,6 +210,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Documento Fiscal Auxiliar
+    |--------------------------------------------------------------------------
+    |
+    | The QR code of an ONLINE or OFFLINE DFA holds {base_url}/{IUD}, which
+    | opens the document on the e-Fatura platform (Manual v11, 6.13). The
+    | base URL must use HTTPS without credentials, query strings or
+    | fragments; trailing slashes are removed.
+    |
+    */
+    'dfa' => [
+        'base_url' => env('EFATURA_DFA_BASE_URL', 'https://pe.efatura.cv/dfe/view'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Sequence Database And Queue
     |--------------------------------------------------------------------------
     |
