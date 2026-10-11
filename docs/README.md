@@ -15,6 +15,7 @@
 - Issuing documents and events, outcomes and reconciliation: see [issuance](issuance.md).
 - Checking an installation before issuing: see [readiness](readiness.md).
 - Exchange rates and converting a foreign currency document to CVE: see [currency conversion](currency.md).
+- Printing the Documento Fiscal Auxiliar as a PDF with its QR code: see [DFA](dfa.md).
 - Migrating replaced DTOs, exact values and renamed symbols: see [migration guide](migration.md).
 - Service provider: see [src/EfaturaServiceProvider.php](../src/EfaturaServiceProvider.php).
 - Document data objects: see [src/Data](../src/Data).
