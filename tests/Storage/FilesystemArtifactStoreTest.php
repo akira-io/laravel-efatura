@@ -39,6 +39,17 @@ it('stores each kind under the repository, the emitter, the month and the IUD', 
     'dfa'        => [ArtifactKind::Dfa, '{iud}.pdf'],
 ]);
 
+it('records the size of the contents in bytes', function (string $contents, int $bytes): void {
+    $stored = S::store()->put(S::iud(), ArtifactKind::Dfa, $contents);
+
+    expect($stored->size)->toBe($bytes)
+        ->and(Storage::disk('archive')->size($stored->path))->toBe($bytes)
+        ->and(S::store()->get($stored))->toBe($contents);
+})->with([
+    'multibyte text' => ['Preço € «ok»', 17],
+    'binary'         => ["%PDF-\x00\xff\xfe\n", 9],
+]);
+
 it('takes the year and the month from the date inside the IUD', function (string $date, string $folder): void {
     $iud = S::iud(date: $date);
 
