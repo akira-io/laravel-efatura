@@ -12,11 +12,13 @@ use Akira\Efatura\Signing\SignatureVerification;
 
 /**
  * @phpstan-type PresentedSignature array{valid: bool, failures: list<string>, certificate: array{subject: string, serial_number: string, digest: string}|null}
- * @phpstan-type PresentedSchema array{valid: bool, code: string|null, violations: list<array{line: int, column: int, message: string}>}
+ * @phpstan-type PresentedSchema array{valid: bool, code: string|null, violations: list<array{line: int, column: int, message: string}>, violations_total: int}
  */
 final readonly class XmlValidation
 {
     public const array PROFILES = ['enveloped' => SignatureProfile::Enveloped, 'detached' => SignatureProfile::InternallyDetached];
+
+    public const int MAX_PRESENTED_VIOLATIONS = 100;
 
     /**
      * @param list<SchemaViolation> $violations
@@ -45,6 +47,14 @@ final readonly class XmlValidation
         return $this->schemaCode === null && $this->signature?->valid === true;
     }
 
+    /**
+     * @return list<SchemaViolation>
+     */
+    public function presentedViolations(): array
+    {
+        return \array_slice($this->violations, 0, self::MAX_PRESENTED_VIOLATIONS);
+    }
+
     public function profileName(): ?string
     {
         $name = array_search($this->profile, self::PROFILES, true);
@@ -67,7 +77,8 @@ final readonly class XmlValidation
                     'line'    => $violation->line,
                     'column'  => $violation->column,
                     'message' => $violation->message,
-                ], $this->violations),
+                ], $this->presentedViolations()),
+                'violations_total' => \count($this->violations),
             ],
             'signature'            => $this->signature instanceof SignatureVerification ? self::signature($this->signature) : null,
             'trust_chain_verified' => false,

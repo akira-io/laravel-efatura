@@ -80,8 +80,13 @@ final class ValidateCommand extends Command
         }
 
         $this->line(self::schemaLine($validation));
-        foreach ($validation->violations as $violation) {
+        foreach ($validation->presentedViolations() as $violation) {
             $this->line('  ' . self::violationLine($violation));
+        }
+
+        $hidden = \count($validation->violations) - XmlValidation::MAX_PRESENTED_VIOLATIONS;
+        if ($hidden > 0) {
+            $this->line('  ' . __('efatura::efatura.console.validate.violations_hidden', ['count' => (string) $hidden]));
         }
 
         if ($validation->signature instanceof SignatureVerification) {

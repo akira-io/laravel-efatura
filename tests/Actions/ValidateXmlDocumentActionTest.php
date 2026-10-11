@@ -8,8 +8,10 @@ use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Enums\SignatureFailure;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\ConfigurationException;
+use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Signing\SignatureVerification;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
+use Akira\Efatura\Xml\SchemaViolation;
 use Akira\Efatura\Xml\XmlValidation;
 
 function validateXmlDocument(string $xml, ?SignatureProfile $profile = null): XmlValidation
@@ -65,7 +67,7 @@ it('keeps only the code of a package exception raised by the schema validator', 
 
     expect($validation->valid())->toBeFalse()
         ->and($validation->signature)->toBeNull()
-        ->and($validation->toArray()['schema'])->toBe(['valid' => false, 'code' => 'configuration.invalid_type', 'violations' => []])
+        ->and($validation->toArray()['schema'])->toBe(['valid' => false, 'code' => 'configuration.invalid_type', 'violations' => [], 'violations_total' => 0])
         ->and(json_encode($validation->toArray(), JSON_THROW_ON_ERROR))->not->toContain('passphrase');
 });
 
@@ -98,7 +100,7 @@ it('presents the result as plain values', function (): void {
     expect(validateXmlDocument($signed->xml)->toArray())->toBe([
         'valid'     => true,
         'profile'   => 'detached',
-        'schema'    => ['valid' => true, 'code' => null, 'violations' => []],
+        'schema'    => ['valid' => true, 'code' => null, 'violations' => [], 'violations_total' => 0],
         'signature' => [
             'valid'       => true,
             'failures'    => [],
@@ -122,3 +124,17 @@ it('presents a missing signature without a certificate', function (): void {
 it('names the profiles it accepts', function (): void {
     expect(XmlValidation::PROFILES)->toBe(['enveloped' => SignatureProfile::Enveloped, 'detached' => SignatureProfile::InternallyDetached]);
 });
+
+it('presents the first hundred violations and counts them all', function (int $count, int $presented): void {
+    $violations = array_map(static fn (int $line): SchemaViolation => new SchemaViolation($line, 1, LIBXML_ERR_ERROR, 'violation ' . $line), range(1, $count));
+    $schema     = XmlValidation::refused(SchemaValidationException::malformed($violations))->toArray()['schema'];
+
+    expect($schema['violations'])->toHaveCount($presented)
+        ->and($schema['violations_total'])->toBe($count)
+        ->and(array_column($schema['violations'], 'line'))->toBe(range(1, $presented));
+})->with([
+    'one'          => [1, 1],
+    'exactly 100'  => [XmlValidation::MAX_PRESENTED_VIOLATIONS, 100],
+    'one too many' => [XmlValidation::MAX_PRESENTED_VIOLATIONS + 1, 100],
+    'many more'    => [250, 100],
+]);

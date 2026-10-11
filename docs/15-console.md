@@ -101,7 +101,7 @@ certificate chain was not verified against ICP-CV. With `--json` it prints:
 {
     "valid": true,
     "profile": "enveloped",
-    "schema": {"valid": true, "code": null, "violations": []},
+    "schema": {"valid": true, "code": null, "violations": [], "violations_total": 0},
     "signature": {
         "valid": true,
         "failures": [],
@@ -113,7 +113,9 @@ certificate chain was not verified against ICP-CV. With `--json` it prints:
 
 `schema.code` is the package code of the failure (`xml.schema_invalid`,
 `xml.malformed`, `xml.doctype_forbidden`...), and each violation has its `line`,
-`column` and redacted `message`. XML refused by the parser has a `null`
+`column` and redacted `message`. Only the first 100 violations are listed
+(`XmlValidation::MAX_PRESENTED_VIOLATIONS`); `violations_total` counts them all,
+and the text output says how many it left out. XML refused by the parser has a `null`
 `profile` and `signature`. A document the schema refuses keeps its `profile` and
 has a `null` `signature`: the signature is not checked, so a document built to
 make verification slow costs no more than its schema validation, and the text

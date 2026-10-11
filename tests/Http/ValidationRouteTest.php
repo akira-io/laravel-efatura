@@ -34,7 +34,7 @@ it('answers 200 with the validation of a signed document', function (): void {
         ->assertExactJson([
             'valid'     => true,
             'profile'   => 'detached',
-            'schema'    => ['valid' => true, 'code' => null, 'violations' => []],
+            'schema'    => ['valid' => true, 'code' => null, 'violations' => [], 'violations_total' => 0],
             'signature' => [
                 'valid'       => true,
                 'failures'    => [],
@@ -110,7 +110,7 @@ it('keeps only the code of a package exception and never its message', function 
 
     $response = postXml(UploadedFile::fake()->createWithContent('document.xml', S::sign(S::unsigned())->xml));
 
-    $response->assertUnprocessable()->assertJsonPath('schema', ['valid' => false, 'code' => 'configuration.invalid_type', 'violations' => []]);
+    $response->assertUnprocessable()->assertJsonPath('schema', ['valid' => false, 'code' => 'configuration.invalid_type', 'violations' => [], 'violations_total' => 0]);
     expect($response->getContent())->not->toContain('passphrase')->not->toContain('ConfigurationException')->not->toContain('trace');
 });
 

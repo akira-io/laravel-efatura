@@ -73,6 +73,7 @@ return [
             'schema_valid'      => 'Schema (:profile): valid.',
             'schema_invalid'    => 'Schema (:profile): invalid (:code).',
             'violation'         => 'Line :line, column :column: :message',
+            'violations_hidden' => ':count more violations are not shown.',
             'signature_valid'   => 'Signature: valid.',
             'signature_invalid' => 'Signature: invalid.',
             'signature_skipped' => 'Signature: not checked, because the schema validation failed.',

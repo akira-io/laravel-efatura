@@ -136,7 +136,7 @@ it('prints a stable json document', function (): void {
         ->and($document)->toBe([
             'valid'     => true,
             'profile'   => 'enveloped',
-            'schema'    => ['valid' => true, 'code' => null, 'violations' => []],
+            'schema'    => ['valid' => true, 'code' => null, 'violations' => [], 'violations_total' => 0],
             'signature' => [
                 'valid'       => true,
                 'failures'    => [],
@@ -166,8 +166,25 @@ it('prints the failures of a signature the schema accepts as json', function ():
     [$exitCode, $document] = validationJson(validationFile($xml));
 
     expect($exitCode)->toBe(1)
-        ->and($document['schema'])->toBe(['valid' => true, 'code' => null, 'violations' => []])
+        ->and($document['schema'])->toBe(['valid' => true, 'code' => null, 'violations' => [], 'violations_total' => 0])
         ->and($document['signature'])->toBe(['valid' => false, 'failures' => ['signature.certificate_invalid'], 'certificate' => null]);
+});
+
+it('prints the first hundred violations and how many it left out', function (): void {
+    $xml  = S::unsigned();
+    $line = Str::between($xml, '<Lines>', '</Lines>');
+    $path = validationFile(str_replace($line, str_repeat(str_replace('LineTypeCode="N"', 'LineTypeCode="Q"', $line), 150), $xml));
+
+    artisan('efatura:validate', ['path' => $path])
+        ->expectsOutputToContain('Schema (enveloped): invalid (xml.schema_invalid).')
+        ->expectsOutputToContain('50 more violations are not shown.')
+        ->assertExitCode(1);
+
+    [$exitCode, $document] = validationJson($path);
+
+    expect($exitCode)->toBe(1)
+        ->and($document['schema']['violations'])->toHaveCount(100)
+        ->and($document['schema']['violations_total'])->toBe(150);
 });
 
 it('refuses paths and options it cannot validate', function (Closure $path, array $options, string $reason, string $message): void {
