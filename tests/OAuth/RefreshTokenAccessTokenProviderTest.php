@@ -187,7 +187,7 @@ it('fails without leaking any secret', function (Closure $response, string $erro
     'a json list'            => [fn (): PromiseInterface => Http::response('[1]'), 'oauth.unexpected_response', ['emitter' => O::EMITTER, 'status' => 200]],
     'a server error'         => [fn (): PromiseInterface => Http::response('', 500), 'oauth.unexpected_response', ['emitter' => O::EMITTER, 'status' => 500]],
     'a refused connection'   => [
-        fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7', $request->toPsrRequest())),
+        fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest())),
         'transport.connection_failed',
         ['identifiers' => O::EMITTER],
     ],

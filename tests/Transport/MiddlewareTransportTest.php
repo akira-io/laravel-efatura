@@ -133,7 +133,7 @@ it('never retries a submission', function (): void {
 });
 
 it('classifies a submission that could not connect as undelivered and retryable', function (): void {
-    Http::fake(fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7', $request->toPsrRequest())));
+    Http::fake(fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest())));
 
     expect(fn (): SubmissionResult => $this->transport->submit(T::archive()))->toThrow(function (TransportException $exception): void {
         expect($exception->failure)->toBe(TransportFailure::ConnectionFailed)
@@ -174,7 +174,7 @@ it('retries a lookup that never reached the middleware', function (): void {
         $attempts++;
 
         return $attempts < 3
-            ? Create::rejectionFor(new ConnectException('cURL error 7', $request->toPsrRequest()))
+            ? Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest()))
             : Http::response(middlewareDfe(T::FIRST_IUD));
     });
 
@@ -280,7 +280,7 @@ it('keeps the transmitter key out of every failure', function (Closure $response
 })->with([
     'an unknown outcome'   => [fn (): PromiseInterface => Http::response('', 503)],
     'an unexpected body'   => [fn (): PromiseInterface => Http::response('<html/>')],
-    'a refused connection' => [fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7', $request->toPsrRequest()))],
+    'a refused connection' => [fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest()))],
 ]);
 
 it('retries only failures that left nothing behind', function (?Throwable $exception, bool $retryable): void {

@@ -193,7 +193,7 @@ it('reaches the configured endpoint and compares clocks only when asked to', fun
 ]);
 
 it('fails an endpoint it cannot reach and skips the clock it would have read', function (): void {
-    Http::fake(fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7', $request->toPsrRequest())));
+    Http::fake(fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest())));
 
     $report = readiness(['efatura.http.retry_delay_milliseconds' => 0], remote: true);
 

@@ -12,6 +12,7 @@ use Akira\Efatura\Tests\Support\TransportFixtures as T;
 use Akira\Efatura\Transport\FailureClassifier;
 use Akira\Efatura\Transport\TransportRequests;
 use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\ConnectTimeoutException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -57,12 +58,28 @@ it('reads the curl failure a guzzle 7 handler reports to decide whether the requ
     'unknown error'              => [['errno' => 999], TransportFailure::OutcomeUnknown],
 ]);
 
-it('falls back on the kind of failure when the handler reports no curl error, as guzzle 8 does', function (Closure $cause, TransportFailure $failure): void {
+it('reads the curl error a guzzle 8 handler reports in its message', function (Closure $cause, TransportFailure $failure): void {
     expect(resolve(FailureClassifier::class)->classify(connectionFailure($cause), T::FIRST_IUD)->failure)->toBe($failure);
 })->with([
-    'a connect failure' => [fn (RequestInterface $request): ConnectException => new ConnectException('cURL error 7', $request), TransportFailure::ConnectionFailed],
-    'any other failure' => [fn (RequestInterface $request): RequestException => new RequestException('cURL error 56', $request), TransportFailure::OutcomeUnknown],
+    'connection refused'      => [fn (RequestInterface $request): ConnectException => new ConnectException('cURL error 7: Failed to connect', $request), TransportFailure::ConnectionFailed],
+    'host not resolved'       => [fn (RequestInterface $request): ConnectException => new ConnectException('cURL error 6: Could not resolve', $request), TransportFailure::ConnectionFailed],
+    'timeout without timings' => [fn (RequestInterface $request): RequestException => new RequestException('cURL error 28: Operation timed out', $request), TransportFailure::OutcomeUnknown],
+    'empty reply'             => [fn (RequestInterface $request): RequestException => new RequestException('cURL error 52: Empty reply', $request), TransportFailure::OutcomeUnknown],
 ]);
+
+it('never counts a failure without a curl error as undelivered, whatever its kind', function (Closure $cause): void {
+    expect(resolve(FailureClassifier::class)->classify(connectionFailure($cause), T::FIRST_IUD)->failure)->toBe(TransportFailure::OutcomeUnknown);
+})->with([
+    'a stream handler connect failure' => [fn (RequestInterface $request): ConnectException => new ConnectException('Error creating resource', $request)],
+    'an error number out of place'     => [fn (RequestInterface $request): ConnectException => new ConnectException('Failed: cURL error 7: refused', $request)],
+    'any other failure'                => [fn (RequestInterface $request): RequestException => new RequestException('Connection lost', $request)],
+]);
+
+it('counts a guzzle 8 connect timeout as undelivered', function (): void {
+    $cause = fn (RequestInterface $request): ConnectException => new ConnectTimeoutException('Connection timed out', $request);
+
+    expect(resolve(FailureClassifier::class)->classify(connectionFailure($cause), T::FIRST_IUD)->failure)->toBe(TransportFailure::ConnectionFailed);
+})->skip(! class_exists(ConnectTimeoutException::class), 'Guzzle 7 has no connect timeout exception.');
 
 it('treats a connection failure without a cause as an unknown outcome', function (): void {
     expect(resolve(FailureClassifier::class)->classify(new ConnectionException('lost'), T::FIRST_IUD)->failure)->toBe(TransportFailure::OutcomeUnknown);

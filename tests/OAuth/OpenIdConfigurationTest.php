@@ -71,5 +71,5 @@ it('fails closed on a discovery document it cannot use', function (Closure $resp
     'no token endpoint'   => [fn (): PromiseInterface => Http::response(['issuer' => O::ISSUER]), ['status' => 200]],
     'a numeric endpoint'  => [fn (): PromiseInterface => Http::response(['token_endpoint' => 42]), ['status' => 200]],
     'too large'           => [fn (): PromiseInterface => Http::response(str_repeat(' ', Fiscal::MAX_RESPONSE_BYTES + 1)), ['status' => 200]],
-    'refused connections' => [fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7', $request->toPsrRequest())), []],
+    'refused connections' => [fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest())), []],
 ]);

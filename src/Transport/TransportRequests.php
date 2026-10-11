@@ -29,9 +29,10 @@ final readonly class TransportRequests
     public function plain(HttpClientConfig $config): PendingRequest
     {
         return $this->http->createPendingRequest()
+            ->setHandler(new BoundedCurlHandler)
             ->timeout($config->timeoutSeconds)
             ->connectTimeout($config->connectTimeoutSeconds)
             ->withoutRedirecting()
-            ->withOptions(['verify' => $config->verify(), 'stream' => true]);
+            ->withOptions(['verify' => $config->verify()]);
     }
 }

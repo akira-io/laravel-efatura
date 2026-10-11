@@ -53,9 +53,11 @@ test document to production.
 
 Every operation builds a fresh request from the HTTP client profile: base URL,
 `timeout_seconds`, `connect_timeout_seconds`, `verify_tls` or `ca_bundle_path`,
-no redirects, and the body read as a stream up to 5 MiB
-(`Fiscal::MAX_RESPONSE_BYTES`); anything larger is `transport.response_too_large`
-and its body is never kept. Nothing is shared between two emitters.
+and no redirects. Requests always go through the Guzzle cURL handler (ext-curl is
+required), never through PHP streams: only cURL says whether a failed request left
+the machine. The handler keeps at most 5 MiB and one byte of the response body
+(`Fiscal::MAX_RESPONSE_BYTES`) and discards the rest as it arrives; a larger body
+is `transport.response_too_large`. Nothing is shared between two emitters.
 
 ## Responses
 
@@ -82,12 +84,12 @@ readable `<Responses>` body wins over its status.
 
 | Answer | `TransportException::$failure` | Retryable |
 | --- | --- | --- |
-| DNS failure, connection refused, connect timeout, TLS handshake (cURL 6, 7, 28 before connecting, 35, 60) | `transport.connection_failed` | yes: nothing was delivered |
+| DNS failure, connection refused, connect timeout, TLS handshake (cURL 6, 7, 28 before connecting, 35, 60; the Guzzle 8 `ConnectTimeoutException`) | `transport.connection_failed` | yes: nothing was delivered |
 | 401, 403 | `transport.unauthorized` | no |
 | 404, 405, 415 | `transport.http_error` (endpoint misconfigured, nothing processed) | no |
 | 413 | `transport.payload_too_large` | no |
 | 429 | `transport.rate_limited` | yes |
-| 3xx, 5xx, a connection broken after the request left, an unreadable body after a submission | `transport.outcome_unknown` | no: reconcile first |
+| 3xx, 5xx, a connection broken or silent after the request left, any failure without a cURL error number, an unreadable body after a submission | `transport.outcome_unknown` | no: reconcile first |
 | Body of a successful status that is not figure 13 | `transport.unexpected_response` | no: reconcile first |
 
 The exception message is the error code. `context` holds only `status`, `kind`,

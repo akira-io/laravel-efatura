@@ -11,6 +11,7 @@ it('declares the runtime platform and imported Laravel components', function ():
 
     expect($requirements)->toMatchArray([
         'php'                   => '^8.5',
+        'ext-curl'              => '*',
         'ext-dom'               => '*',
         'ext-libxml'            => '*',
         'ext-openssl'           => '*',

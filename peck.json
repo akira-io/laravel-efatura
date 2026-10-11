@@ -44,7 +44,10 @@
             "xmldsig",
             "xpath",
             "encrypter",
-            "lockless"
+            "lockless",
+            "loopback",
+            "eof",
+            "seekable"
         ],
         "paths": [
             "resources/catalogs/source",

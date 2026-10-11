@@ -28,7 +28,7 @@ it('bounds every request by the timeouts and trust of its client profile', funct
         ->and($options['connect_timeout'])->toBe(4)
         ->and($options['verify'])->toBe($this->bundle)
         ->and($options['allow_redirects'])->toBeFalse()
-        ->and($options['stream'])->toBeTrue()
+        ->and($options)->not->toHaveKey('stream')
         ->and($this->requests->for($http->platform, Environment::Test)->getOptions()['verify'])->toBeTrue();
 });
 

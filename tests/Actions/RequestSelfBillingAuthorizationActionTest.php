@@ -138,7 +138,7 @@ it('never repeats the request and maps an unreadable answer by its status', func
 it('classifies a request that never connected as undelivered and keeps the key out of it', function (): void {
     selfBillingConfig('middleware');
     $original = ini_set('zend.exception_ignore_args', '0');
-    Http::fake(fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7', $request->toPsrRequest())));
+    Http::fake(fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest())));
 
     try {
         requestSelfBilling();

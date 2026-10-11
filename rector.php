@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use Rector\CodeQuality\Rector\ClassMethod\LocallyCalledStaticMethodToNonStaticRector;
+use Rector\CodeQuality\Rector\FuncCall\InlineIsAInstanceOfRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodParameterRector;
 use Rector\DeadCode\Rector\Property\RemoveUnusedPrivatePropertyRector;
+use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
 use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
 use Rector\Renaming\Rector\Name\RenameClassRector;
@@ -31,6 +33,8 @@ return RectorConfig::configure()
         ],
         RemoveUnusedPrivateMethodParameterRector::class,
         RemoveUnusedPrivatePropertyRector::class,
+        StringClassNameToClassConstantRector::class => [__DIR__ . '/src/Transport/FailureClassifier.php'],
+        InlineIsAInstanceOfRector::class            => [__DIR__ . '/src/Transport/FailureClassifier.php'],
     ])
     ->withComposerBased(laravel: true)
     ->withSets([
