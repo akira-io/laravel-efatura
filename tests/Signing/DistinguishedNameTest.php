@@ -66,3 +66,17 @@ it('escapes the characters rfc 4514 reserves', function (string $value, string $
     'nul'             => ["a\0b", 'a\00b'],
     'inner hash'      => ['a#b c', 'a#b c'],
 ]);
+
+it('writes the subject of a certificate in rfc 4514 order', function (): void {
+    $tbs = Der::sequence(
+        Der::integerHex('01'),
+        Der::sequence(Der::oid('1.2.840.113549.1.1.11'), Der::null()),
+        Der::name([[['2.5.4.3', 'Issuer']]]),
+        Der::sequence(),
+        Der::name([[['2.5.4.6', 'CV', 0x13]], [['2.5.4.3', 'Legacy Subject']]]),
+    );
+
+    expect(DistinguishedName::subjectOf(C::signer()->der()))->toBe('CN=e-Fatura Test Signer,O=e-Fatura Test,C=CV')
+        ->and(DistinguishedName::subjectOf(C::ca()->der()))->toBe(C::CA_NAME)
+        ->and(DistinguishedName::subjectOf(Der::sequence($tbs)))->toBe('CN=Legacy Subject,C=CV');
+});

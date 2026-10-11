@@ -30,13 +30,18 @@ final class DistinguishedName
 
     private const int VERSION_TAG = 0xA0;
 
+    private const int ISSUER_FIELD = 2;
+
+    private const int SUBJECT_FIELD = 4;
+
     public static function issuerOf(string $certificateDer): string
     {
-        $certificate = self::elements($certificateDer)[0]['content'] ?? '';
-        $fields      = self::elements(self::elements($certificate)[0]['content'] ?? '');
-        $offset      = ($fields[0]['tag'] ?? null) === self::VERSION_TAG ? 1 : 0;
+        return self::nameAt($certificateDer, self::ISSUER_FIELD);
+    }
 
-        return self::fromName($fields[$offset + 2]['content'] ?? '');
+    public static function subjectOf(string $certificateDer): string
+    {
+        return self::nameAt($certificateDer, self::SUBJECT_FIELD);
     }
 
     public static function fromName(string $rdnSequence): string
@@ -54,6 +59,15 @@ final class DistinguishedName
         $escaped = str_replace("\0", '\00', (string) preg_replace('/[,+"\\\<>;]/', '\\\$0', $value));
 
         return (string) preg_replace('/\A[ #]| \z/', '\\\$0', $escaped);
+    }
+
+    private static function nameAt(string $certificateDer, int $field): string
+    {
+        $certificate = self::elements($certificateDer)[0]['content'] ?? '';
+        $fields      = self::elements(self::elements($certificate)[0]['content'] ?? '');
+        $offset      = ($fields[0]['tag'] ?? null) === self::VERSION_TAG ? 1 : 0;
+
+        return self::fromName($fields[$offset + $field]['content'] ?? '');
     }
 
     /**

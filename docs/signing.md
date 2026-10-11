@@ -181,6 +181,56 @@ and the tests validate signed documents against the XSD with short serial
 numbers. To validate a signed document yourself on libxml 2.9, expect that
 failure on that element alone (see [schema validation](xml.md#schema-validation)).
 
+## Verifying a signature
+
+`Actions\VerifyXmlSignatureAction::handle(string $xml): SignatureVerification`
+checks a signed `Dfe` or `Event` the way this package writes it. It parses the
+XML with the hardened parser, so XML that is not well formed fails with
+`xml.malformed` and a document type declaration (the vector of an XXE attempt)
+with `xml.doctype_forbidden`, both as `SchemaValidationException`. It never
+signs, stores or sends anything.
+
+It accepts exactly what the signer emits and nothing else:
+
+- one `ds:Signature`, as the last child of `Dfe` or `Event` (enveloped) or as
+  the first child of `internally-detached` followed by the `Dfe` or `Event`
+  (internally detached);
+- inclusive C14N 1.0 for `SignedInfo`, `rsa-sha256` for the signature and
+  SHA-256 for every digest;
+- two references, in this order: the `Id` of the signed root, then
+  `SignedProperties` with its XAdES `Type`, each `Id` held by exactly one
+  element of the document;
+- `enveloped-signature` and inclusive C14N as the only transforms.
+
+Each reference digest is recomputed, the `SignatureValue` is verified against
+the RSA key of the `X509Certificate` in `KeyInfo`, and the `CertDigest` of the
+signing certificate must be the SHA-256 of that certificate.
+
+`Signing\SignatureVerification` carries `valid`, the `failures` (a list of
+`Enums\SignatureFailure`, each with a stable `code()` such as
+`signature.digest_mismatch`), the detected `profile`, and the subject, decimal
+serial number and SHA-256 digest of the certificate in `KeyInfo`. Nothing private
+is read or returned.
+
+| Failure | When |
+| --- | --- |
+| `signature.missing` | The document has no `ds:Signature` |
+| `signature.multiple` | It has more than one |
+| `signature.placement` | The signature is not where either profile puts it |
+| `signature.algorithm_unsupported` | A canonicalization, signature, digest or transform algorithm the signer never writes |
+| `signature.reference_unexpected` | References other than the two above, or an `Id` that is missing or used twice |
+| `signature.digest_mismatch` | A reference digest does not match the signed content or properties |
+| `signature.certificate_invalid` | `KeyInfo` holds no readable certificate |
+| `signature.key_unsupported` | The certificate key is not RSA |
+| `signature.certificate_mismatch` | `CertDigest` is not the SHA-256 of the `KeyInfo` certificate |
+| `signature.value_invalid` | `SignatureValue` does not verify against that certificate |
+
+A valid result proves that the document was not changed since it was signed by
+the holder of the key in `KeyInfo`. It does not prove who that holder is: the
+certificate chain is not verified against ICP-CV or any other authority. Use
+`efatura.certificates.ca_bundle_path` when loading your own credentials for that
+check (see [ICP-CV and the CA bundle](#icp-cv-and-the-ca-bundle)).
+
 ---
 
 [Documentation index](README.md) · [Sequences](sequences.md) · [Packaging](packaging.md)
