@@ -19,29 +19,24 @@ final readonly class CachedExchangeRateProvider implements ExchangeRateProvider
         private Repository $cache,
         private string $prefix,
         private int $ttlSeconds,
+        private ExchangeRateType $defaultType,
+        private bool $keepsEarlierDays = false,
     ) {}
 
     public function rate(ExchangeRateRequest $request): ExchangeRateQuote
     {
         $key    = $this->key($request);
-        $cached = $this->restored($this->cache->get($key));
+        $cached = $this->restored($this->read($key));
 
         if ($cached instanceof ExchangeRateQuote) {
             return $cached->answering($request);
         }
 
         $quote = $this->provider->rate($request);
-        $this->cache->put($key, [
-            'sourceCurrency' => $quote->sourceCurrency,
-            'targetCurrency' => $quote->targetCurrency,
-            'rate'           => (string) $quote->rate,
-            'rateType'       => $quote->rateType->value,
-            'effectiveAt'    => $quote->effectiveAt->toIso8601String(),
-            'retrievedAt'    => $quote->retrievedAt->toIso8601String(),
-            'provider'       => $quote->provider,
-            'sourceUrl'      => $quote->sourceUrl,
-            'evidence'       => $quote->evidence,
-        ], $this->ttlSeconds);
+
+        if ($this->keepsEarlierDays || ! Fiscal::local($quote->effectiveAt)->startOfDay()->isBefore(Fiscal::local($request->effectiveAt)->startOfDay())) {
+            $this->write($key, $quote);
+        }
 
         return $quote;
     }
@@ -52,9 +47,37 @@ final readonly class CachedExchangeRateProvider implements ExchangeRateProvider
             $this->prefix,
             $request->sourceCurrency,
             $request->targetCurrency,
-            $request->rateType->value ?? 'default',
+            ($request->rateType ?? $this->defaultType)->value,
             Fiscal::local($request->effectiveAt)->toDateString(),
         ]);
+    }
+
+    private function read(string $key): mixed
+    {
+        try {
+            return $this->cache->get($key);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private function write(string $key, ExchangeRateQuote $quote): void
+    {
+        try {
+            $this->cache->put($key, [
+                'sourceCurrency' => $quote->sourceCurrency,
+                'targetCurrency' => $quote->targetCurrency,
+                'rate'           => (string) $quote->rate,
+                'rateType'       => $quote->rateType->value,
+                'effectiveAt'    => $quote->effectiveAt->toIso8601String(),
+                'retrievedAt'    => $quote->retrievedAt->toIso8601String(),
+                'provider'       => $quote->provider,
+                'sourceUrl'      => $quote->sourceUrl,
+                'evidence'       => $quote->evidence,
+            ], $this->ttlSeconds);
+        } catch (Throwable) {
+            return;
+        }
     }
 
     private function restored(mixed $entry): ?ExchangeRateQuote

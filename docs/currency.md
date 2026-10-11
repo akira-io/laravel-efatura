@@ -104,11 +104,19 @@ set there fails with `configuration.fixed_endpoint` when the configuration loads
 
 ### Cache
 
-BCV and World Bank quotes are cached in `efatura.cache.store`, under
-`{prefix}:exchange_rates:{provider}:{source}:{target}:{type or default}:{Cabo Verde day}`,
-for `efatura.cache.exchange_rates_ttl_seconds`. The entry holds plain values and is
-rebuilt and checked against each request; an entry that cannot be rebuilt is
-ignored. Fixed and callback rates are not cached.
+BCV and World Bank quotes are cached in `efatura.cache.store` for
+`efatura.cache.exchange_rates_ttl_seconds`, under
+`{prefix}:exchange_rates:{variant}:{source}:{target}:{type}:{Cabo Verde day}`. The
+variant names the provider and the option that changes its answer: `bcv:age_{n}`
+for a `max_publication_age_days` of n, `world_bank:{observation_year}`. The type is
+the request's, or the provider's default when the request names none (`buy` or
+`sell` as configured for the BCV, `reference` for the World Bank), so both share one
+entry. A BCV quote published before the requested day is returned but never cached,
+so the table published later that day is not hidden behind it; World Bank quotes,
+always dated on the first day of the observed year, are cached. The entry holds plain
+values and is rebuilt and checked against each request; an entry that cannot be
+rebuilt is ignored, and a store that fails to read or write is treated as a miss.
+Fixed and callback rates are not cached.
 
 ## Configuration
 

@@ -10,6 +10,7 @@ use Akira\Efatura\Currency\ExchangeRateProviderResolver;
 use Akira\Efatura\Currency\ExchangeRateQuote;
 use Akira\Efatura\Currency\FixedExchangeRateProvider;
 use Akira\Efatura\Enums\ExchangeRateFailure;
+use Akira\Efatura\Enums\ExchangeRateType;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Tests\Support\ConfigFixtures;
 use Akira\Efatura\Tests\Support\CurrencyFixtures as C;
@@ -105,17 +106,17 @@ it('caches a quote per provider, pair, type and Cabo Verde day', function (): vo
     $first  = $provider->rate(C::request(null));
     $second = $provider->rate(C::request(null, effectiveAt: '2026-07-21T20:00:00Z'));
     $provider->rate(C::request(null, 'JPY'));
-    $provider->rate(C::request());
+    $provider->rate(C::request(ExchangeRateType::Sell));
 
     expect($second)->toEqual($first)
-        ->and(Cache::store('array')->get('efatura:exchange_rates:bcv:EUR:CVE:default:2026-07-21'))->toBeArray()
-        ->and(Cache::store('array')->has('efatura:exchange_rates:bcv:EUR:CVE:buy:2026-07-21'))->toBeTrue();
+        ->and(Cache::store('array')->get('efatura:exchange_rates:bcv:age_0:EUR:CVE:buy:2026-07-21'))->toBeArray()
+        ->and(Cache::store('array')->has('efatura:exchange_rates:bcv:age_0:EUR:CVE:sell:2026-07-21'))->toBeTrue();
     Http::assertSentCount(3);
 });
 
 it('answers from a cached entry without asking', function (): void {
     Http::fake();
-    Cache::store('array')->put('efatura:exchange_rates:bcv:EUR:CVE:buy:2026-07-21', cachedQuoteEntry(['evidence' => ['indicator' => 'BCV']]), 600);
+    Cache::store('array')->put('efatura:exchange_rates:bcv:age_0:EUR:CVE:buy:2026-07-21', cachedQuoteEntry(['evidence' => ['indicator' => 'BCV']]), 600);
 
     expect(exchangeRatesUsing([])->rate(C::request())->provider)->toBe('BCV');
     Http::assertNothingSent();
@@ -133,18 +134,16 @@ it('asks again once the cached quote expires', function (): void {
 });
 
 it('checks a cached quote against the request it answers', function (): void {
-    bcvPublishes();
-    $provider = exchangeRatesUsing(['bcv' => ['max_publication_age_days' => 5]]);
-    $provider->rate(C::request(effectiveAt: '2026-07-23T12:00:00Z'));
+    Http::fake();
+    Cache::store('array')->put('efatura:exchange_rates:bcv:age_0:EUR:CVE:buy:2026-07-20', cachedQuoteEntry(), 600);
 
-    Cache::store('array')->put('efatura:exchange_rates:bcv:EUR:CVE:buy:2026-07-20', Cache::store('array')->get('efatura:exchange_rates:bcv:EUR:CVE:buy:2026-07-23'), 600);
-
-    expect(C::failure(fn (): ExchangeRateQuote => $provider->rate(C::request(effectiveAt: '2026-07-20T12:00:00Z'))))->toBe(ExchangeRateFailure::DateUnavailable);
+    expect(C::failure(fn (): ExchangeRateQuote => exchangeRatesUsing([])->rate(C::request(effectiveAt: '2026-07-20T12:00:00Z'))))->toBe(ExchangeRateFailure::DateUnavailable);
+    Http::assertNothingSent();
 });
 
 it('asks again when the cached entry is not a quote it can rebuild', function (mixed $poisoned): void {
     bcvPublishes();
-    Cache::store('array')->put('efatura:exchange_rates:bcv:EUR:CVE:buy:2026-07-21', $poisoned, 600);
+    Cache::store('array')->put('efatura:exchange_rates:bcv:age_0:EUR:CVE:buy:2026-07-21', $poisoned, 600);
 
     expect((string) exchangeRatesUsing([])->rate(C::request())->rate)->toBe('110.26500');
     Http::assertSentCount(1);
