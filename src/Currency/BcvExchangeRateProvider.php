@@ -19,6 +19,8 @@ final readonly class BcvExchangeRateProvider implements ExchangeRateProvider
 
     public const string NAME = 'Banco de Cabo Verde';
 
+    public const int MAX_BODY_BYTES = 262_144;
+
     private const string HOST = 'www.bcv.cv';
 
     private string $sourceUrl;
@@ -54,7 +56,7 @@ final readonly class BcvExchangeRateProvider implements ExchangeRateProvider
             throw ExchangeRateException::because(ExchangeRateFailure::PairMismatch);
         }
 
-        $html = $this->client->get($this->profile, $this->sourceUrl, 'text/html', 'bcv');
+        $html = $this->client->get($this->profile, $this->sourceUrl, 'text/html', 'bcv', self::MAX_BODY_BYTES);
         $rate = $this->parser->parse($html, $request->sourceCurrency, $type);
         $this->checkPublication($rate->publishedOn, Fiscal::local($request->effectiveAt)->startOfDay());
 

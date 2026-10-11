@@ -23,12 +23,25 @@ final readonly class BcvExchangeRateParser
 
     private const string HEADING = '/\ATaxas de Câmbio para o dia (\d{2})\/(\d{2})\/(\d{4})\z/iu';
 
+    private const int MAX_TABLES = 20;
+
+    private const int MAX_ROWS = 500;
+
+    private const array SECTIONS = ['thead', 'tbody', 'tfoot'];
+
     private const string DECIMAL = '/\A\d+(?:\.\d+)?\z/';
 
     public function parse(string $html, string $currency, ExchangeRateType $type): BcvRate
     {
+        $document = HTMLDocument::createFromString($html, LIBXML_NOERROR);
+        $found    = $document->querySelectorAll('table');
+
+        if ($found->length > self::MAX_TABLES || $document->querySelectorAll('tr')->length > self::MAX_ROWS) {
+            throw self::invalid();
+        }
+
         $tables = [];
-        foreach (HTMLDocument::createFromString($html, LIBXML_NOERROR)->querySelectorAll('table') as $table) {
+        foreach ($found as $table) {
             $rows = $this->rows($table);
             foreach ($rows as $index => $cells) {
                 $headers = array_map(fn (Element $cell): string => Str::upper(Str::ascii($this->text($cell))), $cells);
@@ -54,9 +67,12 @@ final readonly class BcvExchangeRateParser
     private function rows(Element $table): array
     {
         $rows = [];
-        foreach ($table->querySelectorAll('tr') as $row) {
-            if ($row->closest('table') === $table) {
-                $rows[] = $this->cells($row);
+        foreach ($table->children as $child) {
+            $members = \in_array($child->localName, self::SECTIONS, true) ? iterator_to_array($child->children, false) : [$child];
+            foreach ($members as $row) {
+                if ($row->localName === 'tr') {
+                    $rows[] = $this->cells($row);
+                }
             }
         }
 

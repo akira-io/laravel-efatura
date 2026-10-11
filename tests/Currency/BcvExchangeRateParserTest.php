@@ -91,3 +91,30 @@ it('refuses rates and units that are not positive decimals without keeping them'
     'an inner quote'      => [['<td>100</td>' => '<td>1&#39;00</td>'], 'JPY'],
     'a missing rate cell' => [['<td>Zona Euro</td><td>EUR</td><td>1</td><td>110,26500</td><td>110,26500</td>' => '<td>Zona Euro</td><td>EUR</td><td>1</td>'], 'EUR'],
 ]);
+
+function bcvPageWith(int $tables, int $rows): string
+{
+    $filler = str_repeat('<table>' . str_repeat('<tr><td>x</td></tr>', $rows) . '</table>', $tables);
+
+    return bcvPage(['</main>' => $filler . '</main>']);
+}
+
+it('reads a page at the structure limits', function (int $tables, int $rows): void {
+    expect((string) bcvRate(bcvPageWith($tables, $rows))->rate)->toBe('110.26500');
+})->with([
+    'twenty tables'     => [19, 0],
+    'five hundred rows' => [1, 496],
+]);
+
+it('refuses a page above the structure limits before reading its tables', function (int $tables, int $rows): void {
+    expect(C::failure(fn (): BcvRate => bcvRate(bcvPageWith($tables, $rows))))->toBe(ExchangeRateFailure::ResponseInvalid);
+})->with([
+    'twenty one tables'         => [20, 0],
+    'five hundred and one rows' => [1, 497],
+]);
+
+it('reads only the rows of the rate table itself, not those of a table nested in it', function (): void {
+    $nested = '<tr><td colspan="5"><table><tr><td>Zona Euro</td><td>EUR</td><td>1</td><td>1,00000</td><td>1,00000</td></tr></table></td></tr>';
+
+    expect((string) bcvRate(bcvPage([BCV_EUR_ROW => BCV_EUR_ROW . $nested]))->rate)->toBe('110.26500');
+});

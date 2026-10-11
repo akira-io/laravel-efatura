@@ -52,17 +52,19 @@ provider fails, the conversion fails.
 ### BCV
 
 The page is read with the `efatura.http.bcv` client profile: its timeouts and TLS
-options, no redirects, at most 1 MiB of body, and read retries. The address is
+options, no redirects, at most 256 KiB of body, and read retries. The address is
 `efatura.http.bcv.base_url` when set, otherwise the official statistics page; it
 must be HTTPS on `www.bcv.cv` without a port (`exchange_rate.source_required`
 otherwise, before any request).
 
 The parser reads the HTML with `Dom\HTMLDocument` (the HTML5 parser of ext-dom,
-independent of the libxml version). It requires exactly one table with one header
-row naming `PAIS`, `MOEDA`, `UNIDADES`, `COMPRA` and `VENDA` (accents and letter
-case ignored), and exactly one publication heading
+independent of the libxml version). A page with more than 20 tables or more than
+500 rows is refused before any table is read. It requires exactly one table with
+one header row naming `PAIS`, `MOEDA`, `UNIDADES`, `COMPRA` and `VENDA` once each (accents and
+letter case ignored) and exactly one publication heading
 `Taxas de Câmbio para o dia dd/mm/yyyy`, either a header cell spanning the five
-columns inside that table or the heading element right before it. Numbers use a
+columns inside that table or the heading element right before it. Only the rows of
+that table are read, not those of a table nested in one of its cells. Numbers use a
 decimal comma; spaces, non-breaking spaces and matching quotes around a number
 are ignored. A page in another encoding must say so in a `meta charset`.
 
@@ -207,7 +209,7 @@ URL with credentials or a redirect location.
 | Code | Retryable | When |
 | --- | --- | --- |
 | `exchange_rate.provider_unavailable` | yes | Connection failure, a non-2xx answer (redirects included), or a callback that threw something other than an `ExchangeRateException` (kept as previous) |
-| `exchange_rate.response_invalid` | no | A body over 1 MiB, a page or JSON that cannot be read with certainty, a quote without a provider name or with empty evidence, a negative publication age, an invalid economy map |
+| `exchange_rate.response_invalid` | no | A body over 256 KiB (BCV) or 1 MiB (World Bank), a BCV page with more than 20 tables or 500 rows, a page or JSON that cannot be read with certainty, a quote without a provider name or with empty evidence, a negative publication age, an invalid economy map |
 | `exchange_rate.currency_unsupported` | no | A currency outside the official catalog, not published by the BCV, not mapped for the World Bank or absent from the fixed rates |
 | `exchange_rate.pair_mismatch` | no | A quote for another pair or rate type, a BCV request for another target or a type other than buy and sell, a World Bank request for a type other than reference |
 | `exchange_rate.rate_invalid` | no | A rate or unit count that is not a positive decimal, or a rate that rounds to zero |

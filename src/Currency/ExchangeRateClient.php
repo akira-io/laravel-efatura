@@ -19,7 +19,7 @@ final readonly class ExchangeRateClient
 
     public function __construct(private TransportRequests $requests, private ReadRetries $retries, private BoundedBody $body) {}
 
-    public function get(HttpClientConfig $profile, string $url, string $accept, string $source): string
+    public function get(HttpClientConfig $profile, string $url, string $accept, string $source, int $maxBytes = self::MAX_BODY_BYTES): string
     {
         try {
             $response = $this->retries->apply($this->requests->plain($profile)->accept($accept), $profile)->get($url);
@@ -32,7 +32,7 @@ final readonly class ExchangeRateClient
         }
 
         try {
-            return $this->body->read($response, $source, self::MAX_BODY_BYTES);
+            return $this->body->read($response, $source, $maxBytes);
         } catch (TransportException) {
             throw ExchangeRateException::because(ExchangeRateFailure::ResponseInvalid, ['source' => $source]);
         }

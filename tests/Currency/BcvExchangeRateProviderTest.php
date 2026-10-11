@@ -118,14 +118,14 @@ function bcvPageOf(int $bytes): string
     return $page . str_repeat(' ', $bytes - strlen($page));
 }
 
-it('reads a page of exactly one mebibyte', function (): void {
-    bcvServes(bcvPageOf(1_048_576));
+it('reads a page of exactly 256 KiB', function (): void {
+    bcvServes(bcvPageOf(262_144));
 
     expect((string) C::bcv()->rate(C::request())->rate)->toBe('110.26500');
 });
 
-it('refuses a page one byte above one mebibyte', function (): void {
-    bcvServes(bcvPageOf(1_048_577));
+it('refuses a page one byte above 256 KiB', function (): void {
+    bcvServes(bcvPageOf(262_145));
 
     expect(C::exception(fn (): ExchangeRateQuote => C::bcv()->rate(C::request())))
         ->failure->toBe(ExchangeRateFailure::ResponseInvalid)
