@@ -49,7 +49,8 @@
             "eof",
             "seekable",
             "renderer",
-            "dompdf"
+            "dompdf",
+            "testbench"
         ],
         "paths": [
             "resources/catalogs/source",

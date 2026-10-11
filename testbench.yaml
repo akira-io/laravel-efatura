@@ -1,0 +1,2 @@
+providers:
+  - Akira\Efatura\EfaturaServiceProvider
