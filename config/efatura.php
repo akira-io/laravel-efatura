@@ -269,7 +269,8 @@ return [
     | must use HTTPS without credentials, query strings or fragments (the bcv
     | page address alone may carry a query string, as the official page
     | does), and the middleware and platform URLs end with the API version
-    | (/v1). A null
+    | (/v1). The World Bank address is fixed (https://api.worldbank.org):
+    | its client takes no base_url, and setting one fails. A null
     | base URL defers endpoint selection to its provider's later configuration.
     | Fiscal environment selection never replaces these endpoints.
     | Requests go through the Laravel HTTP client, whose request events
@@ -316,7 +317,6 @@ return [
             'ca_bundle_path'           => null,
         ],
         'world_bank' => [
-            'base_url'                 => env('EFATURA_WORLD_BANK_BASE_URL'),
             'timeout_seconds'          => null,
             'connect_timeout_seconds'  => null,
             'retries'                  => null,

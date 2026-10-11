@@ -106,7 +106,7 @@ it('normalizes configured identities infrastructure and client overrides', funct
             'middleware'               => ['base_url' => 'https://middleware.example.test/api/', 'timeout_seconds' => 90],
             'platform'                 => ['connect_timeout_seconds' => 20, 'retries' => 4],
             'bcv'                      => ['retry_delay_milliseconds' => 400, 'concurrency' => 1],
-            'world_bank'               => ['base_url' => 'https://rates.example.test', 'verify_tls' => true],
+            'world_bank'               => ['verify_tls' => true],
         ],
     ]);
 
@@ -153,7 +153,7 @@ it('normalizes configured identities infrastructure and client overrides', funct
         ->and($config->http->bcv->retryDelayMilliseconds)->toBe(400)
         ->and($config->http->bcv->concurrency)->toBe(1)
         ->and($config->http->bcv->verifyTls)->toBeFalse()
-        ->and($config->http->worldBank->baseUrl)->toBe('https://rates.example.test')
+        ->and($config->http->worldBank->baseUrl)->toBeNull()
         ->and($config->http->worldBank->verifyTls)->toBeTrue();
 });
 

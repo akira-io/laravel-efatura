@@ -36,10 +36,6 @@ final readonly class WorldBankExchangeRateProvider implements ExchangeRateProvid
      */
     public function __construct(private ExchangeRateClient $client, private ClockInterface $clock, private HttpClientConfig $profile, array $economies = [])
     {
-        if ($profile->baseUrl !== null && SourceUrl::parts($profile->baseUrl) !== ['host' => self::HOST, 'port' => null]) {
-            throw ExchangeRateException::because(ExchangeRateFailure::SourceRequired);
-        }
-
         $this->economies = [...self::economies($economies), Fiscal::CURRENCY => self::CAPE_VERDE_ECONOMY];
     }
 

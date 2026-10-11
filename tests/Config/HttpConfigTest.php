@@ -71,3 +71,22 @@ it('refuses a query outside the bcv address and a fragment anywhere', function (
     'a bcv fragment'     => [['bcv' => ['base_url' => 'https://www.bcv.cv/rates?_expType=PDF#top']], 'efatura.http.bcv.base_url'],
     'a bcv plain http'   => [['bcv' => ['base_url' => 'http://www.bcv.cv/rates?_expType=PDF']], 'efatura.http.bcv.base_url'],
 ]);
+
+it('keeps the World Bank endpoint fixed and refuses a configured address for it', function (?string $url): void {
+    expect(fn (): EfaturaConfig => ConfigFixtures::load(['http' => ['world_bank' => ['base_url' => $url]]]))
+        ->toThrow(function (ConfigurationException $exception): void {
+            expect($exception->errorCode)->toBe('configuration.fixed_endpoint')
+                ->and($exception->field)->toBe('efatura.http.world_bank.base_url');
+        });
+})->with([
+    'the official api' => ['https://api.worldbank.org'],
+    'another host'     => ['https://rates.example/api'],
+]);
+
+it('reads the World Bank client options without an address', function (): void {
+    $worldBank = ConfigFixtures::load(['http' => ['world_bank' => ['timeout_seconds' => 7]]])->http->worldBank;
+
+    expect($worldBank->baseUrl)->toBeNull()
+        ->and($worldBank->timeoutSeconds)->toBe(7)
+        ->and(config('efatura.http.world_bank'))->not->toHaveKey('base_url');
+});

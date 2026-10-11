@@ -92,6 +92,10 @@ every other currency needs an entry in `world_bank.economies` (for example
 `EUR => EMU`). A missing or null observation, or one of another year, fails with
 `exchange_rate.date_unavailable`; the provider never falls back to another year.
 
+The address is fixed to `https://api.worldbank.org`: the `efatura.http.world_bank`
+client profile carries only timeouts, retries and TLS options, and a `base_url`
+set there fails with `configuration.fixed_endpoint` when the configuration loads.
+
 ### Cache
 
 BCV and World Bank quotes are cached in `efatura.cache.store`, under

@@ -121,20 +121,6 @@ it('accepts the CVE mapping restated and normalizes the map', function (): void 
     expect($quote->evidence['source_economy'])->toBe('EMU');
 });
 
-it('refuses a base url outside the World Bank api', function (string $url): void {
-    expect(C::failure(fn (): WorldBankExchangeRateProvider => C::worldBank(http: ['base_url' => $url])))->toBe(ExchangeRateFailure::SourceRequired);
-})->with([
-    'another host' => ['https://rates.example/api'],
-    'another port' => ['https://api.worldbank.org:8443'],
-]);
-
-it('accepts the official api as a configured base url', function (): void {
-    worldBankServes();
-
-    expect(C::worldBank(http: ['base_url' => 'https://api.worldbank.org'])->rate(worldBankRequest())->sourceUrl)
-        ->toBe('https://data.worldbank.org/indicator/PA.NUS.FCRF');
-});
-
 it('reports an observation the World Bank does not have without falling back', function (Closure $cpv): void {
     worldBankServes($cpv());
 

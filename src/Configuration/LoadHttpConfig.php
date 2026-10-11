@@ -26,7 +26,7 @@ final readonly class LoadHttpConfig
             $this->profile('middleware', $defaults, 'https://localhost:3443/v1'),
             $this->profile('platform', $defaults, 'https://services.efatura.cv/v1'),
             $this->profile('bcv', $defaults, allowQuery: true),
-            $this->profile('world_bank', $defaults),
+            $this->fixedEndpoint('world_bank', $defaults),
         );
     }
 
@@ -40,6 +40,17 @@ final readonly class LoadHttpConfig
         $this->section('efatura.http.' . $name);
 
         return $this->client('efatura.http.' . $name, $defaults, $baseUrl, $allowQuery);
+    }
+
+    private function fixedEndpoint(string $name, HttpClientConfig $defaults): HttpClientConfig
+    {
+        $path = 'efatura.http.' . $name . '.base_url';
+
+        if ($this->repository->get($path) !== null) {
+            throw new ConfigurationException('configuration.fixed_endpoint', $path);
+        }
+
+        return $this->profile($name, $defaults);
     }
 
     private function client(
