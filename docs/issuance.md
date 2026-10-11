@@ -47,6 +47,10 @@ must not wait; the package ships no job of its own yet.
 Every event is `final readonly` and carries the prepared artifact, the entry
 result or the failure code; none carries a credential.
 
+The package stores nothing on its own. To keep the signed XML, the archive, the
+answer and the DFA of an issued document on a disk, call
+`StoreIssuedArtifactsAction`; see [artifact storage](storage.md).
+
 ## Outcomes
 
 | Outcome | Meaning | What to do |
@@ -114,4 +118,4 @@ whose outcome is unknown: reconcile it first, because the PE may hold it.
 
 ---
 
-[Documentation index](README.md) · [Transport](transport.md) · [Readiness](readiness.md)
+[Documentation index](README.md) · [Transport](transport.md) · [Readiness](readiness.md) · [Artifact storage](storage.md)

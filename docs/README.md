@@ -16,6 +16,7 @@
 - Checking an installation before issuing: see [readiness](readiness.md).
 - Exchange rates and converting a foreign currency document to CVE: see [currency conversion](currency.md).
 - Printing the Documento Fiscal Auxiliar as a PDF with its QR code: see [DFA](dfa.md).
+- Keeping the signed XML, the archive, the answer and the DFA on a disk: see [artifact storage](storage.md).
 - Migrating replaced DTOs, exact values and renamed symbols: see [migration guide](migration.md).
 - Service provider: see [src/EfaturaServiceProvider.php](../src/EfaturaServiceProvider.php).
 - Document data objects: see [src/Data](../src/Data).
@@ -24,4 +25,4 @@
 
 The package validates all nine fiscal document payloads and FDC/UDN event payloads through immutable Spatie Data values. The concrete document classes extend the abstract `DocumentData` contract; each owns its official fields. Receipts have no lines or totals, and transport documents have no totals. See [Fiscal domain validation](fiscal-domain.md) for entry points, required data, source precedence, and calculation policy.
 
-Host applications remain responsible for persistence, middleware credentials, refresh tokens, issued-document storage, and operational audit trails. Successful domain validation is not a completed, signed, authorized XML document: the XML actions write and validate the unsigned document, the preparation actions number, sign and package it, and the [issuance](issuance.md) actions submit it and report the platform answer.
+Host applications remain responsible for persistence, middleware credentials, refresh tokens, and operational audit trails. Keeping the artifacts of an issued document is opt-in through [artifact storage](storage.md). Successful domain validation is not a completed, signed, authorized XML document: the XML actions write and validate the unsigned document, the preparation actions number, sign and package it, and the [issuance](issuance.md) actions submit it and report the platform answer.
