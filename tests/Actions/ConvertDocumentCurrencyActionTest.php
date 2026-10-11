@@ -206,13 +206,13 @@ it('refuses a quote that does not answer the document', function (ExchangeRateQu
 
 it('reports a converted document the fiscal rules refuse as an invalid invoice', function (): void {
     $source = ElectronicInvoiceData::from(eurInvoice(
-        ['quantity' => ['value' => '2', 'unitCode' => 'C62'], 'price' => '1', 'priceExtension' => '2', 'netTotal' => '2', 'taxes' => [['taxTypeCode' => 'IVA', 'taxPercentage' => '15']]],
-        ['priceExtensionTotalAmount' => '2', 'netTotalAmount' => '2', 'taxTotalAmount' => '0.3', 'payableAmount' => '2.3'],
+        ['taxes' => [['taxTypeCode' => 'IVA', 'taxPercentage' => '15', 'taxTotal' => '0.15'], ['taxTypeCode' => 'IR', 'taxAmount' => '0.001']]],
+        ['withholdingTaxTotalAmount' => '0.001', 'payableAmount' => '1.149'],
     ));
 
-    $exception = C::exception(fn (): DocumentData => convertToCve($source));
+    $exception = C::exception(fn (): DocumentData => convertToCve($source, quote: eurQuote('1')));
 
     expect($exception->failure)->toBe(ExchangeRateFailure::InvoiceInvalid)
         ->and($exception->getPrevious())->toBeInstanceOf(ValidationException::class)
-        ->and($exception->getPrevious()->errors())->toHaveKey('lines.0.priceExtension');
+        ->and($exception->getPrevious()->errors())->toHaveKey('lines.0.taxes.1.taxAmount');
 });

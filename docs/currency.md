@@ -131,33 +131,58 @@ the source currency is the second argument.
    `exchange_rate.alternatives_conflict`, before any rate is asked for.
 4. The quote is the one given, or the provider's answer for the issue instant. It
    must answer that request.
-5. Lines (`price`, `priceExtension`, `netTotal`, amount discounts, `taxAmount`,
-   `taxTotal`), references (`paymentAmount` and their taxes) and payments
-   (`paymentAmount`) are multiplied by the rate and rounded half up to two
-   decimals. Percentages, quantities and percentage discounts do not change. An
-   amount global discount is converted the same way.
-6. Totals are recomputed from the converted lines with the signs the totals
+5. Only the independent inputs are converted from the source currency, by
+   multiplying by the rate and rounding half up to two decimals: the unit `price`
+   of each line, amount line discounts, absolute `taxAmount` values, an amount
+   global discount, the amount to pay, reference `paymentAmount` values and their
+   taxes, and payment `paymentAmount` values. Quantities, percentages and
+   percentage discounts do not change.
+6. Every derived line value is recomputed from the converted inputs with the
+   formulas and rounding of the totals verification:
+   - `priceExtension` is the converted price times the quantity, rounded to two
+     decimals;
+   - the line base is that extension less the line discount (the converted amount,
+     or the extension times the percentage);
+   - `netTotal` is the base less a percentage global discount, rounded to two
+     decimals (deduction lines take no global discount);
+   - with an amount global discount, each normal or charge line keeps its share:
+     the source allocation (base less net) is converted, and the cents left over
+     by rounding go one at a time to the line with the most room (or, when the
+     shares exceed the converted discount, are taken from the largest share), so
+     the shares add up exactly to the converted discount;
+   - a percentage tax is the net total times the percentage, rounded to two
+     decimals; its `taxTotal` is that amount, and stays empty when it rounds to
+     zero.
+7. Totals are recomputed from the converted lines with the signs the totals
    verification uses: deduction lines subtract, information lines count only
    their taxes other than income tax, and income tax goes to the withholding. Tax
-   totals are the sum of the taxes rounded per line. Charge and discount totals
-   are recomputed only when the source had them.
-7. The amount to pay is the source amount to pay converted directly. The
-   difference with the recomputed totals goes to `PayableRoundingAmount`, which
-   stays null when the source had none and the difference is zero.
-8. One `PayableAlternativeAmount` is appended with the source amount to pay, the
-   source currency and the rate.
-9. The result is built again through the fiscal validation. A failure becomes
-   `exchange_rate.invoice_invalid`, with the `ValidationException` as previous.
+   and withholding totals are the sum of the taxes rounded per line. Charge and
+   discount totals are recomputed only when the source had them.
+8. The amount to pay is the source amount to pay converted directly. The
+   difference against net total + taxes - withholding goes to
+   `PayableRoundingAmount`, which stays null when the source had none and the
+   difference is zero.
+9. One `PayableAlternativeAmount` is appended with the source amount to pay, the
+   source currency and the rate. The XML writes it without non-significant zeros,
+   for a currency without decimals as well (`1150` JPY).
+10. The result is built again through the fiscal validation. A failure becomes
+    `exchange_rate.invoice_invalid`, with the `ValidationException` as previous.
 
 The source document is never modified.
 
-Line amounts are converted one by one, as the Node package does. The totals
-verification of this package also checks each line against itself
-(`priceExtension` against `price` times quantity, `netTotal` against the discount,
-`taxTotal` against the percentage, and an amount global discount allocated
-exactly). When rounding does not commute, for example a price of 1 EUR for a
-quantity of 2 at 110.265 (110.27 times 2 is 220.54, the converted extension is
-220.53), the converted document fails with `exchange_rate.invoice_invalid`.
+This differs from the Node package, which converts every line amount on its own
+(`priceExtension`, `netTotal` and `taxTotal` included). This package's totals
+verification checks each line against itself, so converting derived values
+independently would refuse ordinary documents: a price of 1 EUR for two units at
+110.265 gives 110.27 times 2 = 220.54, while the extension converted on its own is
+220.53. Recomputing them keeps the converted document reconciled; the cost is
+that a converted extension can differ by a cent from the source extension
+converted on its own.
+
+The conversion still fails with `exchange_rate.invoice_invalid` when a converted
+input cannot be represented: an absolute tax amount or a payment amount that
+rounds to zero at the rate, or an amount global discount combined with a
+percentage line discount whose base has more than five decimals.
 
 ## Errors
 
