@@ -8,9 +8,10 @@ use Akira\Efatura\Contracts\ExchangeRateProvider;
 use Akira\Efatura\Enums\ExchangeRateType;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
+use Exception;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Arr;
-use Throwable;
+use UnexpectedValueException;
 
 final readonly class CachedExchangeRateProvider implements ExchangeRateProvider
 {
@@ -56,7 +57,7 @@ final readonly class CachedExchangeRateProvider implements ExchangeRateProvider
     {
         try {
             return $this->cache->get($key);
-        } catch (Throwable) {
+        } catch (Exception) {
             return null;
         }
     }
@@ -75,7 +76,7 @@ final readonly class CachedExchangeRateProvider implements ExchangeRateProvider
                 'sourceUrl'      => $quote->sourceUrl,
                 'evidence'       => $quote->evidence,
             ], $this->ttlSeconds);
-        } catch (Throwable) {
+        } catch (Exception) {
             return;
         }
     }
@@ -91,14 +92,14 @@ final readonly class CachedExchangeRateProvider implements ExchangeRateProvider
                 Arr::string($entry, 'sourceCurrency'),
                 Arr::string($entry, 'targetCurrency'),
                 Arr::string($entry, 'rate'),
-                ExchangeRateType::from(Arr::string($entry, 'rateType')),
+                ExchangeRateType::tryFrom(Arr::string($entry, 'rateType')) ?? throw new UnexpectedValueException,
                 Fiscal::local(CarbonImmutable::parse(Arr::string($entry, 'effectiveAt'))),
                 Fiscal::local(CarbonImmutable::parse(Arr::string($entry, 'retrievedAt'))),
                 Arr::string($entry, 'provider'),
                 isset($entry['sourceUrl']) ? Arr::string($entry, 'sourceUrl') : null,
                 Arr::array($entry, 'evidence'),
             );
-        } catch (Throwable) {
+        } catch (Exception) {
             return null;
         }
     }

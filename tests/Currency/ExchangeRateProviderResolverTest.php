@@ -155,4 +155,5 @@ it('asks again when the cached entry is not a quote it can rebuild', function (m
     'not an array'     => [new ArrayObject(cachedQuoteEntry())],
     'numeric evidence' => [cachedQuoteEntry(['evidence' => ['indicator' => 1]])],
     'listed evidence'  => [cachedQuoteEntry(['evidence' => ['PA.NUS.FCRF']])],
+    'unknown type'     => [cachedQuoteEntry(['rateType' => 'average'])],
 ]);

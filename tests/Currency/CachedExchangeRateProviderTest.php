@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Contracts\ExchangeRateProvider;
 use Akira\Efatura\Currency\CachedExchangeRateProvider;
+use Akira\Efatura\Currency\ExchangeRateQuote;
 use Akira\Efatura\Enums\ExchangeRateType;
 use Akira\Efatura\Tests\Support\ConfigFixtures;
 use Akira\Efatura\Tests\Support\CurrencyFixtures as C;
@@ -81,3 +82,15 @@ it('treats a cache store that fails to read or write as a miss', function (): vo
         ->and($store->reads)->toBe(1)
         ->and($store->writes)->toBe(1);
 });
+
+it('lets an error raised by the cache store surface', function (bool $failsReads, string $message, int $writes): void {
+    $store    = new FailingCacheStore(TypeError::class, $failsReads);
+    $provider = new CachedExchangeRateProvider(C::bcv(), new Repository($store), 'efatura:exchange_rates:bcv:age_0', 600, ExchangeRateType::Buy);
+
+    expect(fn (): ExchangeRateQuote => $provider->rate(C::request()))->toThrow(TypeError::class, $message)
+        ->and($store->reads)->toBe(1)
+        ->and($store->writes)->toBe($writes);
+})->with([
+    'on read'  => [true, 'cache read failed', 0],
+    'on write' => [false, 'cache write failed', 1],
+]);
