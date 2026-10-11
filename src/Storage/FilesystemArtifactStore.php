@@ -72,8 +72,8 @@ final readonly class FilesystemArtifactStore implements ArtifactStore
         try {
             $stored = $locks->lock($this->cache->prefix . ':artifact:' . hash(self::CHECKSUM, $this->config->disk . ':' . $path), self::LOCK_SECONDS)
                 ->block($this->lockWaitSeconds, $store);
-        } catch (LockTimeoutException $exception) {
-            throw StorageException::unavailable($path, $exception);
+        } catch (LockTimeoutException $lockTimeoutException) {
+            throw StorageException::unavailable($path, $lockTimeoutException);
         }
 
         return $stored instanceof StoredArtifact ? $stored : $store();

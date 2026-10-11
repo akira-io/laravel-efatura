@@ -34,6 +34,7 @@ it('writes under a lock on the path and releases it', function (string $store): 
     $directory = sys_get_temp_dir() . '/efatura-locks-' . bin2hex(random_bytes(6));
     config()->set('efatura.cache.store', $store);
     config()->set('cache.stores.file.path', $directory);
+
     $lock = Cache::store($store)->lock(artifactLockKey(ArtifactKind::Archive), 5);
 
     try {
@@ -49,6 +50,7 @@ it('writes under a lock on the path and releases it', function (string $store): 
 it('reports a path another process is storing as retryable and writes nothing', function (): void {
     config()->set('efatura.cache.store', 'array');
     config()->set('efatura.cache.prefix', 'fiscal');
+
     $held = Cache::store('array')->lock(artifactLockKey(ArtifactKind::Archive, 'fiscal'), 30);
     $held->get();
 
