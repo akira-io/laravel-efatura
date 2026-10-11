@@ -83,6 +83,7 @@ return [
                 'missing'               => 'O documento não tem assinatura.',
                 'multiple'              => 'O documento tem mais de uma assinatura.',
                 'placement'             => 'A assinatura não está onde o perfil enveloped ou detached a coloca.',
+                'structure_unexpected'  => 'A assinatura não tem exatamente a estrutura XMLDSig e XAdES que o pacote escreve.',
                 'algorithm_unsupported' => 'A assinatura usa um algoritmo que o pacote não escreve.',
                 'reference_unexpected'  => 'A assinatura referencia algo que não é o documento e as respetivas propriedades assinadas.',
                 'digest_mismatch'       => 'Um digest assinado não corresponde: o conteúdo ou as propriedades assinadas foram alterados depois da assinatura.',

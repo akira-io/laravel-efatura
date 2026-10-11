@@ -83,6 +83,7 @@ return [
                 'missing'               => 'The document has no signature.',
                 'multiple'              => 'The document has more than one signature.',
                 'placement'             => 'The signature is not where the enveloped or detached profile places it.',
+                'structure_unexpected'  => 'The signature does not have exactly the XMLDSig and XAdES structure the package writes.',
                 'algorithm_unsupported' => 'The signature uses an algorithm the package does not write.',
                 'reference_unexpected'  => 'The signature references something other than the document and its signed properties.',
                 'digest_mismatch'       => 'A signed digest does not match: the content or its signed properties changed after signing.',

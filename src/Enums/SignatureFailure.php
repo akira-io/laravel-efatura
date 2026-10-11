@@ -9,6 +9,7 @@ enum SignatureFailure: string
     case Missing              = 'missing';
     case Multiple             = 'multiple';
     case Placement            = 'placement';
+    case StructureUnexpected  = 'structure_unexpected';
     case AlgorithmUnsupported = 'algorithm_unsupported';
     case ReferenceUnexpected  = 'reference_unexpected';
     case DigestMismatch       = 'digest_mismatch';

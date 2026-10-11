@@ -193,15 +193,30 @@ signs, stores or sends anything.
 
 It accepts exactly what the signer emits and nothing else:
 
-- one `ds:Signature`, as the last child of `Dfe` or `Event` (enveloped) or as
-  the first child of `internally-detached` followed by the `Dfe` or `Event`
-  (internally detached);
+- one `ds:Signature`, as the last element of `Dfe` or `Event` in the e-Fatura
+  namespace (enveloped), or as the first of exactly two elements of
+  `internally-detached`, followed by the `Dfe` or `Event` it signs (internally
+  detached). Any other element beside them is refused;
+- exactly one `SignedInfo`, `SignatureValue`, `KeyInfo` and `Object`, in that
+  order; `SignedInfo` holds `CanonicalizationMethod`, `SignatureMethod` and the
+  references; each reference holds optional `Transforms`, then one
+  `DigestMethod` and one `DigestValue`; `KeyInfo` holds one `X509Data` with one
+  `X509Certificate`; `Object` holds one `QualifyingProperties` with one
+  `SignedProperties`. Anything else is `signature.structure_unexpected`;
 - inclusive C14N 1.0 for `SignedInfo`, `rsa-sha256` for the signature and
   SHA-256 for every digest;
-- two references, in this order: the `Id` of the signed root, then
+- two references: the `Id` of the signed root, without a `Type`, and
   `SignedProperties` with its XAdES `Type`, each `Id` held by exactly one
-  element of the document;
-- `enveloped-signature` and inclusive C14N as the only transforms.
+  element of the document. The signer writes them in that order; the reverse
+  order is accepted, since each reference is identified by its `Type` and checked
+  as strictly as before;
+- for the signed root, `enveloped-signature` optionally followed by inclusive
+  C14N in the enveloped profile, and no transform or inclusive C14N alone in the
+  detached profile; for `SignedProperties`, no transform or inclusive C14N alone.
+
+`DigestValue`, the `CertDigest` value and the base64 of `SignatureValue` and
+`X509Certificate` may carry leading, trailing or line-wrapping whitespace, as
+other signers write certificates wrapped at 64 or 76 columns.
 
 Each reference digest is recomputed, the `SignatureValue` is verified against
 the RSA key of the `X509Certificate` in `KeyInfo`, and the `CertDigest` of the
@@ -223,7 +238,8 @@ is read or returned.
 | --- | --- |
 | `signature.missing` | The document has no `ds:Signature` |
 | `signature.multiple` | It has more than one |
-| `signature.placement` | The signature is not where either profile puts it |
+| `signature.placement` | The signature is not where either profile puts it, or other elements sit beside it or the signed document |
+| `signature.structure_unexpected` | The signature does not have exactly the XMLDSig and XAdES elements listed above |
 | `signature.algorithm_unsupported` | A canonicalization, signature, digest or transform algorithm the signer never writes |
 | `signature.reference_unexpected` | References other than the two above, or an `Id` that is missing or used twice |
 | `signature.digest_mismatch` | A reference digest does not match the signed content or properties |

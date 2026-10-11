@@ -8,6 +8,7 @@ use Akira\Efatura\Enums\SignatureFailure;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Signing\SignatureCertificate;
 use Akira\Efatura\Signing\SignatureDigests;
+use Akira\Efatura\Signing\SignatureStructure;
 use Akira\Efatura\Signing\SignatureVerification;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Xml\SafeXmlParser;
@@ -18,13 +19,13 @@ use DOMXPath;
 
 final readonly class VerifyXmlSignatureAction
 {
-    private const array TRANSFORMS = [Fiscal::ENVELOPED_SIGNATURE_TRANSFORM, Fiscal::C14N_ALGORITHM];
+    private const array PROPERTIES_TRANSFORMS = [[], [Fiscal::C14N_ALGORITHM]];
 
     public function __construct(private SafeXmlParser $parser) {}
 
-    public function handle(string $xml): SignatureVerification
+    public function handle(DOMDocument|string $xml): SignatureVerification
     {
-        $document = $this->parser->parse($xml);
+        $document = $xml instanceof DOMDocument ? $xml : $this->parser->parse($xml);
         $xpath    = new DOMXPath($document);
         $xpath->registerNamespace('ds', Fiscal::XMLDSIG_NAMESPACE);
         $xpath->registerNamespace('xades', Fiscal::XADES_NAMESPACE);
@@ -34,25 +35,27 @@ final readonly class VerifyXmlSignatureAction
             return new SignatureVerification([$signatures === [] ? SignatureFailure::Missing : SignatureFailure::Multiple]);
         }
 
-        $signature = $signatures[0];
-        $placement = self::placement($document, $signature);
+        $placement = self::placement($document, $signatures[0]);
         if ($placement === null) {
             return new SignatureVerification([SignatureFailure::Placement]);
         }
 
         [$profile, $signed] = $placement;
-        $properties         = self::elements($xpath, 'ds:Object/xades:QualifyingProperties/xades:SignedProperties', $signature);
-        $certificate        = SignatureCertificate::fromBase64(self::text($xpath, 'ds:KeyInfo/ds:X509Data/ds:X509Certificate', $signature));
-        $algorithms         = self::algorithmsSupported($xpath, $signature);
-        $failures           = [
+        $structure          = SignatureStructure::of($signatures[0]);
+        if (! $structure instanceof SignatureStructure) {
+            return new SignatureVerification([SignatureFailure::StructureUnexpected], $profile);
+        }
+
+        $certificate = SignatureCertificate::fromBase64($structure->certificate->textContent);
+        $algorithms  = self::algorithmsSupported($xpath, $structure->signedInfo);
+        $failures    = [
             ...($algorithms ? [] : [SignatureFailure::AlgorithmUnsupported]),
-            ...self::references($document, $xpath, $signature, $signed, $properties),
-            ...self::certificate($xpath, $certificate, $properties),
+            ...self::references($document, $xpath, $profile, $signed, $structure),
+            ...self::certificate($xpath, $certificate, $structure->signedProperties),
         ];
 
-        $signedInfo = self::elements($xpath, 'ds:SignedInfo', $signature)[0] ?? null;
-        $value      = base64_decode(self::text($xpath, 'ds:SignatureValue', $signature), true);
-        if ($algorithms && $certificate?->hasRsaKey() && ! $certificate->verifies($signedInfo instanceof DOMElement ? SignatureDigests::canonical($signedInfo) : '', (string) $value)) {
+        $value = (string) base64_decode($structure->signatureValue->textContent, true);
+        if ($algorithms && $certificate?->hasRsaKey() && ! $certificate->verifies(SignatureDigests::canonical($structure->signedInfo), $value)) {
             $failures[] = SignatureFailure::ValueInvalid;
         }
 
@@ -76,50 +79,56 @@ final readonly class VerifyXmlSignatureAction
         }
 
         if (self::isFiscalRoot($root)) {
-            return [SignatureProfile::Enveloped, $root];
+            return $root->lastElementChild === $signature ? [SignatureProfile::Enveloped, $root] : null;
         }
 
         $signed   = $signature->nextElementSibling;
-        $detached = $root->namespaceURI === null && $root->localName === Fiscal::DETACHED_SIGNATURE_ROOT;
+        $detached = $root->namespaceURI === null && $root->localName === Fiscal::DETACHED_SIGNATURE_ROOT && $root->firstElementChild === $signature;
 
-        if (! $detached || ! $signed instanceof DOMElement || ! self::isFiscalRoot($signed)) {
-            return null;
-        }
-
-        return [SignatureProfile::InternallyDetached, $signed];
+        return $detached && $signed instanceof DOMElement && ! $signed->nextElementSibling instanceof DOMElement && self::isFiscalRoot($signed)
+            ? [SignatureProfile::InternallyDetached, $signed]
+            : null;
     }
 
-    private static function algorithmsSupported(DOMXPath $xpath, DOMElement $signature): bool
+    private static function algorithmsSupported(DOMXPath $xpath, DOMElement $signedInfo): bool
     {
-        return self::attributes($xpath, 'ds:SignedInfo/ds:CanonicalizationMethod', $signature) === [Fiscal::C14N_ALGORITHM]
-            && self::attributes($xpath, 'ds:SignedInfo/ds:SignatureMethod', $signature) === [Fiscal::RSA_SHA256_ALGORITHM];
+        return self::attributes($xpath, 'ds:CanonicalizationMethod', $signedInfo) === [Fiscal::C14N_ALGORITHM]
+            && self::attributes($xpath, 'ds:SignatureMethod', $signedInfo) === [Fiscal::RSA_SHA256_ALGORITHM];
     }
 
     /**
-     * @param  list<DOMElement>       $properties
      * @return list<SignatureFailure>
      */
-    private static function references(DOMDocument $document, DOMXPath $xpath, DOMElement $signature, DOMElement $signed, array $properties): array
-    {
-        $references = self::elements($xpath, 'ds:SignedInfo/ds:Reference', $signature);
-        $expected   = \count($references) === 2 && \count($properties) === 1
-            && self::points($xpath, $references[0], $signed, null)
-            && self::points($xpath, $references[1], $properties[0], Fiscal::SIGNED_PROPERTIES_TYPE);
-        if (! $expected) {
+    private static function references(
+        DOMDocument $document,
+        DOMXPath $xpath,
+        SignatureProfile $profile,
+        DOMElement $signed,
+        SignatureStructure $structure,
+    ): array {
+        $references       = $structure->references;
+        $signedProperties = $structure->signedProperties;
+        if (\count($references) !== 2) {
+            return [SignatureFailure::ReferenceUnexpected];
+        }
+
+        [$data, $properties] = $references[0]->hasAttribute('Type') ? array_reverse($references) : $references;
+        if (! self::points($xpath, $data, $signed, null) || ! self::points($xpath, $properties, $signedProperties, Fiscal::SIGNED_PROPERTIES_TYPE)) {
             return [SignatureFailure::ReferenceUnexpected];
         }
 
         $failures = [];
-        foreach ([[$references[0], $signed], [$references[1], $properties[0]]] as [$reference, $target]) {
+        $checks   = [[$data, $signed, self::dataTransforms($profile)], [$properties, $signedProperties, self::PROPERTIES_TRANSFORMS]];
+        foreach ($checks as [$reference, $target, $allowed]) {
             $transforms = self::attributes($xpath, 'ds:Transforms/ds:Transform', $reference);
-            if (array_diff($transforms, self::TRANSFORMS) !== [] || self::attributes($xpath, 'ds:DigestMethod', $reference) !== [Fiscal::SHA256_ALGORITHM]) {
+            if (! \in_array($transforms, $allowed, true) || self::attributes($xpath, 'ds:DigestMethod', $reference) !== [Fiscal::SHA256_ALGORITHM]) {
                 $failures[] = SignatureFailure::AlgorithmUnsupported;
 
                 continue;
             }
 
-            $enveloped = \in_array(Fiscal::ENVELOPED_SIGNATURE_TRANSFORM, $transforms, true);
-            if (self::digest($document, $target, $signature, $enveloped) !== self::text($xpath, 'ds:DigestValue', $reference)) {
+            $enveloped = ($transforms[0] ?? null) === Fiscal::ENVELOPED_SIGNATURE_TRANSFORM;
+            if (self::digest($document, $target, $enveloped) !== self::text($xpath, 'ds:DigestValue', $reference)) {
                 $failures[] = SignatureFailure::DigestMismatch;
             }
         }
@@ -128,10 +137,20 @@ final readonly class VerifyXmlSignatureAction
     }
 
     /**
-     * @param  list<DOMElement>       $properties
+     * @return list<list<string>>
+     */
+    private static function dataTransforms(SignatureProfile $profile): array
+    {
+        return match ($profile) {
+            SignatureProfile::Enveloped          => [[Fiscal::ENVELOPED_SIGNATURE_TRANSFORM], [Fiscal::ENVELOPED_SIGNATURE_TRANSFORM, Fiscal::C14N_ALGORITHM]],
+            SignatureProfile::InternallyDetached => self::PROPERTIES_TRANSFORMS,
+        };
+    }
+
+    /**
      * @return list<SignatureFailure>
      */
-    private static function certificate(DOMXPath $xpath, ?SignatureCertificate $certificate, array $properties): array
+    private static function certificate(DOMXPath $xpath, ?SignatureCertificate $certificate, DOMElement $properties): array
     {
         if (! $certificate instanceof SignatureCertificate) {
             return [SignatureFailure::CertificateInvalid];
@@ -139,9 +158,8 @@ final readonly class VerifyXmlSignatureAction
 
         $digest   = 'xades:SignedSignatureProperties/xades:SigningCertificate/xades:Cert/xades:CertDigest';
         $failures = $certificate->hasRsaKey() ? [] : [SignatureFailure::KeyUnsupported];
-        $matches  = $properties === []
-            || (self::attributes($xpath, $digest . '/ds:DigestMethod', $properties[0]) === [Fiscal::SHA256_ALGORITHM]
-                && self::text($xpath, $digest . '/ds:DigestValue', $properties[0]) === $certificate->digest());
+        $matches  = self::attributes($xpath, $digest . '/ds:DigestMethod', $properties) === [Fiscal::SHA256_ALGORITHM]
+            && self::text($xpath, $digest . '/ds:DigestValue', $properties) === $certificate->digest();
 
         return $matches ? $failures : [...$failures, SignatureFailure::CertificateMismatch];
     }
@@ -157,16 +175,16 @@ final readonly class VerifyXmlSignatureAction
             && ($reference->hasAttribute('Type') ? $reference->getAttribute('Type') : null) === $type;
     }
 
-    private static function digest(DOMDocument $document, DOMElement $target, DOMElement $signature, bool $enveloped): string
+    private static function digest(DOMDocument $document, DOMElement $target, bool $enveloped): string
     {
-        if (! $enveloped || ! $target->contains($signature)) {
+        if (! $enveloped) {
             return SignatureDigests::node($target);
         }
 
-        $copy     = clone $document;
-        $envelope = $copy->getElementsByTagNameNS(Fiscal::XMLDSIG_NAMESPACE, 'Signature')->item(0);
-        if ($envelope instanceof DOMElement) {
-            $envelope->parentNode?->removeChild($envelope);
+        $copy      = clone $document;
+        $signature = $copy->documentElement?->lastElementChild;
+        if ($signature instanceof DOMElement) {
+            $signature->parentNode?->removeChild($signature);
         }
 
         return SignatureDigests::node($copy->documentElement ?? $copy);
@@ -184,7 +202,7 @@ final readonly class VerifyXmlSignatureAction
     {
         $elements = self::elements($xpath, $query, $context);
 
-        return \count($elements) === 1 ? $elements[0]->textContent : '';
+        return \count($elements) === 1 ? trim($elements[0]->textContent) : '';
     }
 
     /**

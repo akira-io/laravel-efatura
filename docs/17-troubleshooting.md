@@ -86,7 +86,8 @@ verification, in `php artisan efatura:validate` and in the validate route.
 | --- | --- |
 | `signature.missing` | The document has no `ds:Signature` |
 | `signature.multiple` | It has more than one |
-| `signature.placement` | The signature is not where either profile puts it |
+| `signature.placement` | The signature is not where either profile puts it, or other elements sit beside it or the signed document |
+| `signature.structure_unexpected` | The signature holds elements other than one `SignedInfo`, `SignatureValue`, `KeyInfo` and `Object` with the content the signer writes |
 | `signature.algorithm_unsupported` | An algorithm the signer never writes |
 | `signature.reference_unexpected` | Unexpected references, or an `Id` missing or used twice |
 | `signature.digest_mismatch` | A reference digest does not match: the content changed after signing |

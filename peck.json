@@ -50,7 +50,8 @@
             "seekable",
             "renderer",
             "dompdf",
-            "testbench"
+            "testbench",
+            "namespaces"
         ],
         "paths": [
             "resources/catalogs/source",

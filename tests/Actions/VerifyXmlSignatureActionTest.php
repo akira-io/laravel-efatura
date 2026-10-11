@@ -109,10 +109,7 @@ it('reports references other than the two the signer writes', function (Closure 
     'an id used twice' => [function (DOMDocument $document, DOMXPath $xpath): void {
         $decoy = $document->createElementNS(Fiscal::XML_NAMESPACE, 'Decoy');
         $decoy->setAttribute('Id', (string) $document->documentElement?->getAttribute('Id'));
-        E::element($xpath, '//ds:Object')->appendChild($decoy);
-    }],
-    'no signed properties' => [function (DOMDocument $document, DOMXPath $xpath): void {
-        E::element($xpath, '//ds:Signature')->removeChild(E::element($xpath, '//ds:Object'));
+        E::element($xpath, '/e:Dfe/e:Invoice')->appendChild($decoy);
     }],
 ]);
 
