@@ -30,7 +30,7 @@ final class DoctorCommand extends Command
         $report = $readiness->handle($remote);
 
         if ((bool) $this->option('json')) {
-            $this->line(json_encode($report->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+            $this->line(json_encode($report->toJsonDocument(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
 
             return $this->exitCode($report);
         }

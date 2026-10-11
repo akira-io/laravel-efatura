@@ -9,6 +9,7 @@ use Akira\Efatura\Enums\ReadinessStatus;
 
 /**
  * @phpstan-type PresentedCheck array{check: string, status: string, code: string, field: ?string, required: bool, context: array<string, scalar|null>}
+ * @phpstan-type JsonCheck array{check: string, status: string, code: string, field: ?string, required: bool, context: object}
  */
 final readonly class ReadinessReport
 {
@@ -55,6 +56,19 @@ final readonly class ReadinessReport
                 'required' => $result->required,
                 'context'  => array_intersect_key($result->context, self::PRESENTED_CONTEXT),
             ], $this->results),
+        ];
+    }
+
+    /**
+     * @return array{ready: bool, checks: list<JsonCheck>}
+     */
+    public function toJsonDocument(): array
+    {
+        $document = $this->toArray();
+
+        return [
+            'ready'  => $document['ready'],
+            'checks' => array_map(static fn (array $check): array => [...$check, 'context' => (object) $check['context']], $document['checks']),
         ];
     }
 }

@@ -80,3 +80,15 @@ it('presents only the context values the package documents', function (): void {
     expect(new ReadinessReport([$result])->toArray()['checks'][0]['context'])->toBe(['skew_seconds' => 4000, 'status' => 200, 'environment' => 'test'])
         ->and(new ReadinessReport([$result])->toArray()['ready'])->toBeFalse();
 });
+
+it('writes an empty context as a json object for the console and the readiness route', function (): void {
+    $report = new ReadinessReport([
+        ReadinessResult::skipped(ReadinessCheck::Clock, false),
+        ReadinessResult::passed(ReadinessCheck::Configuration, 'readiness.configured', ['driver' => 'middleware']),
+    ]);
+
+    expect(json_encode($report->toJsonDocument(), JSON_THROW_ON_ERROR))->toBe(
+        '{"ready":true,"checks":[{"check":"clock","status":"skipped","code":"readiness.skipped","field":null,"required":false,"context":{}},'
+        . '{"check":"configuration","status":"passed","code":"readiness.configured","field":null,"required":true,"context":{"driver":"middleware"}}]}',
+    );
+});

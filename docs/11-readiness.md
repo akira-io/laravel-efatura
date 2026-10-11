@@ -13,6 +13,7 @@ $report->warnings();                           // results that deserve attention
 $report->of(ReadinessCheck::Certificate);      // the results of one check
 json_encode($report);                          // check, status, code, field, context, required
 $report->toArray();                            // ready and checks, for presenting the report
+$report->toJsonDocument();                     // the same, with each context as an object for JSON
 ```
 
 `toArray()` returns `ready` and one entry per result under `checks`, with the
@@ -20,6 +21,9 @@ $report->toArray();                            // ready and checks, for presenti
 it is `required` and the `context`. The context keeps only the keys the checks
 document (`days_left`, `driver`, `environment`, `skew_seconds`, `status`), so a
 value added to a result later never reaches a presentation by accident.
+`toJsonDocument()` is the document `efatura:doctor --json` and the readiness route
+print: the same values, with each `context` as an object, so an empty context is
+written as `{}` and never as `[]`.
 
 Each `ReadinessResult` has a `check` (`ReadinessCheck`), a `status`
 (`Passed`, `Warning`, `Failed`, `Skipped`), a stable `code`, the configuration

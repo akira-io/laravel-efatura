@@ -23,8 +23,9 @@ function doctorConfiguration(array $config = []): void
 function doctorJson(array $options = []): array
 {
     $exitCode = Artisan::call('efatura:doctor', ['--json' => true, ...$options]);
+    $output   = Artisan::output();
 
-    return [$exitCode, json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR), Artisan::output()];
+    return [$exitCode, json_decode($output, true, flags: JSON_THROW_ON_ERROR), $output];
 }
 
 beforeEach(function (): void {
@@ -91,7 +92,7 @@ it('reaches the configured endpoint only with the remote option', function (): v
 it('prints a stable json document', function (): void {
     Http::fake();
 
-    [$exitCode, $document] = doctorJson();
+    [$exitCode, $document, $output] = doctorJson();
 
     expect($exitCode)->toBe(0)
         ->and(array_keys($document))->toBe(['ready', 'checks'])
@@ -113,7 +114,8 @@ it('prints a stable json document', function (): void {
             'field'    => null,
             'required' => false,
             'context'  => [],
-        ]);
+        ])
+        ->and($output)->toContain('"context": {}')->not->toContain('"context": []');
     Http::assertNothingSent();
 });
 

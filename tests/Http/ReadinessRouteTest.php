@@ -24,6 +24,7 @@ it('answers 200 with the readiness report of a ready installation without reachi
         ->assertJsonMissingPath('data')
         ->assertJsonFragment(['code' => 'readiness.configured'])
         ->assertJsonFragment(['check' => 'endpoint', 'status' => 'skipped']);
+    expect($response->getContent())->toContain('"context":{}')->not->toContain('"context":[]');
     Http::assertNothingSent();
 });
 

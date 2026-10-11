@@ -24,6 +24,6 @@ final class ReadinessResource extends JsonResource
     #[Override]
     public function toArray(Request $request): array
     {
-        return $this->resource->toArray();
+        return $this->resource->toJsonDocument();
     }
 }
