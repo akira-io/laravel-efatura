@@ -14,6 +14,7 @@
 - Drivers, requests, responses, OAuth and self-billing: see [transport](transport.md).
 - Issuing documents and events, outcomes and reconciliation: see [issuance](issuance.md).
 - Checking an installation before issuing: see [readiness](readiness.md).
+- Optional JSON routes for readiness and XML validation: see [diagnostics routes](http.md).
 - Exchange rates and converting a foreign currency document to CVE: see [currency conversion](currency.md).
 - Printing the Documento Fiscal Auxiliar as a PDF with its QR code: see [DFA](dfa.md).
 - Keeping the signed XML, the archive, the answer and the DFA on a disk: see [artifact storage](storage.md).
