@@ -74,6 +74,21 @@ it('adds the DFA when one is given', function (): void {
         ->and(resolve(ArtifactStore::class)->get($artifacts[3]))->toBe('%PDF-1.7 dfa');
 });
 
+it('refuses a DFA rendered for another document or in a contingency model', function (string $iud, EmissionMode $model): void {
+    expect(fn (): array => resolve(StoreIssuedArtifactsAction::class)->handle(D::issued(), new RenderedDfa('%PDF-1.7 dfa', $iud . '.pdf', $iud, $model)))
+        ->toThrow(function (StorageException $exception) use ($iud, $model): void {
+            expect($exception->errorCode)->toBe('storage.dfa_mismatch')
+                ->and($exception->field)->toBe('dfa')
+                ->and($exception->context)->toBe(['iud' => D::iud(), 'dfaIud' => $iud, 'model' => $model->name])
+                ->and($exception->retryable)->toBeFalse();
+        })
+        ->and(Storage::disk('archive')->allFiles())->toBe([]);
+})->with([
+    'another IUD'   => [S::iud(emitter: '200300400'), EmissionMode::Online],
+    'offline model' => [D::iud(), EmissionMode::Offline],
+    'off model'     => [D::iud(), EmissionMode::Off],
+]);
+
 it('writes the response evidence as stable JSON', function (): void {
     $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(issueWithMessages());
 

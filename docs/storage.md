@@ -22,7 +22,9 @@ foreach ($artifacts as $artifact) {
 
 `handle(IssuedDocument $issued, ?RenderedDfa $dfa = null)` returns a
 `list<StoredArtifact>` in the order signed XML, archive, response and, when a
-DFA is given, DFA. Keep the `StoredArtifact` values (for example as columns of
+DFA is given, DFA. The DFA must be the ONLINE model rendered for the same IUD
+(`RenderedDfa::$iud` and `RenderedDfa::$model`); any other fails with
+`storage.dfa_mismatch` before anything is written. Keep the `StoredArtifact` values (for example as columns of
 the application's own table): `ArtifactStore::get()` takes one and returns the
 bytes after checking the checksum.
 
@@ -129,6 +131,7 @@ and message are the code below.
 | Code | Field | Context | Retryable | When |
 | --- | --- | --- | --- | --- |
 | `storage.not_authorized` | | `iud` | no | The `IssuedDocument` was not authorized by the platform |
+| `storage.dfa_mismatch` | `dfa` | `iud`, `dfaIud`, `model` | no | The DFA was rendered for another IUD, or is not the ONLINE model |
 | `storage.invalid_iud` | `iud` | | no | The IUD is not an official IUD with a valid check digit |
 | `storage.disk_invalid` | `efatura.storage.disk` | `disk` | no | The configured disk cannot be resolved |
 | `storage.conflict` | | `path` | no | Different bytes already exist at the path |
