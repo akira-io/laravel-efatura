@@ -220,11 +220,15 @@ return [
     | The QR code of an ONLINE or OFFLINE DFA holds {base_url}/{IUD}, which
     | opens the document on the e-Fatura platform (Manual v11, 6.13). The
     | base URL must use HTTPS without credentials, query strings or
-    | fragments; trailing slashes are removed.
+    | fragments; trailing slashes are removed. The cache path is an absolute
+    | directory, without traversal, where dompdf keeps its font metrics and
+    | temporary files and finds an empty chroot; null uses efatura-dompdf
+    | under the system temp directory. It is created when missing.
     |
     */
     'dfa' => [
-        'base_url' => env('EFATURA_DFA_BASE_URL', 'https://pe.efatura.cv/dfe/view'),
+        'base_url'   => env('EFATURA_DFA_BASE_URL', 'https://pe.efatura.cv/dfe/view'),
+        'cache_path' => env('EFATURA_DFA_CACHE_PATH'),
     ],
 
     /*

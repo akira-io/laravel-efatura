@@ -45,6 +45,22 @@ trait ValidatesConfigurationValues
         return $value;
     }
 
+    private function validatedAbsolutePath(#[SensitiveParameter] ?string $value, string $path): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = Str::rtrim($value, '/');
+
+        if (! Str::startsWith($trimmed, '/') || preg_match('/[\x00-\x1f\\\]/', $trimmed) === 1
+            || Str::of(Str::after($trimmed, '/'))->explode('/')->intersect(['', '.', '..'])->isNotEmpty()) {
+            throw new ConfigurationException('configuration.unsafe_path', $path);
+        }
+
+        return $trimmed;
+    }
+
     private function validatedIdentifier(#[SensitiveParameter] string $value, string $path): string
     {
         if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $value) !== 1) {

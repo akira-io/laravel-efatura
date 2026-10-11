@@ -149,6 +149,27 @@ the values come from the document and its parties. The view receives `$dfa`
 
 The dompdf renderer disables remote resources, embedded PHP and JavaScript, and
 accepts only `data:` URIs, which is how the QR code is embedded.
+`Dfa\DompdfOptions` builds those options.
+
+dompdf caches the metrics of the fonts it uses and writes temporary files. The
+renderer never lets it write into `vendor/`: both go to a directory the
+application can write to, with an empty `chroot` beside them.
+
+```php
+'dfa' => [
+    'cache_path' => env('EFATURA_DFA_CACHE_PATH'),
+],
+```
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `efatura.dfa.cache_path` (`EFATURA_DFA_CACHE_PATH`) | null | An absolute directory without `..`, `.` or empty segments; null uses `efatura-dompdf` under `sys_get_temp_dir()` |
+
+The renderer creates `fonts/`, `tmp/` and `chroot/` under it (mode 0700) when
+they are missing. A path that is not absolute fails with
+`configuration.unsafe_path` when the configuration loads; a directory that
+cannot be created fails with `dfa.cache_unavailable` when a DFA is rendered.
+On a read-only filesystem, point it at a writable volume.
 
 ## Errors
 
@@ -162,6 +183,7 @@ message are the code below.
 | `dfa.iuc_required` | `iuc` | `iud` | An OFF document without IUC, and none given |
 | `dfa.invalid_iuc` | `iuc` | | An IUC that is not four digits, a slash and digits |
 | `dfa.iuc_mismatch` | `iuc` | `iud` | A given IUC that differs from the one on the document |
+| `dfa.cache_unavailable` | `efatura.dfa.cache_path` | | The dompdf cache directory cannot be created; the filesystem error, when there is one, is `previous` |
 | `dfa.renderer_unavailable` | | `package` | `dompdf/dompdf` or `bacon/bacon-qr-code` is not installed |
 
 ---

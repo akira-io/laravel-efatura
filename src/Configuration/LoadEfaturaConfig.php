@@ -90,6 +90,7 @@ final readonly class LoadEfaturaConfig
             dfa: new DfaConfig(
                 $this->url('efatura.dfa.base_url', Fiscal::DFA_BASE_URL)
                     ?? throw new ConfigurationException('configuration.invalid_type', 'efatura.dfa.base_url'),
+                $this->validatedAbsolutePath($this->string('efatura.dfa.cache_path'), 'efatura.dfa.cache_path'),
             ),
         );
     }

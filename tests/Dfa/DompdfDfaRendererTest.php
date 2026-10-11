@@ -6,6 +6,7 @@ use Akira\Efatura\Actions\BuildDfaDataAction;
 use Akira\Efatura\Contracts\DfaRenderer;
 use Akira\Efatura\Dfa\DfaView;
 use Akira\Efatura\Dfa\DompdfDfaRenderer;
+use Akira\Efatura\Dfa\DompdfOptions;
 use Akira\Efatura\Dfa\LibraryRequirement;
 use Akira\Efatura\Dfa\RenderedDfa;
 use Akira\Efatura\Enums\EmissionMode;
@@ -38,7 +39,7 @@ it('prints the same PDF, byte for byte, when the same document is reprinted', fu
 });
 
 it('fails with a stable code when dompdf is not installed', function (): void {
-    $renderer = new DompdfDfaRenderer(resolve(DfaView::class), new LibraryRequirement('dompdf/dompdf', 'Missing\Dompdf\Dompdf'));
+    $renderer = new DompdfDfaRenderer(resolve(DfaView::class), resolve(DompdfOptions::class), new LibraryRequirement('dompdf/dompdf', 'Missing\Dompdf\Dompdf'));
 
     expect(fn (): RenderedDfa => $renderer->render(resolve(BuildDfaDataAction::class)->handle(D::issued())))
         ->toThrow(function (DfaException $exception): void {

@@ -10,5 +10,6 @@ final readonly class DfaConfig
 {
     public function __construct(
         public string $baseUrl = Fiscal::DFA_BASE_URL,
+        public ?string $cachePath = null,
     ) {}
 }

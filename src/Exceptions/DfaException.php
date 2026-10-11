@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Exceptions;
 
+use Throwable;
+
 final class DfaException extends EfaturaException
 {
     /**
      * @param array<string, string> $context
      */
-    private function __construct(string $errorCode, ?string $field = null, array $context = [])
+    private function __construct(string $errorCode, ?string $field = null, array $context = [], ?Throwable $previous = null)
     {
-        parent::__construct($errorCode, $errorCode, $field, $context);
+        parent::__construct($errorCode, $errorCode, $field, $context, $previous);
     }
 
     public static function notAuthorized(string $iud): self
@@ -42,5 +44,10 @@ final class DfaException extends EfaturaException
     public static function rendererUnavailable(string $package): self
     {
         return new self('dfa.renderer_unavailable', context: ['package' => $package]);
+    }
+
+    public static function cacheUnavailable(?Throwable $previous = null): self
+    {
+        return new self('dfa.cache_unavailable', 'efatura.dfa.cache_path', previous: $previous);
     }
 }
