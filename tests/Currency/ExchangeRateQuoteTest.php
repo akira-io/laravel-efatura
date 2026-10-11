@@ -87,7 +87,12 @@ it('refuses a source url that is not plain https without leaking it', function (
     'not a url'   => ['not a url'],
     'no host'     => ['https:///rates'],
     'credentials' => ['https://user:SECRET@www.bcv.cv/rates'],
+    'a fragment'  => ['https://www.bcv.cv/rates#SECRET'],
 ]);
+
+it('accepts a source url with a query', function (): void {
+    expect(C::quote(['sourceUrl' => 'https://www.bcv.cv/rates?_expType=PDF'])->sourceUrl)->toBe('https://www.bcv.cv/rates?_expType=PDF');
+});
 
 it('keeps evidence of where a rate came from', function (): void {
     $evidence = ['indicator' => 'PA.NUS.FCRF', 'target_url' => 'https://api.worldbank.org/v2/country/CPV'];

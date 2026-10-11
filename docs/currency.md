@@ -30,8 +30,8 @@ A rate is asked for with an `ExchangeRateRequest` and answered with an
 | `rate` | A `BigDecimal`, CVE per one unit of the source currency, rounded half up to five decimals. Given as a string it must be a plain decimal of at most 32 characters, without exponent or spaces. A rate that rounds to zero, is negative, is not a plain decimal or has more than 15 integer digits fails (`exchange_rate.rate_invalid`). |
 | `effectiveAt` of the quote | The publication day (BCV), the first day of the observed year (World Bank) or the requested instant (fixed). It is never after the request. |
 | `retrievedAt`, `provider` | When and from whom the rate was obtained. |
-| `sourceUrl` | An HTTPS URL without credentials, or null. |
-| `evidence` | A flat map of strings describing the observation (World Bank). Keys ending in `_url` hold HTTPS URLs without credentials. It never holds secrets. |
+| `sourceUrl` | An HTTPS URL without credentials or fragment, or null. |
+| `evidence` | A flat map of strings describing the observation (World Bank). Keys ending in `_url` hold HTTPS URLs without credentials or fragment. It never holds secrets. |
 
 `ExchangeRateQuote::answering($request)` refuses a quote for another pair or rate
 type (`exchange_rate.pair_mismatch`) and a quote dated after the request
@@ -53,9 +53,14 @@ provider fails, the conversion fails.
 
 The page is read with the `efatura.http.bcv` client profile: its timeouts and TLS
 options, no redirects, at most 256 KiB of body, and read retries. The address is
-`efatura.http.bcv.base_url` when set, otherwise the official statistics page; it
-must be HTTPS on `www.bcv.cv` without a port (`exchange_rate.source_required`
-otherwise, before any request).
+`efatura.http.bcv.base_url` when set, otherwise the official statistics page
+`https://www.bcv.cv/pt/PoliticaMonetaria/EstatisticasCambiais/Paginas/Estatisticas_Cambiais.aspx?_expType=PDF`
+(the address the Node package reads, asked for as `text/html`). The configured
+address is checked like every base URL (HTTPS, no credentials, no fragment), except
+that it may carry a query string, so the official address can be set explicitly;
+it must also be on `www.bcv.cv` without a port (`exchange_rate.source_required`
+otherwise, before any request). A quote's `sourceUrl` and the evidence URLs follow
+the same rule: HTTPS, no credentials, no fragment, a query string allowed.
 
 The parser reads the HTML with `Dom\HTMLDocument` (the HTML5 parser of ext-dom,
 independent of the libxml version). A page with more than 20 tables or more than
@@ -221,7 +226,7 @@ URL with credentials or a redirect location.
 | `exchange_rate.date_unavailable` | only for the BCV case | The BCV page still shows an earlier day with `max_publication_age_days` at zero (retryable), no observation for the year, or a quote dated after the request |
 | `exchange_rate.date_invalid` | no | A BCV publication dated after the requested day |
 | `exchange_rate.stale` | no | A BCV publication older than `max_publication_age_days` |
-| `exchange_rate.source_required` | no | A source URL that is not HTTPS on the expected host, or that carries credentials |
+| `exchange_rate.source_required` | no | A source URL that is not HTTPS on the expected host, or that carries credentials or a fragment |
 | `exchange_rate.invoice_invalid` | no | A document without totals, or a converted document the fiscal validation refuses |
 | `exchange_rate.alternatives_conflict` | no | A source document that already has a payable alternative amount |
 

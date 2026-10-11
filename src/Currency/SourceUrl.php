@@ -6,6 +6,7 @@ namespace Akira\Efatura\Currency;
 
 use Akira\Efatura\Enums\ExchangeRateFailure;
 use Akira\Efatura\Exceptions\ExchangeRateException;
+use Akira\Efatura\Support\HttpsUrl;
 use SensitiveParameter;
 
 final readonly class SourceUrl
@@ -15,13 +16,7 @@ final readonly class SourceUrl
      */
     public static function parts(#[SensitiveParameter] string $url): array
     {
-        $parts = parse_url($url);
-
-        if (! \is_array($parts) || ($parts['scheme'] ?? null) !== 'https' || ($parts['host'] ?? '') === '' || isset($parts['user']) || isset($parts['pass'])) {
-            throw ExchangeRateException::because(ExchangeRateFailure::SourceRequired);
-        }
-
-        return ['host' => $parts['host'], 'port' => $parts['port'] ?? null];
+        return HttpsUrl::origin($url, allowQuery: true) ?? throw ExchangeRateException::because(ExchangeRateFailure::SourceRequired);
     }
 
     public static function validated(#[SensitiveParameter] string $url): string

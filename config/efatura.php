@@ -266,8 +266,10 @@ return [
     | certificate of the middleware is verified. It cannot be combined with
     | disabled verification.
     | Each client's null tuning option inherits the global default. Base URLs
-    | must use HTTPS without credentials, query strings or fragments, and the
-    | middleware and platform URLs end with the API version (/v1). A null
+    | must use HTTPS without credentials, query strings or fragments (the bcv
+    | page address alone may carry a query string, as the official page
+    | does), and the middleware and platform URLs end with the API version
+    | (/v1). A null
     | base URL defers endpoint selection to its provider's later configuration.
     | Fiscal environment selection never replaces these endpoints.
     | Requests go through the Laravel HTTP client, whose request events

@@ -83,8 +83,8 @@ trait ReadsConfigurationValues
         return $value;
     }
 
-    private function url(string $path, #[SensitiveParameter] ?string $default = null): ?string
+    private function url(string $path, #[SensitiveParameter] ?string $default = null, bool $allowQuery = false): ?string
     {
-        return $this->validatedUrl($this->string($path, $default), $path);
+        return $this->validatedUrl($this->string($path, $default), $path, $allowQuery);
     }
 }

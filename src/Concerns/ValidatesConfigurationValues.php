@@ -7,10 +7,9 @@ namespace Akira\Efatura\Concerns;
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Support\FiscalRules;
+use Akira\Efatura\Support\HttpsUrl;
 use Illuminate\Support\Str;
 use SensitiveParameter;
-
-use const FILTER_VALIDATE_URL;
 
 trait ValidatesConfigurationValues
 {
@@ -55,15 +54,13 @@ trait ValidatesConfigurationValues
         return $value;
     }
 
-    private function validatedUrl(#[SensitiveParameter] ?string $url, string $path): ?string
+    private function validatedUrl(#[SensitiveParameter] ?string $url, string $path, bool $allowQuery = false): ?string
     {
         if ($url === null) {
             return null;
         }
 
-        $parts = parse_url($url);
-        if (filter_var($url, FILTER_VALIDATE_URL) === false || $parts === false || ($parts['scheme'] ?? '') !== 'https'
-            || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])) {
+        if (HttpsUrl::origin($url, $allowQuery) === null) {
             throw new ConfigurationException('configuration.unsafe_url', $path);
         }
 

@@ -25,7 +25,7 @@ final readonly class LoadHttpConfig
             $defaults,
             $this->profile('middleware', $defaults, 'https://localhost:3443/v1'),
             $this->profile('platform', $defaults, 'https://services.efatura.cv/v1'),
-            $this->profile('bcv', $defaults),
+            $this->profile('bcv', $defaults, allowQuery: true),
             $this->profile('world_bank', $defaults),
         );
     }
@@ -35,19 +35,25 @@ final readonly class LoadHttpConfig
         return $this->repository;
     }
 
-    private function profile(string $name, HttpClientConfig $defaults, ?string $baseUrl = null): HttpClientConfig
+    private function profile(string $name, HttpClientConfig $defaults, ?string $baseUrl = null, bool $allowQuery = false): HttpClientConfig
     {
         $this->section('efatura.http.' . $name);
 
-        return $this->client('efatura.http.' . $name, $defaults, $baseUrl);
+        return $this->client('efatura.http.' . $name, $defaults, $baseUrl, $allowQuery);
     }
 
-    private function client(string $path, #[SensitiveParameter] HttpClientConfig $defaults, #[SensitiveParameter] ?string $baseUrl = null): HttpClientConfig
-    {
+    private function client(
+        string $path,
+        #[SensitiveParameter]
+        HttpClientConfig $defaults,
+        #[SensitiveParameter]
+        ?string $baseUrl = null,
+        bool $allowQuery = false,
+    ): HttpClientConfig {
         $verifyTls = $this->boolean($path . '.verify_tls', $defaults->verifyTls);
 
         return new HttpClientConfig(
-            $this->url($path . '.base_url', $baseUrl),
+            $this->url($path . '.base_url', $baseUrl, $allowQuery),
             $this->integer($path . '.timeout_seconds', $defaults->timeoutSeconds),
             $this->integer($path . '.connect_timeout_seconds', $defaults->connectTimeoutSeconds),
             $this->integer($path . '.retries', $defaults->retries, 0),
