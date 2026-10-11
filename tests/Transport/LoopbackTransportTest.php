@@ -49,7 +49,7 @@ it('stops keeping a response body past the response limit', function (): void {
     $server = LoopbackServer::start('oversized');
 
     try {
-        $response = $this->exchange->post($server->config(), T::archive(), []);
+        $response = $this->exchange->post($server->config(timeoutSeconds: 15), T::archive(), []);
 
         expect(fn (): mixed => $this->exchange->submission(T::archive(), $response))
             ->toThrow(fn (TransportException $exception): mixed => expect($exception->failure)->toBe(TransportFailure::ResponseTooLarge))

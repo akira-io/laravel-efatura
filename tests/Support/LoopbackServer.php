@@ -33,9 +33,9 @@ final readonly class LoopbackServer
         return self::profile((int) substr($name, (int) strrpos($name, ':') + 1));
     }
 
-    public function config(): HttpClientConfig
+    public function config(int $timeoutSeconds = 1): HttpClientConfig
     {
-        return self::profile($this->port);
+        return self::profile($this->port, $timeoutSeconds);
     }
 
     public function receivedBytes(): ?int
@@ -48,8 +48,8 @@ final readonly class LoopbackServer
         $this->process->stop(0);
     }
 
-    private static function profile(int $port): HttpClientConfig
+    private static function profile(int $port, int $timeoutSeconds = 1): HttpClientConfig
     {
-        return new HttpClientConfig('http://127.0.0.1:' . $port . '/v1/', 1, 1, 0, 0, 1, true);
+        return new HttpClientConfig('http://127.0.0.1:' . $port . '/v1/', $timeoutSeconds, 1, 0, 0, 1, true);
     }
 }
