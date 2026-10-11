@@ -130,6 +130,7 @@ it('handles missing env file', function (): void {
 it('names the DFA packages that are missing', function (array $installed, string $missing): void {
     $this->files->put(base_path('.env'), $this->fixture->envContent($this->fixture->envDefaults()));
     $this->files->put(config_path('efatura.php'), '');
+
     app()->instance(DfaLibraries::class, new DfaLibraries([
         new LibraryRequirement('dompdf/dompdf', in_array('dompdf/dompdf', $installed, true) ? Dompdf::class : 'Missing\Dompdf\Dompdf'),
         new LibraryRequirement('bacon/bacon-qr-code', in_array('bacon/bacon-qr-code', $installed, true) ? Writer::class : 'Missing\BaconQrCode\Writer'),

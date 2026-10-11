@@ -25,7 +25,7 @@ afterEach(function (): void {
 
 function vendorFonts(): array
 {
-    $directory = dirname((new ReflectionClass(Options::class))->getFileName(), 2) . '/lib/fonts';
+    $directory = dirname(new ReflectionClass(Options::class)->getFileName(), 2) . '/lib/fonts';
 
     return collect(new Filesystem()->files($directory))
         ->mapWithKeys(fn (SplFileInfo $file): array => [$file->getFilename() => [$file->getSize(), $file->getMTime()]])
@@ -44,7 +44,7 @@ it('keeps the font cache, the temporary files and the chroot in the configured d
 });
 
 it('falls back to a directory of its own under the system temp directory', function (): void {
-    config()->set('efatura.dfa.cache_path', null);
+    config()->set('efatura.dfa.cache_path');
 
     expect(resolve(DompdfOptions::class)->make()->getFontCache())->toBe(sys_get_temp_dir() . '/efatura-dompdf/fonts')
         ->and(is_dir(sys_get_temp_dir() . '/efatura-dompdf/chroot'))->toBeTrue();
