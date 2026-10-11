@@ -8,6 +8,7 @@ use Akira\Efatura\Contracts\DocumentSchemaValidator;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\EfaturaException;
+use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Xml\SafeXmlParser;
@@ -33,6 +34,8 @@ final readonly class ValidateXmlDocumentAction
                 ? $this->schemas->validateDocument($document, $profile)
                 : $this->schemas->validate($xml, $profile);
             $failure = null;
+        } catch (OfficialArtifactException $officialArtifactException) {
+            throw $officialArtifactException;
         } catch (EfaturaException $efaturaException) {
             $failure = $efaturaException;
         }

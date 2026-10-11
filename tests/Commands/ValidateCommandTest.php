@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use Akira\Efatura\Commands\ValidateCommand;
 use Akira\Efatura\Configuration\RoutesConfig;
+use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Enums\SignatureProfile;
+use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Tests\Support\CertificateFixtures as C;
 use Akira\Efatura\Tests\Support\SignatureEdits as E;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
@@ -229,4 +231,25 @@ it('accepts a file of exactly 5 MiB', function (): void {
 it('shares one size limit between the command and the validate route', function (): void {
     expect(XmlValidation::MAX_BYTES)->toBe(5 * 1024 * 1024)
         ->and(RoutesConfig::MAX_UPLOAD_KILOBYTES * 1024)->toBe(XmlValidation::MAX_BYTES);
+});
+
+it('reports damaged official artifacts as an installation fault, not as an invalid document', function (): void {
+    app()->instance(SchemaValidator::class, new class implements SchemaValidator
+    {
+        public function validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped): void
+        {
+            throw new OfficialArtifactException('artifacts.checksum_mismatch', 'resolve');
+        }
+    });
+    $path = validationFile(S::sign(S::unsigned())->xml);
+
+    artisan('efatura:validate', ['path' => $path])
+        ->expectsOutputToContain('The bundled official schemas cannot be used (artifacts.checksum_mismatch). Reinstall the package; the document was not validated.')
+        ->doesntExpectOutputToContain('The document is not valid.')
+        ->assertExitCode(1);
+
+    [$exitCode, $document] = validationJson($path);
+
+    expect($exitCode)->toBe(1)
+        ->and($document)->toBe(['valid' => false, 'error' => 'artifacts_unavailable', 'code' => 'artifacts.checksum_mismatch']);
 });

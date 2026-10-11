@@ -125,6 +125,50 @@ validation. See [XML](05-xml.md).
 | `xml.too_complex` | The document holds more than 100 000 elements, or an element with more than 16 namespace declarations on itself and its ancestors | Check the file is a single e-Fatura document; no real document comes near either limit |
 | `xml.external_resource` | The schema asked for a file or URL outside the bundled official artifacts | Reinstall the package so `resources/official-artifacts.json` and the XSD files match |
 
+## Official artifacts
+
+`OfficialArtifactException` means the XSD files and catalogs bundled in
+`resources/` do not match `resources/official-artifacts.json`, so nothing is
+validated against them. It is a fault of the installation, never of a document:
+`efatura:validate` reports it apart from an invalid document and the validate
+route answers 503. Reinstall the package (`composer reinstall akira/efatura`)
+and check that no deployment step rewrites files under `vendor/`.
+
+| Code | Meaning |
+| --- | --- |
+| `artifacts.missing_root` | The `resources` directory of the package cannot be found or is not a directory |
+| `artifacts.invalid_manifest` | `official-artifacts.json` is not valid JSON, or lacks its `files` or `signature_profiles` |
+| `artifacts.unknown_profile` | The manifest has no entry XSD for the signature profile asked for |
+| `artifacts.unknown_or_unsafe_path` | A file asked for is not listed in the manifest, or its path is not a plain relative path |
+| `artifacts.invalid_checksum` | The manifest lists a file with a checksum that is not a SHA-256 |
+| `artifacts.invalid_size` | The manifest lists a file with a size that is not an integer of zero or more |
+| `artifacts.missing_or_unreadable` | A listed file is missing, unreadable or not a regular file |
+| `artifacts.symbolic_link` | A listed file, or a directory on its path, is a symbolic link |
+| `artifacts.size_mismatch` | A listed file does not have the size the manifest records |
+| `artifacts.checksum_mismatch` | A listed file does not have the SHA-256 the manifest records |
+| `artifacts.invalid_schema` | The listed XSD files match the manifest but libxml cannot compile them |
+
+## Packaging
+
+`PackagingException` comes from `ZipArchivePackager` before anything is sent; the
+`context` names the `entry` (its position in the list) when one entry is at
+fault. See [packaging](08-packaging.md).
+
+| Code | Meaning | Fix |
+| --- | --- | --- |
+| `package.empty` | No XML given | Pass at least one signed document or event |
+| `package.too_many_entries` | More than 1000 entries | Split the archive |
+| `package.too_large` | More than 10 MiB of XML before compression | Split the archive |
+| `package.unsupported_root` | A root that is not `Dfe`, `Event` or `internally-detached` holding one of them | Package only signed e-Fatura documents and events |
+| `package.unsigned` | A root without a `ds:Signature` child | Sign the XML before packaging it |
+| `package.invalid_identifier` | An `Id` that is not a valid IUD or event ID | Build the document through the package actions, which write the `Id` |
+| `package.mixed_kinds` | Documents and events in the same archive | Package them separately |
+| `package.mixed_repositories` | Identifiers of more than one repository | Package one environment per archive |
+| `package.mixed_self_billing` | Self-billed and regular documents together | Package them separately |
+| `package.missing_emitter` | An event without a non-empty `EmitterTaxId` | Build the event through the package actions |
+| `package.duplicate_entry` | Two entries with the same `Id` | Remove the duplicate |
+| `package.write_failed` | ext-zip could not write the archive in the temporary directory | Check the free space and permissions of the temporary directory |
+
 ## Transport and OAuth
 
 `TransportException` carries the failure in `$failure`, and `retryable` and

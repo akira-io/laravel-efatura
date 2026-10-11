@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\ConfigurationException;
+use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Tests\Support\DiagnosticsGuard;
 use Akira\Efatura\Tests\Support\RouteFixtures;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
@@ -112,6 +113,20 @@ it('keeps only the code of a package exception and never its message', function 
 
     $response->assertUnprocessable()->assertJsonPath('schema', ['valid' => false, 'code' => 'configuration.invalid_type', 'violations' => [], 'violations_total' => 0]);
     expect($response->getContent())->not->toContain('passphrase')->not->toContain('ConfigurationException')->not->toContain('trace');
+});
+
+it('answers 503 when the bundled official artifacts cannot be used', function (): void {
+    app()->instance(SchemaValidator::class, new class implements SchemaValidator
+    {
+        public function validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped): void
+        {
+            throw new OfficialArtifactException('artifacts.invalid_schema', 'validate');
+        }
+    });
+
+    postXml(UploadedFile::fake()->createWithContent('document.xml', S::sign(S::unsigned())->xml))
+        ->assertServiceUnavailable()
+        ->assertExactJson(['valid' => false, 'error' => 'artifacts_unavailable', 'code' => 'artifacts.invalid_schema']);
 });
 
 it('leaves exceptions from outside the package to the application handler', function (): void {

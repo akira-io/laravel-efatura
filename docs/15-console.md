@@ -126,6 +126,13 @@ output says "Signature: not checked". A refused path or profile prints only
 `{"valid": false, "error": "<reason>"}`, with `file_missing`,
 `file_not_regular`, `file_unreadable`, `file_too_large` or `profile_invalid`.
 
+When the bundled official schemas cannot be used (an `OfficialArtifactException`,
+`artifacts.*`), the document is not validated at all: the command exits with `1`,
+says the installation must be repaired instead of calling the document invalid,
+and with `--json` prints
+`{"valid": false, "error": "artifacts_unavailable", "code": "artifacts.<reason>"}`.
+See [troubleshooting](17-troubleshooting.md#official-artifacts).
+
 The same validation is available over HTTP through the optional
 [diagnostics routes](16-http.md).
 

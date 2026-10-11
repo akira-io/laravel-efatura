@@ -57,6 +57,13 @@ codes. Secrets, passphrases and private key paths never appear in it.
 - `profile`: optional, `enveloped` or `detached`, detected from the root
   element when omitted.
 
+PHP refuses an upload above `upload_max_filesize`, or a request above
+`post_max_size`, before Laravel runs, and the route then reports the `file` as
+missing. Set both in `php.ini` (and any limit of the web server, such as
+`client_max_body_size` in nginx) above `max_upload_kilobytes`, with room for the
+multipart overhead: for the default 5120 KB, `upload_max_filesize = 6M` and
+`post_max_size = 8M`.
+
 It runs `ValidateXmlDocumentAction`, the action behind `efatura:validate`, and
 returns the same document as `efatura:validate --json`:
 
@@ -88,7 +95,13 @@ validation `errors`, in JSON whatever the `Accept` header says.
 
 ## Errors
 
-A package exception raised while validating is reduced to its code in
+When the bundled official schemas cannot be used (`artifacts.*`), the route
+answers 503 with
+`{"valid": false, "error": "artifacts_unavailable", "code": "artifacts.<reason>"}`:
+the installation is at fault, not the document, which was not validated. See
+[troubleshooting](17-troubleshooting.md#official-artifacts).
+
+Any other package exception raised while validating is reduced to its code in
 `schema.code`; its message, its fields and its trace never reach the response.
 Exceptions from outside the package are left to the application exception
 handler.

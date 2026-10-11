@@ -6,6 +6,7 @@ namespace Akira\Efatura\Commands;
 
 use Akira\Efatura\Actions\ValidateXmlDocumentAction;
 use Akira\Efatura\Enums\SignatureProfile;
+use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Signing\SignatureVerification;
 use Akira\Efatura\Xml\SchemaViolation;
 use Akira\Efatura\Xml\XmlValidation;
@@ -41,7 +42,22 @@ final class ValidateCommand extends Command
             return $this->refuse('file_too_large', $path);
         }
 
-        return $this->report($validate->handle($xml, \is_string($option) ? XmlValidation::PROFILES[$option] : null));
+        try {
+            $validation = $validate->handle($xml, \is_string($option) ? XmlValidation::PROFILES[$option] : null);
+        } catch (OfficialArtifactException $officialArtifactException) {
+            return $this->unavailable($officialArtifactException->errorCode);
+        }
+
+        return $this->report($validation);
+    }
+
+    private function unavailable(string $code): int
+    {
+        (bool) $this->option('json')
+            ? $this->json(['valid' => false, 'error' => 'artifacts_unavailable', 'code' => $code])
+            : error(__('efatura::efatura.console.validate.artifacts_unavailable', ['code' => $code]));
+
+        return self::FAILURE;
     }
 
     private function refusal(string $path, ?string $profile): ?string
@@ -64,7 +80,7 @@ final class ValidateCommand extends Command
     private function refuse(string $reason, string $path): int
     {
         if ((bool) $this->option('json')) {
-            $this->line(json_encode(['valid' => false, 'error' => $reason], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+            $this->json(['valid' => false, 'error' => $reason]);
 
             return self::FAILURE;
         }
@@ -74,12 +90,20 @@ final class ValidateCommand extends Command
         return self::FAILURE;
     }
 
+    /**
+     * @param array<string, mixed> $document
+     */
+    private function json(array $document): void
+    {
+        $this->line(json_encode($document, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+    }
+
     private function report(XmlValidation $validation): int
     {
         $valid = $validation->valid();
 
         if ((bool) $this->option('json')) {
-            $this->line(json_encode($validation->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+            $this->json($validation->toArray());
 
             return $valid ? self::SUCCESS : self::FAILURE;
         }

@@ -8,6 +8,7 @@ use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Enums\SignatureFailure;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\ConfigurationException;
+use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Signing\SignatureVerification;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
@@ -92,6 +93,19 @@ it('hands the schema validator the document it already parsed when the validator
 
     expect($validation->valid())->toBeTrue()
         ->and($validator->document?->documentElement?->localName)->toBe('Dfe');
+});
+
+it('lets a fault of the bundled official artifacts reach the caller', function (): void {
+    app()->instance(SchemaValidator::class, new class implements SchemaValidator
+    {
+        public function validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped): void
+        {
+            throw new OfficialArtifactException('artifacts.missing_or_unreadable', 'resolve');
+        }
+    });
+
+    expect(fn (): XmlValidation => validateXmlDocument(S::sign(S::unsigned())->xml))
+        ->toThrow(OfficialArtifactException::class, 'artifacts.missing_or_unreadable');
 });
 
 it('presents the result as plain values', function (): void {
