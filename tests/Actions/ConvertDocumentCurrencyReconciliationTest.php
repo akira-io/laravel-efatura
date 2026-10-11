@@ -6,7 +6,9 @@ use Akira\Efatura\Actions\ConvertDocumentCurrencyAction;
 use Akira\Efatura\Data\DocumentData;
 use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Tests\Support\CurrencyFixtures as C;
+use Akira\Efatura\Tests\Support\DocumentPayloads as P;
 use Akira\Efatura\Tests\Support\ForeignDocuments;
+use Akira\Efatura\Tests\Support\XmlFixtures;
 use Brick\Math\BigDecimal;
 use Carbon\CarbonImmutable;
 use Random\Engine\Mt19937;
@@ -71,4 +73,11 @@ it('reconciles a few hundred generated documents', function (): void {
         expect(BigDecimal::of($alternative['value'])->isEqualTo($source['totals']['payableAmount']))->toBeTrue('document ' . $index)
             ->and($residual->isLessThanOrEqualTo('0.005'))->toBeTrue('document ' . $index);
     }
+});
+
+it('writes a zero decimal currency alternative without non-significant zeros', function (): void {
+    $converted = reconciledToCve([...ForeignDocuments::invoice([['price' => '1000', 'tax' => '15']]), 'header' => P::header(['serie' => 'A', 'documentNumber' => 1]), 'emission' => P::transmission()], '0.59727', 'JPY');
+
+    expect($converted->toPayload()['totals']['payableAlternativeAmounts'])->toBe([['value' => '1150.00000', 'currencyCode' => 'JPY', 'exchangeRate' => '0.59727']])
+        ->and(XmlFixtures::documentXml($converted))->toContain('<PayableAlternativeAmount CurrencyCode="JPY" ExchangeRate="0.59727">1150</PayableAlternativeAmount>');
 });
