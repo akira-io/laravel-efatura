@@ -48,7 +48,8 @@
             "loopback",
             "eof",
             "seekable",
-            "renderer"
+            "renderer",
+            "dompdf"
         ],
         "paths": [
             "resources/catalogs/source",

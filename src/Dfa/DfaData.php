@@ -27,6 +27,16 @@ final readonly class DfaData
         return $this->mode !== EmissionMode::Off;
     }
 
+    public function contingencyMode(): string
+    {
+        return $this->fillsCustomerByHand() ? 'OFF' : 'OFFLINE';
+    }
+
+    public function fillsCustomerByHand(): bool
+    {
+        return $this->mode === EmissionMode::Off;
+    }
+
     public function filename(): string
     {
         return $this->iud . '.pdf';
