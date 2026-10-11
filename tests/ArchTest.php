@@ -87,6 +87,7 @@ arch('transport, issuance and readiness receive their collaborators and configur
         'Akira\Efatura\Events',
         'Akira\Efatura\Testing',
         'Akira\Efatura\Currency',
+        'Akira\Efatura\Dfa',
     ]);
 
 arch('the package reaches the network only through the injected laravel http client')
@@ -111,7 +112,7 @@ arch('transport and oauth never log or dump what they exchange')
     ->expect(['Psr\Log', Log::class, 'logger', 'info', 'error_log', 'var_dump', 'var_export', 'print_r', 'serialize'])
     ->each->not->toBeUsedIn(['Akira\Efatura\Transport', 'Akira\Efatura\OAuth']);
 
-arch('transport, oauth, issuance, readiness, event and currency values are immutable')
+arch('transport, oauth, issuance, readiness, event, currency and dfa values are immutable')
     ->expect([
         'Akira\Efatura\Transport',
         'Akira\Efatura\OAuth',
@@ -119,6 +120,7 @@ arch('transport, oauth, issuance, readiness, event and currency values are immut
         'Akira\Efatura\Readiness',
         'Akira\Efatura\Events',
         'Akira\Efatura\Currency',
+        'Akira\Efatura\Dfa',
     ])
     ->toBeReadonly();
 
