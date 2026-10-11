@@ -18,6 +18,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Transport Driver
+    |--------------------------------------------------------------------------
+    |
+    | middleware (the default) submits through the local e-Fatura middleware,
+    | which holds the OAuth credentials of the transmitter and its emitters.
+    | platform submits directly to the e-Fatura platform with access tokens
+    | obtained from refresh tokens the application stores. The name is read
+    | in any letter case; a TransportDriver enum case is accepted as well.
+    |
+    */
+    'driver' => env('EFATURA_DRIVER', 'middleware'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Default Fiscal Emitter
     |--------------------------------------------------------------------------
     |
@@ -68,10 +82,13 @@ return [
     | match the emitter's when the same taxpayer submits its own documents;
     | an authorized intermediary has its own identity. These roles stay
     | separate even when the tax IDs match. Identity fields are nullable.
-    | The middleware key is sent as cv-ef-mw-core-transmitter-key. OAuth is
-    | used only for direct platform authentication. Secrets default to null
-    | and are required only by the operation using them. Never log these
-    | values; protect cached configuration files as they contain secrets.
+    | The middleware key is sent as cv-ef-mw-core-transmitter-key and has
+    | exactly 64 characters. OAuth is used only for direct platform
+    | authentication; the issuer URL locates its OpenID configuration and
+    | must use HTTPS without credentials, query strings or fragments.
+    | Secrets default to null and are required only by the operation using
+    | them. Never log these values; protect cached configuration files as
+    | they contain secrets.
     |
     */
     'transmitter' => [
@@ -81,6 +98,7 @@ return [
         'oauth'          => [
             'client_id'     => env('EFATURA_TRANSMITTER_CLIENT_ID'),
             'client_secret' => env('EFATURA_TRANSMITTER_CLIENT_SECRET'),
+            'issuer_url'    => env('EFATURA_OAUTH_ISSUER_URL', 'https://iam.efatura.cv/auth/realms/taxpayers'),
         ],
     ],
 
@@ -145,7 +163,9 @@ return [
     | A null store inherits cache.default; cache tags are not required. Prefix
     | is a nonempty string isolating package entries. The exchange-rate TTL
     | is a positive integer in seconds (3600 = one hour). Cache reusable
-    | lookups only, never signing material or authentication secrets.
+    | lookups and platform access tokens only, the tokens encrypted with the
+    | application key and kept for less than their lifetime. Signing material,
+    | refresh tokens, client secrets and the middleware key are never cached.
     |
     */
     'cache' => [
@@ -187,13 +207,23 @@ return [
     | Timeouts are positive integer seconds. Retry delay is a nonnegative
     | integer in milliseconds; retries counts additional attempts, with zero
     | disabling retries. Concurrency is a positive integer. Automatic retries
-    | apply only to requests with a verified idempotency guarantee.
+    | apply only to reads (document lookups, OpenID discovery, remote
+    | readiness); a submission, a self-billing request or a token request
+    | is never repeated, since the platform offers no idempotency key.
     | TLS verification is a boolean, true by default. Disabling verification
     | exposes credentials and documents to interception; keep it on in production.
+    | ca_bundle_path is an absolute path to a readable local PEM file; when set,
+    | the client trusts only those certificates, which is how the self-signed
+    | certificate of the middleware is verified. It cannot be combined with
+    | disabled verification.
     | Each client's null tuning option inherits the global default. Base URLs
-    | must use HTTPS without credentials, query strings or fragments. A null
+    | must use HTTPS without credentials, query strings or fragments, and the
+    | middleware and platform URLs end with the API version (/v1). A null
     | base URL defers endpoint selection to its provider's later configuration.
     | Fiscal environment selection never replaces these endpoints.
+    | Requests go through the Laravel HTTP client, whose request events
+    | Telescope or Nightwatch may record: hide the authorization and
+    | cv-ef-mw-core-transmitter-key headers there.
     |
     */
     'http' => [
@@ -203,14 +233,16 @@ return [
         'retry_delay_milliseconds' => env('EFATURA_HTTP_RETRY_DELAY_MILLISECONDS', 200),
         'concurrency'              => env('EFATURA_HTTP_CONCURRENCY', 5),
         'verify_tls'               => env('EFATURA_HTTP_VERIFY_TLS', true),
+        'ca_bundle_path'           => env('EFATURA_HTTP_CA_BUNDLE_PATH'),
         'middleware'               => [
-            'base_url'                 => env('EFATURA_MIDDLEWARE_BASE_URL', 'https://localhost:3443'),
+            'base_url'                 => env('EFATURA_MIDDLEWARE_BASE_URL', 'https://localhost:3443/v1'),
             'timeout_seconds'          => null,
             'connect_timeout_seconds'  => null,
             'retries'                  => null,
             'retry_delay_milliseconds' => null,
             'concurrency'              => null,
             'verify_tls'               => null,
+            'ca_bundle_path'           => env('EFATURA_MIDDLEWARE_CA_BUNDLE_PATH'),
         ],
         'platform' => [
             'base_url'                 => env('EFATURA_PLATFORM_BASE_URL', 'https://services.efatura.cv/v1'),
@@ -220,6 +252,7 @@ return [
             'retry_delay_milliseconds' => null,
             'concurrency'              => null,
             'verify_tls'               => null,
+            'ca_bundle_path'           => null,
         ],
         'bcv' => [
             'base_url'                 => env('EFATURA_BCV_BASE_URL'),
@@ -229,6 +262,7 @@ return [
             'retry_delay_milliseconds' => null,
             'concurrency'              => null,
             'verify_tls'               => null,
+            'ca_bundle_path'           => null,
         ],
         'world_bank' => [
             'base_url'                 => env('EFATURA_WORLD_BANK_BASE_URL'),
@@ -238,6 +272,7 @@ return [
             'retry_delay_milliseconds' => null,
             'concurrency'              => null,
             'verify_tls'               => null,
+            'ca_bundle_path'           => null,
         ],
     ],
 ];

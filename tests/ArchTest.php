@@ -7,6 +7,8 @@ use Akira\Efatura\Sequence\SequenceScope;
 use Akira\Efatura\Signing\SignedXml;
 use Akira\Efatura\Signing\SigningCredentials;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Casts\Cast;
@@ -74,6 +76,53 @@ arch('actions expose a single handle entry point')
     ->expect('Akira\Efatura\Actions')
     ->toHaveMethod('handle')
     ->not->toHavePublicMethodsBesides(['__construct', 'handle']);
+
+arch('transport, issuance and readiness receive their collaborators and configuration')
+    ->expect(['Illuminate\Support\Facades', 'resolve', 'app', 'config'])
+    ->each->not->toBeUsedIn([
+        'Akira\Efatura\Transport',
+        'Akira\Efatura\OAuth',
+        'Akira\Efatura\Issuance',
+        'Akira\Efatura\Readiness',
+        'Akira\Efatura\Events',
+        'Akira\Efatura\Testing',
+    ]);
+
+arch('the package reaches the network only through the injected laravel http client')
+    ->expect([
+        'curl_init',
+        'curl_exec',
+        'curl_multi_init',
+        'curl_multi_exec',
+        'fsockopen',
+        'pfsockopen',
+        'stream_socket_client',
+        'fopen',
+        Http::class,
+    ])
+    ->each->not->toBeUsedIn('Akira\Efatura');
+
+arch('transport, oauth and readiness never read files')
+    ->expect(['file_get_contents', 'file', 'readfile'])
+    ->each->not->toBeUsedIn(['Akira\Efatura\Transport', 'Akira\Efatura\OAuth', 'Akira\Efatura\Readiness']);
+
+arch('transport and oauth never log or dump what they exchange')
+    ->expect(['Psr\Log', Log::class, 'logger', 'info', 'error_log', 'var_dump', 'var_export', 'print_r', 'serialize'])
+    ->each->not->toBeUsedIn(['Akira\Efatura\Transport', 'Akira\Efatura\OAuth']);
+
+arch('transport, oauth, issuance, readiness and event values are immutable')
+    ->expect(['Akira\Efatura\Transport', 'Akira\Efatura\OAuth', 'Akira\Efatura\Issuance', 'Akira\Efatura\Readiness', 'Akira\Efatura\Events'])
+    ->toBeReadonly();
+
+it('never turns an http response into an exception that carries its body', function (): void {
+    $throwing = collect(new Filesystem()->allFiles(__DIR__ . '/../src'))
+        ->filter(fn (SplFileInfo $file): bool => preg_match('/->throw(If|Unless)?\(/', (string) file_get_contents($file->getPathname())) === 1)
+        ->map(fn (SplFileInfo $file): string => $file->getFilename())
+        ->values()
+        ->all();
+
+    expect($throwing)->toBe([]);
+});
 
 it('keeps source and tooling lines within 160 characters', function (): void {
     $longLines = collect(new Filesystem()->allFiles(__DIR__ . '/../src'))

@@ -69,8 +69,36 @@ final class DefinitionException extends EfaturaException
         return new self('definition.sequences_in_use', \sprintf('The %s table still holds fiscal sequence counters and is not dropped.', $table));
     }
 
+    public static function submissionEntry(string $identifier): self
+    {
+        return new self('definition.submission_entry', \sprintf('The submission holds no entry for %s.', $identifier));
+    }
+
+    public static function transportEndpoint(): self
+    {
+        return new self('definition.transport_endpoint', 'A fiscal request needs an HTTP client profile with a base URL.');
+    }
+
+    public static function transportDriver(string $name): self
+    {
+        return new self('definition.transport_driver', \sprintf('%s is not a transport driver; use middleware or platform.', $name));
+    }
+
     public static function credentialsSerialization(): self
     {
         return new self('definition.credentials_serialization', 'Signing credentials hold a private key and cannot be serialized.');
+    }
+
+    public static function tokenSerialization(): self
+    {
+        return new self('definition.token_serialization', 'An access token is a secret and cannot be serialized.');
+    }
+
+    public static function selfBillingNotQueued(): self
+    {
+        return new self(
+            'definition.self_billing_not_queued',
+            'The fake transport holds no self-billing answer; queue one with grantSelfBilling() or refuseSelfBilling().',
+        );
     }
 }

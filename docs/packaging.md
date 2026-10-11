@@ -2,7 +2,7 @@
 
 The authority receives signed XML inside a ZIP compressed with Deflate, sent as
 the `file` part of a `multipart/form-data` request (§10.2, p.67). This page
-covers the archive the package builds; sending it belongs to a later stage.
+covers the archive the package builds; [transport](transport.md) covers sending it.
 
 ## Building an archive
 
@@ -24,8 +24,23 @@ given in, sit at the root of the archive (no directories), and are compressed
 with Deflate.
 
 `PackagedArchive` carries the ZIP `bytes`, its `kind` (`PackageKind::Documents`
-or `PackageKind::Events`, which tells the caller which resource to send it to)
-and the list of entry names.
+or `PackageKind::Events`, which tells the caller which resource to send it to),
+the list of entry names (`identifiers()` returns them without `.xml`) and the
+`repository` (an `Environment`) read from the identifiers of its entries. An
+archive belongs to one repository, because the request names it once in the
+`cv-ef-repository-code` header (§10.2, p.67): the repository is the third
+character of every IUD and event ID, never a value of the caller.
+
+`emitters` lists, once each and in order of appearance, the tax IDs of the
+emitters whose documents or events the archive holds: the emitter NIF of each
+IUD, and the `EmitterTaxId` of each event (the event ID names the transmitter,
+not the emitter). An archive may hold several emitters; sending it directly to
+the platform needs exactly one, because the access token belongs to the
+taxpayer who consented to it.
+
+`selfBilled` is true when every DFE of the archive carries a `SelfBilling` header
+(figure 17): the IUD names the seller, but the platform driver asks for the token
+of the buyer, as the [transport](transport.md#oauth) explains.
 
 ## What is refused
 
@@ -41,6 +56,9 @@ position of the offending entry (`entry`) or the limit, never the XML:
 | `package.unsigned` | A root without a `ds:Signature` child in the XMLDSig namespace (a signature nested deeper or in another namespace does not count) |
 | `package.invalid_identifier` | An `Id` that is not a valid IUD (check digit included) or event ID |
 | `package.mixed_kinds` | DFE and events in the same archive |
+| `package.mixed_repositories` | Identifiers of more than one repository in the same archive |
+| `package.mixed_self_billing` | Self-billed and regular DFE in the same archive |
+| `package.missing_emitter` | An event without a non-empty `EmitterTaxId` |
 | `package.duplicate_entry` | Two entries with the same `Id` |
 | `package.write_failed` | ext-zip could not write the archive in the temporary directory |
 

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use Akira\Efatura\EfaturaManager;
 use Akira\Efatura\Facades\Efatura as EfaturaFacade;
+use Akira\Efatura\Transport\MiddlewareTransport;
 
 it('resolves the singleton manager through the facade', function (): void {
     $manager = resolve(EfaturaManager::class);
 
     expect(EfaturaFacade::getFacadeRoot())->toBe($manager)
-        ->and(EfaturaFacade::config())->toBe($manager->config());
+        ->and(EfaturaFacade::config())->toBe($manager->config())
+        ->and(EfaturaFacade::driver())->toBeInstanceOf(MiddlewareTransport::class);
 });

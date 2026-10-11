@@ -7,6 +7,7 @@ namespace Akira\Efatura\Packaging;
 use Akira\Efatura\Actions\ParseEventIdAction;
 use Akira\Efatura\Actions\ParseIudAction;
 use Akira\Efatura\Contracts\Packager;
+use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\PackageKind;
 use Akira\Efatura\Exceptions\PackagingException;
 use Akira\Efatura\Support\Fiscal;
@@ -31,14 +32,27 @@ final readonly class ZipArchivePackager implements Packager
     {
         self::guardLimits($signedXml);
 
-        $entries = [];
-        $kind    = null;
+        $entries    = [];
+        $emitters   = [];
+        $kind       = null;
+        $repository = null;
+        $selfBilled = null;
         foreach ($signedXml as $position => $xml) {
-            [$entryKind, $id] = $this->identify($xml, $position);
+            [$entryKind, $id, $entryRepository, $emitters[], $entrySelfBilled] = $this->identify($xml, $position);
             $kind ??= $entryKind;
+            $repository ??= $entryRepository;
+            $selfBilled ??= $entrySelfBilled;
 
             if ($entryKind !== $kind) {
                 throw new PackagingException('package.mixed_kinds', ['entry' => $position]);
+            }
+
+            if ($entryRepository !== $repository) {
+                throw new PackagingException('package.mixed_repositories', ['entry' => $position]);
+            }
+
+            if ($entrySelfBilled !== $selfBilled) {
+                throw new PackagingException('package.mixed_self_billing', ['entry' => $position]);
             }
 
             if (isset($entries[$id . '.xml'])) {
@@ -48,7 +62,14 @@ final readonly class ZipArchivePackager implements Packager
             $entries[$id . '.xml'] = $xml;
         }
 
-        return new PackagedArchive($this->write($entries), $kind ?? PackageKind::Documents, array_keys($entries));
+        return new PackagedArchive(
+            $this->write($entries),
+            $kind ?? PackageKind::Documents,
+            array_keys($entries),
+            $repository ?? Environment::Test,
+            array_values(array_unique($emitters)),
+            $selfBilled ?? false,
+        );
     }
 
     /**
@@ -71,7 +92,7 @@ final readonly class ZipArchivePackager implements Packager
     }
 
     /**
-     * @return array{PackageKind, string}
+     * @return array{PackageKind, string, Environment, string, bool}
      */
     private function identify(string $xml, int $position): array
     {
@@ -87,7 +108,11 @@ final readonly class ZipArchivePackager implements Packager
             throw new PackagingException('package.unsigned', ['entry' => $position]);
         }
 
-        return [$kind, $this->identifier($kind, (string) $root?->getAttribute('Id'), $position)];
+        $id = (string) $root?->getAttribute('Id');
+
+        $selfBilled = $root instanceof DOMElement && $root->getElementsByTagNameNS(Fiscal::XML_NAMESPACE, 'SelfBilling')->length > 0;
+
+        return [$kind, $id, ...$this->origin($kind, $id, $root, $position), $selfBilled];
     }
 
     private static function signed(DOMElement $outer): bool
@@ -101,15 +126,37 @@ final readonly class ZipArchivePackager implements Packager
         return false;
     }
 
-    private function identifier(PackageKind $kind, string $id, int $position): string
+    /**
+     * @return array{Environment, string}
+     */
+    private function origin(PackageKind $kind, string $id, ?DOMElement $root, int $position): array
     {
         try {
-            $kind === PackageKind::Documents ? $this->parseIud->handle($id) : $this->parseEventId->handle($id);
+            if ($kind === PackageKind::Documents) {
+                $iud = $this->parseIud->handle($id);
+
+                return [$iud->repository, $iud->emitterTaxId];
+            }
+
+            $repository = $this->parseEventId->handle($id)->repository;
         } catch (ValidationException) {
             throw new PackagingException('package.invalid_identifier', ['entry' => $position]);
         }
 
-        return $id;
+        return [$repository, self::eventEmitter($root) ?? throw new PackagingException('package.missing_emitter', ['entry' => $position])];
+    }
+
+    private static function eventEmitter(?DOMElement $root): ?string
+    {
+        foreach ($root->childNodes ?? [] as $child) {
+            if ($child instanceof DOMElement && $child->namespaceURI === Fiscal::XML_NAMESPACE && $child->localName === 'EmitterTaxId') {
+                $taxId = Str::trim($child->textContent);
+
+                return $taxId === '' ? null : $taxId;
+            }
+        }
+
+        return null;
     }
 
     /**

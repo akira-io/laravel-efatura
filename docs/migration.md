@@ -7,8 +7,9 @@ release was being built are not listed.
 
 ## Runtime
 
-The package needs PHP 8.5 and Laravel 13, and adds `psr/clock` and
-`illuminate/database` to its dependencies. Run `composer update akira/efatura`.
+The package needs PHP 8.5 and Laravel 13, and adds `psr/clock`,
+`illuminate/database` and `illuminate/http` (with Guzzle, already present in a
+Laravel application) to its dependencies. Run `composer update akira/efatura`.
 `php artisan efatura:install` skips a config file that already exists, so merge
 the new keys by hand as described under [configuration](#configuration).
 
@@ -205,7 +206,7 @@ document, raise `Exceptions\DefinitionException`, which extends
 | Before | After |
 | --- | --- |
 | `new Efatura($config)` | `new Efatura($config, $clock)` with a `Psr\Clock\ClockInterface`; resolve it from the container instead |
-| `new EfaturaManager($config)` | `new EfaturaManager($config, $clock)`; resolve it from the container instead |
+| `new EfaturaManager($config)` | `new EfaturaManager($config, $clock, $transports)` with a `Transport\TransportResolver`; resolve it from the container instead |
 | `Efatura::config()`, `efatura()`, `withConfig()` | Unchanged |
 | none | `Efatura::invoice()` and `Efatura::event()` return builders |
 
@@ -223,12 +224,22 @@ that binds its own `ClockInterface` after the provider registers keeps it.
 | `efatura.emitter.address.address_detail`, `address_code`, `state`, `street_detail`, `building_name`, `building_number`, `building_floor` | New, from `EFATURA_EMITTER_ADDRESS_DETAIL`, `EFATURA_EMITTER_ADDRESS_CODE`, `EFATURA_EMITTER_STATE`, `EFATURA_EMITTER_STREET_DETAIL`, `EFATURA_EMITTER_BUILDING_NAME`, `EFATURA_EMITTER_BUILDING_NUMBER`, `EFATURA_EMITTER_BUILDING_FLOOR` |
 | `efatura.emitter.contacts.telefax`, `website` | New, from `EFATURA_EMITTER_TELEFAX` and `EFATURA_EMITTER_WEBSITE` |
 | `efatura.certificates.ca_bundle_path` | New, from `EFATURA_CA_BUNDLE_PATH`: an optional PEM file of CA certificates on the certificates disk; when set, the signing certificate must chain to it (see [signing](signing.md#icp-cv-and-the-ca-bundle)) |
+| `efatura.http.middleware.base_url` / `EFATURA_MIDDLEWARE_BASE_URL` | The default changes from `https://localhost:3443` to `https://localhost:3443/v1`. Base URLs now carry the API version on both profiles, as the platform default already did, and requests use resources relative to them (`dfe`, `event`). An application that set `https://localhost:3443` explicitly, in its config or its `.env`, appends `/v1` |
+| `efatura.driver` / `EFATURA_DRIVER` | New: `middleware` (the default) or `platform`, in any letter case, or a `TransportDriver` case; anything else fails with `configuration.invalid_driver` |
+| `efatura.transmitter.middleware_key` / `EFATURA_TRANSMITTER_KEY` | When set, it must have exactly 64 characters (Manual 11.4.1); any other length fails loading with `configuration.invalid_length`, and a space, a control character or anything outside printable ASCII with `configuration.invalid_format`; neither message contains the key |
+| `efatura.transmitter.oauth.issuer_url` / `EFATURA_OAUTH_ISSUER_URL` | New: the OpenID issuer of the platform, `https://iam.efatura.cv/auth/realms/taxpayers` by default, with the same HTTPS rules as the base URLs |
+| `efatura.http.ca_bundle_path` and `efatura.http.<client>.ca_bundle_path` / `EFATURA_HTTP_CA_BUNDLE_PATH`, `EFATURA_MIDDLEWARE_CA_BUNDLE_PATH` | New: an absolute path to a readable local PEM file the client trusts instead of the system store, inherited like the other client options. A relative path fails with `configuration.unsafe_path`, a missing file with `configuration.unreadable_path`, and a bundle on a client whose `verify_tls` is false with `configuration.conflicting_tls` |
+| `efatura.cache` | The store may now hold platform access tokens, encrypted with the application key; refresh tokens, client secrets and the middleware key are never cached |
+| `efatura.http.retries`, `retry_delay_milliseconds` and their per-client overrides | Now used, and only for reads: document lookups, OpenID discovery and remote readiness. Submissions, self-billing requests and token requests are never retried (see [transport](transport.md#retries)) |
 | `efatura.database.connection`, `sequences_table` | Now used: the connection and table of the document number counters (see [document numbers and sequences](sequences.md)) |
 
 `EmitterConfig::$led` changes from `?string` to `?int`. `AddressConfig` and
 `ContactsConfig` gain the new fields as optional trailing constructor
 arguments, so existing positional calls keep working. `CertificateConfig` gains
-`caBundlePath` as an optional trailing constructor argument. `CertificateConfig`,
+`caBundlePath` as an optional trailing constructor argument. `HttpClientConfig` gains `caBundlePath` and `verify()`,
+`OAuthConfig` gains `issuerUrl` and `EfaturaConfig` gains `driver`, each as an
+optional trailing constructor argument; the JSON form of `OAuthConfig` now
+includes `issuerUrl`. `CertificateConfig`,
 `OAuthConfig` and `TransmitterConfig` redact their secrets from `dump()`,
 `var_dump()` and `print_r()` output, and implement `JsonSerializable` with the
 same redaction, so `json_encode()` and Monolog's normalizer write `[redacted]`.
@@ -238,6 +249,22 @@ consults `__debugInfo()` or `jsonSerialize()`; never pass these objects to them.
 Merge the new keys from the published [config](../config/efatura.php) into an
 application config file that was published before, then set the address code
 and address detail the emitter needs.
+
+## Sending documents
+
+The first release could validate a document but not send it. Sending is new and
+replaces nothing, so no code has to change: `IssueDocumentAction` and
+`IssueEventAction` prepare and submit, `ReconcileDocumentAction` resolves an
+unknown outcome, `RequestSelfBillingAuthorizationAction` asks for a self-billing
+authorization, and `CheckReadinessAction` checks the installation (see
+[issuance](issuance.md), [transport](transport.md) and [readiness](readiness.md)).
+To use the middleware, set `EFATURA_TRANSMITTER_KEY` and, for its self-signed
+certificate, `EFATURA_MIDDLEWARE_CA_BUNDLE_PATH`. To send directly to the
+platform, set `EFATURA_DRIVER=platform`, `EFATURA_EMITTER_TAX_ID`, the OAuth client
+of the transmitter and bind a `Contracts\RefreshTokenRepository`. Tests replace the
+driver with `Testing\FakeTransport`. An application that records outgoing HTTP
+requests (Telescope, Nightwatch) hides the `authorization` and
+`cv-ef-mw-core-transmitter-key` headers.
 
 ## Translations
 

@@ -7,13 +7,18 @@ namespace Akira\Efatura;
 use Akira\Efatura\Builders\DocumentBuilder;
 use Akira\Efatura\Builders\EventBuilder;
 use Akira\Efatura\Configuration\EfaturaConfig;
+use Akira\Efatura\Contracts\Transport;
+use Akira\Efatura\Enums\TransportDriver;
+use Akira\Efatura\Exceptions\DefinitionException;
+use Akira\Efatura\Transport\TransportResolver;
+use Illuminate\Support\Str;
 use Psr\Clock\ClockInterface;
 
 final readonly class EfaturaManager
 {
     private Efatura $efatura;
 
-    public function __construct(private EfaturaConfig $config, private ClockInterface $clock)
+    public function __construct(private EfaturaConfig $config, private ClockInterface $clock, private TransportResolver $transports)
     {
         $this->efatura = new Efatura($config, $clock);
     }
@@ -25,7 +30,7 @@ final readonly class EfaturaManager
 
     public function withConfig(EfaturaConfig $config): self
     {
-        return new self($config, $this->clock);
+        return new self($config, $this->clock, $this->transports->withConfig($config));
     }
 
     public function efatura(): Efatura
@@ -41,5 +46,12 @@ final readonly class EfaturaManager
     public function event(): EventBuilder
     {
         return $this->efatura->event();
+    }
+
+    public function driver(?string $name = null): Transport
+    {
+        $driver = $name === null ? null : TransportDriver::tryFrom(Str::lower($name)) ?? throw DefinitionException::transportDriver($name);
+
+        return $this->transports->driver($driver);
     }
 }

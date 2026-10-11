@@ -13,6 +13,7 @@ use Akira\Efatura\Enums\IudSegment;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Packaging\ZipArchivePackager;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\FiscalRules;
 use Akira\Efatura\Support\Luhn;
 use Akira\Efatura\Tests\Support\SignatureFixtures as S;
 use Akira\Efatura\Tests\Support\XmlFixtures as X;
@@ -41,6 +42,11 @@ final class PackageFixtures
         return S::sign($xml, $profile)->xml;
     }
 
+    public static function selfBilled(string $signedXml): string
+    {
+        return (string) preg_replace('/(<Dfe\b[^>]*>)/', '$1<SelfBilling><AuthorizationId>granted</AuthorizationId></SelfBilling>', $signedXml, 1);
+    }
+
     public static function id(string $signedXml): string
     {
         $outer = S::document($signedXml)->documentElement;
@@ -62,6 +68,20 @@ final class PackageFixtures
         $payload = substr_replace(substr($iud, 2, -1), $segment->padded($number), $segment->offset() - 2, $segment->length());
 
         return Fiscal::COUNTRY . $payload . Luhn::checkDigit($payload);
+    }
+
+    public static function inRepository(string $signedXml, Environment $repository): string
+    {
+        return self::withId($signedXml, static function (string $id) use ($repository): string {
+            $replaced = substr_replace($id, (string) $repository->code(), 2, 1);
+            if (FiscalRules::isEventId($id)) {
+                return $replaced;
+            }
+
+            $payload = substr($replaced, 2, -1);
+
+            return Fiscal::COUNTRY . $payload . Luhn::checkDigit($payload);
+        });
     }
 
     public static function withWrongCheckDigit(string $signedXml): string

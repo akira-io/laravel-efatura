@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Akira\Efatura\Exceptions;
 
 use Akira\Efatura\Sequence\NumberedDocument;
-use Akira\Efatura\Sequence\SequenceScope;
 use Throwable;
 
 final class PreparationException extends EfaturaException
@@ -17,15 +16,6 @@ final class PreparationException extends EfaturaException
 
     public static function failedAfterAllocation(NumberedDocument $numbered, Throwable $previous): self
     {
-        $scope = SequenceScope::forDocument($numbered->document);
-
-        return new self('preparation.failed_after_allocation', [
-            'documentNumber'   => $numbered->document->header->documentNumber,
-            'iud'              => $numbered->iud,
-            'emitterTaxId'     => $scope->emitterTaxId,
-            'fiscalYear'       => $scope->year,
-            'ledCode'          => $scope->ledCode,
-            'documentTypeCode' => $scope->documentType->code(),
-        ], $previous);
+        return new self('preparation.failed_after_allocation', $numbered->context(), $previous);
     }
 }

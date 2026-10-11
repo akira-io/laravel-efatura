@@ -33,7 +33,7 @@ it('resolves minimal host defaults without optional identities or secrets', func
         ->and($config->database->sequencesTable)->toBe('efatura_sequences')
         ->and($config->queue->connection)->toBe('host-queue')
         ->and($config->queue->queue)->toBe('host-jobs')
-        ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443')
+        ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443/v1')
         ->and($config->http->platform->baseUrl)->toBe('https://services.efatura.cv/v1')
         ->and($config->http->bcv->baseUrl)->toBeNull()
         ->and($config->http->worldBank->baseUrl)->toBeNull();
@@ -90,7 +90,7 @@ it('normalizes configured identities infrastructure and client overrides', funct
             'contacts' => ['email' => 'fiscal@example.test', 'telephone' => '2600000', 'mobile' => '9900000'],
         ],
         'transmitter' => [
-            'tax_id' => '100200300', 'name' => 'Transmission party', 'middleware_key' => ' test-key ',
+            'tax_id' => '100200300', 'name' => 'Transmission party', 'middleware_key' => str_repeat('k', 64),
             'oauth'  => ['client_id' => 'test-client', 'client_secret' => ' test-secret '],
         ],
         'software'     => ['code' => 'SW-1', 'name' => 'Fiscal software', 'version' => '1.0'],
@@ -124,7 +124,7 @@ it('normalizes configured identities infrastructure and client overrides', funct
         ->and($config->emitter->contacts->mobile)->toBe('9900000')
         ->and($config->transmitter->name)->toBe('Transmission party')
         ->and($config->transmitter->taxId)->toBe($config->emitter->taxId)
-        ->and($config->transmitter->middlewareKey)->toBe(' test-key ')
+        ->and($config->transmitter->middlewareKey)->toBe(str_repeat('k', 64))
         ->and($config->transmitter->oauth->clientId)->toBe('test-client')
         ->and($config->transmitter->oauth->clientSecret)->toBe(' test-secret ')
         ->and($config->software->code)->toBe('SW-1')
@@ -165,12 +165,11 @@ it('trims ASCII edge whitespace while preserving non-breaking spaces and secrets
     $nonBreaking = "\u{00A0}name\u{00A0}";
     $config      = ConfigFixtures::load([
         'software'    => ['name' => $nonBreaking, 'code' => " \tcode\r\n"],
-        'transmitter' => ['middleware_key' => " \tsecret\r\n", 'oauth' => ['client_secret' => "\u{00A0}secret\u{00A0}"]],
+        'transmitter' => ['oauth' => ['client_secret' => "\u{00A0}secret\u{00A0}"]],
     ]);
 
     expect($config->software->name)->toBe($nonBreaking)
         ->and($config->software->code)->toBe('code')
-        ->and($config->transmitter->middlewareKey)->toBe(" \tsecret\r\n")
         ->and($config->transmitter->oauth->clientSecret)->toBe("\u{00A0}secret\u{00A0}");
 });
 

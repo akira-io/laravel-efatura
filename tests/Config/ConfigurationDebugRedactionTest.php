@@ -22,7 +22,7 @@ dataset('debug outputs', [
 
 it('redacts configured secrets from debug output', function (Closure $dump): void {
     $config = ConfigFixtures::load([
-        'transmitter'  => ['tax_id' => '100200300', 'middleware_key' => 'synthetic-middleware-key', 'oauth' => ['client_id' => 'client', 'client_secret' => 'synthetic-client-secret']],
+        'transmitter'  => ['tax_id' => '100200300', 'middleware_key' => str_pad('synthetic-middleware-key', 64, '-key'), 'oauth' => ['client_id' => 'client', 'client_secret' => 'synthetic-client-secret']],
         'certificates' => ['passphrase' => 'synthetic-passphrase'],
     ]);
 
@@ -53,12 +53,14 @@ it('reports absent secrets as null in debug output', function (): void {
     ])->and(new OAuthConfig('client', 'synthetic-client-secret')->__debugInfo())->toBe([
         'clientId'     => 'client',
         'clientSecret' => '[redacted]',
+        'issuerUrl'    => 'https://iam.efatura.cv/auth/realms/taxpayers',
     ]);
 });
 
 it('redacts the secrets of each configuration from its json form', function (): void {
     expect(json_encode(new TransmitterConfig('100200300', 'Transmitter', 'synthetic-middleware-key', new OAuthConfig('client', 'synthetic-client-secret'))))
-        ->toBe('{"taxId":"100200300","name":"Transmitter","middlewareKey":"[redacted]","oauth":{"clientId":"client","clientSecret":"[redacted]"}}')
+        ->toBe('{"taxId":"100200300","name":"Transmitter","middlewareKey":"[redacted]","oauth":{"clientId":"client","clientSecret":"[redacted]",'
+            . '"issuerUrl":"https:\/\/iam.efatura.cv\/auth\/realms\/taxpayers"}}')
         ->and(json_encode(new CertificateConfig('disk', 'cert.pem', 'key.pem', 'synthetic-passphrase')))
         ->toBe('{"disk":"disk","certificatePath":"cert.pem","privateKeyPath":"key.pem","passphrase":"[redacted]","caBundlePath":null}');
 });

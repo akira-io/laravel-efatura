@@ -3,10 +3,15 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Configuration\EfaturaConfig;
+use Akira\Efatura\Contracts\AccessTokenProvider;
+use Akira\Efatura\Contracts\RefreshTokenRepository;
 use Akira\Efatura\EfaturaManager;
 use Akira\Efatura\EfaturaServiceProvider;
 use Akira\Efatura\Enums\Environment;
+use Akira\Efatura\OAuth\RefreshTokenAccessTokenProvider;
 use Akira\Efatura\Tests\Support\ComposerMetadata;
+use Akira\Efatura\Tests\Support\InMemoryRefreshTokens;
+use Akira\Efatura\Tests\Support\RecordingAccessTokens;
 
 it('loads the immutable configuration once when first resolved', function (): void {
     config()->set('efatura.environment', 'HOMOLOGATION');
@@ -33,4 +38,28 @@ it('declares the provider metadata and registers without absent views', function
     expect(ComposerMetadata::read()['extra']['laravel']['providers'])->toContain(EfaturaServiceProvider::class)
         ->and(app()->getLoadedProviders())->toHaveKey(EfaturaServiceProvider::class)
         ->and(resolve('view')->getFinder()->getHints())->not->toHaveKey('efatura');
+});
+
+it('binds the access token provider only once the application binds a refresh token repository', function (): void {
+    $provider = app()->getProvider(EfaturaServiceProvider::class);
+    $provider->packageBooted();
+
+    $unbound = app()->bound(AccessTokenProvider::class);
+
+    config()->set('app.key', 'base64:' . base64_encode(random_bytes(32)));
+    app()->instance(RefreshTokenRepository::class, new InMemoryRefreshTokens);
+    $provider->packageBooted();
+
+    expect($unbound)->toBeFalse()
+        ->and(resolve(AccessTokenProvider::class))->toBeInstanceOf(RefreshTokenAccessTokenProvider::class);
+});
+
+it('keeps an access token provider the application binds itself', function (): void {
+    $tokens = new RecordingAccessTokens('provider');
+    app()->instance(AccessTokenProvider::class, $tokens);
+    app()->instance(RefreshTokenRepository::class, new InMemoryRefreshTokens);
+
+    app()->getProvider(EfaturaServiceProvider::class)->packageBooted();
+
+    expect(resolve(AccessTokenProvider::class))->toBe($tokens);
 });

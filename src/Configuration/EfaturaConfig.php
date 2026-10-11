@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Configuration;
 
+use Akira\Efatura\Enums\TransportDriver;
+
 final readonly class EfaturaConfig
 {
     public function __construct(
@@ -17,5 +19,6 @@ final readonly class EfaturaConfig
         public DatabaseConfig $database,
         public QueueConfig $queue,
         public HttpConfig $http,
+        public TransportDriver $driver = TransportDriver::Middleware,
     ) {}
 }

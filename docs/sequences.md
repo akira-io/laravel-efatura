@@ -143,6 +143,17 @@ is not an IUD fails on `iud` with the usual IUD message. Without the IUD a
 resumed document gets a new random code and therefore a new IUD, which is only
 right when the first IUD never left the process.
 
+### Rejected or unknown
+
+A number is spent differently by the two answers that are not an authorization
+(see [issuance](issuance.md#outcomes)). A rejected document was validated and
+refused, and the platform stored nothing: correct it and resume with the same
+number and IUD, or close the number with an UDN event if the document is
+abandoned. An unknown outcome (`transport.outcome_unknown`) may have been
+authorized: never issue an UDN for it and never prepare it again; reconcile it by
+IUD with `ReconcileDocumentAction` and resend the same `PreparedDocument` only when
+the platform does not hold it.
+
 ## Tests
 
 `Sequence\InMemorySequenceStore` implements the contract in memory with the same

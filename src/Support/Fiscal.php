@@ -39,6 +39,24 @@ final class Fiscal
 
     public const int MAX_PACKAGE_BYTES = 10 * 1024 * 1024;
 
+    public const int MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+
+    public const int MAX_JSON_DEPTH = 16;
+
+    public const int TRANSMITTER_KEY_LENGTH = 64;
+
+    public const string REPOSITORY_HEADER = 'cv-ef-repository-code';
+
+    public const string TRANSMITTER_KEY_HEADER = 'cv-ef-mw-core-transmitter-key';
+
+    public const int CERTIFICATE_EXPIRY_WARNING_DAYS = 30;
+
+    public const int CLOCK_SKEW_WARNING_SECONDS = 300;
+
+    public const int ONLINE_ISSUE_LEAD_SECONDS = 3600;
+
+    public const string OAUTH_ISSUER_URL = 'https://iam.efatura.cv/auth/realms/taxpayers';
+
     public const string EARLIEST_DATE = '2021-01-01';
 
     public const string IDENTIFIER_DATE_LIMIT = '2100-01-01';

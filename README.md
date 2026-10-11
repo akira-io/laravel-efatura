@@ -99,6 +99,22 @@ and the [migration guide](docs/migration.md). Payload keys keep the official XML
 named after their concept (`$header->series`, `$tax->taxType`, `$line->lineType`),
 as listed in the [renamed symbols](docs/migration.md#renamed-symbols) table.
 
+To issue it, check the installation once and send the document through the
+configured driver (the local middleware by default):
+
+```php
+resolve(CheckReadinessAction::class)->handle()->ready();
+
+$issued = resolve(IssueDocumentAction::class)->handle($document);
+$issued->authorized();
+```
+
+`IssueDocumentAction` numbers, signs, packages and submits the document and
+dispatches Laravel events on the way. An ambiguous answer throws
+`transport.outcome_unknown`: reconcile it by IUD before anything else. See
+[issuance](docs/issuance.md), [transport](docs/transport.md) and
+[readiness](docs/readiness.md).
+
 ## Documentation
 
 - [Documentation index](docs/README.md)
@@ -106,6 +122,9 @@ as listed in the [renamed symbols](docs/migration.md#renamed-symbols) table.
 - [Document numbers and sequences](docs/sequences.md)
 - [Signing](docs/signing.md)
 - [Packaging](docs/packaging.md)
+- [Transport](docs/transport.md)
+- [Issuance](docs/issuance.md)
+- [Readiness](docs/readiness.md)
 - Configuration: [config/efatura.php](config/efatura.php)
 - API reference: [source API](https://github.com/akira-io/laravel-efatura/tree/main/src)
 

@@ -9,18 +9,23 @@ use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\DatabaseConfig;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
+use Akira\Efatura\Contracts\AccessTokenProvider;
 use Akira\Efatura\Contracts\CertificateLoader;
 use Akira\Efatura\Contracts\Packager;
+use Akira\Efatura\Contracts\RefreshTokenRepository;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Contracts\SequenceStore;
+use Akira\Efatura\Contracts\Transport;
 use Akira\Efatura\Contracts\XmlSigner;
 use Akira\Efatura\Money\CatalogCurrency;
+use Akira\Efatura\OAuth\RefreshTokenAccessTokenProvider;
 use Akira\Efatura\Packaging\ZipArchivePackager;
 use Akira\Efatura\Sequence\DatabaseSequenceStore;
 use Akira\Efatura\Signing\OpenSslCertificateLoader;
 use Akira\Efatura\Signing\XadesBesXmlSigner;
 use Akira\Efatura\Support\Catalogs;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Transport\TransportResolver;
 use Akira\Efatura\Xml\LibxmlSchemaValidator;
 use Carbon\FactoryImmutable;
 use Illuminate\Foundation\Application;
@@ -55,6 +60,15 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $this->app->bind(CertificateLoader::class, OpenSslCertificateLoader::class);
         $this->app->bind(XmlSigner::class, XadesBesXmlSigner::class);
         $this->app->bind(Packager::class, ZipArchivePackager::class);
+        $this->app->bind(Transport::class, fn (Application $app): Transport => $app->make(TransportResolver::class)->driver());
+    }
+
+    #[Override]
+    public function packageBooted(): void
+    {
+        if ($this->app->bound(RefreshTokenRepository::class)) {
+            $this->app->bindIf(AccessTokenProvider::class, RefreshTokenAccessTokenProvider::class);
+        }
     }
 
     public function configurePackage(Package $package): void

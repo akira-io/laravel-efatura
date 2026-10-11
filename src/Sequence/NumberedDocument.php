@@ -13,4 +13,21 @@ final readonly class NumberedDocument
         public string $iud,
         public bool $allocated,
     ) {}
+
+    /**
+     * @return array<string, int|string|null>
+     */
+    public function context(): array
+    {
+        $scope = SequenceScope::forDocument($this->document);
+
+        return [
+            'documentNumber'   => $this->document->header->documentNumber,
+            'iud'              => $this->iud,
+            'emitterTaxId'     => $scope->emitterTaxId,
+            'fiscalYear'       => $scope->year,
+            'ledCode'          => $scope->ledCode,
+            'documentTypeCode' => $scope->documentType->code(),
+        ];
+    }
 }

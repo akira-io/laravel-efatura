@@ -78,6 +78,28 @@ next one, so close the gap with an UDN event. An event takes its ID from the
 repository, its issue date and time, and the transmitter tax ID of its emission
 context.
 
+## Self-billed documents
+
+A buyer that issues a document in the name of a seller asks the platform for an
+authorization first (Manual v11, §10.5, p.71-73). Build a
+`SelfBillingAuthorizationRequestData` with the seller `taxId` (a Cabo Verde tax
+ID), `documentTypeCode` (FTE, FRE, RCE, NCE, NDE or DVE; the platform codes 1, 2,
+4, 5, 6 and 8), the seller `mobilePhoneNumber` and the CVE `totalAmount`, and pass
+it to `RequestSelfBillingAuthorizationAction::handle()`. The call goes through the
+configured [transport](transport.md#self-billing) and returns a
+`SelfBillingAuthorization` with `authorizationId`, `expiresInSeconds`, `iud`,
+`series` (`AUTOFATURA`), `ledCode` and `documentNumber`. The platform reserves
+that number; the package reserves nothing.
+
+The seller receives the authorization code by SMS or email. Build the document
+with the authorization values as received: `header(...)` with `serie` set to
+`series`, `ledCode`, `documentNumber`, and `selfBilling` holding the
+`authorizationId` and the code the seller passes on. Then prepare it as a resumed
+document, `PrepareDocumentAction::handle($document, iud: $authorization->iud)`: the
+number is already set, so no sequence is touched, and the IUD is checked against
+the document before it is reused. A document whose issue date, emitter, LED, type
+or number disagrees with that IUD fails with `iud_mismatch` on `iud`.
+
 ## Configured emitter
 
 The published [Laravel config](../config/efatura.php) documents infrastructure,
