@@ -89,7 +89,7 @@ An artifact is never overwritten:
 
 Only an authorized document is stored. A rejected one fails with
 `storage.not_authorized` before anything is written: corrected and issued
-again it keeps its IUD (see [issuance](issuance.md#outcomes)), so the rejected
+again it keeps its IUD (see [issuance](10-issuance.md#outcomes)), so the rejected
 XML would otherwise hold the canonical path and the authorized attempt would
 conflict with it. Keep the evidence of a rejection in the application's own
 records.
@@ -156,4 +156,4 @@ and message are the code below.
 
 ---
 
-[Documentation index](README.md) · [Issuance](issuance.md) · [DFA](dfa.md)
+Previous: [Documento Fiscal Auxiliar (DFA)](13-dfa.md) · [Index](00-index.md) · Next: [Console commands](15-console.md)

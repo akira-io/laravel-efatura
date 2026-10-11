@@ -87,7 +87,7 @@ used instead of passing them to a job.
 ## Signing
 
 `Contracts\XmlSigner::sign(string $xml, SigningCredentials $credentials, SignatureProfile $profile = SignatureProfile::Enveloped): SignedXml`
-signs an unsigned `Dfe` or `Event` written by the [XML actions](xml.md). The
+signs an unsigned `Dfe` or `Event` written by the [XML actions](05-xml.md). The
 container binds it to `Signing\XadesBesXmlSigner`. It parses the XML with the
 same hardened parser as the schema validator (no network, no DTD) and refuses:
 
@@ -180,7 +180,7 @@ signs it; it does not validate the signed XML again. `ds:X509SerialNumber` is an
 numbers can have up to 20 bytes. The signature has a fixed, tested structure,
 and the tests validate signed documents against the XSD with short serial
 numbers. To validate a signed document yourself on libxml 2.9, expect that
-failure on that element alone (see [schema validation](xml.md#schema-validation)).
+failure on that element alone (see [schema validation](05-xml.md#schema-validation)).
 
 ## Verifying a signature
 
@@ -234,44 +234,11 @@ check (see [ICP-CV and the CA bundle](#icp-cv-and-the-ca-bundle)).
 
 ### From the console
 
-```sh
-php artisan efatura:validate storage/app/efatura/CV1261002....xml
-php artisan efatura:validate signed.xml --profile=detached
-php artisan efatura:validate signed.xml --json
-```
-
-`efatura:validate` reads the file, refuses a path that does not exist, is not a
-regular file, cannot be read or is larger than 5 MiB, and parses it with the
-hardened parser. It then validates it against the XSD of the profile and runs
-`VerifyXmlSignatureAction`. `--profile` takes `enveloped` or `detached`; without
-it the profile follows the root element (`internally-detached` means detached).
-The command never submits, stores or signs anything.
-
-It exits with `0` only when both the schema and the signature are valid, and with
-`1` otherwise, including every refusal. The output always states that the
-certificate chain was not verified against ICP-CV. With `--json` it prints:
-
-```json
-{
-    "valid": true,
-    "profile": "enveloped",
-    "schema": {"valid": true, "code": null, "violations": []},
-    "signature": {
-        "valid": true,
-        "failures": [],
-        "certificate": {"subject": "CN=...", "serial_number": "1715004", "digest": "..."}
-    },
-    "trust_chain_verified": false
-}
-```
-
-`schema.code` is the package code of the failure (`xml.schema_invalid`,
-`xml.malformed`, `xml.doctype_forbidden`...), and each violation has its `line`,
-`column` and redacted `message`. XML refused by the parser has a `null`
-`profile` and `signature`. A refused path or profile prints only
-`{"valid": false, "error": "<reason>"}`, with `file_missing`,
-`file_not_regular`, `file_unreadable`, `file_too_large` or `profile_invalid`.
+`php artisan efatura:validate <path>` validates a signed file against the XSD and
+runs `VerifyXmlSignatureAction`, without submitting or storing anything. Its
+options, JSON output and exit codes are described in
+[console commands](15-console.md).
 
 ---
 
-[Documentation index](README.md) · [Sequences](sequences.md) · [Packaging](packaging.md)
+Previous: [Document numbers and sequences](06-sequences.md) · [Index](00-index.md) · Next: [Packaging](08-packaging.md)

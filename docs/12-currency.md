@@ -264,4 +264,4 @@ messages your callback throws.
 
 ---
 
-[Documentation index](README.md) · [Fiscal domain](fiscal-domain.md) · [Transport](transport.md)
+Previous: [Readiness](11-readiness.md) · [Index](00-index.md) · Next: [Documento Fiscal Auxiliar (DFA)](13-dfa.md)

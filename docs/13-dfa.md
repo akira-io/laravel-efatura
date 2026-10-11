@@ -67,7 +67,7 @@ The totals block lists `Nº de Itens`, `Total Líquido` (the net total),
 (`Retenção na Fonte`) and a rounding adjustment (`Arredondamento`) are listed
 only when they are not zero. When the document has `PayableAlternativeAmount`
 entries, a `Conversão cambial` block lists each currency, amount and rate
-(`1 EUR = 110,26500 CVE`); see [currency conversion](currency.md).
+(`1 EUR = 110,26500 CVE`); see [currency conversion](12-currency.md).
 
 CVE amounts are written as the Manual prints them: thousands separated by a
 space and `$` as the decimal separator, always with two decimals (`1 400$00`,
@@ -208,4 +208,4 @@ message are the code below.
 
 ---
 
-[Documentation index](README.md) · [Issuance](issuance.md) · [Currency conversion](currency.md)
+Previous: [Currency conversion](12-currency.md) · [Index](00-index.md) · Next: [Artifact storage](14-storage.md)

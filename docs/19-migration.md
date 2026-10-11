@@ -24,7 +24,7 @@ php artisan migrate
 
 `efatura:install` publishes the same migration, and skips it when a migration
 named `*_create_efatura_sequences_table.php` already exists. The package never
-runs it on its own. See [document numbers and sequences](sequences.md).
+runs it on its own. See [document numbers and sequences](06-sequences.md).
 
 ## Documents
 
@@ -50,14 +50,14 @@ Upgrade steps:
 1. Remove the `invoice` key and move its fields to the top level of the
    payload given to the concrete class, or build the document with
    `Efatura::invoice()` (see the [Quick Start](../README.md#quick-start) and
-   [builders and configuration](builders.md)).
+   [builders and configuration](04-builders.md)).
 2. Replace `type` with the class: `DocumentType::Invoice->dataClass()` returns
    `ElectronicInvoiceData::class`.
 3. Move `issueDate` into `header` and add `issueTime` and `ledCode`.
 4. On credit notes, send the original document in `references` and the reason
    as `issueReasonCode`.
 
-The [field graph](fiscal-domain.md) lists the sections each document accepts:
+The [field graph](03-fiscal-domain.md) lists the sections each document accepts:
 receipts have no lines or totals, and transport documents have no totals.
 
 ### Parties
@@ -125,7 +125,7 @@ RCE, DVE and NLE through its document type policy.
 
 A document accepts at most 1000 `lines` and 1000 `references`, and the
 extension lists at most 100 entries each; Manual 11 sets no count, so these
-are defensive limits, listed in [fiscal domain validation](fiscal-domain.md).
+are defensive limits, listed in [fiscal domain validation](03-fiscal-domain.md).
 
 A received IUD, in an event's `iuds` or in `references[].fiscalDocument.value`,
 must carry the Luhn check digit of Manual 11. An identifier with the official
@@ -223,25 +223,25 @@ that binds its own `ClockInterface` after the provider registers keeps it.
 | `efatura.emitter.led` | An integer or a string matching `[1-9][0-9]{0,4}`; anything else fails with `configuration.invalid_led` |
 | `efatura.emitter.address.address_detail`, `address_code`, `state`, `street_detail`, `building_name`, `building_number`, `building_floor` | New, from `EFATURA_EMITTER_ADDRESS_DETAIL`, `EFATURA_EMITTER_ADDRESS_CODE`, `EFATURA_EMITTER_STATE`, `EFATURA_EMITTER_STREET_DETAIL`, `EFATURA_EMITTER_BUILDING_NAME`, `EFATURA_EMITTER_BUILDING_NUMBER`, `EFATURA_EMITTER_BUILDING_FLOOR` |
 | `efatura.emitter.contacts.telefax`, `website` | New, from `EFATURA_EMITTER_TELEFAX` and `EFATURA_EMITTER_WEBSITE` |
-| `efatura.certificates.ca_bundle_path` | New, from `EFATURA_CA_BUNDLE_PATH`: an optional PEM file of CA certificates on the certificates disk; when set, the signing certificate must chain to it (see [signing](signing.md#icp-cv-and-the-ca-bundle)) |
+| `efatura.certificates.ca_bundle_path` | New, from `EFATURA_CA_BUNDLE_PATH`: an optional PEM file of CA certificates on the certificates disk; when set, the signing certificate must chain to it (see [signing](07-signing.md#icp-cv-and-the-ca-bundle)) |
 | `efatura.http.middleware.base_url` / `EFATURA_MIDDLEWARE_BASE_URL` | The default changes from `https://localhost:3443` to `https://localhost:3443/v1`. Base URLs now carry the API version on both profiles, as the platform default already did, and requests use resources relative to them (`dfe`, `event`). An application that set `https://localhost:3443` explicitly, in its config or its `.env`, appends `/v1` |
 | `efatura.driver` / `EFATURA_DRIVER` | New: `middleware` (the default) or `platform`, in any letter case, or a `TransportDriver` case; anything else fails with `configuration.invalid_driver` |
 | `efatura.transmitter.middleware_key` / `EFATURA_TRANSMITTER_KEY` | When set, it must have exactly 64 characters (Manual 11.4.1); any other length fails loading with `configuration.invalid_length`, and a space, a control character or anything outside printable ASCII with `configuration.invalid_format`; neither message contains the key |
 | `efatura.transmitter.oauth.issuer_url` / `EFATURA_OAUTH_ISSUER_URL` | New: the OpenID issuer of the platform, `https://iam.efatura.cv/auth/realms/taxpayers` by default, with the same HTTPS rules as the base URLs |
 | `efatura.http.ca_bundle_path` and `efatura.http.<client>.ca_bundle_path` / `EFATURA_HTTP_CA_BUNDLE_PATH`, `EFATURA_MIDDLEWARE_CA_BUNDLE_PATH` | New: an absolute path to a readable local PEM file the client trusts instead of the system store, inherited like the other client options. A relative path fails with `configuration.unsafe_path`, a missing file with `configuration.unreadable_path`, and a bundle on a client whose `verify_tls` is false with `configuration.conflicting_tls` |
 | `efatura.cache` | The store may now hold platform access tokens, encrypted with the application key; refresh tokens, client secrets and the middleware key are never cached |
-| `efatura.http.retries`, `retry_delay_milliseconds` and their per-client overrides | Now used, and only for reads: document lookups, OpenID discovery and remote readiness. Submissions, self-billing requests and token requests are never retried (see [transport](transport.md#retries)) |
-| `efatura.database.connection`, `sequences_table` | Now used: the connection and table of the document number counters (see [document numbers and sequences](sequences.md)) |
-| `efatura.exchange_rates.provider` / `EFATURA_EXCHANGE_RATE_PROVIDER` | New: `bcv` (the default), `world_bank`, `fixed` or `callback`, in any letter case; anything else fails with `configuration.invalid_exchange_rate_provider` (see [currency conversion](currency.md)) |
+| `efatura.http.retries`, `retry_delay_milliseconds` and their per-client overrides | Now used, and only for reads: document lookups, OpenID discovery and remote readiness. Submissions, self-billing requests and token requests are never retried (see [transport](09-transport.md#retries)) |
+| `efatura.database.connection`, `sequences_table` | Now used: the connection and table of the document number counters (see [document numbers and sequences](06-sequences.md)) |
+| `efatura.exchange_rates.provider` / `EFATURA_EXCHANGE_RATE_PROVIDER` | New: `bcv` (the default), `world_bank`, `fixed` or `callback`, in any letter case; anything else fails with `configuration.invalid_exchange_rate_provider` (see [currency conversion](12-currency.md)) |
 | `efatura.exchange_rates.bcv.rate_type`, `max_publication_age_days` / `EFATURA_BCV_RATE_TYPE`, `EFATURA_BCV_MAX_PUBLICATION_AGE_DAYS` | New: `buy` (the default) or `sell`, otherwise `configuration.invalid_rate_type`; and the age in days of an earlier BCV publication still accepted, 0 by default |
 | `efatura.exchange_rates.world_bank.economies`, `observation_year` / `EFATURA_WORLD_BANK_OBSERVATION_YEAR` | New: a map of currency to World Bank economy code, and `previous` (the default) or `request`, otherwise `configuration.invalid_observation_year` |
 | `efatura.exchange_rates.fixed.rates`, `rate_type`, `name` and `efatura.exchange_rates.callback` | New: the rates of the `fixed` provider, and the class the `callback` provider resolves |
 | `efatura.http.bcv` / `EFATURA_BCV_BASE_URL` | Now used: the client profile that reads the BCV page. Its `base_url` alone may carry a query string, as the official page address does |
 | `efatura.http.world_bank.base_url` / `EFATURA_WORLD_BANK_BASE_URL` | Removed. The World Bank endpoint is fixed (`https://api.worldbank.org`); a config whose key still holds a value (for example from `EFATURA_WORLD_BANK_BASE_URL`) fails loading with `configuration.fixed_endpoint`, and a null one is ignored. Delete the key and the variable. The other `efatura.http.world_bank` options are used |
 | `efatura.cache.exchange_rates_ttl_seconds` / `EFATURA_EXCHANGE_RATES_TTL_SECONDS` | Now used: how long BCV and World Bank quotes stay cached, 3600 by default |
-| `efatura.dfa.base_url` / `EFATURA_DFA_BASE_URL` | New: the viewer address the DFA QR code points at, `https://pe.efatura.cv/dfe/view` by default (see [DFA](dfa.md#qr-code)) |
+| `efatura.dfa.base_url` / `EFATURA_DFA_BASE_URL` | New: the viewer address the DFA QR code points at, `https://pe.efatura.cv/dfe/view` by default (see [DFA](13-dfa.md#qr-code)) |
 | `efatura.dfa.cache_path` / `EFATURA_DFA_CACHE_PATH` | New: an absolute directory for the dompdf font cache, temporary files and chroot; null uses `storage/framework/cache/efatura-dompdf` of the application. A directory owned by another user or writable by its group or others fails with `dfa.cache_unavailable` when a DFA is rendered. A relative path or one with `..`, `.` or empty segments fails with `configuration.unsafe_path` |
-| `efatura.storage.disk`, `path` | Now used, by `StoreIssuedArtifactsAction` only (see [artifact storage](storage.md)). A disk whose `visibility` is `public` is refused when an artifact is written |
+| `efatura.storage.disk`, `path` | Now used, by `StoreIssuedArtifactsAction` only (see [artifact storage](14-storage.md)). A disk whose `visibility` is `public` is refused when an artifact is written |
 
 `EmitterConfig::$led` changes from `?string` to `?int`. `AddressConfig` and
 `ContactsConfig` gain the new fields as optional trailing constructor
@@ -274,7 +274,7 @@ replaces nothing, so no code has to change: `IssueDocumentAction` and
 `IssueEventAction` prepare and submit, `ReconcileDocumentAction` resolves an
 unknown outcome, `RequestSelfBillingAuthorizationAction` asks for a self-billing
 authorization, and `CheckReadinessAction` checks the installation (see
-[issuance](issuance.md), [transport](transport.md) and [readiness](readiness.md)).
+[issuance](10-issuance.md), [transport](09-transport.md) and [readiness](11-readiness.md)).
 To use the middleware, set `EFATURA_TRANSMITTER_KEY` and, for its self-signed
 certificate, `EFATURA_MIDDLEWARE_CA_BUNDLE_PATH`. To send directly to the
 platform, set `EFATURA_DRIVER=platform`, `EFATURA_EMITTER_TAX_ID`, the OAuth client
@@ -287,8 +287,8 @@ requests (Telescope, Nightwatch) hides the `authorization` and
 
 Converting a document to CVE, printing the DFA and keeping the artifacts of an
 issued document are new and replace nothing, so no code has to change; each is
-opt-in. See [currency conversion](currency.md), [DFA](dfa.md) and
-[artifact storage](storage.md).
+opt-in. See [currency conversion](12-currency.md), [DFA](13-dfa.md) and
+[artifact storage](14-storage.md).
 
 - `ConvertDocumentCurrencyAction` reads a quote from the bound
   `Contracts\ExchangeRateProvider` and writes `PayableAlternativeAmount`.
@@ -301,7 +301,7 @@ opt-in. See [currency conversion](currency.md), [DFA](dfa.md) and
   stores only an authorized document.
 
 The new error codes are `exchange_rate.*` (`ExchangeRateException`, listed in
-[currency conversion](currency.md#errors)), `dfa.*` (`DfaException`:
+[currency conversion](12-currency.md#errors)), `dfa.*` (`DfaException`:
 `dfa.not_authorized`, `dfa.invalid_iud`, `dfa.iuc_required`,
 `dfa.invalid_iuc`, `dfa.iuc_mismatch`, `dfa.renderer_unavailable`,
 `dfa.cache_unavailable`), `storage.*` (`StorageException`:
@@ -378,5 +378,36 @@ the official name in PHP too.
 - Validation, building and verification never allocate numbers or IUDs, sign,
   transmit or issue a document. `PrepareDocumentAction` and
   `PrepareEventAction` number, sign and package a document or event without
-  sending it (see [packaging](packaging.md#preparation)); a number they reserve
+  sending it (see [packaging](08-packaging.md#preparation)); a number they reserve
   stays consumed when a later step fails.
+
+## Documentation paths
+
+The guides are numbered in reading order. A link to an old path moves to:
+
+| Old path | New path |
+| --- | --- |
+| `docs/README.md` | `docs/00-index.md` |
+| `docs/fiscal-domain.md` | `docs/03-fiscal-domain.md` |
+| `docs/builders.md` | `docs/04-builders.md` |
+| `docs/xml.md` | `docs/05-xml.md` |
+| `docs/sequences.md` | `docs/06-sequences.md` |
+| `docs/signing.md` | `docs/07-signing.md` |
+| `docs/packaging.md` | `docs/08-packaging.md` |
+| `docs/transport.md` | `docs/09-transport.md` |
+| `docs/issuance.md` | `docs/10-issuance.md` |
+| `docs/readiness.md` | `docs/11-readiness.md` |
+| `docs/currency.md` | `docs/12-currency.md` |
+| `docs/dfa.md` | `docs/13-dfa.md` |
+| `docs/storage.md` | `docs/14-storage.md` |
+| `docs/http.md` | `docs/16-http.md` |
+| `docs/migration.md` | `docs/19-migration.md` |
+
+Installation, configuration, console commands, troubleshooting and the Manual v11
+compliance matrix are new guides (`01`, `02`, `15`, `17` and `18`). The console
+sections of the readiness and signing guides moved to
+[console commands](15-console.md).
+
+---
+
+Previous: [Compliance with Manual v11](18-compliance-manual-v11.md) · [Index](00-index.md)

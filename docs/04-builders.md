@@ -31,7 +31,7 @@ Document-specific setters accept their canonical Data, enum, date or scalar:
 | Transport | `receiverType`, `transportDocumentType`, `transportServiceProvider`, `transportRoute` |
 
 Select any of the nine `DocumentType` cases; validation returns the corresponding
-concrete class listed in [fiscal domain validation](fiscal-domain.md). Unsupported
+concrete class listed in [fiscal domain validation](03-fiscal-domain.md). Unsupported
 sections are rejected, including totals on transport documents and lines on
 receipts. Changing `type()` retains your draft so incompatible fields produce
 validation errors instead of silently disappearing. Start a fresh builder when
@@ -69,7 +69,7 @@ A document is numbered during preparation, after the signing credentials load,
 so a wrong certificate configuration never consumes a number. A document whose
 `header.documentNumber` is already set is resumed: nothing is reserved, and the
 IUD it already received, passed as `$iud`, is reused after it is checked against
-the document (see [resuming](sequences.md#gaps-udn-and-resuming)). Its unsigned
+the document (see [resuming](06-sequences.md#gaps-udn-and-resuming)). Its unsigned
 XML is checked against the official schema before signing. Any failure after a
 reservation, whatever its class, throws `PreparationException` (`preparation.failed_after_allocation`)
 with `documentNumber`, `iud`, emitter tax ID, fiscal year, LED and document type
@@ -86,7 +86,7 @@ authorization first (Manual v11, §10.5, p.71-73). Build a
 ID), `documentTypeCode` (FTE, FRE, RCE, NCE, NDE or DVE; the platform codes 1, 2,
 4, 5, 6 and 8), the seller `mobilePhoneNumber` and the CVE `totalAmount`, and pass
 it to `RequestSelfBillingAuthorizationAction::handle()`. The call goes through the
-configured [transport](transport.md#self-billing) and returns a
+configured [transport](09-transport.md#self-billing) and returns a
 `SelfBillingAuthorization` with `authorizationId`, `expiresInSeconds`, `iud`,
 `series` (`AUTOFATURA`), `ledCode` and `documentNumber`. The platform reserves
 that number; the package reserves nothing.
@@ -140,3 +140,7 @@ For multiple issuers, use complete `emitter()` overrides on each builder or
 `$manager->withConfig($typedConfig)`. The latter returns a new manager. An event
 inherits only the configured emitter tax ID and can replace it with `emitter()`;
 its explicit number range owns its LED.
+
+---
+
+Previous: [Fiscal domain](03-fiscal-domain.md) · [Index](00-index.md) · Next: [Identifiers, XML and schema validation](05-xml.md)

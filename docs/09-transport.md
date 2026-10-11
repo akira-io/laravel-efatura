@@ -13,7 +13,7 @@ The validation and authorization are synchronous (§5.4, p.12): the answer of a
 submission is the outcome. Use the actions on top of the contract
 (`SubmitArchiveAction`, `SubmitPreparedDocumentAction`, `SubmitPreparedEventAction`,
 `ReconcileDocumentAction`, `RequestSelfBillingAuthorizationAction`, and the
-[issuance](issuance.md) actions) rather than the transport itself: they check the
+[issuance](10-issuance.md) actions) rather than the transport itself: they check the
 repository and dispatch the Laravel events.
 
 ## Drivers
@@ -107,7 +107,7 @@ wins over a body too large to read (a 413 with a large body is still
 The exception message is the error code. `context` holds only `status`, `kind`,
 `identifiers` (comma separated) and `bytes`; the body, the headers and the
 original Guzzle or Laravel exception never enter the exception or its `previous`
-chain. [Issuance](issuance.md#outcomes) says what to do with each outcome.
+chain. [Issuance](10-issuance.md#outcomes) says what to do with each outcome.
 
 ## Retries
 
@@ -126,7 +126,7 @@ The middleware listens on `https://localhost:3443` with a self-signed certificat
 (`EFATURA_MIDDLEWARE_CA_BUNDLE_PATH`) to the absolute path of a PEM file holding
 that certificate: the client then trusts it alone instead of the system store.
 `verify_tls` false also works, but sends the transmitter key to anyone able to
-intercept the local network, and [readiness](readiness.md) reports it as a warning.
+intercept the local network, and [readiness](11-readiness.md) reports it as a warning.
 
 ## OAuth
 
@@ -212,7 +212,7 @@ throws `transport.rejected` with the platform `messages` in
 `TransportException::$messages` (each read from `source`, `type`, `dateTime`,
 `code`, `description` and `location`, first letter in either case). The middleware
 support of this resource is still to be confirmed in its resource list (p.77).
-[Builders](builders.md#self-billed-documents) shows how to prepare the document
+[Builders](04-builders.md#self-billed-documents) shows how to prepare the document
 with the values received.
 
 ## Testing
@@ -265,4 +265,4 @@ personal data: treat recorded bodies the same way.
 
 ---
 
-[Documentation index](README.md) · [Issuance](issuance.md) · [Readiness](readiness.md)
+Previous: [Packaging](08-packaging.md) · [Index](00-index.md) · Next: [Issuance](10-issuance.md)

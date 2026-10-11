@@ -45,7 +45,7 @@ package registers nothing and the cached ones are used.
 
 `GET {prefix}/readiness` runs `CheckReadinessAction` and returns
 `ReadinessReport::toArray()` without a `data` wrapper, the same document as
-`efatura:doctor --json`. See [readiness](readiness.md) for the checks and their
+`efatura:doctor --json`. See [readiness](11-readiness.md) for the checks and their
 codes. Secrets, passphrases and private key paths never appear in it.
 
 ## Validation
@@ -88,3 +88,7 @@ A package exception raised while validating is reduced to its code in
 `schema.code`; its message, its fields and its trace never reach the response.
 Exceptions from outside the package are left to the application exception
 handler.
+
+---
+
+Previous: [Console commands](15-console.md) · [Index](00-index.md) · Next: [Troubleshooting](17-troubleshooting.md)

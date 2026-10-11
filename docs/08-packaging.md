@@ -2,7 +2,7 @@
 
 The authority receives signed XML inside a ZIP compressed with Deflate, sent as
 the `file` part of a `multipart/form-data` request (§10.2, p.67). This page
-covers the archive the package builds; [transport](transport.md) covers sending it.
+covers the archive the package builds; [transport](09-transport.md) covers sending it.
 
 ## Building an archive
 
@@ -40,7 +40,7 @@ taxpayer who consented to it.
 
 `selfBilled` is true when every DFE of the archive carries a `SelfBilling` header
 (figure 17): the IUD names the seller, but the platform driver asks for the token
-of the buyer, as the [transport](transport.md#oauth) explains.
+of the buyer, as the [transport](09-transport.md#oauth) explains.
 
 ## What is refused
 
@@ -97,10 +97,10 @@ archive. They return `Packaging\PreparedDocument` (the numbered document, its
 IUD, the unsigned XML, the `SignedXml`, the `PackagedArchive` and whether a
 number was reserved) or `Packaging\PreparedEvent` (the event, its ID, the
 unsigned XML, the `SignedXml` and the archive). Nothing is sent, stored or
-dispatched. See [builders and configuration](builders.md#preparation) for the
-order of the steps and [sequences](sequences.md#gaps-udn-and-resuming) for a
+dispatched. See [builders and configuration](04-builders.md#preparation) for the
+order of the steps and [sequences](06-sequences.md#gaps-udn-and-resuming) for a
 failure after the number is reserved.
 
 ---
 
-[Documentation index](README.md) · [Signing](signing.md) · [Sequences](sequences.md)
+Previous: [Signing](07-signing.md) · [Index](00-index.md) · Next: [Transport](09-transport.md)

@@ -23,7 +23,7 @@ must not wait; the package ships no job of its own yet.
    credentials, number and IUD, XML, schema validation, signature and ZIP. No
    network. A reservation never happens inside a transaction on the sequence
    connection (`sequence.inside_transaction`), so no request ever runs inside it
-   either. See [builders](builders.md#preparation) and [packaging](packaging.md).
+   either. See [builders](04-builders.md#preparation) and [packaging](08-packaging.md).
 2. `DocumentPrepared` (or `EventPrepared`) is dispatched synchronously, before any
    request. Store the `PreparedDocument` there: it is what a retry or a
    reconciliation needs. An exception from a listener aborts the issuance with
@@ -31,7 +31,7 @@ must not wait; the package ships no job of its own yet.
    IUD and scope in `context` and the listener failure as `previous`), and
    nothing is sent.
 3. `SubmitPreparedDocumentAction` (or `SubmitPreparedEventAction`) sends the
-   prepared archive through the configured [transport](transport.md).
+   prepared archive through the configured [transport](09-transport.md).
 4. The answer dispatches `DocumentAuthorized` or `DocumentRejected` (`EventAuthorized`
    or `EventRejected`) with the `EntryResult`. Any package exception on the way
    (a `TransportException`, an `OAuthException` while obtaining the platform token,
@@ -49,7 +49,7 @@ result or the failure code; none carries a credential.
 
 The package stores nothing on its own. To keep the signed XML, the archive, the
 answer and the DFA of an issued document on a disk, call
-`StoreIssuedArtifactsAction`; see [artifact storage](storage.md).
+`StoreIssuedArtifactsAction`; see [artifact storage](14-storage.md).
 
 ## Outcomes
 
@@ -84,13 +84,13 @@ if ($reconciliation->authorized()) {
 `ReconcileDocumentAction` sends `GET dfe/xml/{IUD}` (scope `cv_ef_dfe_read_iud`,
 §10.3, p.70). Given the `PreparedDocument`, it takes the IUD and the self-billed
 flag of its archive, so the platform driver uses the token of the buyer for a
-self-billed document (see [OAuth](transport.md#oauth)). With only the IUD, pass
+self-billed document (see [OAuth](09-transport.md#oauth)). With only the IUD, pass
 `handle($iud, selfBilled: true)` for a self-billed one. Found means authorized; not found means the PE never stored it, so
 send the same `PreparedDocument` again, with the same bytes. The package reads
 any 404 as not found; if that resend is then rejected because the IUD already
 exists (ID-UK1, p.33), the first submission had been authorized after all:
 reconcile again to obtain the stored document. A lookup that fails
-is retried as a read (see [retries](transport.md#retries)) and otherwise throws; it
+is retried as a read (see [retries](09-transport.md#retries)) and otherwise throws; it
 never answers not found by itself.
 
 Events have no documented read (§10.4, only the `cv_ef_event_read` scope): after
@@ -105,7 +105,7 @@ In online mode the issue date and time may be up to 24 hours behind and one hour
 ahead of the platform clock (IDT-IMO-LE/GE, p.35). A resend or a reconciliation
 must therefore conclude within 24 hours of the issue time. After that, the
 document must be issued in contingency (up to seven days, IDT-IMC-GE, p.35), which
-the package will support in a later release. [Readiness](readiness.md) compares
+the package will support in a later release. [Readiness](11-readiness.md) compares
 the local clock with the platform before you start.
 
 ## UDN
@@ -113,9 +113,9 @@ the local clock with the platform before you start.
 An unused document number event closes a number that will never be authorized:
 a document abandoned after a rejection, or a number reserved by a preparation
 that failed (`preparation.failed_after_allocation`, see
-[sequences](sequences.md#gaps-udn-and-resuming)). Never issue an UDN for a number
+[sequences](06-sequences.md#gaps-udn-and-resuming)). Never issue an UDN for a number
 whose outcome is unknown: reconcile it first, because the PE may hold it.
 
 ---
 
-[Documentation index](README.md) · [Transport](transport.md) · [Readiness](readiness.md) · [Artifact storage](storage.md)
+Previous: [Transport](09-transport.md) · [Index](00-index.md) · Next: [Readiness](11-readiness.md)

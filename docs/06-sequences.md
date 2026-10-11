@@ -3,7 +3,7 @@
 This page covers how the package reserves the number of a document, where the
 counters live, and what happens to a number when issuance fails after the
 reservation. Preparation, which calls the reservation, is described in
-[builders and configuration](builders.md#preparation).
+[builders and configuration](04-builders.md#preparation).
 
 ## Scope
 
@@ -125,7 +125,7 @@ packaging, or an error that is not a package exception at all) throws
 (`preparation.failed_after_allocation`) with the `documentNumber`, the `iud`
 and the scope in `context`. The next call receives the next number. Close the
 gap with an UDN event for that number (see [identifiers, XML and schema
-validation](xml.md)), or resume the same document.
+validation](05-xml.md)), or resume the same document.
 
 To resume, set `header.documentNumber` to the reserved number and prepare the
 document again: a document that already carries a number reserves nothing and
@@ -146,7 +146,7 @@ right when the first IUD never left the process.
 ### Rejected or unknown
 
 A number is spent differently by the two answers that are not an authorization
-(see [issuance](issuance.md#outcomes)). A rejected document was validated and
+(see [issuance](10-issuance.md#outcomes)). A rejected document was validated and
 refused, and the platform stored nothing: correct it and resume with the same
 number and IUD, or close the number with an UDN event if the document is
 abandoned. An unknown outcome (`transport.outcome_unknown`) may have been
@@ -178,4 +178,4 @@ connection and does not see the migrated table.
 
 ---
 
-[Documentation index](README.md) · [Signing](signing.md) · [Packaging](packaging.md)
+Previous: [Identifiers, XML and schema validation](05-xml.md) · [Index](00-index.md) · Next: [Signing](07-signing.md)

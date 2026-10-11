@@ -3,8 +3,8 @@
 This page covers the official identifiers, the XML the package writes for the
 nine DFE and the two fiscal events, and the validation of that XML against the
 bundled XSD of 2024-05-27. The XML written here is unsigned: see
-[signing](signing.md) for the signature, [packaging](packaging.md) for the ZIP
-and [document numbers and sequences](sequences.md) for where the document number
+[signing](07-signing.md) for the signature, [packaging](08-packaging.md) for the ZIP
+and [document numbers and sequences](06-sequences.md) for where the document number
 of the IUD comes from. Transmission is not part of this stage.
 
 ## Identifiers
@@ -149,3 +149,7 @@ and accepts the full examples only when they pass or fail on that element alone.
 - The document number is read from the header and compared with the IUD rather
   than read from the IUD.
 - Received IUDs must carry a valid check digit.
+
+---
+
+Previous: [Builders](04-builders.md) · [Index](00-index.md) · Next: [Document numbers and sequences](06-sequences.md)

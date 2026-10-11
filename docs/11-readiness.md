@@ -69,41 +69,10 @@ token, certificate passphrase) ever enters the report.
 
 ## From the console
 
-```sh
-php artisan efatura:doctor            # local checks only, never touches the network
-php artisan efatura:doctor --remote   # also the endpoint, clock and credentials checks
-php artisan efatura:doctor --json     # the same report as a JSON document
-```
-
-`efatura:doctor` runs `CheckReadinessAction` and prints one row per result with
-the check, the status, the code and the configuration field. It exits with `0`
-when the installation is ready, warnings included, and with `1` when any result
-blocks it. Without `--remote` the remote checks are reported as skipped and the
-command says how to run them.
-
-`--json` prints `toArray()` and nothing else, so the output can be piped:
-
-```json
-{
-    "ready": true,
-    "checks": [
-        {
-            "check": "configuration",
-            "status": "passed",
-            "code": "readiness.configured",
-            "field": null,
-            "required": true,
-            "context": {"driver": "middleware"}
-        }
-    ]
-}
-```
-
-The keys and their order are stable. `code` is the package code, not a message,
-so scripts can match on it; there is no translated `message`. Neither output
-ever carries a secret, a token, a passphrase or the path of a key: a field names
-the configuration key, never its value.
+`php artisan efatura:doctor` runs these checks and prints the report, offline
+unless `--remote` is given; `--json` prints `toArray()`. Its options, output and
+exit codes are described in [console commands](15-console.md).
 
 ---
 
-[Documentation index](README.md) · [Transport](transport.md) · [Issuance](issuance.md)
+Previous: [Issuance](10-issuance.md) · [Index](00-index.md) · Next: [Currency conversion](12-currency.md)
