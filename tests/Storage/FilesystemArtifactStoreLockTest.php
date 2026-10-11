@@ -11,6 +11,7 @@ use Akira\Efatura\Tests\Support\LocklessCacheStore;
 use Akira\Efatura\Tests\Support\StorageFixtures as S;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Database\QueryException;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -73,4 +74,28 @@ it('stores without a lock on a cache store that has none', function (): void {
     config()->set('efatura.cache.store', 'lockless');
 
     expect(quickStore()->put(S::iud(), ArtifactKind::Archive, 'zip')->path)->toEndWith('.zip');
+});
+
+it('reports a cache store that cannot lock as retryable and writes nothing', function (): void {
+    config()->set('cache.stores.broken-locks', ['driver' => 'database', 'connection' => 'testing', 'table' => 'missing_cache', 'lock_table' => 'missing_cache_locks']);
+    config()->set('efatura.cache.store', 'broken-locks');
+
+    expect(fn (): StoredArtifact => quickStore()->put(S::iud(), ArtifactKind::Archive, 'zip'))
+        ->toThrow(function (StorageException $exception): void {
+            expect($exception->errorCode)->toBe('storage.unavailable')
+                ->and($exception->retryable)->toBeTrue()
+                ->and($exception->getPrevious())->toBeInstanceOf(QueryException::class);
+        })
+        ->and(Storage::disk('archive')->allFiles())->toBe([]);
+});
+
+it('keeps the error of the store itself when the lock is held', function (): void {
+    config()->set('efatura.cache.store', 'array');
+    quickStore()->put(S::iud(), ArtifactKind::Archive, 'zip');
+
+    expect(fn (): StoredArtifact => quickStore()->put(S::iud(), ArtifactKind::Archive, 'another zip'))
+        ->toThrow(function (StorageException $exception): void {
+            expect($exception->errorCode)->toBe('storage.conflict');
+        })
+        ->and(Cache::store('array')->lock(artifactLockKey(ArtifactKind::Archive), 5)->get())->toBeTrue();
 });

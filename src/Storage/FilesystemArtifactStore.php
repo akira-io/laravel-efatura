@@ -13,7 +13,6 @@ use Akira\Efatura\Exceptions\StorageException;
 use Closure;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Cache\LockProvider;
-use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Filesystem\Factory;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -69,14 +68,19 @@ final readonly class FilesystemArtifactStore implements ArtifactStore
             return $store();
         }
 
+        $lock = $locks->lock($this->cache->prefix . ':artifact:' . hash(self::CHECKSUM, $this->config->disk . ':' . $path), self::LOCK_SECONDS);
+
         try {
-            $stored = $locks->lock($this->cache->prefix . ':artifact:' . hash(self::CHECKSUM, $this->config->disk . ':' . $path), self::LOCK_SECONDS)
-                ->block($this->lockWaitSeconds, $store);
-        } catch (LockTimeoutException $lockTimeoutException) {
-            throw StorageException::unavailable($path, $lockTimeoutException);
+            $lock->block($this->lockWaitSeconds);
+        } catch (Throwable $throwable) {
+            throw StorageException::unavailable($path, $throwable);
         }
 
-        return $stored instanceof StoredArtifact ? $stored : $store();
+        try {
+            return $store();
+        } finally {
+            $lock->release();
+        }
     }
 
     private function store(Filesystem $disk, StoredArtifact $artifact, string $contents): StoredArtifact

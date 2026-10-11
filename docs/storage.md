@@ -99,7 +99,8 @@ package cache store (`efatura.cache.store`, keyed under `efatura.cache.prefix`),
 so two processes storing the same artifact at the same moment are serialized:
 the second sees the first one's file and returns it, or fails with
 `storage.conflict` when its bytes differ. A process that waits more than ten
-seconds for the lock fails with `storage.unavailable`, which is retryable. The
+seconds for the lock, or whose cache store fails while locking, fails with
+`storage.unavailable`, which is retryable, before anything is written. The
 lock is only as wide as the cache store: use a shared store (redis, database,
 memcached) when several servers write to the same disk. A store without locks
 stores without one.
@@ -151,7 +152,7 @@ and message are the code below.
 | `storage.conflict` | | `path` | no | Different bytes already exist at the path |
 | `storage.missing` | | `path` | no | The artifact is not on the disk, or does not belong to the configured disk and path |
 | `storage.corrupted` | | `path` | no | The stored bytes no longer match the checksum |
-| `storage.unavailable` | | `path` | yes | The disk failed to check, read or write, or the lock on the path was not obtained in time; the filesystem exception or the `LockTimeoutException`, when there is one, is `previous` |
+| `storage.unavailable` | | `path` | yes | The disk failed to check, read or write, or the lock on the path was not obtained, because another process held it too long or the cache store failed; the filesystem, lock timeout or cache exception, when there is one, is `previous` |
 
 ---
 
