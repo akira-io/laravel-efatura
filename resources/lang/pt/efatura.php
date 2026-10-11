@@ -14,7 +14,7 @@ return [
         'fiscal_date'                => 'O campo :attribute tem de usar uma data ou hora fiscal válida.',
         'official_code'              => 'O campo :attribute tem de ser um código do catálogo oficial.',
         'tax_id'                     => 'O campo :attribute tem de ser um NIF válido para o seu país.',
-        'iud_invalid'                => 'O campo :attribute tem de ser um IUD oficial com dígito de controlo válido.',
+        'iud_invalid'                => 'O campo :attribute tem de ser um IUD oficial com dígito verificador válido.',
         'iud_mismatch'               => 'O campo :attribute não identifica este documento.',
         'self_billing_document_type' => 'O campo :attribute tem de ser um tipo de documento que a autofaturação possa autorizar.',
         'event_id_invalid'           => 'O campo :attribute tem de ser um identificador de evento oficial.',

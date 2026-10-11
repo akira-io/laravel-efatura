@@ -66,3 +66,9 @@ it('renders a console message in portuguese when the locale is pt', function ():
         ->expectsOutputToContain('O ficheiro ' . $path . ' não existe.')
         ->assertExitCode(1);
 });
+
+it('calls the iud check digit a digito verificador in portuguese', function (): void {
+    expect(packagedTranslations('pt')['validation.iud_invalid'])
+        ->toBe('O campo :attribute tem de ser um IUD oficial com dígito verificador válido.')
+        ->and(collect(packagedTranslations('pt'))->filter(fn (string $line): bool => str_contains($line, 'dígito de controlo'))->all())->toBe([]);
+});
