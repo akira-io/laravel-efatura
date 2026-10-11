@@ -24,10 +24,9 @@ final readonly class DfaLibraries
      */
     public function missing(): array
     {
-        return collect($this->requirements)
+        return array_values(collect($this->requirements)
             ->reject(static fn (LibraryRequirement $requirement): bool => $requirement->installed())
             ->map(static fn (LibraryRequirement $requirement): string => $requirement->package)
-            ->values()
-            ->all();
+            ->all());
     }
 }
