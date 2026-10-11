@@ -6,24 +6,48 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"
       - "v[0-9]+.[0-9]+.[0-9]+-*"
 
-permissions:
-  contents: write
-  pull-requests: read
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
-  release:
+  verify:
+    name: Verify the tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       TAG_NAME: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install git-cliff
         uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
         with:
           tool: git-cliff
+
+      - name: Refuse a tag outside main
+        run: |
+          set -euo pipefail
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+            echo "::error::${TAG_NAME} points at ${GITHUB_SHA}, which is not contained in origin/main. Release tags are created on main only."
+            exit 1
+          fi
+
+      - name: Refuse a tag that is already released
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "${TAG_NAME}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "::error::A GitHub Release for ${TAG_NAME} already exists. Published releases are never replaced; tag the next version instead."
+            exit 1
+          fi
 
       - name: Verify tag matches the version computed from commits
         if: ${{ !contains(github.ref_name, '-') }}
@@ -42,34 +66,6 @@ jobs:
           PREVIOUS="$(git describe --tags --abbrev=0 --match 'v[0-9]*' --exclude '*-*' HEAD 2>/dev/null || true)"
           EXPECTED="$(git-cliff --config cliff.toml --use-branch-tags --bumped-version)"
 
-          TAG_MAJOR="${TAG_NAME#v}"
-          TAG_MAJOR="${TAG_MAJOR%%.*}"
-          EXPECTED_MAJOR="${EXPECTED#v}"
-          EXPECTED_MAJOR="${EXPECTED_MAJOR%%.*}"
-          MAINTENANCE_BRANCH="origin/${TAG_MAJOR}.x"
-          DEFAULT_BRANCH="$(git remote show origin | sed -n 's/.*HEAD branch: //p')"
-          PRODUCTION_BRANCH=""
-          if git rev-parse --verify --quiet refs/remotes/origin/main >/dev/null; then
-            PRODUCTION_BRANCH=main
-          fi
-          if [ -z "${PRODUCTION_BRANCH}" ] && [ "${DEFAULT_BRANCH}" != develop ]; then
-            PRODUCTION_BRANCH="${DEFAULT_BRANCH}"
-          fi
-          if [ -z "${PRODUCTION_BRANCH}" ] && git rev-parse --verify --quiet refs/remotes/origin/master >/dev/null; then
-            PRODUCTION_BRANCH=master
-          fi
-          if [ -z "${PRODUCTION_BRANCH}" ]; then
-            echo "::error::No production branch: origin/main does not exist and the default branch is develop. Release tags are created only on main (the production branch) or on a maintenance line N.x; name the production branch main."
-            exit 1
-          fi
-          if [ "${EXPECTED_MAJOR}" -gt "${TAG_MAJOR}" ] \
-            && git rev-parse --verify --quiet "refs/remotes/${MAINTENANCE_BRANCH}" >/dev/null \
-            && git merge-base --is-ancestor "${GITHUB_SHA}" "${MAINTENANCE_BRANCH}" \
-            && ! git merge-base --is-ancestor "${GITHUB_SHA}" "origin/${PRODUCTION_BRANCH}"; then
-            EXPECTED="$(git-cliff --config cliff.toml --use-branch-tags --bump minor --bumped-version)"
-            echo "::warning::${MAINTENANCE_BRANCH#origin/} carries breaking changes since ${PREVIOUS:-the last release}. A maintenance line cannot move to the next major, so the release is checked as ${EXPECTED}; document the break in the upgrade guide."
-          fi
-
           if [ -n "${PREVIOUS}" ] && [ "${EXPECTED}" = "${PREVIOUS}" ]; then
             IFS=. read -r MAJOR MINOR PATCH <<< "${PREVIOUS#v}"
             EXPECTED="v${MAJOR}.${MINOR}.$((PATCH + 1))"
@@ -79,6 +75,31 @@ jobs:
             echo "::error::Tag ${TAG_NAME} does not match the version computed from the commits since ${PREVIOUS:-the last release} (${EXPECTED}). Delete the tag, re-tag as ${EXPECTED}, and push again: git tag -d ${TAG_NAME} && git push origin :refs/tags/${TAG_NAME} && git tag ${EXPECTED} && git push --follow-tags"
             exit 1
           fi
+
+  gates:
+    name: Test gates
+    needs: verify
+    permissions:
+      contents: read
+    uses: ./.github/workflows/tests.yml
+
+  release:
+    name: Publish the release
+    needs: [verify, gates]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG_NAME: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
+        with:
+          tool: git-cliff
 
       - name: Generate CHANGELOG
         env:
@@ -102,87 +123,31 @@ jobs:
             echo "${DELIMITER}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Resolve release branch
-        id: branch
+      - name: Resolve release flags
+        id: flags
         run: |
           set -euo pipefail
-          DEFAULT_BRANCH="$(git remote show origin | sed -n 's/.*HEAD branch: //p')"
-          PRODUCTION_BRANCH=""
-          if git rev-parse --verify --quiet refs/remotes/origin/main >/dev/null; then
-            PRODUCTION_BRANCH=main
-          fi
-          if [ -z "${PRODUCTION_BRANCH}" ] && [ "${DEFAULT_BRANCH}" != develop ]; then
-            PRODUCTION_BRANCH="${DEFAULT_BRANCH}"
-          fi
-          if [ -z "${PRODUCTION_BRANCH}" ] && git rev-parse --verify --quiet refs/remotes/origin/master >/dev/null; then
-            PRODUCTION_BRANCH=master
-          fi
-          if [ -z "${PRODUCTION_BRANCH}" ]; then
-            echo "::error::No production branch: origin/main does not exist and the default branch is develop. Release tags are created only on main (the production branch) or on a maintenance line N.x; name the production branch main."
-            exit 1
-          fi
-          MAJOR="${TAG_NAME#v}"
-          MAJOR="${MAJOR%%.*}"
-          STABLE="${TAG_NAME%%-*}"
-
-          LINE=""
-          for CANDIDATE in "release/${STABLE}" "release/${STABLE#v}" "${MAJOR}.x" "${PRODUCTION_BRANCH}"; do
-            if git rev-parse --verify --quiet "refs/remotes/origin/${CANDIDATE}" >/dev/null \
-              && git merge-base --is-ancestor "${GITHUB_SHA}" "origin/${CANDIDATE}"; then
-              LINE="${CANDIDATE}"
-              break
-            fi
-          done
-
-          if [ -z "${LINE}" ]; then
-            echo "::error::${TAG_NAME} is not contained in origin/release/${STABLE}, origin/${PRODUCTION_BRANCH} or origin/${MAJOR}.x; refusing to publish it. Release tags are created on the release branch release/${STABLE}, on ${PRODUCTION_BRANCH} (the production branch), or, for fixes to a previous major, on a maintenance line N.x; never on develop, milestone/* or a work branch."
-            exit 1
-          fi
-
-          BRANCH="${LINE}"
-          if [ "${LINE}" = "${PRODUCTION_BRANCH}" ]; then
-            BRANCH="${DEFAULT_BRANCH}"
-          fi
-
-          is_newest_on() {
-            local HIGHEST
-            HIGHEST="$( { git tag --merged "origin/$1" --list 'v[0-9]*' | grep -v -- '-' || true; echo "${TAG_NAME}"; } | sort -V | tail -n1)"
-            [ "${HIGHEST}" = "${TAG_NAME}" ]
-          }
+          HIGHEST_ON_MAIN="$( { git tag --merged origin/main --list 'v[0-9]*' | grep -v -- '-' || true; echo "${TAG_NAME}"; } | sort -V | tail -n1)"
+          HIGHEST_STABLE="$( { git tag --list 'v[0-9]*' | grep -v -- '-' || true; echo "${TAG_NAME}"; } | sort -V | tail -n1)"
 
           NEWEST=false
-          if is_newest_on "${BRANCH}"; then
+          if [ "${HIGHEST_ON_MAIN}" = "${TAG_NAME}" ]; then
             NEWEST=true
           fi
-
-          is_highest_stable_tag() {
-            local HIGHEST
-            HIGHEST="$( { git tag --list 'v[0-9]*' | grep -v -- '-' || true; echo "${TAG_NAME}"; } | sort -V | tail -n1)"
-            [ "${HIGHEST}" = "${TAG_NAME}" ]
-          }
-
-          heads_for_production() {
-            case "${LINE}" in
-              release/*) return 0 ;;
-            esac
-
-            [ "${LINE}" = "${PRODUCTION_BRANCH}" ]
-          }
 
           PRERELEASE=false
           LATEST=false
           case "${TAG_NAME}" in
             *-*) PRERELEASE=true ;;
             *)
-              if heads_for_production && is_highest_stable_tag; then
+              if [ "${HIGHEST_STABLE}" = "${TAG_NAME}" ]; then
                 LATEST=true
               fi
               ;;
           esac
 
-          echo "Release line: ${LINE}; changelog branch: ${BRANCH} (default ${DEFAULT_BRANCH}, production ${PRODUCTION_BRANCH}); newest on branch: ${NEWEST}; latest: ${LATEST}; prerelease: ${PRERELEASE}"
+          echo "Newest on main: ${NEWEST}; latest: ${LATEST}; prerelease: ${PRERELEASE}"
           {
-            echo "name=${BRANCH}"
             echo "newest=${NEWEST}"
             echo "latest=${LATEST}"
             echo "prerelease=${PRERELEASE}"
@@ -191,10 +156,9 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          LATEST: ${{ steps.branch.outputs.latest }}
-          PRERELEASE: ${{ steps.branch.outputs.prerelease }}
+          LATEST: ${{ steps.flags.outputs.latest }}
+          PRERELEASE: ${{ steps.flags.outputs.prerelease }}
         run: |
-          gh release delete "${TAG_NAME}" --yes 2>/dev/null || true
           gh release create "${TAG_NAME}" \
             --title "${TAG_NAME}" \
             --notes-file "${RUNNER_TEMP}/release-notes.md" \
@@ -218,20 +182,19 @@ jobs:
 
       - name: Commit CHANGELOG
         env:
-          BRANCH: ${{ steps.branch.outputs.name }}
-          NEWEST: ${{ steps.branch.outputs.newest }}
+          NEWEST: ${{ steps.flags.outputs.newest }}
         run: |
           set -euo pipefail
           if [ "${NEWEST}" != true ]; then
-            echo "::notice::${BRANCH} already carries a release newer than ${TAG_NAME}; CHANGELOG.md on ${BRANCH} is left as is."
+            echo "::notice::main already carries a release newer than ${TAG_NAME}; CHANGELOG.md on main is left as is."
             exit 0
           fi
 
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           mv CHANGELOG.md "${RUNNER_TEMP}/CHANGELOG.md"
-          git checkout -f -B "${BRANCH}" "origin/${BRANCH}"
+          git checkout -f -B main origin/main
           cp "${RUNNER_TEMP}/CHANGELOG.md" CHANGELOG.md
           git add CHANGELOG.md
           git diff --cached --quiet || git commit -m "chore(changelog): ${TAG_NAME}"
-          git push origin "HEAD:refs/heads/${BRANCH}"
+          git push origin HEAD:refs/heads/main
