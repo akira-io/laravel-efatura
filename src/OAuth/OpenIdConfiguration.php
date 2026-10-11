@@ -8,6 +8,7 @@ use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Exceptions\OAuthException;
 use Akira\Efatura\Exceptions\TransportException;
 use Akira\Efatura\Support\Fiscal;
+use Akira\Efatura\Support\HttpsUrl;
 use Akira\Efatura\Transport\BoundedBody;
 use Akira\Efatura\Transport\ReadRetries;
 use Akira\Efatura\Transport\TransportRequests;
@@ -19,8 +20,6 @@ use JsonException;
 use SensitiveParameter;
 
 use const JSON_THROW_ON_ERROR;
-use const PHP_URL_HOST;
-use const PHP_URL_PORT;
 
 final readonly class OpenIdConfiguration
 {
@@ -88,12 +87,6 @@ final readonly class OpenIdConfiguration
      */
     private static function sameOrigin(mixed $endpoint, string $issuer): bool
     {
-        $parts = \is_string($endpoint) ? parse_url($endpoint) : false;
-
-        return \is_array($parts)
-            && ($parts['scheme'] ?? null) === 'https'
-            && ! isset($parts['user'])
-            && Str::lower($parts['host'] ?? '') === Str::lower((string) parse_url($issuer, PHP_URL_HOST))
-            && ($parts['port'] ?? null) === parse_url($issuer, PHP_URL_PORT);
+        return HttpsUrl::isSafe($endpoint, allowQuery: true) && HttpsUrl::origin($endpoint, allowQuery: true) === HttpsUrl::origin($issuer, allowQuery: true);
     }
 }

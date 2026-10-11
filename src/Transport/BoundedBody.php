@@ -13,7 +13,7 @@ use SensitiveParameter;
 
 final readonly class BoundedBody
 {
-    public function read(#[SensitiveParameter] Response $response, PackagedArchive|string|null $subject): string
+    public function read(#[SensitiveParameter] Response $response, PackagedArchive|string|null $subject, int $limit = Fiscal::MAX_RESPONSE_BYTES): string
     {
         $stream = $response->toPsrResponse()->getBody();
         if ($stream->isSeekable()) {
@@ -21,8 +21,8 @@ final readonly class BoundedBody
         }
 
         $body = '';
-        while (! $stream->eof() && \strlen($body) <= Fiscal::MAX_RESPONSE_BYTES) {
-            $chunk = $stream->read(Fiscal::MAX_RESPONSE_BYTES + 1 - \strlen($body));
+        while (! $stream->eof() && \strlen($body) <= $limit) {
+            $chunk = $stream->read($limit + 1 - \strlen($body));
             if ($chunk === '') {
                 break;
             }
@@ -30,7 +30,7 @@ final readonly class BoundedBody
             $body .= $chunk;
         }
 
-        if (\strlen($body) > Fiscal::MAX_RESPONSE_BYTES) {
+        if (\strlen($body) > $limit) {
             throw TransportException::because(TransportFailure::ResponseTooLarge, $subject, $response->status(), \strlen($body));
         }
 

@@ -145,9 +145,13 @@ return [
     | Document Storage
     |--------------------------------------------------------------------------
     |
-    | A null disk inherits filesystems.default. The path is a nonempty relative
-    | directory without traversal, used for generated XML, ZIP and responses.
-    | Fiscal documents contain personal data: configure a private host disk.
+    | Where StoreIssuedArtifactsAction keeps the artifacts of an authorized
+    | document: the signed XML, the ZIP sent, the response evidence and the
+    | DFA PDF. Nothing is stored unless the application calls that action.
+    | Files land in {path}/{repository}/{NIF}/{YYYY}/{MM}/{IUD}/. A null disk
+    | inherits filesystems.default. The path is a nonempty relative directory
+    | without traversal. Fiscal documents contain personal data: configure a
+    | private disk; one whose visibility is public is refused.
     |
     */
     'storage' => [
@@ -172,6 +176,65 @@ return [
         'store'                      => env('EFATURA_CACHE_STORE'),
         'prefix'                     => env('EFATURA_CACHE_PREFIX', 'efatura'),
         'exchange_rates_ttl_seconds' => env('EFATURA_EXCHANGE_RATES_TTL_SECONDS', 3600),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Exchange Rates
+    |--------------------------------------------------------------------------
+    |
+    | Rates are CVE per one unit of the foreign currency, kept at five
+    | decimals. One provider is selected explicitly and there is no fallback:
+    | bcv (the Banco de Cabo Verde page, the default), world_bank (annual
+    | average, reference rate), fixed (the rates below) or callback (a class
+    | with __invoke resolved from the container). BCV rate_type is buy or
+    | sell; a publication of an earlier Cabo Verde day is accepted only when
+    | max_publication_age_days is positive. World Bank economies map a
+    | currency to an economy code (EUR => EMU); CVE is always CPV. The World
+    | Bank observation_year is previous (the year before the request, the
+    | latest annual average usually published) or request (the request's
+    | own year, often not published yet). Fixed
+    | rates map a currency to a positive decimal string. Quotes are cached
+    | for cache.exchange_rates_ttl_seconds.
+    |
+    */
+    'exchange_rates' => [
+        'provider' => env('EFATURA_EXCHANGE_RATE_PROVIDER', 'bcv'),
+        'bcv'      => [
+            'rate_type'                => env('EFATURA_BCV_RATE_TYPE', 'buy'),
+            'max_publication_age_days' => env('EFATURA_BCV_MAX_PUBLICATION_AGE_DAYS', 0),
+        ],
+        'world_bank' => [
+            'economies'        => [],
+            'observation_year' => env('EFATURA_WORLD_BANK_OBSERVATION_YEAR', 'previous'),
+        ],
+        'fixed' => [
+            'rates'     => [],
+            'rate_type' => 'custom',
+            'name'      => 'Fixed rate',
+        ],
+        'callback' => null,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Documento Fiscal Auxiliar
+    |--------------------------------------------------------------------------
+    |
+    | The QR code of an ONLINE or OFFLINE DFA holds {base_url}/{IUD}, which
+    | opens the document on the e-Fatura platform (Manual v11, 6.13). The
+    | base URL must use HTTPS without credentials, query strings or
+    | fragments; trailing slashes are removed. The cache path is an absolute
+    | directory, without traversal, where dompdf keeps its font metrics and
+    | temporary files and finds an empty chroot; null uses
+    | storage/framework/cache/efatura-dompdf. It is created when missing; an
+    | existing one must belong to the PHP user and be closed to group and
+    | others.
+    |
+    */
+    'dfa' => [
+        'base_url'   => env('EFATURA_DFA_BASE_URL', 'https://pe.efatura.cv/dfe/view'),
+        'cache_path' => env('EFATURA_DFA_CACHE_PATH'),
     ],
 
     /*
@@ -217,8 +280,11 @@ return [
     | certificate of the middleware is verified. It cannot be combined with
     | disabled verification.
     | Each client's null tuning option inherits the global default. Base URLs
-    | must use HTTPS without credentials, query strings or fragments, and the
-    | middleware and platform URLs end with the API version (/v1). A null
+    | must use HTTPS without credentials, query strings or fragments (the bcv
+    | page address alone may carry a query string, as the official page
+    | does), and the middleware and platform URLs end with the API version
+    | (/v1). The World Bank address is fixed (https://api.worldbank.org):
+    | its client takes no base_url, and setting one fails. A null
     | base URL defers endpoint selection to its provider's later configuration.
     | Fiscal environment selection never replaces these endpoints.
     | Requests go through the Laravel HTTP client, whose request events
@@ -265,7 +331,6 @@ return [
             'ca_bundle_path'           => null,
         ],
         'world_bank' => [
-            'base_url'                 => env('EFATURA_WORLD_BANK_BASE_URL'),
             'timeout_seconds'          => null,
             'connect_timeout_seconds'  => null,
             'retries'                  => null,

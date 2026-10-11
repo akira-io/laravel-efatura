@@ -125,6 +125,10 @@ dispatches Laravel events on the way. An ambiguous answer throws
 - [Transport](docs/transport.md)
 - [Issuance](docs/issuance.md)
 - [Readiness](docs/readiness.md)
+- [Currency conversion](docs/currency.md)
+- [Documento Fiscal Auxiliar (DFA)](docs/dfa.md)
+- [Artifact storage](docs/storage.md)
+- [Migration guide](docs/migration.md)
 - Configuration: [config/efatura.php](config/efatura.php)
 - API reference: [source API](https://github.com/akira-io/laravel-efatura/tree/main/src)
 

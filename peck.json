@@ -47,7 +47,10 @@
             "lockless",
             "loopback",
             "eof",
-            "seekable"
+            "seekable",
+            "renderer",
+            "dompdf",
+            "testbench"
         ],
         "paths": [
             "resources/catalogs/source",

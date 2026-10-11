@@ -5,24 +5,37 @@ declare(strict_types=1);
 namespace Akira\Efatura;
 
 use Akira\Efatura\Actions\BuildIudAction;
+use Akira\Efatura\Actions\ConvertDocumentCurrencyAction;
 use Akira\Efatura\Commands\InstallCommand;
+use Akira\Efatura\Configuration\CacheConfig;
 use Akira\Efatura\Configuration\DatabaseConfig;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
+use Akira\Efatura\Configuration\StorageConfig;
 use Akira\Efatura\Contracts\AccessTokenProvider;
+use Akira\Efatura\Contracts\ArtifactStore;
 use Akira\Efatura\Contracts\CertificateLoader;
+use Akira\Efatura\Contracts\DfaRenderer;
+use Akira\Efatura\Contracts\ExchangeRateProvider;
 use Akira\Efatura\Contracts\Packager;
+use Akira\Efatura\Contracts\QrCodeRenderer;
 use Akira\Efatura\Contracts\RefreshTokenRepository;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Contracts\SequenceStore;
 use Akira\Efatura\Contracts\Transport;
 use Akira\Efatura\Contracts\XmlSigner;
+use Akira\Efatura\Currency\DeferredExchangeRateProvider;
+use Akira\Efatura\Currency\ExchangeRateProviderResolver;
+use Akira\Efatura\Dfa\BaconQrCodeRenderer;
+use Akira\Efatura\Dfa\DompdfDfaRenderer;
+use Akira\Efatura\Dfa\DompdfOptions;
 use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\OAuth\RefreshTokenAccessTokenProvider;
 use Akira\Efatura\Packaging\ZipArchivePackager;
 use Akira\Efatura\Sequence\DatabaseSequenceStore;
 use Akira\Efatura\Signing\OpenSslCertificateLoader;
 use Akira\Efatura\Signing\XadesBesXmlSigner;
+use Akira\Efatura\Storage\FilesystemArtifactStore;
 use Akira\Efatura\Support\Catalogs;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Transport\TransportResolver;
@@ -60,7 +73,21 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $this->app->bind(CertificateLoader::class, OpenSslCertificateLoader::class);
         $this->app->bind(XmlSigner::class, XadesBesXmlSigner::class);
         $this->app->bind(Packager::class, ZipArchivePackager::class);
+        $this->app->bind(QrCodeRenderer::class, BaconQrCodeRenderer::class);
+        $this->app->bind(DfaRenderer::class, DompdfDfaRenderer::class);
+        $this->app->when(DompdfOptions::class)->needs('$defaultRoot')
+            ->give(fn (Application $app): string => $app->storagePath('framework/cache/efatura-dompdf'));
+        $this->app->when(FilesystemArtifactStore::class)->needs(StorageConfig::class)
+            ->give(fn (): StorageConfig => $this->app->make(EfaturaConfig::class)->storage);
+        $this->app->when(FilesystemArtifactStore::class)->needs(CacheConfig::class)
+            ->give(fn (): CacheConfig => $this->app->make(EfaturaConfig::class)->cache);
+        $this->app->bind(ArtifactStore::class, FilesystemArtifactStore::class);
         $this->app->bind(Transport::class, fn (Application $app): Transport => $app->make(TransportResolver::class)->driver());
+        $this->app->bind(
+            ExchangeRateProvider::class,
+            fn (Application $app): ExchangeRateProvider => $app->make(ExchangeRateProviderResolver::class)->provider(),
+        );
+        $this->app->when(ConvertDocumentCurrencyAction::class)->needs(ExchangeRateProvider::class)->give(DeferredExchangeRateProvider::class);
     }
 
     #[Override]
@@ -77,6 +104,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             ->name('efatura')
             ->hasConfigFile()
             ->hasTranslations()
+            ->hasViews()
             ->hasMigration(InstallCommand::SEQUENCE_MIGRATION)
             ->hasCommand(InstallCommand::class);
     }

@@ -43,6 +43,26 @@ it('retains the package runtime and development tools', function (): void {
     ]);
 });
 
+it('suggests the DFA renderers and installs them for development', function (): void {
+    $composer = ComposerMetadata::read();
+
+    expect(array_keys($composer['suggest']))->toBe(['dompdf/dompdf', 'bacon/bacon-qr-code'])
+        ->and($composer['require'])->not->toHaveKeys(['dompdf/dompdf', 'bacon/bacon-qr-code'])
+        ->and($composer['require-dev'])->toMatchArray([
+            'dompdf/dompdf'       => '^3.1',
+            'dompdf/php-font-lib' => '^1.0.2',
+            'dompdf/php-svg-lib'  => '^1.0.2',
+            'bacon/bacon-qr-code' => '^3.1',
+        ]);
+});
+
+it('conflicts with DFA renderer versions older than the ones it supports', function (): void {
+    expect(ComposerMetadata::read()['conflict'] ?? null)->toBe([
+        'dompdf/dompdf'       => '<3.1',
+        'bacon/bacon-qr-code' => '<3.1',
+    ]);
+});
+
 it('runs the clear script as a registered Testbench command', function (): void {
     $clearHelp = new Process(['composer', 'run', 'clear', '--', '--help'], __DIR__ . '/..');
     $clearHelp->run();
@@ -69,6 +89,7 @@ it('ships runtime resources and leaves development files out of dist archives', 
     ['resources/lang/en/efatura.php', 'unspecified'],
     ['resources/catalogs/units.json', 'unspecified'],
     ['resources/official-artifacts.json', 'unspecified'],
+    ['resources/views/dfa/document.blade.php', 'unspecified'],
     ['resources/xsd/efatura/2024-05-27/EnvelopedSignature.xsd', 'unspecified'],
     ['composer.json', 'unspecified'],
     ['tests', 'set'],

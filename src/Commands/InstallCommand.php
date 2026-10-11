@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Commands;
 
+use Akira\Efatura\Dfa\DfaLibraries;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -24,12 +25,12 @@ final class InstallCommand extends Command
 {
     public const string SEQUENCE_MIGRATION = 'create_efatura_sequences_table';
 
-    public function handle(Filesystem $filesystem): int
+    public function handle(Filesystem $filesystem, DfaLibraries $libraries): int
     {
         $this->publishConfig($filesystem);
         $this->publishSequenceMigration($filesystem);
         $this->updateEnvironmentFile($filesystem);
-        $this->notifyOptionalPackages($filesystem);
+        $this->notifyOptionalPackages($libraries);
 
         note(__('efatura::efatura.install.completed'));
 
@@ -124,25 +125,15 @@ final class InstallCommand extends Command
         }
     }
 
-    private function notifyOptionalPackages(Filesystem $filesystem): void
+    private function notifyOptionalPackages(DfaLibraries $libraries): void
     {
-        $missing = [];
-
-        if (! $filesystem->isDirectory(base_path('vendor/akira/laravel-pdf-invoice'))) {
-            $missing[] = 'akira/laravel-pdf-invoice';
-        }
-
-        if (! $filesystem->isDirectory(base_path('vendor/akira/laravel-qrcode'))) {
-            $missing[] = 'akira/laravel-qrcode';
-        }
+        $missing = $libraries->missing();
 
         if ($missing === []) {
             return;
         }
 
-        $packages = Arr::join($missing, ', ');
-
-        info(__('efatura::efatura.install.optional_packages_notice', ['packages' => $packages]));
+        info(__('efatura::efatura.install.optional_packages_notice', ['packages' => implode(', ', $missing)]));
     }
 
     private function environmentVariableExists(string $contents, string $key): bool

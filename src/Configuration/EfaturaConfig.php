@@ -20,5 +20,7 @@ final readonly class EfaturaConfig
         public QueueConfig $queue,
         public HttpConfig $http,
         public TransportDriver $driver = TransportDriver::Middleware,
+        public ExchangeRatesConfig $exchangeRates = new ExchangeRatesConfig,
+        public DfaConfig $dfa = new DfaConfig,
     ) {}
 }

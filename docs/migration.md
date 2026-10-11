@@ -232,13 +232,24 @@ that binds its own `ClockInterface` after the provider registers keeps it.
 | `efatura.cache` | The store may now hold platform access tokens, encrypted with the application key; refresh tokens, client secrets and the middleware key are never cached |
 | `efatura.http.retries`, `retry_delay_milliseconds` and their per-client overrides | Now used, and only for reads: document lookups, OpenID discovery and remote readiness. Submissions, self-billing requests and token requests are never retried (see [transport](transport.md#retries)) |
 | `efatura.database.connection`, `sequences_table` | Now used: the connection and table of the document number counters (see [document numbers and sequences](sequences.md)) |
+| `efatura.exchange_rates.provider` / `EFATURA_EXCHANGE_RATE_PROVIDER` | New: `bcv` (the default), `world_bank`, `fixed` or `callback`, in any letter case; anything else fails with `configuration.invalid_exchange_rate_provider` (see [currency conversion](currency.md)) |
+| `efatura.exchange_rates.bcv.rate_type`, `max_publication_age_days` / `EFATURA_BCV_RATE_TYPE`, `EFATURA_BCV_MAX_PUBLICATION_AGE_DAYS` | New: `buy` (the default) or `sell`, otherwise `configuration.invalid_rate_type`; and the age in days of an earlier BCV publication still accepted, 0 by default |
+| `efatura.exchange_rates.world_bank.economies`, `observation_year` / `EFATURA_WORLD_BANK_OBSERVATION_YEAR` | New: a map of currency to World Bank economy code, and `previous` (the default) or `request`, otherwise `configuration.invalid_observation_year` |
+| `efatura.exchange_rates.fixed.rates`, `rate_type`, `name` and `efatura.exchange_rates.callback` | New: the rates of the `fixed` provider, and the class the `callback` provider resolves |
+| `efatura.http.bcv` / `EFATURA_BCV_BASE_URL` | Now used: the client profile that reads the BCV page. Its `base_url` alone may carry a query string, as the official page address does |
+| `efatura.http.world_bank.base_url` / `EFATURA_WORLD_BANK_BASE_URL` | Removed. The World Bank endpoint is fixed (`https://api.worldbank.org`); a config whose key still holds a value (for example from `EFATURA_WORLD_BANK_BASE_URL`) fails loading with `configuration.fixed_endpoint`, and a null one is ignored. Delete the key and the variable. The other `efatura.http.world_bank` options are used |
+| `efatura.cache.exchange_rates_ttl_seconds` / `EFATURA_EXCHANGE_RATES_TTL_SECONDS` | Now used: how long BCV and World Bank quotes stay cached, 3600 by default |
+| `efatura.dfa.base_url` / `EFATURA_DFA_BASE_URL` | New: the viewer address the DFA QR code points at, `https://pe.efatura.cv/dfe/view` by default (see [DFA](dfa.md#qr-code)) |
+| `efatura.dfa.cache_path` / `EFATURA_DFA_CACHE_PATH` | New: an absolute directory for the dompdf font cache, temporary files and chroot; null uses `storage/framework/cache/efatura-dompdf` of the application. A directory owned by another user or writable by its group or others fails with `dfa.cache_unavailable` when a DFA is rendered. A relative path or one with `..`, `.` or empty segments fails with `configuration.unsafe_path` |
+| `efatura.storage.disk`, `path` | Now used, by `StoreIssuedArtifactsAction` only (see [artifact storage](storage.md)). A disk whose `visibility` is `public` is refused when an artifact is written |
 
 `EmitterConfig::$led` changes from `?string` to `?int`. `AddressConfig` and
 `ContactsConfig` gain the new fields as optional trailing constructor
 arguments, so existing positional calls keep working. `CertificateConfig` gains
 `caBundlePath` as an optional trailing constructor argument. `HttpClientConfig` gains `caBundlePath` and `verify()`,
-`OAuthConfig` gains `issuerUrl` and `EfaturaConfig` gains `driver`, each as an
-optional trailing constructor argument; the JSON form of `OAuthConfig` now
+`OAuthConfig` gains `issuerUrl` and `EfaturaConfig` gains `driver`,
+`exchangeRates` (an `ExchangeRatesConfig`) and `dfa` (a `DfaConfig` with
+`baseUrl` and `cachePath`), each as an optional trailing constructor argument; the JSON form of `OAuthConfig` now
 includes `issuerUrl`. `CertificateConfig`,
 `OAuthConfig` and `TransmitterConfig` redact their secrets from `dump()`,
 `var_dump()` and `print_r()` output, and implement `JsonSerializable` with the
@@ -249,6 +260,12 @@ consults `__debugInfo()` or `jsonSerialize()`; never pass these objects to them.
 Merge the new keys from the published [config](../config/efatura.php) into an
 application config file that was published before, then set the address code
 and address detail the emitter needs.
+
+Every HTTPS address the package checks now refuses a fragment (`#...`) as well
+as credentials: the configured base URLs, the issuer and the DFA base URL, the
+source and evidence URLs of an exchange rate quote (`exchange_rate.source_required`)
+and the token endpoint the OpenID discovery returns. Only the BCV base URL, the
+quote and evidence URLs and the token endpoint may carry a query string.
 
 ## Sending documents
 
@@ -265,6 +282,35 @@ of the transmitter and bind a `Contracts\RefreshTokenRepository`. Tests replace 
 driver with `Testing\FakeTransport`. An application that records outgoing HTTP
 requests (Telescope, Nightwatch) hides the `authorization` and
 `cv-ef-mw-core-transmitter-key` headers.
+
+## Exchange rates, DFA and storage
+
+Converting a document to CVE, printing the DFA and keeping the artifacts of an
+issued document are new and replace nothing, so no code has to change; each is
+opt-in. See [currency conversion](currency.md), [DFA](dfa.md) and
+[artifact storage](storage.md).
+
+- `ConvertDocumentCurrencyAction` reads a quote from the bound
+  `Contracts\ExchangeRateProvider` and writes `PayableAlternativeAmount`.
+- `BuildDfaDataAction` and `Contracts\DfaRenderer` print the DFA. They need
+  `dompdf/dompdf` and `bacon/bacon-qr-code` `^3.1`, which the package suggests
+  and does not require; Composer refuses older versions of both. Publish the
+  views to change the layout with
+  `php artisan vendor:publish --tag=efatura-views`.
+- `StoreIssuedArtifactsAction` writes through `Contracts\ArtifactStore` and
+  stores only an authorized document.
+
+The new error codes are `exchange_rate.*` (`ExchangeRateException`, listed in
+[currency conversion](currency.md#errors)), `dfa.*` (`DfaException`:
+`dfa.not_authorized`, `dfa.invalid_iud`, `dfa.iuc_required`,
+`dfa.invalid_iuc`, `dfa.iuc_mismatch`, `dfa.renderer_unavailable`,
+`dfa.cache_unavailable`), `storage.*` (`StorageException`:
+`storage.not_authorized`, `storage.dfa_mismatch`, `storage.invalid_iud`,
+`storage.disk_invalid`, `storage.public_disk`, `storage.conflict`,
+`storage.missing`, `storage.corrupted`, `storage.unavailable`) and, when the
+configuration loads, `configuration.invalid_exchange_rate_provider`,
+`configuration.invalid_rate_type`, `configuration.invalid_observation_year`
+and `configuration.fixed_endpoint`.
 
 ## Translations
 
@@ -285,7 +331,10 @@ These keys are gone, because nothing produces those messages any more:
 `software_code_required`, `software_name_required`,
 `software_version_required`, `middleware_base_url_required`,
 `environment_invalid`; `install.command_description`; `general.package`. The
-`install.*` keys the command printed before are unchanged; it adds
+`install.*` keys the command printed before are unchanged except
+`install.optional_packages_notice`, which now reads "Optional DFA packages not
+detected: :packages. Install them to render the Documento Fiscal Auxiliar as a
+PDF with its QR code."; update an override of it. The command adds
 `install.migration_published` and `install.migration_exists`. The new `validation.*` keys
 are listed in [resources/lang/en/efatura.php](../resources/lang/en/efatura.php).
 

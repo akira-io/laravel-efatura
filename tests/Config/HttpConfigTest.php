@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Configuration\EfaturaConfig;
+use Akira\Efatura\Currency\BcvExchangeRateProvider;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Tests\Support\ConfigFixtures;
 
@@ -53,3 +54,39 @@ it('rejects a ca bundle that is not a readable absolute local file', function (C
     'inherited conflict'    => [fn (string $bundle): array => ['ca_bundle_path' => $bundle, 'bcv' => ['verify_tls' => false]], 'efatura.http.bcv.ca_bundle_path', 'configuration.conflicting_tls'],
     'not a string'          => [fn (string $bundle): array => ['middleware' => ['ca_bundle_path' => true]], 'efatura.http.middleware.ca_bundle_path', 'configuration.invalid_type'],
 ]);
+
+it('accepts the official BCV page with its query as the bcv address only', function (): void {
+    expect(ConfigFixtures::load(['http' => ['bcv' => ['base_url' => BcvExchangeRateProvider::DEFAULT_SOURCE_URL]]])->http->bcv->baseUrl)
+        ->toBe(BcvExchangeRateProvider::DEFAULT_SOURCE_URL);
+});
+
+it('refuses a query outside the bcv address and a fragment anywhere', function (array $http, string $field): void {
+    expect(fn (): EfaturaConfig => ConfigFixtures::load(['http' => $http]))
+        ->toThrow(function (ConfigurationException $exception) use ($field): void {
+            expect($exception->errorCode)->toBe('configuration.unsafe_url')
+                ->and($exception->field)->toBe($field);
+        });
+})->with([
+    'a middleware query' => [['middleware' => ['base_url' => 'https://localhost:3443/v1?debug=1']], 'efatura.http.middleware.base_url'],
+    'a bcv fragment'     => [['bcv' => ['base_url' => 'https://www.bcv.cv/rates?_expType=PDF#top']], 'efatura.http.bcv.base_url'],
+    'a bcv plain http'   => [['bcv' => ['base_url' => 'http://www.bcv.cv/rates?_expType=PDF']], 'efatura.http.bcv.base_url'],
+]);
+
+it('keeps the World Bank endpoint fixed and refuses a configured address for it', function (?string $url): void {
+    expect(fn (): EfaturaConfig => ConfigFixtures::load(['http' => ['world_bank' => ['base_url' => $url]]]))
+        ->toThrow(function (ConfigurationException $exception): void {
+            expect($exception->errorCode)->toBe('configuration.fixed_endpoint')
+                ->and($exception->field)->toBe('efatura.http.world_bank.base_url');
+        });
+})->with([
+    'the official api' => ['https://api.worldbank.org'],
+    'another host'     => ['https://rates.example/api'],
+]);
+
+it('reads the World Bank client options without an address', function (): void {
+    $worldBank = ConfigFixtures::load(['http' => ['world_bank' => ['timeout_seconds' => 7]]])->http->worldBank;
+
+    expect($worldBank->baseUrl)->toBeNull()
+        ->and($worldBank->timeoutSeconds)->toBe(7)
+        ->and(config('efatura.http.world_bank'))->not->toHaveKey('base_url');
+});

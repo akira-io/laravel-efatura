@@ -34,10 +34,10 @@ it('shares one manager with the resolved configuration', function (): void {
         ->and($manager->config())->toBe(resolve(EfaturaConfig::class));
 });
 
-it('declares the provider metadata and registers without absent views', function (): void {
+it('declares the provider metadata and registers the DFA views', function (): void {
     expect(ComposerMetadata::read()['extra']['laravel']['providers'])->toContain(EfaturaServiceProvider::class)
         ->and(app()->getLoadedProviders())->toHaveKey(EfaturaServiceProvider::class)
-        ->and(resolve('view')->getFinder()->getHints())->not->toHaveKey('efatura');
+        ->and(resolve('view')->getFinder()->getHints())->toHaveKey('efatura');
 });
 
 it('binds the access token provider only once the application binds a refresh token repository', function (): void {

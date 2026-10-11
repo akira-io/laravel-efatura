@@ -7,10 +7,9 @@ namespace Akira\Efatura\Concerns;
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Support\FiscalRules;
+use Akira\Efatura\Support\HttpsUrl;
 use Illuminate\Support\Str;
 use SensitiveParameter;
-
-use const FILTER_VALIDATE_URL;
 
 trait ValidatesConfigurationValues
 {
@@ -46,6 +45,22 @@ trait ValidatesConfigurationValues
         return $value;
     }
 
+    private function validatedAbsolutePath(#[SensitiveParameter] ?string $value, string $path): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = Str::rtrim($value, '/');
+
+        if (! Str::startsWith($trimmed, '/') || preg_match('/[\x00-\x1f\\\]/', $trimmed) === 1
+            || Str::of(Str::after($trimmed, '/'))->explode('/')->intersect(['', '.', '..'])->isNotEmpty()) {
+            throw new ConfigurationException('configuration.unsafe_path', $path);
+        }
+
+        return $trimmed;
+    }
+
     private function validatedIdentifier(#[SensitiveParameter] string $value, string $path): string
     {
         if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $value) !== 1) {
@@ -55,15 +70,13 @@ trait ValidatesConfigurationValues
         return $value;
     }
 
-    private function validatedUrl(#[SensitiveParameter] ?string $url, string $path): ?string
+    private function validatedUrl(#[SensitiveParameter] ?string $url, string $path, bool $allowQuery = false): ?string
     {
         if ($url === null) {
             return null;
         }
 
-        $parts = parse_url($url);
-        if (filter_var($url, FILTER_VALIDATE_URL) === false || $parts === false || ($parts['scheme'] ?? '') !== 'https'
-            || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])) {
+        if (HttpsUrl::origin($url, $allowQuery) === null) {
             throw new ConfigurationException('configuration.unsafe_url', $path);
         }
 

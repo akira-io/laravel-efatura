@@ -54,7 +54,19 @@
         "roave/security-advisories": "dev-latest",
         "peckphp/peck": "^0.3.0",
         "phpoffice/phpspreadsheet": "^5.10",
-        "robrichards/xmlseclibs": "^4.0"
+        "robrichards/xmlseclibs": "^4.0",
+        "dompdf/dompdf": "^3.1",
+        "dompdf/php-font-lib": "^1.0.2",
+        "dompdf/php-svg-lib": "^1.0.2",
+        "bacon/bacon-qr-code": "^3.1"
+    },
+    "conflict": {
+        "dompdf/dompdf": "<3.1",
+        "bacon/bacon-qr-code": "<3.1"
+    },
+    "suggest": {
+        "dompdf/dompdf": "Required to render the Documento Fiscal Auxiliar (DFA) as a PDF (^3.1).",
+        "bacon/bacon-qr-code": "Required to draw the DFA QR code as SVG, without gd or imagick (^3.1)."
     },
     "autoload": {
         "psr-4": {

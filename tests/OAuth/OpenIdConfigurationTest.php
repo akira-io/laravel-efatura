@@ -56,6 +56,7 @@ it('refuses a token endpoint outside the issuer', function (string $endpoint): v
     'another port'     => ['https://iam.efatura.cv:8443/token'],
     'with credentials' => ['https://user@iam.efatura.cv/token'],
     'not a url'        => ['https:///token'],
+    'with a fragment'  => ['https://iam.efatura.cv/token#fragment'],
 ]);
 
 it('fails closed on a discovery document it cannot use', function (Closure $response, array $context): void {
