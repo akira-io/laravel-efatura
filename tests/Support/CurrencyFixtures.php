@@ -9,6 +9,7 @@ use Akira\Efatura\Currency\BcvExchangeRateProvider;
 use Akira\Efatura\Currency\ExchangeRateClient;
 use Akira\Efatura\Currency\ExchangeRateQuote;
 use Akira\Efatura\Currency\ExchangeRateRequest;
+use Akira\Efatura\Currency\WorldBankExchangeRateProvider;
 use Akira\Efatura\Enums\ExchangeRateFailure;
 use Akira\Efatura\Enums\ExchangeRateType;
 use Akira\Efatura\Exceptions\ExchangeRateException;
@@ -54,6 +55,17 @@ final class CurrencyFixtures
             'parser'  => new BcvExchangeRateParser,
             'clock'   => resolve(ClockInterface::class),
             'profile' => ConfigFixtures::load(['http' => ['retries' => 0, 'bcv' => $http]])->http->bcv,
+            ...$options,
+        ]);
+    }
+
+    public static function worldBank(array $options = [], array $http = []): WorldBankExchangeRateProvider
+    {
+        return new WorldBankExchangeRateProvider(...[
+            'client'    => resolve(ExchangeRateClient::class),
+            'clock'     => resolve(ClockInterface::class),
+            'profile'   => ConfigFixtures::load(['http' => ['retries' => 0, 'world_bank' => $http]])->http->worldBank,
+            'economies' => ['EUR' => 'EMU'],
             ...$options,
         ]);
     }
