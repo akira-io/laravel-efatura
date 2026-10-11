@@ -13,23 +13,42 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\warning;
 
 use const PHP_EOL;
 
-#[Signature('efatura:install')]
+#[Signature('efatura:install
+    {--write-env : Append the missing EFATURA_* variables to .env without asking}
+    {--views : Publish the DFA views}
+    {--lang : Publish the translations}
+    {--force : Overwrite the config, views and translations that already exist}')]
 #[Description('Install akira/efatura configuration')]
 final class InstallCommand extends Command
 {
     public const string SEQUENCE_MIGRATION = 'create_efatura_sequences_table';
 
+    private const array OPTIONS = ['write-env', 'views', 'lang', 'force'];
+
     public function handle(Filesystem $filesystem, DfaLibraries $libraries): int
     {
         $this->publishConfig($filesystem);
         $this->publishSequenceMigration($filesystem);
-        $this->updateEnvironmentFile($filesystem);
+
+        if ((bool) $this->option('views')) {
+            $this->publishDirectory($filesystem, \dirname(__DIR__, 2) . '/resources/views', resource_path('views/vendor/efatura'));
+        }
+
+        if ((bool) $this->option('lang')) {
+            $this->publishDirectory($filesystem, \dirname(__DIR__, 2) . '/resources/lang', lang_path('vendor/efatura'));
+        }
+
+        if (! $this->updateEnvironment($filesystem)) {
+            return self::FAILURE;
+        }
+
         $this->notifyOptionalPackages($libraries);
 
         note(__('efatura::efatura.install.completed'));
@@ -41,7 +60,9 @@ final class InstallCommand extends Command
     {
         $configPath = config_path('efatura.php');
 
-        if ($filesystem->exists($configPath)) {
+        $exists = $filesystem->exists($configPath);
+
+        if ($exists && ! (bool) $this->option('force')) {
             note(__('efatura::efatura.install.config_exists'));
 
             return;
@@ -52,7 +73,7 @@ final class InstallCommand extends Command
         $filesystem->ensureDirectoryExists(\dirname($configPath));
         $filesystem->copy($sourcePath, $configPath);
 
-        info(__('efatura::efatura.install.config_published'));
+        info(__($exists ? 'efatura::efatura.console.install.config_overwritten' : 'efatura::efatura.install.config_published'));
     }
 
     private function publishSequenceMigration(Filesystem $filesystem): void
@@ -74,15 +95,52 @@ final class InstallCommand extends Command
         info(__('efatura::efatura.install.migration_published'));
     }
 
-    private function updateEnvironmentFile(Filesystem $filesystem): void
+    private function publishDirectory(Filesystem $filesystem, string $source, string $target): void
+    {
+        foreach ($filesystem->allFiles($source) as $file) {
+            $destination = $target . '/' . $file->getRelativePathname();
+            $relative    = Str::after($destination, base_path() . '/');
+            $exists      = $filesystem->exists($destination);
+
+            if ($exists && ! (bool) $this->option('force')) {
+                note(__('efatura::efatura.console.install.kept', ['path' => $relative]));
+
+                continue;
+            }
+
+            $filesystem->ensureDirectoryExists(\dirname($destination));
+            $filesystem->copy($file->getPathname(), $destination);
+
+            info(__($exists ? 'efatura::efatura.console.install.overwritten' : 'efatura::efatura.console.install.published', ['path' => $relative]));
+        }
+    }
+
+    private function updateEnvironment(Filesystem $filesystem): bool
+    {
+        $append  = (bool) $this->option('write-env');
+        $options = collect(self::OPTIONS)->contains(fn (string $option): bool => (bool) $this->option($option));
+        $prompts = ! $options && $this->input->isInteractive();
+
+        if (! $append && ! $prompts) {
+            note(__('efatura::efatura.console.install.env_untouched'));
+
+            return true;
+        }
+
+        if (! $filesystem->exists(base_path('.env'))) {
+            $append ? error(__('efatura::efatura.console.install.env_required')) : warning(__('efatura::efatura.install.env_missing'));
+
+            return ! $append;
+        }
+
+        $this->appendEnvironmentVariables($filesystem, $prompts);
+
+        return true;
+    }
+
+    private function appendEnvironmentVariables(Filesystem $filesystem, bool $prompts): void
     {
         $envPath = base_path('.env');
-
-        if (! $filesystem->exists($envPath)) {
-            warning(__('efatura::efatura.install.env_missing'));
-
-            return;
-        }
 
         $contents = $filesystem->get($envPath);
 
@@ -102,9 +160,7 @@ final class InstallCommand extends Command
                 continue;
             }
 
-            $confirmed = confirm(__('efatura::efatura.install.env_add_confirm', ['key' => $key]));
-
-            if (! $confirmed) {
+            if ($prompts && ! confirm(__('efatura::efatura.install.env_add_confirm', ['key' => $key]))) {
                 note(__('efatura::efatura.install.env_skipped', ['key' => $key]));
 
                 continue;

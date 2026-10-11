@@ -33,7 +33,8 @@ afterEach(function (): void {
 it('declares its signature and description with Laravel command attributes', function (): void {
     $command = new ReflectionClass(InstallCommand::class);
 
-    expect($command->getAttributes(Signature::class)[0]->newInstance()->signature)->toBe('efatura:install')
+    expect($command->getAttributes(Signature::class)[0]->newInstance()->signature)->toStartWith('efatura:install')
+        ->and(array_keys(resolve(InstallCommand::class)->getDefinition()->getOptions()))->toBe(['write-env', 'views', 'lang', 'force'])
         ->and($command->getAttributes(Description::class)[0]->newInstance()->description)->toBe('Install akira/efatura configuration')
         ->and($command->getConstructor()?->getDeclaringClass()->getName())->not->toBe(InstallCommand::class)
         ->and(resolve(InstallCommand::class)->getDescription())->toBe('Install akira/efatura configuration');

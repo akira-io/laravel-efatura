@@ -45,6 +45,14 @@ return [
         'optional_packages_notice' => 'Optional DFA packages not detected: :packages. Install them to render the Documento Fiscal Auxiliar as a PDF with its QR code.',
     ],
     'console' => [
+        'install' => [
+            'env_untouched'      => '.env left unchanged. Pass --write-env to add the missing variables.',
+            'env_required'       => '.env file not found. Create it before running with --write-env.',
+            'config_overwritten' => 'Config file overwritten.',
+            'published'          => 'Published :path.',
+            'kept'               => 'Kept :path. Pass --force to overwrite it.',
+            'overwritten'        => 'Overwrote :path.',
+        ],
         'doctor' => [
             'check'               => 'Check',
             'status'              => 'Status',

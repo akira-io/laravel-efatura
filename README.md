@@ -34,9 +34,27 @@ php artisan efatura:install
 php artisan migrate
 ```
 
-The command offers `EFATURA_TRANSMITTER_TAX_ID`, `EFATURA_EMITTER_LED`,
-`EFATURA_TRANSMITTER_KEY`, `EFATURA_MIDDLEWARE_BASE_URL` and `EFATURA_ENVIRONMENT`,
-and never overwrites an existing key. The remaining `EFATURA_EMITTER_*` keys are
+Run without options in a terminal, the command asks before adding each of
+`EFATURA_TRANSMITTER_TAX_ID`, `EFATURA_EMITTER_LED`, `EFATURA_TRANSMITTER_KEY`,
+`EFATURA_MIDDLEWARE_BASE_URL` and `EFATURA_ENVIRONMENT` to `.env`, and never
+overwrites an existing key. It also runs without questions, for deployments and
+CI:
+
+```sh
+php artisan efatura:install --no-interaction               # config and migration, .env untouched
+php artisan efatura:install --write-env --no-interaction   # also append the missing keys to .env
+php artisan efatura:install --views --lang                 # also publish the DFA views and the translations
+```
+
+`--write-env` appends every missing key without asking and fails when there is
+no `.env`; without it, any option or `--no-interaction` leaves `.env` alone.
+(`--env` is taken by Laravel for the application environment.) `--views` and
+`--lang` copy the same files as the `efatura-views` and `efatura-translations`
+publish tags. A file that already exists is reported and kept; `--force`
+overwrites the config, views and translations, never an existing `.env` key or
+the sequence migration, which is published once. Re-running the command changes
+nothing that is already installed. It exits with `0`, or `1` when `--write-env`
+finds no `.env`. The remaining `EFATURA_EMITTER_*` keys are
 optional; `config/efatura.php` lists them. The migration creates the table that
 holds the document number counters; set `EFATURA_DATABASE_CONNECTION` and
 `EFATURA_SEQUENCES_TABLE` before running it if the defaults do not fit (see
