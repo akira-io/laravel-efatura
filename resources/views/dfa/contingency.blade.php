@@ -17,9 +17,9 @@
             <div class="pending">Pendente de Autorização</div>
         </td>
     </tr>
-    <tr>
-        <td colspan="2">@include('efatura::dfa.partials.items')</td>
-    </tr>
+</table>
+@include('efatura::dfa.partials.items')
+<table class="dfa dfa-continued">
     @if ($dfa->content->totals !== null)
         <tr>
             <td colspan="2" class="totals-cell">@include('efatura::dfa.partials.totals', ['totals' => $dfa->content->totals])</td>

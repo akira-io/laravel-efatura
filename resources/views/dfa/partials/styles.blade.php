@@ -12,7 +12,9 @@
     .right { text-align: right; }
     .contingency-title { font-weight: bold; font-size: 11pt; }
     .pending { font-size: 10pt; }
-    .items { width: 100%; }
+    .dfa-continued { border-top: none; }
+    .items { width: 100%; border-left: 1px solid #000; border-right: 1px solid #000; }
+    .items th, .items td { padding: 2px 4px; }
     .items th { font-weight: bold; border-bottom: 1px solid #000; }
     .items td { border-bottom: 1px solid #999; }
     .totals td.label { text-align: right; padding-right: 8px; }

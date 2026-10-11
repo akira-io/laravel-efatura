@@ -113,6 +113,16 @@ when the document carries none. An argument that differs from the document's
 IUC fails with `dfa.iuc_mismatch`, a missing one with `dfa.iuc_required` and a
 malformed one with `dfa.invalid_iuc`.
 
+## Large documents
+
+The items of an OFFLINE or OFF DFA flow across as many A4 pages as they need,
+with the column headings repeated on each page. dompdf lays out the whole
+document in memory: measured on PHP 8.5 with dompdf 3.1, a DFA of 1000 lines
+takes about 25 pages and a peak of 275 to 350 MB. Render large contingency DFAs in a process whose `memory_limit`
+allows it, for example a queued job, rather than in a web request with the
+default 128 MB. The package's regression test renders 300 lines to keep the
+suite fast under coverage; the figures above come from 1000.
+
 ## Reprints
 
 `DfaData` never reads the clock: the dates come from the document. Building the
