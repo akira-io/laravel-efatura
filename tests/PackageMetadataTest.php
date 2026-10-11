@@ -6,31 +6,18 @@ use Akira\Efatura\Tests\Support\ComposerMetadata;
 use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 
-it('declares the runtime platform and imported Laravel components', function (): void {
+it('declares the runtime platform and the Laravel framework its foundation classes ship in', function (): void {
     $requirements = ComposerMetadata::read()['require'];
 
     expect($requirements)->toMatchArray([
-        'php'                    => '^8.5',
-        'ext-curl'               => '*',
-        'ext-dom'                => '*',
-        'ext-libxml'             => '*',
-        'ext-openssl'            => '*',
-        'ext-zip'                => '*',
-        'illuminate/cache'       => '^13.0',
-        'illuminate/config'      => '^13.0',
-        'illuminate/console'     => '^13.0',
-        'illuminate/contracts'   => '^13.0',
-        'illuminate/database'    => '^13.0',
-        'illuminate/encryption'  => '^13.0',
-        'illuminate/events'      => '^13.0',
-        'illuminate/filesystem'  => '^13.0',
-        'illuminate/http'        => '^13.0',
-        'illuminate/routing'     => '^13.0',
-        'illuminate/support'     => '^13.0',
-        'illuminate/translation' => '^13.0',
-        'illuminate/validation'  => '^13.0',
-        'illuminate/view'        => '^13.0',
-    ]);
+        'php'               => '^8.5',
+        'ext-curl'          => '*',
+        'ext-dom'           => '*',
+        'ext-libxml'        => '*',
+        'ext-openssl'       => '*',
+        'ext-zip'           => '*',
+        'laravel/framework' => '^13.0',
+    ])->and(array_filter(array_keys($requirements), fn (string $package): bool => str_starts_with($package, 'illuminate/')))->toBe([]);
 });
 
 it('declares the HTTP client its transport drives through the cURL handler', function (): void {

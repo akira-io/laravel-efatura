@@ -19,7 +19,8 @@ composer require akira/efatura
 
 Package discovery registers `Akira\Efatura\EfaturaServiceProvider`; the
 `Akira\Efatura\Facades\Efatura` facade is imported where it is used. The package
-declares the Laravel components it uses and Guzzle, whose cURL handler the
+requires `laravel/framework`, because it uses foundation classes such as
+`FormRequest` and the application helpers, and Guzzle, whose cURL handler the
 transport drives directly.
 
 ## The install command

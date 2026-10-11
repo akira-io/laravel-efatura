@@ -13,9 +13,8 @@ it('targets PHP 8.5, Laravel 13 and Pest 5', function (): void {
     $composer = ComposerMetadata::read();
 
     expect($composer['require'])->toMatchArray([
-        'php'                  => '^8.5',
-        'illuminate/contracts' => '^13.0',
-        'illuminate/support'   => '^13.0',
+        'php'               => '^8.5',
+        'laravel/framework' => '^13.0',
     ])->and($composer['require-dev'])->toMatchArray([
         'orchestra/testbench' => '^11.0.0',
         'pestphp/pest'        => '^5.0',
