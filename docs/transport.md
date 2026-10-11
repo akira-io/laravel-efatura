@@ -138,7 +138,8 @@ configured `efatura.emitter.tax_id` (the buyer) for a self-billing authorization
 A self-billed document names the seller in its IUD, but the buyer is the one who
 issues it and consented to the transmitter, so its submission
 (`PackagedArchive::$selfBilled`) and its lookup (`lookupDocument($iud, selfBilled:
-true)`, or `ReconcileDocumentAction::handle($iud, selfBilled: true)`) also use the
+true)`, `ReconcileDocumentAction::handle($prepared)` on a self-billed
+`PreparedDocument`, or `ReconcileDocumentAction::handle($iud, selfBilled: true)`) also use the
 token of the configured `efatura.emitter.tax_id`; without it they fail with
 `transport.missing_credentials`. The Manual does not say whose token the platform
 expects here; this reading is still to be confirmed with the DNRE. An archive of
