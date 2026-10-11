@@ -12,7 +12,14 @@ $report->ready();                              // false on any failure or skippe
 $report->warnings();                           // results that deserve attention but do not block
 $report->of(ReadinessCheck::Certificate);      // the results of one check
 json_encode($report);                          // check, status, code, field, context, required
+$report->toArray();                            // ready and checks, for presenting the report
 ```
+
+`toArray()` returns `ready` and one entry per result under `checks`, with the
+`check` and `status` as their string values, the `code`, the `field`, whether
+it is `required` and the `context`. The context keeps only the keys the checks
+document (`days_left`, `driver`, `environment`, `skew_seconds`, `status`), so a
+value added to a result later never reaches a presentation by accident.
 
 Each `ReadinessResult` has a `check` (`ReadinessCheck`), a `status`
 (`Passed`, `Warning`, `Failed`, `Skipped`), a stable `code`, the configuration
