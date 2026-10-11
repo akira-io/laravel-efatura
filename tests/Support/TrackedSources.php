@@ -20,9 +20,9 @@ final class TrackedSources
     /**
      * @return list<string>
      */
-    public static function trackedFiles(string ...$pathspecs): array
+    public static function trackedFiles(string ...$patterns): array
     {
-        $listing = new Process(['git', 'ls-files', '-z', '--', ...$pathspecs], self::root());
+        $listing = new Process(['git', 'ls-files', '-z', '--', ...$patterns], self::root());
         $listing->mustRun();
 
         return array_values(array_filter(explode("\0", $listing->getOutput())));

@@ -14,8 +14,8 @@ it('keeps every tracked source file within 300 lines', function (): void {
         ->and($oversized)->toBe([]);
 });
 
-it('never declares, casts or writes a float where fiscal amounts are handled', function (string $pathspec): void {
-    $files = TrackedSources::trackedFiles($pathspec);
+it('never declares, casts or writes a float where fiscal amounts are handled', function (string $pattern): void {
+    $files = TrackedSources::trackedFiles($pattern);
 
     expect($files)->not->toBeEmpty()
         ->and(collect($files)->flatMap(fn (string $path): array => TrackedSources::floats($path))->all())->toBe([]);
