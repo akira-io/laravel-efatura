@@ -85,10 +85,12 @@ An artifact is never overwritten:
 - storing different bytes at an existing path fails with `storage.conflict` and
   leaves the stored file untouched.
 
-A rejected document corrected and issued again keeps its IUD (see
-[issuance](issuance.md#outcomes)). Its signed XML, archive and answer differ
-from the first attempt, so storing both attempts conflicts. Store the
-artifacts once the outcome is final, typically when `$issued->authorized()`.
+Only an authorized document is stored. A rejected one fails with
+`storage.not_authorized` before anything is written: corrected and issued
+again it keeps its IUD (see [issuance](issuance.md#outcomes)), so the rejected
+XML would otherwise hold the canonical path and the authorized attempt would
+conflict with it. Keep the evidence of a rejection in the application's own
+records.
 
 The existence check and the write are two disk calls: two processes storing
 different bytes for the same IUD at the same moment are not serialized by the
@@ -126,6 +128,7 @@ and message are the code below.
 
 | Code | Field | Context | Retryable | When |
 | --- | --- | --- | --- | --- |
+| `storage.not_authorized` | | `iud` | no | The `IssuedDocument` was not authorized by the platform |
 | `storage.invalid_iud` | `iud` | | no | The IUD is not an official IUD with a valid check digit |
 | `storage.disk_invalid` | `efatura.storage.disk` | `disk` | no | The configured disk cannot be resolved |
 | `storage.conflict` | | `path` | no | Different bytes already exist at the path |

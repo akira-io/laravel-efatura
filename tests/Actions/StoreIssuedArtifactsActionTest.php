@@ -23,15 +23,15 @@ beforeEach(function (): void {
     S::store();
 });
 
-function rejectedIssue(): IssuedDocument
+function issueWithMessages(): IssuedDocument
 {
     $prepared = D::prepared();
-    $entry    = new EntryResult($prepared->iud . '.xml', $prepared->iud, false, null, '2026-10-02T12:00:04', [
-        new RemoteMessage('platform', 'Error', '2026-10-02T12:00:04', 'E-17', 'Preço «inválido» / linha 2', '/Dfe/Lines/Line[2]'),
-        new RemoteMessage('xsd', 'Warning', null, 'W-1', null, null),
+    $entry    = new EntryResult($prepared->iud . '.xml', $prepared->iud, true, 'AUTH-77', '2026-10-02T12:00:04', [
+        new RemoteMessage('platform', 'Warning', '2026-10-02T12:00:04', 'W-17', 'Preço «arredondado» / linha 2', '/Dfe/Lines/Line[2]'),
+        new RemoteMessage('xsd', 'Information', null, 'I-1', null, null),
     ]);
 
-    return new IssuedDocument($prepared, $entry, new SubmissionResult(PackageKind::Documents, 422, [$entry], CarbonImmutable::parse('2026-10-02 12:00:05', 'Atlantic/Cape_Verde')));
+    return new IssuedDocument($prepared, $entry, new SubmissionResult(PackageKind::Documents, 200, [$entry], CarbonImmutable::parse('2026-10-02 12:00:05', 'Atlantic/Cape_Verde')));
 }
 
 it('stores the signed XML, the archive and the response evidence of an issued document', function (): void {
@@ -53,6 +53,18 @@ it('stores the signed XML, the archive and the response evidence of an issued do
         ]);
 });
 
+it('refuses a document the platform did not authorize and writes nothing', function (): void {
+    expect(fn (): array => resolve(StoreIssuedArtifactsAction::class)->handle(D::issued(authorized: false)))
+        ->toThrow(function (StorageException $exception): void {
+            expect($exception->errorCode)->toBe('storage.not_authorized')
+                ->and($exception->getMessage())->toBe('storage.not_authorized')
+                ->and($exception->field)->toBeNull()
+                ->and($exception->context)->toBe(['iud' => D::iud()])
+                ->and($exception->retryable)->toBeFalse();
+        })
+        ->and(Storage::disk('archive')->allFiles())->toBe([]);
+});
+
 it('adds the DFA when one is given', function (): void {
     $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(D::issued(), new RenderedDfa('%PDF-1.7 dfa', D::iud() . '.pdf'));
 
@@ -62,49 +74,49 @@ it('adds the DFA when one is given', function (): void {
 });
 
 it('writes the response evidence as stable JSON', function (): void {
-    $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(rejectedIssue());
+    $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(issueWithMessages());
 
     expect(resolve(ArtifactStore::class)->get($artifacts[2]))->toBe(<<<'JSON'
         {
             "entryName": "CV3261002100200300000010100000000712345678909.xml",
             "identifier": "CV3261002100200300000010100000000712345678909",
-            "succeeded": false,
-            "authorizationCode": null,
+            "succeeded": true,
+            "authorizationCode": "AUTH-77",
             "signatureTimeStamp": "2026-10-02T12:00:04",
             "messages": [
                 {
                     "source": "platform",
-                    "type": "Error",
+                    "type": "Warning",
                     "dateTime": "2026-10-02T12:00:04",
-                    "code": "E-17",
-                    "description": "Preço «inválido» / linha 2",
+                    "code": "W-17",
+                    "description": "Preço «arredondado» / linha 2",
                     "location": "/Dfe/Lines/Line[2]"
                 },
                 {
                     "source": "xsd",
-                    "type": "Warning",
+                    "type": "Information",
                     "dateTime": null,
-                    "code": "W-1",
+                    "code": "I-1",
                     "description": null,
                     "location": null
                 }
             ],
             "packageKind": "dfe",
-            "httpStatus": 422,
+            "httpStatus": 200,
             "receivedAt": "2026-10-02T12:00:05-01:00"
         }
         JSON);
 });
 
 it('stores the same issued document twice without a conflict', function (): void {
-    $first = resolve(StoreIssuedArtifactsAction::class)->handle(rejectedIssue());
+    $first = resolve(StoreIssuedArtifactsAction::class)->handle(issueWithMessages());
 
-    expect(resolve(StoreIssuedArtifactsAction::class)->handle(rejectedIssue()))->toEqual($first)
+    expect(resolve(StoreIssuedArtifactsAction::class)->handle(issueWithMessages()))->toEqual($first)
         ->and(Storage::disk('archive')->allFiles())->toHaveCount(3);
 });
 
 it('refuses a second answer for an IUD whose evidence is already stored', function (): void {
-    resolve(StoreIssuedArtifactsAction::class)->handle(rejectedIssue());
+    resolve(StoreIssuedArtifactsAction::class)->handle(issueWithMessages());
 
     expect(fn (): array => resolve(StoreIssuedArtifactsAction::class)->handle(D::issued()))
         ->toThrow(function (StorageException $exception): void {
@@ -121,7 +133,7 @@ it('never writes a configured secret into a stored artifact or its path', functi
     ];
     config()->set($secrets);
 
-    $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(rejectedIssue(), new RenderedDfa('%PDF-1.7 dfa', D::iud() . '.pdf'));
+    $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(issueWithMessages(), new RenderedDfa('%PDF-1.7 dfa', D::iud() . '.pdf'));
     $written   = collect(Storage::disk('archive')->allFiles())
         ->flatMap(fn (string $path): array => [$path, (string) Storage::disk('archive')->get($path)])
         ->merge(collect($artifacts)->map(fn (StoredArtifact $stored): string => json_encode(get_object_vars($stored), JSON_THROW_ON_ERROR)))

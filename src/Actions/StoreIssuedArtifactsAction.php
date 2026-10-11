@@ -7,6 +7,7 @@ namespace Akira\Efatura\Actions;
 use Akira\Efatura\Contracts\ArtifactStore;
 use Akira\Efatura\Dfa\RenderedDfa;
 use Akira\Efatura\Enums\ArtifactKind;
+use Akira\Efatura\Exceptions\StorageException;
 use Akira\Efatura\Issuance\IssuedDocument;
 use Akira\Efatura\Storage\ResponseEvidence;
 use Akira\Efatura\Storage\StoredArtifact;
@@ -20,7 +21,12 @@ final readonly class StoreIssuedArtifactsAction
      */
     public function handle(IssuedDocument $issued, ?RenderedDfa $dfa = null): array
     {
-        $iud       = $issued->prepared->iud;
+        $iud = $issued->prepared->iud;
+
+        if (! $issued->authorized()) {
+            throw StorageException::notAuthorized($iud);
+        }
+
         $artifacts = [
             $this->store->put($iud, ArtifactKind::SignedXml, $issued->prepared->signed->xml),
             $this->store->put($iud, ArtifactKind::Archive, $issued->prepared->archive->bytes),

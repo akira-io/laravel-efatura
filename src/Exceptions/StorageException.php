@@ -21,6 +21,11 @@ final class StorageException extends EfaturaException
         return new self('storage.invalid_iud', 'iud');
     }
 
+    public static function notAuthorized(string $iud): self
+    {
+        return new self('storage.not_authorized', context: ['iud' => $iud]);
+    }
+
     public static function diskInvalid(string $disk, Throwable $previous): self
     {
         return new self('storage.disk_invalid', 'efatura.storage.disk', ['disk' => $disk], $previous);
