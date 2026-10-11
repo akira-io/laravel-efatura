@@ -43,12 +43,20 @@ it('keeps a quote rate at five decimals rounded half up', function (string|int|B
 it('refuses a rate that is not a positive decimal or rounds to zero', function (string|int $rate): void {
     expect(C::failure(fn (): ExchangeRateQuote => C::quote(['rate' => $rate])))->toBe(ExchangeRateFailure::RateInvalid);
 })->with([
-    'zero'              => ['0'],
-    'negative'          => [-1],
-    'not a number'      => ['abc'],
-    'rounds to zero'    => ['0.000004'],
-    'too many integers' => ['1000000000000000'],
+    'zero'               => ['0'],
+    'negative'           => [-1],
+    'not a number'       => ['abc'],
+    'rounds to zero'     => ['0.000004'],
+    'too many integers'  => ['1000000000000000'],
+    'an exponent'        => ['1e2'],
+    'a huge exponent'    => ['1e300000000'],
+    'surrounding space'  => [' 110.265'],
+    'over 32 characters' => ['110.' . str_repeat('0', 29)],
 ]);
+
+it('accepts a plain decimal of exactly 32 characters', function (): void {
+    expect((string) C::quote(['rate' => '110.' . str_repeat('0', 28)])->rate)->toBe('110.00000');
+});
 
 it('normalizes the quote currencies and provider', function (): void {
     $quote = C::quote(['sourceCurrency' => 'eur', 'targetCurrency' => ' cve', 'provider' => ' BCV ']);

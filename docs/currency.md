@@ -27,7 +27,7 @@ A rate is asked for with an `ExchangeRateRequest` and answered with an
 | `sourceCurrency`, `targetCurrency` | Upper case codes of the official currency catalog. The target defaults to `CVE`. |
 | `effectiveAt` | The instant the rate must be valid for. The action uses the issue date and time of the document in Cabo Verde. |
 | `rateType` | `ExchangeRateType::Buy`, `Sell`, `Reference` or `Custom`. Null in a request lets the provider use its own default. |
-| `rate` | A `BigDecimal`, CVE per one unit of the source currency, rounded half up to five decimals. A rate that rounds to zero, is negative, is not a decimal or has more than 15 integer digits fails. |
+| `rate` | A `BigDecimal`, CVE per one unit of the source currency, rounded half up to five decimals. Given as a string it must be a plain decimal of at most 32 characters, without exponent or spaces. A rate that rounds to zero, is negative, is not a plain decimal or has more than 15 integer digits fails (`exchange_rate.rate_invalid`). |
 | `effectiveAt` of the quote | The publication day (BCV), the first day of the observed year (World Bank) or the requested instant (fixed). It is never after the request. |
 | `retrievedAt`, `provider` | When and from whom the rate was obtained. |
 | `sourceUrl` | An HTTPS URL without credentials, or null. |

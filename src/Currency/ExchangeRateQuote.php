@@ -10,12 +10,13 @@ use Akira\Efatura\Exceptions\ExchangeRateException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
-use Brick\Math\Exception\MathException;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 
 final readonly class ExchangeRateQuote
 {
+    private const int MAX_RATE_LENGTH = 32;
+
     public string $sourceCurrency;
 
     public string $targetCurrency;
@@ -72,11 +73,11 @@ final readonly class ExchangeRateQuote
 
     private static function rate(BigDecimal|int|string $rate): BigDecimal
     {
-        try {
-            $scaled = BigDecimal::of($rate)->toScale(Fiscal::AMOUNT_SCALE, DecimalFormatter::fiscalRounding());
-        } catch (MathException) {
+        if (\is_string($rate) && (\strlen($rate) > self::MAX_RATE_LENGTH || ! DecimalFormatter::isPlainDecimal($rate))) {
             throw ExchangeRateException::because(ExchangeRateFailure::RateInvalid);
         }
+
+        $scaled = BigDecimal::of($rate)->toScale(Fiscal::AMOUNT_SCALE, DecimalFormatter::fiscalRounding());
 
         if (! $scaled->isPositive() || ! DecimalFormatter::fitsIntegerDigits($scaled)) {
             throw ExchangeRateException::because(ExchangeRateFailure::RateInvalid);
