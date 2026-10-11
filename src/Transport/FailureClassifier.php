@@ -35,12 +35,15 @@ final readonly class FailureClassifier
             return false;
         }
 
-        if (is_a($cause, self::CONNECT_TIMEOUT)) {
-            return true;
-        }
+        return is_a($cause, self::CONNECT_TIMEOUT) || $this->undeliveredError($this->handlerContext($cause), $cause);
+    }
 
-        $context = $this->handlerContext($cause);
-        $errno   = $context['errno'] ?? $this->reportedError($cause);
+    /**
+     * @param array<array-key, mixed> $context
+     */
+    private function undeliveredError(array $context, #[SensitiveParameter] Throwable $cause): bool
+    {
+        $errno = $context['errno'] ?? $this->reportedError($cause);
         if (! \is_int($errno)) {
             return false;
         }
