@@ -60,7 +60,7 @@ it('points the event data reference at its own id where the official event examp
     expect($generated)->toBe($expected);
 });
 
-it('validates a signature with a twenty byte serial number except on the libxml releases that reject it', function (SignatureProfile $profile): void {
+it('validates a signature with a twenty byte serial number on every libxml release', function (SignatureProfile $profile): void {
     $signed = S::sign(S::unsigned(), $profile, C::credentials(C::longSerialSigner()));
 
     try {
@@ -71,5 +71,5 @@ it('validates a signature with a twenty byte serial number except on the libxml 
     }
 
     expect($signed->serialNumber)->toHaveLength(46)
-        ->and($messages)->toBe(LIBXML_VERSION >= 21000 ? [] : ["Element \x27{http://www.w3.org/2000/09/xmldsig#}X509SerialNumber\x27: \x27…\x27"]);
+        ->and($messages)->toBe([]);
 })->with(SignatureProfile::cases());
