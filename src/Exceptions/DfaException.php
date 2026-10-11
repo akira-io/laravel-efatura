@@ -38,4 +38,9 @@ final class DfaException extends EfaturaException
     {
         return new self('dfa.iuc_mismatch', 'iuc', ['iud' => $iud]);
     }
+
+    public static function rendererUnavailable(string $package): self
+    {
+        return new self('dfa.renderer_unavailable', context: ['package' => $package]);
+    }
 }

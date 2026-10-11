@@ -47,7 +47,8 @@
             "lockless",
             "loopback",
             "eof",
-            "seekable"
+            "seekable",
+            "renderer"
         ],
         "paths": [
             "resources/catalogs/source",

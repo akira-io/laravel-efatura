@@ -13,12 +13,14 @@ use Akira\Efatura\Contracts\AccessTokenProvider;
 use Akira\Efatura\Contracts\CertificateLoader;
 use Akira\Efatura\Contracts\ExchangeRateProvider;
 use Akira\Efatura\Contracts\Packager;
+use Akira\Efatura\Contracts\QrCodeRenderer;
 use Akira\Efatura\Contracts\RefreshTokenRepository;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Contracts\SequenceStore;
 use Akira\Efatura\Contracts\Transport;
 use Akira\Efatura\Contracts\XmlSigner;
 use Akira\Efatura\Currency\ExchangeRateProviderResolver;
+use Akira\Efatura\Dfa\BaconQrCodeRenderer;
 use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\OAuth\RefreshTokenAccessTokenProvider;
 use Akira\Efatura\Packaging\ZipArchivePackager;
@@ -62,6 +64,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $this->app->bind(CertificateLoader::class, OpenSslCertificateLoader::class);
         $this->app->bind(XmlSigner::class, XadesBesXmlSigner::class);
         $this->app->bind(Packager::class, ZipArchivePackager::class);
+        $this->app->bind(QrCodeRenderer::class, BaconQrCodeRenderer::class);
         $this->app->bind(Transport::class, fn (Application $app): Transport => $app->make(TransportResolver::class)->driver());
         $this->app->bind(
             ExchangeRateProvider::class,
