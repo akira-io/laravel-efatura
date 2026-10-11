@@ -231,6 +231,46 @@ certificate chain is not verified against ICP-CV or any other authority. Use
 `efatura.certificates.ca_bundle_path` when loading your own credentials for that
 check (see [ICP-CV and the CA bundle](#icp-cv-and-the-ca-bundle)).
 
+### From the console
+
+```sh
+php artisan efatura:validate storage/app/efatura/CV1261002....xml
+php artisan efatura:validate signed.xml --profile=detached
+php artisan efatura:validate signed.xml --json
+```
+
+`efatura:validate` reads the file, refuses a path that does not exist, is not a
+regular file, cannot be read or is larger than 5 MiB, and parses it with the
+hardened parser. It then validates it against the XSD of the profile and runs
+`VerifyXmlSignatureAction`. `--profile` takes `enveloped` or `detached`; without
+it the profile follows the root element (`internally-detached` means detached).
+The command never submits, stores or signs anything.
+
+It exits with `0` only when both the schema and the signature are valid, and with
+`1` otherwise, including every refusal. The output always states that the
+certificate chain was not verified against ICP-CV. With `--json` it prints:
+
+```json
+{
+    "valid": true,
+    "profile": "enveloped",
+    "schema": {"valid": true, "code": null, "violations": []},
+    "signature": {
+        "valid": true,
+        "failures": [],
+        "certificate": {"subject": "CN=...", "serial_number": "1715004", "digest": "..."}
+    },
+    "trust_chain_verified": false
+}
+```
+
+`schema.code` is the package code of the failure (`xml.schema_invalid`,
+`xml.malformed`, `xml.doctype_forbidden`...), and each violation has its `line`,
+`column` and redacted `message`. XML refused by the parser has a `null`
+`profile` and `signature`. A refused path or profile prints only
+`{"valid": false, "error": "<reason>"}`, with `file_missing`,
+`file_not_regular`, `file_unreadable`, `file_too_large` or `profile_invalid`.
+
 ---
 
 [Documentation index](README.md) · [Sequences](sequences.md) · [Packaging](packaging.md)

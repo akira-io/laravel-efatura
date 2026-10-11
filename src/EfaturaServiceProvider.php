@@ -8,6 +8,7 @@ use Akira\Efatura\Actions\BuildIudAction;
 use Akira\Efatura\Actions\ConvertDocumentCurrencyAction;
 use Akira\Efatura\Commands\DoctorCommand;
 use Akira\Efatura\Commands\InstallCommand;
+use Akira\Efatura\Commands\ValidateCommand;
 use Akira\Efatura\Configuration\CacheConfig;
 use Akira\Efatura\Configuration\DatabaseConfig;
 use Akira\Efatura\Configuration\EfaturaConfig;
@@ -107,6 +108,6 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             ->hasTranslations()
             ->hasViews()
             ->hasMigration(InstallCommand::SEQUENCE_MIGRATION)
-            ->hasCommands([InstallCommand::class, DoctorCommand::class]);
+            ->hasCommands([InstallCommand::class, DoctorCommand::class, ValidateCommand::class]);
     }
 }
