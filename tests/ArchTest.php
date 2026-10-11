@@ -109,6 +109,23 @@ arch('transport, oauth and readiness never read files')
     ->expect(['file_get_contents', 'file', 'readfile'])
     ->each->not->toBeUsedIn(['Akira\Efatura\Transport', 'Akira\Efatura\OAuth', 'Akira\Efatura\Readiness']);
 
+arch('currency never reads files nor logs or dumps the rates and pages it fetches')
+    ->expect([
+        'file_get_contents',
+        'file',
+        'readfile',
+        'Psr\Log',
+        Log::class,
+        'logger',
+        'info',
+        'error_log',
+        'var_dump',
+        'var_export',
+        'print_r',
+        'serialize',
+    ])
+    ->each->not->toBeUsedIn('Akira\Efatura\Currency');
+
 arch('transport and oauth never log or dump what they exchange')
     ->expect(['Psr\Log', Log::class, 'logger', 'info', 'error_log', 'var_dump', 'var_export', 'print_r', 'serialize'])
     ->each->not->toBeUsedIn(['Akira\Efatura\Transport', 'Akira\Efatura\OAuth']);
