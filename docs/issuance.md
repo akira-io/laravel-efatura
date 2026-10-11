@@ -77,7 +77,8 @@ if ($reconciliation->authorized()) {
 ```
 
 `ReconcileDocumentAction` sends `GET dfe/xml/{IUD}` (scope `cv_ef_dfe_read_iud`,
-§10.3, p.70). Found means authorized; not found means the PE never stored it, so
+§10.3, p.70). Pass `selfBilled: true` for a self-billed document, so the platform
+driver uses the token of the buyer (see [OAuth](transport.md#oauth)). Found means authorized; not found means the PE never stored it, so
 send the same `PreparedDocument` again, with the same bytes. A lookup that fails
 is retried as a read (see [retries](transport.md#retries)) and otherwise throws; it
 never answers not found by itself.

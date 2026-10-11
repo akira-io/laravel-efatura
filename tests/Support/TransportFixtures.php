@@ -25,11 +25,12 @@ final class TransportFixtures
         PackageKind $kind = PackageKind::Documents,
         Environment $repository = Environment::Test,
         ?array $emitters = null,
+        bool $selfBilled = false,
     ): PackagedArchive {
         $entries = array_map(static fn (string $identifier): string => $identifier . '.xml', $identifiers);
         $derived = array_values(array_unique(array_map(static fn (string $identifier): string => substr($identifier, 9, 9), $identifiers)));
 
-        return new PackagedArchive('zip-bytes', $kind, $entries, $repository, $emitters ?? $derived);
+        return new PackagedArchive('zip-bytes', $kind, $entries, $repository, $emitters ?? $derived, $selfBilled);
     }
 
     public static function response(string $name): string

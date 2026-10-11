@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Actions\PrepareDocumentAction;
+use Akira\Efatura\Actions\ReconcileDocumentAction;
 use Akira\Efatura\Actions\RequestSelfBillingAuthorizationAction;
+use Akira\Efatura\Actions\SubmitPreparedDocumentAction;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Contracts\AccessTokenProvider;
 use Akira\Efatura\Contracts\Transport;
@@ -18,8 +20,10 @@ use Akira\Efatura\Tests\Support\PreparationFixtures as P;
 use Akira\Efatura\Tests\Support\RecordingAccessTokens;
 use Akira\Efatura\Tests\Support\SelfBillingFixtures as S;
 use Akira\Efatura\Tests\Support\SequenceFixtures;
+use Akira\Efatura\Tests\Support\TransportFixtures as T;
 use Akira\Efatura\Transport\RemoteMessage;
 use Akira\Efatura\Transport\SelfBillingAuthorization;
+use Akira\Efatura\Transport\SubmissionResult;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -182,14 +186,40 @@ it('answers from the fake transport in the order the answers were queued', funct
 
 it('prepares the authorized document with the number, led, series and iud received without reserving a number', function (): void {
     $store         = P::configure();
-    $authorization = S::iud(['issueDate' => '2026-10-02', 'emitterTaxId' => '100200300', 'ledCode' => 1]);
-    $document      = P::invoice(['serie' => 'AUTOFATURA', 'ledCode' => 1, 'documentNumber' => 42, 'selfBilling' => DocumentPayloads::selfBilling()]);
+    $authorization = S::iud(['issueDate' => '2026-10-02', 'ledCode' => 1]);
 
-    $prepared = resolve(PrepareDocumentAction::class)->handle($document, iud: $authorization);
+    $prepared = resolve(PrepareDocumentAction::class)->handle(S::document(), iud: $authorization);
 
     expect($prepared->allocated)->toBeFalse()
         ->and($prepared->iud)->toBe($authorization)
         ->and($store->current(SequenceFixtures::scope()))->toBe(0)
         ->and($prepared->unsignedXml)->toContain('<SelfBilling><AuthorizationId>' . DocumentPayloads::selfBilling()['authorizationId'])
         ->and($prepared->unsignedXml)->toContain('<Serie>AUTOFATURA</Serie>');
+});
+
+it('submits and reconciles a self-billed document with the token of the configured buyer, not of the seller in its iud', function (): void {
+    P::configure(config: ['efatura.driver' => 'platform', 'efatura.emitter.tax_id' => S::BUYER]);
+    $iud      = S::iud(['issueDate' => '2026-10-02', 'ledCode' => 1]);
+    $prepared = resolve(PrepareDocumentAction::class)->handle(S::document(), iud: $iud);
+    Http::fake(['*/dfe' => Http::response(str_replace(T::FIRST_IUD, $iud, T::response('accepted'))), '*/dfe/xml/*' => Http::response('', 404)]);
+
+    $issued = resolve(SubmitPreparedDocumentAction::class)->handle($prepared);
+    resolve(ReconcileDocumentAction::class)->handle($iud, selfBilled: true);
+
+    expect($issued->authorized())->toBeTrue()
+        ->and($prepared->archive->emitters)->toBe([S::SELLER])
+        ->and($prepared->archive->selfBilled)->toBeTrue()
+        ->and($this->tokens->calls)->toBe([['token', S::BUYER, ['cv_ef_dfe_create']], ['token', S::BUYER, ['cv_ef_dfe_read_iud']]]);
+});
+
+it('refuses a self-billed submission on the platform without the configured buyer', function (): void {
+    selfBillingConfig('platform', ['emitter' => ['tax_id' => null]]);
+    Http::fake();
+
+    expect(fn (): SubmissionResult => resolve(Transport::class)->submit(T::archive([S::iud()], selfBilled: true)))
+        ->toThrow(function (TransportException $exception): void {
+            expect($exception->failure)->toBe(TransportFailure::MissingCredentials)
+                ->and($exception->field)->toBe('efatura.emitter.tax_id');
+        });
+    Http::assertNothingSent();
 });

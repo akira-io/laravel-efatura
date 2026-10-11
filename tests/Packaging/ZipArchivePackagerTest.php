@@ -50,6 +50,15 @@ it('names each dfe entry after its iud in the order given and deflates it', func
     'three documents' => [[3, 1, 2]],
 ])->with(SignatureProfile::cases());
 
+it('marks an archive whose documents are all self-billed', function (SignatureProfile $profile): void {
+    $selfBilled = P::packager($this->directory)->package([P::selfBilled(P::document(1, $profile)), P::selfBilled(P::document(2, $profile))]);
+    $regular    = P::packager($this->directory)->package([P::document(1, $profile)]);
+
+    expect($selfBilled->selfBilled)->toBeTrue()
+        ->and($selfBilled->emitters)->toBe($regular->emitters)
+        ->and($regular->selfBilled)->toBeFalse();
+})->with(SignatureProfile::cases());
+
 it('names each event entry after its event id', function (SignatureProfile $profile): void {
     $xml     = [P::event('2026-10-02T12:00:00', $profile), P::event('2026-10-02T12:00:01', $profile)];
     $archive = P::packager($this->directory)->package($xml);
@@ -144,6 +153,11 @@ it('refuses entries it cannot package without echoing them', function (Closure $
     'two repositories' => [
         fn (): array => [P::document(1), P::inRepository(P::document(2), Environment::Homologation)],
         'package.mixed_repositories',
+        ['entry' => 1],
+    ],
+    'self-billed and regular documents' => [
+        fn (): array => [P::selfBilled(P::document(1)), P::document(2)],
+        'package.mixed_self_billing',
         ['entry' => 1],
     ],
     'the same dfe twice' => [fn (): array => [P::document(), P::document(2), P::document()], 'package.duplicate_entry', ['entry' => 2]],

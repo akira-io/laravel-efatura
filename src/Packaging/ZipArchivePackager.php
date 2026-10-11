@@ -36,10 +36,12 @@ final readonly class ZipArchivePackager implements Packager
         $emitters   = [];
         $kind       = null;
         $repository = null;
+        $selfBilled = null;
         foreach ($signedXml as $position => $xml) {
-            [$entryKind, $id, $entryRepository, $emitters[]] = $this->identify($xml, $position);
+            [$entryKind, $id, $entryRepository, $emitters[], $entrySelfBilled] = $this->identify($xml, $position);
             $kind ??= $entryKind;
             $repository ??= $entryRepository;
+            $selfBilled ??= $entrySelfBilled;
 
             if ($entryKind !== $kind) {
                 throw new PackagingException('package.mixed_kinds', ['entry' => $position]);
@@ -47,6 +49,10 @@ final readonly class ZipArchivePackager implements Packager
 
             if ($entryRepository !== $repository) {
                 throw new PackagingException('package.mixed_repositories', ['entry' => $position]);
+            }
+
+            if ($entrySelfBilled !== $selfBilled) {
+                throw new PackagingException('package.mixed_self_billing', ['entry' => $position]);
             }
 
             if (isset($entries[$id . '.xml'])) {
@@ -62,6 +68,7 @@ final readonly class ZipArchivePackager implements Packager
             array_keys($entries),
             $repository ?? Environment::Test,
             array_values(array_unique($emitters)),
+            $selfBilled ?? false,
         );
     }
 
@@ -85,7 +92,7 @@ final readonly class ZipArchivePackager implements Packager
     }
 
     /**
-     * @return array{PackageKind, string, Environment, string}
+     * @return array{PackageKind, string, Environment, string, bool}
      */
     private function identify(string $xml, int $position): array
     {
@@ -103,7 +110,9 @@ final readonly class ZipArchivePackager implements Packager
 
         $id = (string) $root?->getAttribute('Id');
 
-        return [$kind, $id, ...$this->origin($kind, $id, $root, $position)];
+        $selfBilled = $root instanceof DOMElement && $root->getElementsByTagNameNS(Fiscal::XML_NAMESPACE, 'SelfBilling')->length > 0;
+
+        return [$kind, $id, ...$this->origin($kind, $id, $root, $position), $selfBilled];
     }
 
     private static function signed(DOMElement $outer): bool

@@ -94,7 +94,7 @@ final class FakeTransport implements Transport
         return new SubmissionResult($archive->kind, self::STATUS, $entries, $this->now());
     }
 
-    public function lookupDocument(string $iud): DocumentLookup
+    public function lookupDocument(string $iud, bool $selfBilled = false): DocumentLookup
     {
         $this->lookedUp[] = $iud;
         $xml              = $this->documents[$iud] ?? null;

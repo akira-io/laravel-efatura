@@ -30,11 +30,9 @@ final readonly class PlatformTransport implements Transport
 
     public function submit(PackagedArchive $archive): SubmissionResult
     {
-        throw_unless(\count($archive->emitters) === 1, TransportException::because(TransportFailure::MixedEmitters, $archive));
-
         $scope    = $archive->kind === PackageKind::Documents ? OAuthScope::DfeCreate : OAuthScope::EventCreate;
         $response = $this->authorized(
-            $archive->emitters[0],
+            $archive->selfBilled ? $this->buyer($archive) : $this->emitter($archive),
             [$scope],
             fn (array $headers): Response => $this->exchange->post($this->config->http->platform, $archive, $headers),
         );
@@ -42,10 +40,10 @@ final readonly class PlatformTransport implements Transport
         return $this->exchange->submission($archive, $response);
     }
 
-    public function lookupDocument(string $iud): DocumentLookup
+    public function lookupDocument(string $iud, bool $selfBilled = false): DocumentLookup
     {
         $response = $this->authorized(
-            $this->exchange->document($iud)->emitterTaxId,
+            $selfBilled ? $this->buyer($iud) : $this->exchange->document($iud)->emitterTaxId,
             [OAuthScope::DfeReadIud],
             fn (array $headers): Response => $this->exchange->fetch($this->config->http->platform, $iud, $headers),
         );
@@ -55,16 +53,27 @@ final readonly class PlatformTransport implements Transport
 
     public function authorizeSelfBilling(SelfBillingAuthorizationRequestData $request): SelfBillingAuthorization
     {
-        $buyer = $this->config->emitter->taxId
-            ?? throw TransportException::because(TransportFailure::MissingCredentials, field: 'efatura.emitter.tax_id');
         $repository = $this->config->environment->environment;
         $response   = $this->authorized(
-            $buyer,
+            $this->buyer(null),
             [OAuthScope::DfeSelfBillingAuthorize],
             fn (array $headers): Response => $this->selfBilling->post($this->config->http->platform, $repository, $request, $headers),
         );
 
         return $this->selfBilling->authorization($request, $repository, $response);
+    }
+
+    private function emitter(PackagedArchive $archive): string
+    {
+        throw_unless(\count($archive->emitters) === 1, TransportException::because(TransportFailure::MixedEmitters, $archive));
+
+        return $archive->emitters[0];
+    }
+
+    private function buyer(PackagedArchive|string|null $subject): string
+    {
+        return $this->config->emitter->taxId
+            ?? throw TransportException::because(TransportFailure::MissingCredentials, $subject, field: 'efatura.emitter.tax_id');
     }
 
     /**

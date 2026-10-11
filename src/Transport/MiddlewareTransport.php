@@ -23,7 +23,7 @@ final readonly class MiddlewareTransport implements Transport
         return $this->exchange->submission($archive, $response);
     }
 
-    public function lookupDocument(string $iud): DocumentLookup
+    public function lookupDocument(string $iud, bool $selfBilled = false): DocumentLookup
     {
         $response = $this->exchange->fetch($this->config->http->middleware, $iud, $this->credentials($iud));
 

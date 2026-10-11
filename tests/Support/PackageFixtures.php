@@ -42,6 +42,11 @@ final class PackageFixtures
         return S::sign($xml, $profile)->xml;
     }
 
+    public static function selfBilled(string $signedXml): string
+    {
+        return (string) preg_replace('/(<Dfe\b[^>]*>)/', '$1<SelfBilling><AuthorizationId>granted</AuthorizationId></SelfBilling>', $signedXml, 1);
+    }
+
     public static function id(string $signedXml): string
     {
         $outer = S::document($signedXml)->documentElement;

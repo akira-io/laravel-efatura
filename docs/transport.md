@@ -6,7 +6,7 @@ A prepared archive reaches the e-Fatura platform (PE) through a
 | Operation | Request | Manual v11 |
 | --- | --- | --- |
 | `submit(PackagedArchive $archive): SubmissionResult` | `POST dfe` or `POST event`, by the archive `kind` | §10.2, §10.4 (p.67-71) |
-| `lookupDocument(string $iud): DocumentLookup` | `GET dfe/xml/{IUD}` | §10.3 (p.70) |
+| `lookupDocument(string $iud, bool $selfBilled = false): DocumentLookup` | `GET dfe/xml/{IUD}` | §10.3 (p.70) |
 | `authorizeSelfBilling(SelfBillingAuthorizationRequestData $request): SelfBillingAuthorization` | `POST dfe/self-billing/authorize` | §10.5 (p.71-73) |
 
 The validation and authorization are synchronous (§5.4, p.12): the answer of a
@@ -123,7 +123,15 @@ a client ID and secret cannot obtain a token on their own. `PlatformTransport` a
 a `Contracts\AccessTokenProvider` for a token of the taxpayer concerned: the emitter
 NIF of the IUD for a document, the `EmitterTaxId` of the XML for an event, and the
 configured `efatura.emitter.tax_id` (the buyer) for a self-billing authorization.
-An archive of more than one emitter is refused with `transport.mixed_emitters`.
+A self-billed document names the seller in its IUD, but the buyer is the one who
+issues it and consented to the transmitter, so its submission
+(`PackagedArchive::$selfBilled`) and its lookup (`lookupDocument($iud, selfBilled:
+true)`, or `ReconcileDocumentAction::handle($iud, selfBilled: true)`) also use the
+token of the configured `efatura.emitter.tax_id`; without it they fail with
+`transport.missing_credentials`. The Manual does not say whose token the platform
+expects here; this reading is still to be confirmed with the DNRE. An archive of
+more than one emitter is refused with `transport.mixed_emitters`, except a
+self-billed one, whose token is always the buyer's.
 Scopes per operation: `cv_ef_dfe_create`, `cv_ef_event_create`,
 `cv_ef_dfe_read_iud` and `cv_ef_dfe_self_billing_authorize` (table 22, p.66).
 

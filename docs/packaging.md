@@ -38,6 +38,10 @@ not the emitter). An archive may hold several emitters; sending it directly to
 the platform needs exactly one, because the access token belongs to the
 taxpayer who consented to it.
 
+`selfBilled` is true when every DFE of the archive carries a `SelfBilling` header
+(figure 17): the IUD names the seller, but the platform driver asks for the token
+of the buyer, as the [transport](transport.md#oauth) explains.
+
 ## What is refused
 
 Every failure below is a `PackagingException` whose `context` names the
@@ -53,6 +57,7 @@ position of the offending entry (`entry`) or the limit, never the XML:
 | `package.invalid_identifier` | An `Id` that is not a valid IUD (check digit included) or event ID |
 | `package.mixed_kinds` | DFE and events in the same archive |
 | `package.mixed_repositories` | Identifiers of more than one repository in the same archive |
+| `package.mixed_self_billing` | Self-billed and regular DFE in the same archive |
 | `package.missing_emitter` | An event without a non-empty `EmitterTaxId` |
 | `package.duplicate_entry` | Two entries with the same `Id` |
 | `package.write_failed` | ext-zip could not write the archive in the temporary directory |

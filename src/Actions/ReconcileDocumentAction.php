@@ -12,10 +12,10 @@ final readonly class ReconcileDocumentAction
 {
     public function __construct(private Transport $transport, private ParseIudAction $parseIud) {}
 
-    public function handle(string $iud): Reconciliation
+    public function handle(string $iud, bool $selfBilled = false): Reconciliation
     {
         $this->parseIud->handle($iud);
-        $lookup = $this->transport->lookupDocument($iud);
+        $lookup = $this->transport->lookupDocument($iud, $selfBilled);
 
         return new Reconciliation($iud, $lookup->found ? ReconciliationOutcome::Authorized : ReconciliationOutcome::NotFound, $lookup->xml);
     }

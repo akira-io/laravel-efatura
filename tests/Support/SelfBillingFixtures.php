@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Akira\Efatura\Tests\Support;
 
 use Akira\Efatura\Actions\BuildIudAction;
+use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\IudData;
 use Akira\Efatura\Data\SelfBillingAuthorizationRequestData;
 
 final class SelfBillingFixtures
 {
     public const string SELLER = '200300400';
+
+    public const string BUYER = '100200300';
 
     public const string AUTHORIZATION_ID = '3f2b9c1e-8d4a-4f6b-9a7e-1c2d3e4f5a6b';
 
@@ -25,6 +28,20 @@ final class SelfBillingFixtures
     public static function request(array $overrides = []): SelfBillingAuthorizationRequestData
     {
         return SelfBillingAuthorizationRequestData::from(self::input($overrides));
+    }
+
+    public static function document(): ElectronicInvoiceData
+    {
+        $emitter = DocumentFixtures::payload()['emitter'];
+
+        return PreparationFixtures::invoice(
+            ['serie' => 'AUTOFATURA', 'ledCode' => 1, 'documentNumber' => 42, 'selfBilling' => DocumentPayloads::selfBilling()],
+            [
+                'emission' => null,
+                'emitter'  => [...$emitter, 'taxId' => ['value' => self::SELLER, 'countryCode' => 'CV'], 'name' => 'Seller'],
+                'receiver' => ['taxId' => ['value' => self::BUYER, 'countryCode' => 'CV'], 'name' => 'Buyer'],
+            ],
+        );
     }
 
     public static function iud(array $overrides = []): string

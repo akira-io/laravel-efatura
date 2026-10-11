@@ -20,6 +20,7 @@ final readonly class PackagedArchive
         public array $entries,
         public Environment $repository,
         public array $emitters,
+        public bool $selfBilled = false,
     ) {}
 
     /**

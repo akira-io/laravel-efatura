@@ -14,7 +14,7 @@ interface Transport
 {
     public function submit(PackagedArchive $archive): SubmissionResult;
 
-    public function lookupDocument(string $iud): DocumentLookup;
+    public function lookupDocument(string $iud, bool $selfBilled = false): DocumentLookup;
 
     public function authorizeSelfBilling(SelfBillingAuthorizationRequestData $request): SelfBillingAuthorization;
 }
