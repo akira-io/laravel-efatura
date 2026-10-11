@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 use Akira\Efatura\Actions\BuildDfaDataAction;
 use Akira\Efatura\Contracts\DfaRenderer;
+use Akira\Efatura\Data\ElectronicInvoiceData;
+use Akira\Efatura\Data\LineItemData;
 use Akira\Efatura\Dfa\DompdfOptions;
 use Akira\Efatura\Exceptions\DfaException;
 use Akira\Efatura\Tests\Support\DfaFixtures as D;
+use Akira\Efatura\Tests\Support\DocumentFixtures as F;
+use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Filesystem\Filesystem;
 
@@ -82,4 +86,35 @@ it('reports a cache directory that cannot be created', function (): void {
     } finally {
         new Filesystem()->delete($file);
     }
+});
+
+it('embeds no remote or local file a document points at, and only data URIs', function (): void {
+    $pixel = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', true);
+    new Filesystem()->put($this->cache . '-pixel.png', $pixel);
+    $render = function (string $source): string {
+        $dompdf = new Dompdf(resolve(DompdfOptions::class)->make());
+        $dompdf->loadHtml('<p>x</p><img src="' . $source . '">');
+        $dompdf->render();
+
+        return (string) $dompdf->output();
+    };
+
+    try {
+        expect($render('https://example.invalid/x.png'))->not->toContain('/Subtype /Image')
+            ->and($render('file://' . $this->cache . '-pixel.png'))->not->toContain('/Subtype /Image')
+            ->and($render('file:///etc/passwd'))->not->toContain('/Subtype /Image')
+            ->and($render('data:image/png;base64,' . base64_encode($pixel)))->toContain('/Subtype /Image');
+    } finally {
+        new Filesystem()->delete($this->cache . '-pixel.png');
+    }
+});
+
+it('prints markup inside a document value as text', function (): void {
+    $line     = LineItemData::from(F::linePayload(['item' => ['description' => '<img src="https://example.invalid/x.png"><img src="file:///etc/passwd">', 'emitterIdentification' => 'SKU']]));
+    $document = new ElectronicInvoiceData(...[...get_object_vars(D::off()), 'lines' => [$line]]);
+
+    $pdf = resolve(DfaRenderer::class)->render(resolve(BuildDfaDataAction::class)->handle(D::prepared($document)))->bytes;
+
+    expect($pdf)->toStartWith('%PDF-')
+        ->not->toContain('/Subtype /Image');
 });

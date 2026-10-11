@@ -42,7 +42,7 @@ it('prints the OFF model with the IUC, blank customer lines and neither QR code 
     expect($html)->toContain('EMITIDO EM CONTINGÊNCIA OFF<', 'IUC 2026/15', 'Pendente de Autorização', 'Consulta DFE em <strong>efatura.cv</strong>')
         ->toContain('Descrição', 'Valor Total', 'NIF: ____', 'Nome: ____', 'Endereço: ____', 'Contacto: ____')
         ->toContain('Este documento não confere direito a dedução de imposto')
-        ->not->toContain('Código', 'data:image/svg+xml', '>SKU<', 'Receiver');
+        ->not->toContain('Código', 'data:image/svg+xml', '<img class="qr"', 'qr-cell', '>SKU<', 'Receiver');
 });
 
 it('prints the conversion, the withholding and the rounding only when the document has them', function (): void {

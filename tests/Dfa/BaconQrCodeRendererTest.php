@@ -7,6 +7,12 @@ use Akira\Efatura\Dfa\BaconQrCodeRenderer;
 use Akira\Efatura\Dfa\LibraryRequirement;
 use Akira\Efatura\Exceptions\DfaException;
 use Akira\Efatura\Tests\Support\DfaFixtures as D;
+use BaconQrCode\Common\ErrorCorrectionLevel;
+use BaconQrCode\Encoder\Encoder;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 
 it('draws the QR code as a standalone SVG through the bound renderer', function (): void {
     $renderer = resolve(QrCodeRenderer::class);
@@ -36,4 +42,14 @@ it('fails with a stable code when the QR library is not installed', function ():
             expect($exception->errorCode)->toBe('dfa.renderer_unavailable')
                 ->and($exception->context)->toBe(['package' => 'bacon/bacon-qr-code']);
         });
+});
+
+it('draws the QR code at error correction level M', function (): void {
+    $payload = 'https://pe.efatura.cv/dfe/view/' . D::iud();
+    $draw    = fn (ErrorCorrectionLevel $level): string => new Writer(new ImageRenderer(new RendererStyle(240, 1), new SvgImageBackEnd))
+        ->writeString($payload, Encoder::DEFAULT_BYTE_MODE_ENCODING, $level);
+
+    expect(resolve(QrCodeRenderer::class)->render($payload))->toBe($draw(ErrorCorrectionLevel::M()))
+        ->not->toBe($draw(ErrorCorrectionLevel::L()))
+        ->not->toBe($draw(ErrorCorrectionLevel::Q()));
 });

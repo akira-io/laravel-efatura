@@ -99,6 +99,13 @@ it('builds the OFF DFA with the IUC, without QR code, item codes or customer', f
     'given and recorded alike' => ['2026/15'],
 ]);
 
+it('ignores a given IUC outside the OFF model', function (Closure $source): void {
+    expect(buildDfa($source(), '2026/15')->iuc)->toBeNull();
+})->with([
+    'online'  => [fn (): IssuedDocument => D::issued()],
+    'offline' => [fn (): PreparedDocument => D::prepared(D::offline())],
+]);
+
 it('reads the IUC from the caller when the document carries none', function (): void {
     expect(buildDfa(D::prepared(D::offWithoutIuc()), '2026/42')->iuc)->toBe('2026/42');
 });
@@ -124,9 +131,12 @@ it('refuses a DFA for a document the platform has not authorized', function (Clo
 it('refuses an OFF DFA without a valid and consistent IUC', function (Closure $source, ?string $given, string $errorCode): void {
     expect(dfaFailure(fn (): DfaData => buildDfa($source(), $given))->errorCode)->toBe($errorCode);
 })->with([
-    'missing'        => [fn (): PreparedDocument => D::prepared(D::offWithoutIuc()), null, 'dfa.iuc_required'],
-    'malformed'      => [fn (): PreparedDocument => D::prepared(D::offWithoutIuc()), '15', 'dfa.invalid_iuc'],
-    'another number' => [fn (): PreparedDocument => D::prepared(D::off()), '2026/16', 'dfa.iuc_mismatch'],
+    'missing'          => [fn (): PreparedDocument => D::prepared(D::offWithoutIuc()), null, 'dfa.iuc_required'],
+    'malformed'        => [fn (): PreparedDocument => D::prepared(D::offWithoutIuc()), '15', 'dfa.invalid_iuc'],
+    'three digit year' => [fn (): PreparedDocument => D::prepared(D::offWithoutIuc()), '226/15', 'dfa.invalid_iuc'],
+    'five digit year'  => [fn (): PreparedDocument => D::prepared(D::offWithoutIuc()), '20261/15', 'dfa.invalid_iuc'],
+    'no number'        => [fn (): PreparedDocument => D::prepared(D::offWithoutIuc()), '2026/', 'dfa.invalid_iuc'],
+    'another number'   => [fn (): PreparedDocument => D::prepared(D::off()), '2026/16', 'dfa.iuc_mismatch'],
 ]);
 
 it('refuses a document whose IUD is not official', function (): void {

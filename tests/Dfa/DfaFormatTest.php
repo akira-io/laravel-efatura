@@ -30,6 +30,14 @@ it('writes a unit price with its significant decimals, between two and five', fu
     'negative'       => ['-2.50010', '-2$5001'],
 ]);
 
+it('rounds CVE amounts half up to the cent', function (string $amount, string $expected): void {
+    expect(DfaFormat::cve(Money::of($amount, 'CVE', new CustomContext(5))))->toBe($expected);
+})->with([
+    'half up'  => ['1.005', '1$01'],
+    'below'    => ['1.00499', '1$00'],
+    'negative' => ['-1.005', '-1$01'],
+]);
+
 it('writes foreign amounts with a decimal comma and their currency', function (Money $amount, string $expected): void {
     expect(DfaFormat::foreign($amount))->toBe($expected);
 })->with([
