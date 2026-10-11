@@ -145,9 +145,13 @@ return [
     | Document Storage
     |--------------------------------------------------------------------------
     |
-    | A null disk inherits filesystems.default. The path is a nonempty relative
-    | directory without traversal, used for generated XML, ZIP and responses.
-    | Fiscal documents contain personal data: configure a private host disk.
+    | Where StoreIssuedArtifactsAction keeps the artifacts of an authorized
+    | document: the signed XML, the ZIP sent, the response evidence and the
+    | DFA PDF. Nothing is stored unless the application calls that action.
+    | Files land in {path}/{repository}/{NIF}/{YYYY}/{MM}/{IUD}/. A null disk
+    | inherits filesystems.default. The path is a nonempty relative directory
+    | without traversal. Fiscal documents contain personal data: configure a
+    | private disk; one whose visibility is public is refused.
     |
     */
     'storage' => [
