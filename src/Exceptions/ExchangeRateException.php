@@ -12,16 +12,16 @@ final class ExchangeRateException extends EfaturaException
     /**
      * @param array<string, int|string> $context
      */
-    private function __construct(public readonly ExchangeRateFailure $failure, array $context, ?Throwable $previous)
+    private function __construct(public readonly ExchangeRateFailure $failure, array $context, ?Throwable $previous, bool $retryable)
     {
-        parent::__construct($failure->value, $failure->value, context: $context, previous: $previous, retryable: $failure->retryable());
+        parent::__construct($failure->value, $failure->value, context: $context, previous: $previous, retryable: $retryable || $failure->retryable());
     }
 
     /**
      * @param array<string, int|string> $context
      */
-    public static function because(ExchangeRateFailure $failure, array $context = [], ?Throwable $previous = null): self
+    public static function because(ExchangeRateFailure $failure, array $context = [], ?Throwable $previous = null, bool $retryable = false): self
     {
-        return new self($failure, $context, $previous);
+        return new self($failure, $context, $previous, $retryable);
     }
 }

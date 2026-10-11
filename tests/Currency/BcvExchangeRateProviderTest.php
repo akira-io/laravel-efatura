@@ -157,3 +157,23 @@ it('accepts an earlier publication within the configured age and refuses an olde
     'within the age' => [3, null],
     'too old'        => [2, ExchangeRateFailure::Stale],
 ]);
+
+it('reports the publication of the requested day as not yet available and retryable', function (): void {
+    bcvServes(C::fixture('bcv-rates-2026-07-21.html'));
+
+    $exception = C::exception(fn (): ExchangeRateQuote => C::bcv()->rate(C::request(effectiveAt: '2026-07-22T09:00:00Z')));
+
+    expect($exception->failure)->toBe(ExchangeRateFailure::DateUnavailable)
+        ->and($exception->errorCode)->toBe('exchange_rate.date_unavailable')
+        ->and($exception->retryable)->toBeTrue()
+        ->and($exception->context)->toBe(['source' => 'bcv']);
+});
+
+it('keeps a stale or future publication final', function (string $effectiveAt, int $days): void {
+    bcvServes(C::fixture('bcv-rates-2026-07-21.html'));
+
+    expect(C::exception(fn (): ExchangeRateQuote => C::bcv(['maxPublicationAgeDays' => $days])->rate(C::request(effectiveAt: $effectiveAt)))->retryable)->toBeFalse();
+})->with([
+    'stale'  => ['2026-07-24T12:00:00Z', 2],
+    'future' => ['2026-07-20T12:00:00Z', 0],
+]);
