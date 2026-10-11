@@ -10,7 +10,7 @@ use Akira\Efatura\Events\EventAuthorized;
 use Akira\Efatura\Events\EventPrepared;
 use Akira\Efatura\Events\EventRejected;
 use Akira\Efatura\Events\EventSubmissionFailed;
-use Akira\Efatura\Exceptions\TransportException;
+use Akira\Efatura\Exceptions\EfaturaException;
 use Akira\Efatura\Issuance\IssuanceAnnouncer;
 use Akira\Efatura\Issuance\IssuedEvent;
 
@@ -29,10 +29,10 @@ final readonly class IssueEventAction
 
         try {
             $issued = $this->submitEvent->handle($prepared);
-        } catch (TransportException $transportException) {
-            $this->announcer->afterSubmission(new EventSubmissionFailed($prepared, $transportException->failure, $transportException->retryable));
+        } catch (EfaturaException $efaturaException) {
+            $this->announcer->afterSubmission(EventSubmissionFailed::because($prepared, $efaturaException));
 
-            throw $transportException;
+            throw $efaturaException;
         }
 
         $this->announcer->afterSubmission(

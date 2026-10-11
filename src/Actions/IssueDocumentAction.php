@@ -10,7 +10,7 @@ use Akira\Efatura\Events\DocumentAuthorized;
 use Akira\Efatura\Events\DocumentPrepared;
 use Akira\Efatura\Events\DocumentRejected;
 use Akira\Efatura\Events\DocumentSubmissionFailed;
-use Akira\Efatura\Exceptions\TransportException;
+use Akira\Efatura\Exceptions\EfaturaException;
 use Akira\Efatura\Issuance\IssuanceAnnouncer;
 use Akira\Efatura\Issuance\IssuedDocument;
 
@@ -33,10 +33,10 @@ final readonly class IssueDocumentAction
 
         try {
             $issued = $this->submitDocument->handle($prepared);
-        } catch (TransportException $transportException) {
-            $this->announcer->afterSubmission(new DocumentSubmissionFailed($prepared, $transportException->failure, $transportException->retryable));
+        } catch (EfaturaException $efaturaException) {
+            $this->announcer->afterSubmission(DocumentSubmissionFailed::because($prepared, $efaturaException));
 
-            throw $transportException;
+            throw $efaturaException;
         }
 
         $this->announcer->afterSubmission(

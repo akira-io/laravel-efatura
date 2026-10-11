@@ -27,11 +27,11 @@ it('keeps every secret out of the issuance events', function (): void {
         new DocumentPrepared($document),
         new DocumentAuthorized($document, $result),
         new DocumentRejected($document, $result),
-        new DocumentSubmissionFailed($document, TransportFailure::OutcomeUnknown, false),
+        new DocumentSubmissionFailed($document, TransportFailure::OutcomeUnknown->value, false, true),
         new EventPrepared($event),
         new EventAuthorized($event, $result),
         new EventRejected($event, $result),
-        new EventSubmissionFailed($event, TransportFailure::ConnectionFailed, true),
+        new EventSubmissionFailed($event, TransportFailure::ConnectionFailed->value, true, false),
     ];
     $exposed = collect($events)->map(fn (object $announced): string => json_encode($announced, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE) . serialize($announced))->implode('');
 

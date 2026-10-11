@@ -23,4 +23,9 @@ enum TransportFailure: string
     {
         return \in_array($this, [self::ConnectionFailed, self::RateLimited], true);
     }
+
+    public function mayHaveBeenProcessed(): bool
+    {
+        return \in_array($this, [self::OutcomeUnknown, self::UnexpectedResponse, self::ResponseTooLarge], true);
+    }
 }

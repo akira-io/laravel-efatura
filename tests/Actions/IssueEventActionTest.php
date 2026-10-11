@@ -68,6 +68,25 @@ it('sends nothing when a listener of the prepared event fails', function (): voi
     })->and($this->fake->submitted())->toBe([]);
 });
 
+it('announces a failure before the event left as never processed', function (): void {
+    Event::fake([EventSubmissionFailed::class]);
+    P::configure(config: ['efatura.transmitter.middleware_key' => null]);
+
+    expect(fn (): IssuedEvent => resolve(IssueEventAction::class)->handle(P::event()))->toThrow(TransportException::class, 'transport.missing_credentials');
+    Event::assertDispatched(
+        EventSubmissionFailed::class,
+        fn (EventSubmissionFailed $event): bool => $event->errorCode === 'transport.missing_credentials' && ! $event->retryable && ! $event->mayHaveBeenProcessed,
+    );
+});
+
+it('announces an unknown outcome of the event as possibly processed', function (): void {
+    Event::fake([EventSubmissionFailed::class]);
+    app()->instance(Transport::class, $this->fake->fail($this->eventId, TransportFailure::OutcomeUnknown));
+
+    expect(fn (): IssuedEvent => resolve(IssueEventAction::class)->handle(P::event()))->toThrow(TransportException::class, 'transport.outcome_unknown');
+    Event::assertDispatched(EventSubmissionFailed::class, fn (EventSubmissionFailed $event): bool => $event->mayHaveBeenProcessed && ! $event->retryable);
+});
+
 it('announces a delivery failure of the event and lets it through', function (): void {
     Event::fake([EventSubmissionFailed::class]);
     app()->instance(Transport::class, $this->fake->fail($this->eventId, TransportFailure::ConnectionFailed));
@@ -75,6 +94,9 @@ it('announces a delivery failure of the event and lets it through', function ():
     expect(fn (): IssuedEvent => resolve(IssueEventAction::class)->handle(P::event()))->toThrow(TransportException::class, 'transport.connection_failed');
     Event::assertDispatched(
         EventSubmissionFailed::class,
-        fn (EventSubmissionFailed $event): bool => $event->failure === TransportFailure::ConnectionFailed && $event->retryable && $event->prepared->eventId === $this->eventId,
+        fn (EventSubmissionFailed $event): bool => $event->errorCode === 'transport.connection_failed'
+            && $event->retryable
+            && ! $event->mayHaveBeenProcessed
+            && $event->prepared->eventId === $this->eventId,
     );
 });

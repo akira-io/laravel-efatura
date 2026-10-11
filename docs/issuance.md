@@ -33,9 +33,14 @@ must not wait; the package ships no job of its own yet.
 3. `SubmitPreparedDocumentAction` (or `SubmitPreparedEventAction`) sends the
    prepared archive through the configured [transport](transport.md).
 4. The answer dispatches `DocumentAuthorized` or `DocumentRejected` (`EventAuthorized`
-   or `EventRejected`) with the `EntryResult`. A `TransportException` dispatches
-   `DocumentSubmissionFailed` (`EventSubmissionFailed`) with the failure and
-   whether it is retryable, then propagates. From here on a listener exception is
+   or `EventRejected`) with the `EntryResult`. Any package exception on the way
+   (a `TransportException`, an `OAuthException` while obtaining the platform token,
+   a missing credential) dispatches `DocumentSubmissionFailed`
+   (`EventSubmissionFailed`) with its `errorCode`, `retryable` and
+   `mayHaveBeenProcessed`, then propagates. `mayHaveBeenProcessed` is true only for
+   `transport.outcome_unknown`, `transport.unexpected_response` and
+   `transport.response_too_large`: reconcile those. Every other failure, including
+   every `oauth.*` code, happened before the document reached the PE. From here on a listener exception is
    handed to the `ExceptionHandler::report()` of the application and the result is
    still returned: a listener can never undo an authorization the platform granted.
 
@@ -50,7 +55,7 @@ result or the failure code; none carries a credential.
 | Rejected | The PE validated and refused it; it stored nothing (only authorized documents occupy ID-UK1/ID-UK2, p.33) | Correct the document and prepare it again with the same number and IUD (`handle($fixed, iud: $issued->prepared->iud)`), or close the number with an UDN event when the document is abandoned |
 | `transport.connection_failed` | The request never left (DNS, refused, connect timeout, TLS handshake) | Resend the same `PreparedDocument` with `SubmitPreparedDocumentAction` |
 | `transport.rate_limited` | 429 | Resend the same `PreparedDocument` later |
-| `transport.unauthorized`, `transport.http_error`, `transport.payload_too_large`, `transport.missing_credentials` | Refused before processing, or a configuration problem | Fix the credentials or the configuration, then resend the same `PreparedDocument` |
+| `transport.unauthorized`, `transport.http_error`, `transport.payload_too_large`, `transport.missing_credentials`, any `oauth.*` code | Refused before processing, or a configuration problem | Fix the credentials or the configuration, then resend the same `PreparedDocument` |
 | `transport.outcome_unknown`, `transport.unexpected_response`, `transport.response_too_large` | The request may have been processed | Reconcile before anything else |
 
 Never prepare a document again with a new number after a failure: the number and
