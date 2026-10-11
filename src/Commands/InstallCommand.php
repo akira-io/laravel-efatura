@@ -24,6 +24,8 @@ final class InstallCommand extends Command
 {
     public const string SEQUENCE_MIGRATION = 'create_efatura_sequences_table';
 
+    private const array DFA_PACKAGES = ['dompdf/dompdf', 'bacon/bacon-qr-code'];
+
     public function handle(Filesystem $filesystem): int
     {
         $this->publishConfig($filesystem);
@@ -126,23 +128,14 @@ final class InstallCommand extends Command
 
     private function notifyOptionalPackages(Filesystem $filesystem): void
     {
-        $missing = [];
+        $missing = collect(self::DFA_PACKAGES)
+            ->reject(static fn (string $package): bool => $filesystem->isDirectory(base_path('vendor/' . $package)));
 
-        if (! $filesystem->isDirectory(base_path('vendor/akira/laravel-pdf-invoice'))) {
-            $missing[] = 'akira/laravel-pdf-invoice';
-        }
-
-        if (! $filesystem->isDirectory(base_path('vendor/akira/laravel-qrcode'))) {
-            $missing[] = 'akira/laravel-qrcode';
-        }
-
-        if ($missing === []) {
+        if ($missing->isEmpty()) {
             return;
         }
 
-        $packages = Arr::join($missing, ', ');
-
-        info(__('efatura::efatura.install.optional_packages_notice', ['packages' => $packages]));
+        info(__('efatura::efatura.install.optional_packages_notice', ['packages' => $missing->implode(', ')]));
     }
 
     private function environmentVariableExists(string $contents, string $key): bool

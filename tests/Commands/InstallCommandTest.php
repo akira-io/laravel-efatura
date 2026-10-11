@@ -40,14 +40,14 @@ it('runs without interaction when all variables exist', function (): void {
 
     $this->files->put($envPath, $this->fixture->envContent($this->fixture->envDefaults()));
     $this->files->put(config_path('efatura.php'), '');
-    $this->files->ensureDirectoryExists(base_path('vendor/akira/laravel-pdf-invoice'));
-    $this->files->ensureDirectoryExists(base_path('vendor/akira/laravel-qrcode'));
+    $this->files->ensureDirectoryExists(base_path('vendor/dompdf/dompdf'));
+    $this->files->ensureDirectoryExists(base_path('vendor/bacon/bacon-qr-code'));
 
     artisan('efatura:install')
         ->expectsOutputToContain('Config file already exists. Skipped publishing.')
         ->expectsOutputToContain('akira/efatura installation complete.')
         ->doesntExpectOutputToContain('Add EFATURA_TRANSMITTER_TAX_ID to .env?')
-        ->doesntExpectOutputToContain('Optional PDF/QR packages not detected')
+        ->doesntExpectOutputToContain('Optional DFA packages not detected')
         ->assertExitCode(0);
 
     expect($this->files->get($envPath))->toBe($this->fixture->envContent($this->fixture->envDefaults()));
@@ -125,23 +125,31 @@ it('handles missing env file', function (): void {
         ->assertExitCode(0);
 });
 
-it('notifies when optional packages are missing', function (): void {
+it('names the DFA packages that are missing', function (array $installed, string $missing): void {
     $this->files->put(base_path('.env'), $this->fixture->envContent($this->fixture->envDefaults()));
     $this->files->put(config_path('efatura.php'), '');
 
+    foreach ($installed as $package) {
+        $this->files->ensureDirectoryExists(base_path('vendor/' . $package));
+    }
+
     artisan('efatura:install')
-        ->expectsOutputToContain('Optional PDF/QR packages not detected: akira/laravel-pdf-invoice, akira/laravel-qrcode. PDF and QR generation are optional.')
+        ->expectsOutputToContain('Optional DFA packages not detected: ' . $missing . '. Install them to render the Documento Fiscal Auxiliar as a PDF with its QR code.')
         ->assertExitCode(0);
-});
+})->with([
+    'both missing'       => [[], 'dompdf/dompdf, bacon/bacon-qr-code'],
+    'dompdf missing'     => [['bacon/bacon-qr-code'], 'dompdf/dompdf'],
+    'qr library missing' => [['dompdf/dompdf'], 'bacon/bacon-qr-code'],
+]);
 
 it('does not notify when optional packages are present', function (): void {
     $this->files->put(base_path('.env'), $this->fixture->envContent($this->fixture->envDefaults()));
     $this->files->put(config_path('efatura.php'), '');
-    $this->files->ensureDirectoryExists(base_path('vendor/akira/laravel-pdf-invoice'));
-    $this->files->ensureDirectoryExists(base_path('vendor/akira/laravel-qrcode'));
+    $this->files->ensureDirectoryExists(base_path('vendor/dompdf/dompdf'));
+    $this->files->ensureDirectoryExists(base_path('vendor/bacon/bacon-qr-code'));
 
     artisan('efatura:install')
-        ->doesntExpectOutputToContain('Optional PDF/QR packages not detected')
+        ->doesntExpectOutputToContain('Optional DFA packages not detected')
         ->assertExitCode(0);
 });
 

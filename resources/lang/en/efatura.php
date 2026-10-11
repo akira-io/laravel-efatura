@@ -42,6 +42,6 @@ return [
         'env_add_confirm'          => 'Add :key to .env?',
         'env_skipped'              => 'Skipped :key.',
         'env_added'                => 'Added :key to .env.',
-        'optional_packages_notice' => 'Optional PDF/QR packages not detected: :packages. PDF and QR generation are optional. The recommended packages work out of the box when installed with akira/efatura.',
+        'optional_packages_notice' => 'Optional DFA packages not detected: :packages. Install them to render the Documento Fiscal Auxiliar as a PDF with its QR code.',
     ],
 ];
