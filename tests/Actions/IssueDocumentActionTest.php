@@ -21,6 +21,7 @@ use Akira\Efatura\OAuth\RefreshTokenAccessTokenProvider;
 use Akira\Efatura\Sequence\DatabaseSequenceStore;
 use Akira\Efatura\Testing\FakeTransport;
 use Akira\Efatura\Tests\Support\InMemoryRefreshTokens;
+use Akira\Efatura\Tests\Support\OAuthFixtures as O;
 use Akira\Efatura\Tests\Support\PreparationFixtures as P;
 use Akira\Efatura\Tests\Support\SequenceFixtures;
 use Akira\Efatura\Tests\Support\TransportFixtures as T;
@@ -132,6 +133,32 @@ it('announces a token failure of the platform driver as a submission that was ne
             && $event->prepared->iud === $this->iud,
     );
     Http::assertNothingSent();
+});
+
+it('announces an unreachable token endpoint as a retryable submission that was never processed', function (): void {
+    Event::fake([DocumentSubmissionFailed::class]);
+    $invoice = P::invoice();
+    P::configure(config: [
+        'efatura.driver'                          => 'platform',
+        'efatura.transmitter.oauth.client_id'     => 'transmitter-client',
+        'efatura.transmitter.oauth.client_secret' => 'client-secret',
+        'efatura.http.retry_delay_milliseconds'   => 0,
+        'app.key'                                 => 'base64:' . base64_encode(random_bytes(32)),
+    ]);
+    app()->instance(AccessTokenProvider::class, resolve(RefreshTokenAccessTokenProvider::class, [
+        'refreshTokens' => new InMemoryRefreshTokens([$invoice->emitter->taxId->value => 'stored-refresh']),
+    ]));
+    Http::fake([
+        O::DISCOVERY_URL => O::discovery(),
+        O::TOKEN_URL     => fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest())),
+    ]);
+
+    expect(fn (): IssuedDocument => resolve(IssueDocumentAction::class)->handle($invoice))
+        ->toThrow(fn (OAuthException $exception): mixed => expect($exception->errorCode)->toBe('oauth.token_unavailable')->and($exception->retryable)->toBeTrue());
+    Event::assertDispatched(
+        DocumentSubmissionFailed::class,
+        fn (DocumentSubmissionFailed $event): bool => $event->errorCode === 'oauth.token_unavailable' && $event->retryable && ! $event->mayHaveBeenProcessed,
+    );
 });
 
 it('announces a document that never left as retryable and never processed', function (): void {

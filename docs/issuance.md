@@ -55,7 +55,8 @@ result or the failure code; none carries a credential.
 | Rejected | The PE validated and refused it; it stored nothing (only authorized documents occupy ID-UK1/ID-UK2, p.33) | Correct the document and prepare it again with the same number and IUD (`handle($fixed, iud: $issued->prepared->iud)`), or close the number with an UDN event when the document is abandoned |
 | `transport.connection_failed` | The request never left (DNS, refused, connect timeout, TLS handshake) | Resend the same `PreparedDocument` with `SubmitPreparedDocumentAction` |
 | `transport.rate_limited` | 429 | Resend the same `PreparedDocument` later |
-| `transport.unauthorized`, `transport.http_error`, `transport.payload_too_large`, `transport.missing_credentials`, `transport.repository_mismatch`, `transport.mixed_emitters`, any `oauth.*` code | Refused before processing, or a configuration problem | Fix the credentials or the configuration, then resend the same `PreparedDocument` |
+| `oauth.token_unavailable` | The token endpoint was down or did not answer, or another renewal held the lock; nothing was sent (`retryable` true) | Resend the same `PreparedDocument` later |
+| `transport.unauthorized`, `transport.http_error`, `transport.payload_too_large`, `transport.missing_credentials`, `transport.repository_mismatch`, `transport.mixed_emitters`, any other `oauth.*` code | Refused before processing, or a configuration problem | Fix the credentials or the configuration, then resend the same `PreparedDocument` |
 | `transport.outcome_unknown`, `transport.unexpected_response`, `transport.response_too_large` | The request may have been processed | Reconcile before anything else |
 
 Never prepare a document again with a new number after a failure: the number and

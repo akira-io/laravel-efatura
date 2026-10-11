@@ -184,7 +184,7 @@ the previous one. A token lost there makes the next renewal fail with
 | `oauth.discovery_failed` | The OpenID configuration could not be read, or names a token endpoint outside the issuer |
 | `oauth.refresh_token_missing` | The repository holds no refresh token for the NIF; nothing is sent |
 | `oauth.token_refused` | The token endpoint answered 400 or 401 (`invalid_grant`, revoked consent, wrong client) |
-| `oauth.token_unavailable` | The token endpoint could not be reached or did not answer, or another renewal of the same NIF held the lock for longer than the platform timeouts. The document never left; if the issuer did answer, the refresh token may have rotated without reaching `replace()` |
+| `oauth.token_unavailable` | The token endpoint could not be reached or did not answer, or another renewal of the same NIF held the lock for longer than the platform timeouts. The document never left and `retryable` is true; if the issuer did answer, the refresh token may have rotated without reaching `replace()` |
 | `oauth.unexpected_response` | Any other answer of the token endpoint, or a grant whose tokens or expiry are invalid |
 
 `context` holds only `emitter` and `status`. Every OAuth failure happens before the

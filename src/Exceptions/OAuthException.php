@@ -9,9 +9,9 @@ final class OAuthException extends EfaturaException
     /**
      * @param array<string, int|string> $context
      */
-    private function __construct(string $errorCode, array $context)
+    private function __construct(string $errorCode, array $context, bool $retryable = false)
     {
-        parent::__construct($errorCode, $errorCode, context: $context);
+        parent::__construct($errorCode, $errorCode, context: $context, retryable: $retryable);
     }
 
     public static function refreshTokenMissing(string $emitterTaxId): self
@@ -26,7 +26,7 @@ final class OAuthException extends EfaturaException
 
     public static function tokenUnavailable(string $emitterTaxId): self
     {
-        return new self('oauth.token_unavailable', ['emitter' => $emitterTaxId]);
+        return new self('oauth.token_unavailable', ['emitter' => $emitterTaxId], retryable: true);
     }
 
     public static function unexpectedResponse(string $emitterTaxId, int $status): self
