@@ -58,3 +58,19 @@ it('stops keeping a response body past the response limit', function (): void {
         $server->stop();
     }
 });
+
+it('keeps the response limit when the application sets its own sink', function (): void {
+    $sink = tempnam(sys_get_temp_dir(), 'efatura-sink');
+    Http::globalOptions(['sink' => $sink]);
+    $server = LoopbackServer::start('oversized');
+
+    try {
+        $response = $this->exchange->post($server->config(timeoutSeconds: 15), T::archive(), []);
+
+        expect($response->toPsrResponse()->getBody()->getSize())->toBeLessThanOrEqual(5 * 1024 * 1024 + 1)
+            ->and(filesize($sink))->toBe(0);
+    } finally {
+        $server->stop();
+        unlink($sink);
+    }
+});

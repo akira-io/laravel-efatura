@@ -18,6 +18,6 @@ final readonly class BoundedCurlHandler
      */
     public function __invoke(#[SensitiveParameter] RequestInterface $request, #[SensitiveParameter] array $options): PromiseInterface
     {
-        return ($this->curl)($request, ['sink' => new BoundedSink] + $options);
+        return ($this->curl)($request, array_replace($options, ['sink' => new BoundedSink]));
     }
 }
