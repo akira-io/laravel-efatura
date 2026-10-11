@@ -158,16 +158,22 @@ it('accepts an earlier publication within the configured age and refuses an olde
     'too old'        => [2, ExchangeRateFailure::Stale],
 ]);
 
-it('reports the publication of the requested day as not yet available and retryable', function (): void {
+it('retries a missing publication only while the requested day is today in Cabo Verde', function (string $now, bool $retryable): void {
+    CarbonImmutable::setTestNow($now);
     bcvServes(C::fixture('bcv-rates-2026-07-21.html'));
 
     $exception = C::exception(fn (): ExchangeRateQuote => C::bcv()->rate(C::request(effectiveAt: '2026-07-22T09:00:00Z')));
 
     expect($exception->failure)->toBe(ExchangeRateFailure::DateUnavailable)
         ->and($exception->errorCode)->toBe('exchange_rate.date_unavailable')
-        ->and($exception->retryable)->toBeTrue()
+        ->and($exception->retryable)->toBe($retryable)
         ->and($exception->context)->toBe(['source' => 'bcv']);
-});
+})->with([
+    'the requested day is today'    => ['2026-07-22T10:00:00Z', true],
+    'today ends at the CV midnight' => ['2026-07-23T00:59:59Z', true],
+    'the requested day has passed'  => ['2026-07-23T01:00:00Z', false],
+    'the requested day is days ago' => ['2026-07-25T12:00:00Z', false],
+]);
 
 it('keeps a stale or future publication final', function (string $effectiveAt, int $days): void {
     bcvServes(C::fixture('bcv-rates-2026-07-21.html'));

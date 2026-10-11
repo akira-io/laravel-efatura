@@ -84,7 +84,9 @@ final readonly class BcvExchangeRateProvider implements ExchangeRateProvider
         }
 
         if ($publishedOn->isBefore($requestedDay) && $this->maxPublicationAgeDays === 0) {
-            throw ExchangeRateException::because(ExchangeRateFailure::DateUnavailable, ['source' => 'bcv'], retryable: true);
+            $today = Fiscal::local(CarbonImmutable::instance($this->clock->now()))->startOfDay();
+
+            throw ExchangeRateException::because(ExchangeRateFailure::DateUnavailable, ['source' => 'bcv'], retryable: $requestedDay->equalTo($today));
         }
 
         if ($publishedOn->addDays($this->maxPublicationAgeDays)->isBefore($requestedDay)) {

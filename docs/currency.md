@@ -77,8 +77,9 @@ are ignored. A page in another encoding must say so in a `meta charset`.
 Only the publication of the same Cabo Verde calendar day as the request is
 accepted. While the page still shows an earlier day (the BCV has not published
 today's table yet) and `max_publication_age_days` is zero, the failure is
-`exchange_rate.date_unavailable` marked retryable, with the context source `bcv`:
-asking again later can succeed. On days the BCV does not publish (weekends and
+`exchange_rate.date_unavailable` with the context source `bcv`. It is retryable
+only while the requested day is still today in Cabo Verde, by the injected clock:
+asking again later that day can succeed. For a day already past it is final. On days the BCV does not publish (weekends and
 holidays) it keeps failing until `max_publication_age_days` allows the last
 publication. With `max_publication_age_days` above zero, an earlier publication up to
 that many days old is accepted, and an older one fails with `exchange_rate.stale`.
@@ -253,7 +254,7 @@ messages your callback throws.
 | `exchange_rate.currency_unsupported` | no | A currency outside the official catalog, not published by the BCV, not mapped for the World Bank or absent from the fixed rates |
 | `exchange_rate.pair_mismatch` | no | A quote for another pair or rate type, a BCV request for another target or a type other than buy and sell, a World Bank request for a type other than reference |
 | `exchange_rate.rate_invalid` | no | A rate or unit count that is not a positive decimal, or a rate that rounds to zero |
-| `exchange_rate.date_unavailable` | only for the BCV case | The BCV page still shows an earlier day with `max_publication_age_days` at zero (retryable), no observation for the year, or a quote dated after the request |
+| `exchange_rate.date_unavailable` | only for the BCV case | The BCV page still shows an earlier day with `max_publication_age_days` at zero (retryable only while the requested day is today in Cabo Verde), no observation for the year, or a quote dated after the request |
 | `exchange_rate.date_invalid` | no | A BCV publication dated after the requested day |
 | `exchange_rate.stale` | no | A BCV publication older than `max_publication_age_days` |
 | `exchange_rate.source_required` | no | A source URL that is not HTTPS on the expected host, or that carries credentials or a fragment |
