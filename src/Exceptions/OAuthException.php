@@ -24,6 +24,11 @@ final class OAuthException extends EfaturaException
         return new self('oauth.token_refused', ['emitter' => $emitterTaxId, 'status' => $status]);
     }
 
+    public static function tokenUnavailable(string $emitterTaxId): self
+    {
+        return new self('oauth.token_unavailable', ['emitter' => $emitterTaxId]);
+    }
+
     public static function unexpectedResponse(string $emitterTaxId, int $status): self
     {
         return new self('oauth.unexpected_response', ['emitter' => $emitterTaxId, 'status' => $status]);

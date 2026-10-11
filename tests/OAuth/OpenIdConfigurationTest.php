@@ -12,6 +12,7 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
@@ -72,4 +73,17 @@ it('fails closed on a discovery document it cannot use', function (Closure $resp
     'a numeric endpoint'  => [fn (): PromiseInterface => Http::response(['token_endpoint' => 42]), ['status' => 200]],
     'too large'           => [fn (): PromiseInterface => Http::response(str_repeat(' ', Fiscal::MAX_RESPONSE_BYTES + 1)), ['status' => 200]],
     'refused connections' => [fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest())), []],
+]);
+
+it('discovers again when the cached token endpoint is outside the issuer', function (mixed $poisoned): void {
+    $key = 'efatura:oauth:discovery:' . hash('sha256', O::ISSUER);
+    Cache::store('array')->put($key, $poisoned, 3600);
+    Http::fake([O::DISCOVERY_URL => O::discovery()]);
+
+    expect(resolve(OpenIdConfiguration::class)->tokenEndpoint())->toBe(O::TOKEN_URL)
+        ->and(Cache::store('array')->get($key))->toBe(O::TOKEN_URL);
+    Http::assertSentCount(1);
+})->with([
+    'another host' => ['https://attacker.example.test/token'],
+    'not a string' => [['https://attacker.example.test/token']],
 ]);

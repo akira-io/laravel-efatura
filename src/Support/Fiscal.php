@@ -41,6 +41,8 @@ final class Fiscal
 
     public const int MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 
+    public const int MAX_JSON_DEPTH = 16;
+
     public const int TRANSMITTER_KEY_LENGTH = 64;
 
     public const string REPOSITORY_HEADER = 'cv-ef-repository-code';

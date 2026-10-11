@@ -7,6 +7,7 @@ namespace Akira\Efatura\OAuth;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Exceptions\OAuthException;
 use Akira\Efatura\Exceptions\TransportException;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Transport\BoundedBody;
 use Akira\Efatura\Transport\ReadRetries;
 use Akira\Efatura\Transport\TransportRequests;
@@ -25,8 +26,6 @@ final readonly class OpenIdConfiguration
 {
     private const int CACHE_SECONDS = 86_400;
 
-    private const int JSON_DEPTH = 16;
-
     public function __construct(
         private TransportRequests $requests,
         private ReadRetries $retries,
@@ -39,8 +38,16 @@ final readonly class OpenIdConfiguration
     {
         $issuer = $this->config->transmitter->oauth->issuerUrl;
         $key    = $this->config->cache->prefix . ':oauth:discovery:' . hash('sha256', $issuer);
+        $store  = $this->caches->store($this->config->cache->store);
+        $cached = $store->get($key);
+        if (self::sameOrigin($cached, $issuer)) {
+            return $cached;
+        }
 
-        return $this->caches->store($this->config->cache->store)->remember($key, self::CACHE_SECONDS, fn (): string => $this->discover($issuer));
+        $endpoint = $this->discover($issuer);
+        $store->put($key, $endpoint, self::CACHE_SECONDS);
+
+        return $endpoint;
     }
 
     private function discover(string $issuer): string
@@ -55,7 +62,7 @@ final readonly class OpenIdConfiguration
         }
 
         $endpoint = $this->document($response)['token_endpoint'] ?? null;
-        throw_unless(\is_string($endpoint) && self::sameOrigin($endpoint, $issuer), OAuthException::discoveryFailed($response->status()));
+        throw_unless(self::sameOrigin($endpoint, $issuer), OAuthException::discoveryFailed($response->status()));
 
         return $endpoint;
     }
@@ -68,7 +75,7 @@ final readonly class OpenIdConfiguration
         throw_unless($response->status() === 200, OAuthException::discoveryFailed($response->status()));
 
         try {
-            $document = json_decode($this->body->read($response, 'oauth'), true, self::JSON_DEPTH, JSON_THROW_ON_ERROR);
+            $document = json_decode($this->body->read($response, 'oauth'), true, Fiscal::MAX_JSON_DEPTH, JSON_THROW_ON_ERROR);
         } catch (JsonException|TransportException) {
             throw OAuthException::discoveryFailed($response->status());
         }
@@ -76,9 +83,12 @@ final readonly class OpenIdConfiguration
         return \is_array($document) ? $document : [];
     }
 
-    private static function sameOrigin(string $endpoint, string $issuer): bool
+    /**
+     * @phpstan-assert-if-true string $endpoint
+     */
+    private static function sameOrigin(mixed $endpoint, string $issuer): bool
     {
-        $parts = parse_url($endpoint);
+        $parts = \is_string($endpoint) ? parse_url($endpoint) : false;
 
         return \is_array($parts)
             && ($parts['scheme'] ?? null) === 'https'

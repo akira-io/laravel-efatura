@@ -10,6 +10,7 @@ use Akira\Efatura\Data\SelfBillingAuthorizationRequestData;
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\TransportFailure;
 use Akira\Efatura\Exceptions\TransportException;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Support\FiscalRules;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -20,8 +21,6 @@ use const JSON_THROW_ON_ERROR;
 
 final readonly class SelfBillingResponseParser
 {
-    private const int MAX_DEPTH = 8;
-
     private const array MESSAGE_FIELDS = ['source', 'type', 'dateTime', 'code', 'description', 'location'];
 
     public function __construct(private ParseIudAction $parseIud) {}
@@ -49,7 +48,7 @@ final readonly class SelfBillingResponseParser
     private static function decode(string $body): ?array
     {
         try {
-            $decoded = json_decode($body, true, self::MAX_DEPTH, JSON_THROW_ON_ERROR);
+            $decoded = json_decode($body, true, Fiscal::MAX_JSON_DEPTH, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return null;
         }

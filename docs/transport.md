@@ -138,13 +138,35 @@ The repository stores the refresh token each taxpayer granted with
 `offline_access` (p.67) and receives the rotated one through `replace()`. The
 package never stores refresh tokens. The provider reads the token endpoint from
 `{issuer_url}/.well-known/openid-configuration` (cached for a day, HTTPS on the
-issuer host only), posts `grant_type=refresh_token` with the transmitter client
-credentials, and caches the access token encrypted with the application key in
-`efatura.cache.store`, under a key hashed from client, NIF and scopes, for
-`expires_in` minus 60 seconds. A store that supports locks serializes concurrent
-renewals. Without a repository, the platform driver fails with
-`transport.missing_credentials` on `efatura.transmitter.oauth`. The redirect flow
-that obtains the first refresh token belongs to a later release.
+issuer host only, checked again every time it is read from the cache), posts
+`grant_type=refresh_token` with the transmitter client credentials, and caches the
+access token encrypted with the application key in `efatura.cache.store`, under a
+key hashed from client, NIF and scopes, for `expires_in` minus 60 seconds.
+
+A taxpayer has one refresh token whatever the scopes, so a store that supports
+locks serializes every renewal of the same client and NIF; the refresh token and
+the cache are read again inside the lock. A rotated refresh token is handed to
+`replace()` as soon as it is read, before the rest of the grant is checked. The
+access and refresh tokens must follow the `b64token` syntax of RFC 6750. Without a
+repository, the platform driver fails with `transport.missing_credentials` on
+`efatura.transmitter.oauth`. The redirect flow that obtains the first refresh token
+belongs to a later release.
+
+`RefreshTokenRepository` must be durable and transactional: `replace()` returns only
+once the new token is stored for good, because the issuer has already invalidated
+the previous one. A token lost there makes the next renewal fail with
+`oauth.token_refused` until the taxpayer grants access again.
+
+| `OAuthException::$errorCode` | Cause |
+| --- | --- |
+| `oauth.discovery_failed` | The OpenID configuration could not be read, or names a token endpoint outside the issuer |
+| `oauth.refresh_token_missing` | The repository holds no refresh token for the NIF; nothing is sent |
+| `oauth.token_refused` | The token endpoint answered 400 or 401 (`invalid_grant`, revoked consent, wrong client) |
+| `oauth.token_unavailable` | The token endpoint could not be reached or did not answer, or another renewal of the same NIF held the lock for longer than the platform timeouts. The document never left; if the issuer did answer, the refresh token may have rotated without reaching `replace()` |
+| `oauth.unexpected_response` | Any other answer of the token endpoint, or a grant whose tokens or expiry are invalid |
+
+`context` holds only `emitter` and `status`. Every OAuth failure happens before the
+fiscal request leaves, so the issuance events report it as never processed.
 
 ## Self-billing
 

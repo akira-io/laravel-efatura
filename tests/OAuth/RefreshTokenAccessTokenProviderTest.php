@@ -16,6 +16,7 @@ use Akira\Efatura\Tests\Support\LocklessCacheStore;
 use Akira\Efatura\Tests\Support\OAuthFixtures as O;
 use Carbon\CarbonImmutable;
 use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Contracts\Cache\Repository;
@@ -188,8 +189,19 @@ it('fails without leaking any secret', function (Closure $response, string $erro
     'a server error'         => [fn (): PromiseInterface => Http::response('', 500), 'oauth.unexpected_response', ['emitter' => O::EMITTER, 'status' => 500]],
     'a refused connection'   => [
         fn (Request $request): PromiseInterface => Create::rejectionFor(new ConnectException('cURL error 7: Failed to connect', $request->toPsrRequest())),
-        'transport.connection_failed',
-        ['identifiers' => O::EMITTER],
+        'oauth.token_unavailable',
+        ['emitter' => O::EMITTER],
+    ],
+    'a silent token endpoint' => [
+        fn (Request $request): PromiseInterface => Create::rejectionFor(new RequestException('cURL error 28: Operation timed out', $request->toPsrRequest())),
+        'oauth.token_unavailable',
+        ['emitter' => O::EMITTER],
+    ],
+    'an access token outside the bearer syntax' => [fn (): PromiseInterface => O::grant('acc ess'), 'oauth.unexpected_response', ['emitter' => O::EMITTER, 'status' => 200]],
+    'a refresh token outside the bearer syntax' => [
+        fn (): PromiseInterface => O::grant('x', grant: ['refresh_token' => "rotated\nrefresh"]),
+        'oauth.unexpected_response',
+        ['emitter' => O::EMITTER, 'status' => 200],
     ],
 ]);
 
@@ -213,3 +225,40 @@ it('asks nothing of the issuer without the transmitter client credentials', func
     });
     Http::assertNothingSent();
 })->with(['client_id', 'client_secret']);
+
+it('keeps a rotated refresh token even when the rest of the grant is unusable', function (): void {
+    Http::fake([O::DISCOVERY_URL => O::discovery(), O::TOKEN_URL => Http::response(['refresh_token' => 'rotated-refresh', 'expires_in' => 300])]);
+
+    expect(fn (): AccessToken => tokenProvider()->token(O::EMITTER, $this->scopes))->toThrow(OAuthException::class, 'oauth.unexpected_response')
+        ->and($this->refreshTokens->replaced)->toBe([[O::EMITTER, 'rotated-refresh']]);
+});
+
+it('keeps the stored refresh token when the rotated one is outside the bearer syntax', function (): void {
+    Http::fake([O::DISCOVERY_URL => O::discovery(), O::TOKEN_URL => O::grant($this->accessToken, grant: ['refresh_token' => 'rotated refresh'])]);
+
+    expect(fn (): AccessToken => tokenProvider()->token(O::EMITTER, $this->scopes))->toThrow(OAuthException::class, 'oauth.unexpected_response')
+        ->and($this->refreshTokens->find(O::EMITTER))->toBe($this->refreshToken);
+});
+
+it('serializes renewals per emitter whatever the scopes, and lets other emitters through', function (): void {
+    CarbonImmutable::setTestNow();
+    O::configure($this->refreshTokens, $this->secret, ['http' => ['timeout_seconds' => 1, 'connect_timeout_seconds' => 1]]);
+    $this->refreshTokens->replace('200300400', 'other-refresh');
+    $this->nested = [];
+    Http::fake([O::DISCOVERY_URL => O::discovery(), O::TOKEN_URL => function (Request $request): PromiseInterface {
+        if ($request['refresh_token'] === $this->refreshToken) {
+            foreach (['same emitter' => O::EMITTER, 'other emitter' => '200300400'] as $label => $emitter) {
+                try {
+                    $this->nested[$label] = tokenProvider()->token($emitter, [OAuthScope::EventCreate])->value;
+                } catch (OAuthException $oauthException) {
+                    $this->nested[$label] = $oauthException->errorCode;
+                }
+            }
+        }
+
+        return O::grant('granted-' . $request['refresh_token']);
+    }]);
+
+    expect(tokenProvider()->token(O::EMITTER, $this->scopes)->value)->toBe('granted-' . $this->refreshToken)
+        ->and($this->nested)->toBe(['same emitter' => 'oauth.token_unavailable', 'other emitter' => 'granted-other-refresh']);
+});

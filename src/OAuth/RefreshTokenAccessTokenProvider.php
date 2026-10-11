@@ -11,13 +11,14 @@ use Akira\Efatura\Enums\OAuthScope;
 use Akira\Efatura\Enums\TransportFailure;
 use Akira\Efatura\Exceptions\OAuthException;
 use Akira\Efatura\Exceptions\TransportException;
+use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Transport\BoundedBody;
-use Akira\Efatura\Transport\FailureClassifier;
 use Akira\Efatura\Transport\TransportRequests;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Cache\LockProvider;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Contracts\Encryption\StringEncrypter;
@@ -33,13 +34,12 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
 {
     private const int EXPIRY_MARGIN_SECONDS = 60;
 
-    private const int JSON_DEPTH = 8;
+    private const string B64_TOKEN = '/\A[A-Za-z0-9\-._~+\/]+=*\z/';
 
     private const array REFUSED_STATUSES = [400, 401];
 
     public function __construct(
         private TransportRequests $requests,
-        private FailureClassifier $failures,
         private BoundedBody $body,
         private OpenIdConfiguration $discovery,
         private CacheFactory $caches,
@@ -53,7 +53,7 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
     {
         $key = $this->key($emitterTaxId, $scopes);
 
-        return $this->cached($key) ?? $this->locked($key, fn (): AccessToken => $this->renew($key, $emitterTaxId, $scopes));
+        return $this->cached($key) ?? $this->renewed($key, $emitterTaxId, $scopes);
     }
 
     public function forget(string $emitterTaxId, array $scopes): void
@@ -62,9 +62,21 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
     }
 
     /**
+     * @param list<OAuthScope> $scopes
+     */
+    private function renewed(string $key, string $emitterTaxId, array $scopes): AccessToken
+    {
+        $this->refreshToken($emitterTaxId);
+        $this->credentials($emitterTaxId);
+        $endpoint = $this->discovery->tokenEndpoint();
+
+        return $this->locked($emitterTaxId, fn (): AccessToken => $this->cached($key) ?? $this->refresh($key, $emitterTaxId, $scopes, $endpoint));
+    }
+
+    /**
      * @param Closure(): AccessToken $refresh
      */
-    private function locked(string $key, #[SensitiveParameter] Closure $refresh): AccessToken
+    private function locked(string $emitterTaxId, #[SensitiveParameter] Closure $refresh): AccessToken
     {
         $store = $this->cache()->getStore();
         if (! $store instanceof LockProvider) {
@@ -72,17 +84,14 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
         }
 
         $seconds = $this->config->http->platform->timeoutSeconds + $this->config->http->platform->connectTimeoutSeconds;
-        $token   = $store->lock($key . ':lock', $seconds)->block($seconds, $refresh);
+
+        try {
+            $token = $store->lock($this->lockKey($emitterTaxId), $seconds)->block($seconds, $refresh);
+        } catch (LockTimeoutException) {
+            throw OAuthException::tokenUnavailable($emitterTaxId);
+        }
 
         return $token instanceof AccessToken ? $token : $refresh();
-    }
-
-    /**
-     * @param list<OAuthScope> $scopes
-     */
-    private function renew(string $key, string $emitterTaxId, array $scopes): AccessToken
-    {
-        return $this->cached($key) ?? $this->refresh($key, $emitterTaxId, $scopes);
     }
 
     private function cached(string $key): ?AccessToken
@@ -90,7 +99,7 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
         $payload = $this->cache()->get($key);
 
         try {
-            $stored = \is_string($payload) ? json_decode($this->encryption->decryptString($payload), true, self::JSON_DEPTH, JSON_THROW_ON_ERROR) : null;
+            $stored = \is_string($payload) ? json_decode($this->encryption->decryptString($payload), true, Fiscal::MAX_JSON_DEPTH, JSON_THROW_ON_ERROR) : null;
         } catch (DecryptException|JsonException) {
             return null;
         }
@@ -107,30 +116,28 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
     /**
      * @param list<OAuthScope> $scopes
      */
-    private function refresh(string $key, string $emitterTaxId, array $scopes): AccessToken
+    private function refresh(string $key, string $emitterTaxId, array $scopes, string $endpoint): AccessToken
     {
-        $refreshToken = $this->refreshTokens->find($emitterTaxId) ?? throw OAuthException::refreshTokenMissing($emitterTaxId);
-        $oauth        = $this->config->transmitter->oauth;
-        $form         = [
+        [$clientId, $clientSecret] = $this->credentials($emitterTaxId);
+        $form                      = [
             'grant_type'    => 'refresh_token',
-            'refresh_token' => $refreshToken,
-            'client_id'     => $oauth->clientId ?? throw self::missing($emitterTaxId, 'client_id'),
-            'client_secret' => $oauth->clientSecret ?? throw self::missing($emitterTaxId, 'client_secret'),
+            'refresh_token' => $this->refreshToken($emitterTaxId),
+            'client_id'     => $clientId,
+            'client_secret' => $clientSecret,
             'scope'         => self::scope($scopes),
         ];
-        $endpoint = $this->discovery->tokenEndpoint();
 
         try {
             $response = $this->requests->plain($this->config->http->platform)->acceptJson()->asForm()->post($endpoint, $form);
-        } catch (ConnectionException $connectionException) {
-            throw $this->failures->classify($connectionException, $emitterTaxId);
+        } catch (ConnectionException) {
+            throw OAuthException::tokenUnavailable($emitterTaxId);
         }
 
-        return $this->issue($key, $emitterTaxId, $this->granted($emitterTaxId, $response));
+        return $this->issue($key, $this->granted($emitterTaxId, $response));
     }
 
     /**
-     * @return array{string, int, ?string}
+     * @return array{string, int}
      */
     private function granted(string $emitterTaxId, #[SensitiveParameter] Response $response): array
     {
@@ -141,31 +148,32 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
         throw_unless($status === 200, $unexpected);
 
         try {
-            $grant = json_decode($this->body->read($response, $emitterTaxId), true, self::JSON_DEPTH, JSON_THROW_ON_ERROR);
+            $grant = json_decode($this->body->read($response, $emitterTaxId), true, Fiscal::MAX_JSON_DEPTH, JSON_THROW_ON_ERROR);
         } catch (JsonException|TransportException) {
             throw $unexpected;
         }
 
-        $accessToken = \is_array($grant) ? ($grant['access_token'] ?? null) : null;
-        $expiresIn   = \is_array($grant) ? ($grant['expires_in'] ?? null) : null;
-        $rotated     = \is_array($grant) ? ($grant['refresh_token'] ?? null) : null;
-        throw_unless(\is_string($accessToken) && $accessToken !== '' && \is_int($expiresIn) && $expiresIn > 0, $unexpected);
-        throw_unless($rotated === null || (\is_string($rotated) && $rotated !== ''), $unexpected);
-
-        return [$accessToken, $expiresIn, $rotated];
-    }
-
-    /**
-     * @param array{string, int, ?string} $grant
-     */
-    private function issue(string $key, string $emitterTaxId, #[SensitiveParameter] array $grant): AccessToken
-    {
-        [$value, $expiresIn, $rotated] = $grant;
-        if ($rotated !== null) {
+        $grant   = \is_array($grant) ? $grant : [];
+        $rotated = $grant['refresh_token'] ?? null;
+        throw_unless($rotated === null || self::isToken($rotated), $unexpected);
+        if (\is_string($rotated)) {
             $this->refreshTokens->replace($emitterTaxId, $rotated);
         }
 
-        $lifetime = $expiresIn - self::EXPIRY_MARGIN_SECONDS;
+        $accessToken = $grant['access_token'] ?? null;
+        $expiresIn   = $grant['expires_in'] ?? null;
+        throw_unless(self::isToken($accessToken) && \is_int($expiresIn) && $expiresIn > 0, $unexpected);
+
+        return [$accessToken, $expiresIn];
+    }
+
+    /**
+     * @param array{string, int} $grant
+     */
+    private function issue(string $key, #[SensitiveParameter] array $grant): AccessToken
+    {
+        [$value, $expiresIn] = $grant;
+        $lifetime            = $expiresIn - self::EXPIRY_MARGIN_SECONDS;
         if ($lifetime < 1) {
             return new AccessToken($value, $this->now()->addSeconds($expiresIn));
         }
@@ -185,6 +193,39 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
         $client = $this->config->transmitter->oauth->clientId ?? '';
 
         return $this->config->cache->prefix . ':oauth:' . hash('sha256', $client . '|' . $emitterTaxId . '|' . self::scope($scopes));
+    }
+
+    private function lockKey(string $emitterTaxId): string
+    {
+        $client = $this->config->transmitter->oauth->clientId ?? '';
+
+        return $this->config->cache->prefix . ':oauth:lock:' . hash('sha256', $client . '|' . $emitterTaxId);
+    }
+
+    private function refreshToken(string $emitterTaxId): string
+    {
+        return $this->refreshTokens->find($emitterTaxId) ?? throw OAuthException::refreshTokenMissing($emitterTaxId);
+    }
+
+    /**
+     * @return array{string, string}
+     */
+    private function credentials(string $emitterTaxId): array
+    {
+        $oauth = $this->config->transmitter->oauth;
+
+        return [
+            $oauth->clientId ?? throw self::missing($emitterTaxId, 'client_id'),
+            $oauth->clientSecret ?? throw self::missing($emitterTaxId, 'client_secret'),
+        ];
+    }
+
+    /**
+     * @phpstan-assert-if-true string $token
+     */
+    private static function isToken(#[SensitiveParameter] mixed $token): bool
+    {
+        return \is_string($token) && preg_match(self::B64_TOKEN, $token) === 1;
     }
 
     /**
