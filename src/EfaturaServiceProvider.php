@@ -6,6 +6,7 @@ namespace Akira\Efatura;
 
 use Akira\Efatura\Actions\BuildIudAction;
 use Akira\Efatura\Actions\ConvertDocumentCurrencyAction;
+use Akira\Efatura\Commands\DoctorCommand;
 use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\CacheConfig;
 use Akira\Efatura\Configuration\DatabaseConfig;
@@ -106,6 +107,6 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             ->hasTranslations()
             ->hasViews()
             ->hasMigration(InstallCommand::SEQUENCE_MIGRATION)
-            ->hasCommand(InstallCommand::class);
+            ->hasCommands([InstallCommand::class, DoctorCommand::class]);
     }
 }

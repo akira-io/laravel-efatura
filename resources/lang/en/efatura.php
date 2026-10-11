@@ -44,4 +44,16 @@ return [
         'env_added'                => 'Added :key to .env.',
         'optional_packages_notice' => 'Optional DFA packages not detected: :packages. Install them to render the Documento Fiscal Auxiliar as a PDF with its QR code.',
     ],
+    'console' => [
+        'doctor' => [
+            'check'               => 'Check',
+            'status'              => 'Status',
+            'code'                => 'Code',
+            'field'               => 'Field',
+            'remote_skipped'      => 'Remote checks were skipped. Run with --remote to reach the configured endpoint.',
+            'ready'               => 'This installation is ready to issue documents.',
+            'ready_with_warnings' => 'This installation is ready to issue documents, with :count warning(s).',
+            'not_ready'           => 'This installation is not ready to issue documents.',
+        ],
+    ],
 ];
