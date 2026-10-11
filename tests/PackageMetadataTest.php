@@ -43,6 +43,19 @@ it('retains the package runtime and development tools', function (): void {
     ]);
 });
 
+it('suggests the DFA renderers and installs them for development', function (): void {
+    $composer = ComposerMetadata::read();
+
+    expect(array_keys($composer['suggest']))->toBe(['dompdf/dompdf', 'bacon/bacon-qr-code'])
+        ->and($composer['require'])->not->toHaveKeys(['dompdf/dompdf', 'bacon/bacon-qr-code'])
+        ->and($composer['require-dev'])->toMatchArray([
+            'dompdf/dompdf'       => '^3.1',
+            'dompdf/php-font-lib' => '^1.0.2',
+            'dompdf/php-svg-lib'  => '^1.0.2',
+            'bacon/bacon-qr-code' => '^3.1',
+        ]);
+});
+
 it('runs the clear script as a registered Testbench command', function (): void {
     $clearHelp = new Process(['composer', 'run', 'clear', '--', '--help'], __DIR__ . '/..');
     $clearHelp->run();
