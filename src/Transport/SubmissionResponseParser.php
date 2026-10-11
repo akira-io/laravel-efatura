@@ -154,7 +154,11 @@ final readonly class SubmissionResponseParser
     {
         $children = [];
         foreach ($parent->childNodes as $node) {
-            if ($node instanceof DOMComment || $node instanceof DOMProcessingInstruction) {
+            if ($node instanceof DOMComment) {
+                continue;
+            }
+
+            if ($node instanceof DOMProcessingInstruction) {
                 continue;
             }
 

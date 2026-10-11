@@ -81,7 +81,7 @@ final readonly class SelfBillingResponseParser
 
     private static function integer(mixed $value): ?int
     {
-        if (\is_string($value) && preg_match('/\A[0-9]{1,18}\z/', $value) === 1) {
+        if (\is_string($value) && preg_match('/\A\d{1,18}\z/', $value) === 1) {
             return (int) $value;
         }
 
