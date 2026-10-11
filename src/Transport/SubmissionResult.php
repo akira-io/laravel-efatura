@@ -25,11 +25,11 @@ final readonly class SubmissionResult
     {
         $succeeded = collect($this->entries)->filter(static fn (EntryResult $entry): bool => $entry->succeeded)->count();
 
-        return match ($succeeded) {
-            0                      => SubmissionOutcome::Rejected,
-            \count($this->entries) => SubmissionOutcome::Accepted,
-            default                => SubmissionOutcome::Partial,
-        };
+        if ($succeeded === 0) {
+            return SubmissionOutcome::Rejected;
+        }
+
+        return $succeeded === \count($this->entries) ? SubmissionOutcome::Accepted : SubmissionOutcome::Partial;
     }
 
     public function entry(string $identifier): EntryResult
