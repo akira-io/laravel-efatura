@@ -55,3 +55,14 @@ it('reads the body from the start after something consumed it', function (): voi
 
     expect(resolve(BoundedBody::class)->read($response, T::archive()))->toBe('<Responses/>');
 });
+
+it('reads a body of exactly a smaller limit when asked', function (): void {
+    expect(resolve(BoundedBody::class)->read(boundedResponse('abcd'), 'bcv', 4))->toBe('abcd');
+});
+
+it('refuses one byte above a smaller limit when asked', function (): void {
+    expect(fn (): string => resolve(BoundedBody::class)->read(boundedResponse('abcde'), 'bcv', 4))
+        ->toThrow(function (TransportException $exception): void {
+            expect($exception->context)->toBe(['status' => 200, 'identifiers' => 'bcv', 'bytes' => 5]);
+        });
+});

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Tests\Support;
 
+use Akira\Efatura\Currency\BcvExchangeRateParser;
+use Akira\Efatura\Currency\BcvExchangeRateProvider;
+use Akira\Efatura\Currency\ExchangeRateClient;
 use Akira\Efatura\Currency\ExchangeRateQuote;
 use Akira\Efatura\Currency\ExchangeRateRequest;
 use Akira\Efatura\Enums\ExchangeRateFailure;
@@ -11,6 +14,7 @@ use Akira\Efatura\Enums\ExchangeRateType;
 use Akira\Efatura\Exceptions\ExchangeRateException;
 use Carbon\CarbonImmutable;
 use Closure;
+use Psr\Clock\ClockInterface;
 use RuntimeException;
 
 final class CurrencyFixtures
@@ -35,6 +39,22 @@ final class CurrencyFixtures
             'provider'       => 'Banco de Cabo Verde',
             'sourceUrl'      => 'https://www.bcv.cv/rates',
             ...$overrides,
+        ]);
+    }
+
+    public static function fixture(string $name): string
+    {
+        return (string) file_get_contents(__DIR__ . '/../Fixtures/currency/' . $name);
+    }
+
+    public static function bcv(array $options = [], array $http = []): BcvExchangeRateProvider
+    {
+        return new BcvExchangeRateProvider(...[
+            'client'  => resolve(ExchangeRateClient::class),
+            'parser'  => new BcvExchangeRateParser,
+            'clock'   => resolve(ClockInterface::class),
+            'profile' => ConfigFixtures::load(['http' => ['retries' => 0, 'bcv' => $http]])->http->bcv,
+            ...$options,
         ]);
     }
 
