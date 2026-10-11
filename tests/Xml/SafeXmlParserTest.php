@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Xml\SafeXmlParser;
+use Akira\Efatura\Xml\XmlComplexity;
 
 afterEach(function (): void {
     libxml_clear_errors();
@@ -51,4 +52,37 @@ it('leaves no error behind when the caller had none', function (): void {
     expect(fn (): DOMDocument => new SafeXmlParser()->parse('<Dfe>'))->toThrow(SchemaValidationException::class, 'xml.malformed')
         ->and(libxml_get_errors())->toBe([])
         ->and(libxml_use_internal_errors())->toBeFalse();
+});
+
+it('refuses a document over the element or namespace declaration limits before building it', function (string $xml): void {
+    expect(fn (): DOMDocument => new SafeXmlParser()->parse($xml))->toThrow(function (SchemaValidationException $exception): void {
+        expect($exception->errorCode)->toBe('xml.too_complex')
+            ->and($exception->violations)->toBe([]);
+    });
+})->with([
+    'too many elements'               => fn (): string => '<Dfe>' . str_repeat('<a/>', XmlComplexity::MAX_ELEMENTS) . '</Dfe>',
+    'too many namespace declarations' => fn (): string => '<Dfe' . implode('', array_map(
+        static fn (int $index): string => ' xmlns:n' . $index . '="urn:' . $index . '"',
+        range(0, XmlComplexity::MAX_NAMESPACE_DECLARATIONS),
+    )) . '/>',
+    'declarations spread over elements' => fn (): string => '<Dfe>' . str_repeat('<a xmlns="urn:a"/>', XmlComplexity::MAX_NAMESPACE_DECLARATIONS + 1) . '</Dfe>',
+]);
+
+it('accepts a document exactly at both limits', function (): void {
+    $declarations = implode('', array_map(static fn (int $index): string => ' xmlns:n' . $index . '="urn:' . $index . '"', range(1, XmlComplexity::MAX_NAMESPACE_DECLARATIONS)));
+    $xml          = '<Dfe' . $declarations . '>' . str_repeat('<a/>', XmlComplexity::MAX_ELEMENTS - 1) . '</Dfe>';
+
+    expect(new SafeXmlParser()->parse($xml)->getElementsByTagName('a')->length)->toBe(XmlComplexity::MAX_ELEMENTS - 1)
+        ->and(libxml_get_errors())->toBe([]);
+});
+
+it('reports malformed xml once even though the limits read it first', function (): void {
+    expect(fn (): DOMDocument => new SafeXmlParser()->parse('<Dfe><a></Dfe>'))->toThrow(function (SchemaValidationException $exception): void {
+        $reference = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $reference->loadXML('<Dfe><a></Dfe>');
+
+        expect($exception->errorCode)->toBe('xml.malformed')
+            ->and($exception->violations)->toHaveCount(count(libxml_get_errors()));
+    });
 });

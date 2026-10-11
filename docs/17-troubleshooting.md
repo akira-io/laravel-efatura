@@ -121,6 +121,7 @@ validation. See [XML](05-xml.md).
 | `xml.schema_invalid` | The document does not follow the XSD of the profile, or its root is not one the profile accepts; the violations carry the line and message | Correct the data the violations point at, then prepare again |
 | `xml.malformed` | The XML is not well formed | Check the file was not truncated or re-encoded |
 | `xml.doctype_forbidden` | The document holds a document type declaration | Remove the `DOCTYPE`; it is never accepted |
+| `xml.too_complex` | The document holds more than 250 000 elements or more than 1 000 namespace declarations | Check the file is a single e-Fatura document; no real document comes near either limit |
 | `xml.external_resource` | The schema asked for a file or URL outside the bundled official artifacts | Reinstall the package so `resources/official-artifacts.json` and the XSD files match |
 
 ## Transport and OAuth
