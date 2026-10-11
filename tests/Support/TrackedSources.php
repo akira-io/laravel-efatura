@@ -52,8 +52,11 @@ final class TrackedSources
 
     private static function isFloat(PhpToken $token): bool
     {
-        return $token->is([T_DNUMBER, T_DOUBLE_CAST])
-            || ($token->is(T_STRING) && \in_array(strtolower($token->text), ['float', 'floatval', 'double'], true));
+        if ($token->is([T_DNUMBER, T_DOUBLE_CAST])) {
+            return true;
+        }
+
+        return $token->is(T_STRING) && \in_array(strtolower($token->text), ['float', 'floatval', 'double'], true);
     }
 
     /**

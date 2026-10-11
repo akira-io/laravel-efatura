@@ -58,7 +58,7 @@ it('answers 422 with the failures of an invalid document', function (string $xml
         [],
         ['signature' => ['valid' => false, 'failures' => ['signature.digest_mismatch']]],
     ],
-    'an unsigned document' => [fn (): string => S::unsigned(), [], ['schema' => ['valid' => true], 'signature' => ['failures' => ['signature.missing']]]],
+    'an unsigned document' => [fn (): string => S::unsigned('FTE'), [], ['schema' => ['valid' => true], 'signature' => ['failures' => ['signature.missing']]]],
     'the wrong profile'    => [
         fn (): string => S::sign(S::unsigned(), SignatureProfile::InternallyDetached)->xml,
         ['profile' => 'enveloped'],
