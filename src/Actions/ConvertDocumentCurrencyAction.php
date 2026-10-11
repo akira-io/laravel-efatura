@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Actions;
 
+use Akira\Efatura\Contracts\ExchangeRateProvider;
 use Akira\Efatura\Currency\CurrencyCode;
 use Akira\Efatura\Currency\CveConversion;
-use Akira\Efatura\Currency\DeferredExchangeRateProvider;
 use Akira\Efatura\Currency\ExchangeRateQuote;
 use Akira\Efatura\Currency\ExchangeRateRequest;
 use Akira\Efatura\Data\Contracts\HasTotals;
@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class ConvertDocumentCurrencyAction
 {
-    public function __construct(private DeferredExchangeRateProvider $provider) {}
+    public function __construct(private ExchangeRateProvider $provider) {}
 
     /**
      * @template T of DocumentData

@@ -228,3 +228,9 @@ it('builds the exchange rate provider only when it needs a quote', function (): 
         ->and($action->handle(ElectronicInvoiceData::from(eurInvoice()), 'EUR', eurQuote())->toPayload()['totals']['payableAmount'])->toBe('126.80000')
         ->and(fn (): DocumentData => $action->handle(ElectronicInvoiceData::from(eurInvoice()), 'EUR'))->toThrow(ConfigurationException::class);
 });
+
+it('converts with any provider it is constructed with', function (): void {
+    $action = new ConvertDocumentCurrencyAction(new CallbackExchangeRateProvider(fn (): ExchangeRateQuote => eurQuote()));
+
+    expect($action->handle(ElectronicInvoiceData::from(eurInvoice()), 'EUR')->toPayload()['totals']['payableAmount'])->toBe('126.80000');
+});

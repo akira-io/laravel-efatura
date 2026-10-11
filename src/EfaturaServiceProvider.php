@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura;
 
 use Akira\Efatura\Actions\BuildIudAction;
+use Akira\Efatura\Actions\ConvertDocumentCurrencyAction;
 use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\CacheConfig;
 use Akira\Efatura\Configuration\DatabaseConfig;
@@ -23,6 +24,7 @@ use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Contracts\SequenceStore;
 use Akira\Efatura\Contracts\Transport;
 use Akira\Efatura\Contracts\XmlSigner;
+use Akira\Efatura\Currency\DeferredExchangeRateProvider;
 use Akira\Efatura\Currency\ExchangeRateProviderResolver;
 use Akira\Efatura\Dfa\BaconQrCodeRenderer;
 use Akira\Efatura\Dfa\DompdfDfaRenderer;
@@ -82,6 +84,7 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             ExchangeRateProvider::class,
             fn (Application $app): ExchangeRateProvider => $app->make(ExchangeRateProviderResolver::class)->provider(),
         );
+        $this->app->when(ConvertDocumentCurrencyAction::class)->needs(ExchangeRateProvider::class)->give(DeferredExchangeRateProvider::class);
     }
 
     #[Override]
