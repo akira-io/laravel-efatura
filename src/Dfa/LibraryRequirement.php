@@ -16,9 +16,14 @@ final readonly class LibraryRequirement
         public string $entryClass,
     ) {}
 
+    public function installed(): bool
+    {
+        return class_exists($this->entryClass);
+    }
+
     public function ensureInstalled(): void
     {
-        if (! class_exists($this->entryClass)) {
+        if (! $this->installed()) {
             throw DfaException::rendererUnavailable($this->package);
         }
     }

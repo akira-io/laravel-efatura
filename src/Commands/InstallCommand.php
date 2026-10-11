@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Commands;
 
+use Akira\Efatura\Dfa\DfaLibraries;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -24,14 +25,12 @@ final class InstallCommand extends Command
 {
     public const string SEQUENCE_MIGRATION = 'create_efatura_sequences_table';
 
-    private const array DFA_PACKAGES = ['dompdf/dompdf', 'bacon/bacon-qr-code'];
-
-    public function handle(Filesystem $filesystem): int
+    public function handle(Filesystem $filesystem, DfaLibraries $libraries): int
     {
         $this->publishConfig($filesystem);
         $this->publishSequenceMigration($filesystem);
         $this->updateEnvironmentFile($filesystem);
-        $this->notifyOptionalPackages($filesystem);
+        $this->notifyOptionalPackages($libraries);
 
         note(__('efatura::efatura.install.completed'));
 
@@ -126,16 +125,15 @@ final class InstallCommand extends Command
         }
     }
 
-    private function notifyOptionalPackages(Filesystem $filesystem): void
+    private function notifyOptionalPackages(DfaLibraries $libraries): void
     {
-        $missing = collect(self::DFA_PACKAGES)
-            ->reject(static fn (string $package): bool => $filesystem->isDirectory(base_path('vendor/' . $package)));
+        $missing = $libraries->missing();
 
-        if ($missing->isEmpty()) {
+        if ($missing === []) {
             return;
         }
 
-        info(__('efatura::efatura.install.optional_packages_notice', ['packages' => $missing->implode(', ')]));
+        info(__('efatura::efatura.install.optional_packages_notice', ['packages' => implode(', ', $missing)]));
     }
 
     private function environmentVariableExists(string $contents, string $key): bool

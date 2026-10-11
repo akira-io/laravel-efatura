@@ -28,7 +28,8 @@ composer require dompdf/dompdf:^3.1 bacon/bacon-qr-code:^3.1
 
 `dompdf/dompdf` writes the PDF and `bacon/bacon-qr-code` draws the QR code as
 SVG, so neither gd nor imagick is required. `efatura:install` names the ones
-that are missing. Without them, building a `DfaData` still works and rendering
+that are missing, looking for their classes through the autoloader exactly as
+the renderers do (`Dfa\DfaLibraries`), so a custom vendor directory is found. Without them, building a `DfaData` still works and rendering
 fails with `dfa.renderer_unavailable`.
 
 ## Models
