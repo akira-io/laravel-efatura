@@ -9,7 +9,9 @@ use Akira\Efatura\Commands\InstallCommand;
 use Akira\Efatura\Configuration\DatabaseConfig;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
+use Akira\Efatura\Configuration\StorageConfig;
 use Akira\Efatura\Contracts\AccessTokenProvider;
+use Akira\Efatura\Contracts\ArtifactStore;
 use Akira\Efatura\Contracts\CertificateLoader;
 use Akira\Efatura\Contracts\DfaRenderer;
 use Akira\Efatura\Contracts\ExchangeRateProvider;
@@ -29,6 +31,7 @@ use Akira\Efatura\Packaging\ZipArchivePackager;
 use Akira\Efatura\Sequence\DatabaseSequenceStore;
 use Akira\Efatura\Signing\OpenSslCertificateLoader;
 use Akira\Efatura\Signing\XadesBesXmlSigner;
+use Akira\Efatura\Storage\FilesystemArtifactStore;
 use Akira\Efatura\Support\Catalogs;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Transport\TransportResolver;
@@ -68,6 +71,9 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         $this->app->bind(Packager::class, ZipArchivePackager::class);
         $this->app->bind(QrCodeRenderer::class, BaconQrCodeRenderer::class);
         $this->app->bind(DfaRenderer::class, DompdfDfaRenderer::class);
+        $this->app->when(FilesystemArtifactStore::class)->needs(StorageConfig::class)
+            ->give(fn (): StorageConfig => $this->app->make(EfaturaConfig::class)->storage);
+        $this->app->bind(ArtifactStore::class, FilesystemArtifactStore::class);
         $this->app->bind(Transport::class, fn (Application $app): Transport => $app->make(TransportResolver::class)->driver());
         $this->app->bind(
             ExchangeRateProvider::class,
