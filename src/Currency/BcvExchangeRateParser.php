@@ -29,8 +29,6 @@ final readonly class BcvExchangeRateParser
 
     private const array SECTIONS = ['thead', 'tbody', 'tfoot'];
 
-    private const string DECIMAL = '/\A\d+(?:\.\d+)?\z/';
-
     public function parse(string $html, string $currency, ExchangeRateType $type): BcvRate
     {
         $document = HTMLDocument::createFromString($html, LIBXML_NOERROR);
@@ -157,7 +155,7 @@ final readonly class BcvExchangeRateParser
         $unquoted = preg_replace('/\A([\'"])(.*)\1\z/s', '$2', $this->text($cell));
         $value    = Str::replaceFirst(',', '.', Str::remove(' ', (string) $unquoted));
 
-        if (preg_match(self::DECIMAL, $value) !== 1 || BigDecimal::of($value)->isZero()) {
+        if (! DecimalFormatter::isPlainDecimal($value) || ! BigDecimal::of($value)->isPositive()) {
             throw ExchangeRateException::because(ExchangeRateFailure::RateInvalid);
         }
 
