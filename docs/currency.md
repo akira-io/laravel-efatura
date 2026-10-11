@@ -145,7 +145,7 @@ Fixed and callback rates are not cached.
 | `bcv.max_publication_age_days` | A nonnegative integer | `configuration.invalid_integer` |
 | `world_bank.economies` | A map of codes of the official currency catalog (any letter case, normalized to upper case) to two or three letter or digit economy codes; `CVE` may only be restated as `CPV` | `configuration.invalid_type` |
 | `world_bank.observation_year` | `previous` or `request`, in any letter case | `configuration.invalid_observation_year` |
-| `fixed.rates` | A map of codes of the official currency catalog (any letter case, normalized to upper case) to positive decimal strings or integers | `configuration.invalid_type` |
+| `fixed.rates` | A map of codes of the official currency catalog (any letter case, normalized to upper case) to positive plain decimal strings of at most 32 characters, or integers | `configuration.invalid_type` |
 | `fixed.rate_type` | Any `ExchangeRateType` value | `configuration.invalid_rate_type` |
 | `fixed.name` | A nonempty string | `configuration.empty_string` |
 | `callback` | An existing class name, required by the `callback` provider | `configuration.invalid_type` |

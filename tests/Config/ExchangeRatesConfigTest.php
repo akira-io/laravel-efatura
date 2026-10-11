@@ -74,6 +74,7 @@ it('refuses an exchange rate section it cannot use', function (array $section, s
     'economies not a map'         => [['world_bank' => ['economies' => 'EUR:EMU']], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
     'a zero fixed rate'           => [['fixed' => ['rates' => ['EUR' => '0']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
     'a float fixed rate'          => [['fixed' => ['rates' => ['EUR' => 110.265]]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
+    'a fixed rate of 33 chars'    => [['fixed' => ['rates' => ['EUR' => '1.' . str_repeat('5', 31)]]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
     'a fixed rate without code'   => [['fixed' => ['rates' => ['110.265']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
     'an empty fixed name'         => [['fixed' => ['name' => ' ']], 'configuration.empty_string', 'efatura.exchange_rates.fixed.name'],
     'an unknown callback class'   => [['callback' => 'App\Missing'], 'configuration.invalid_type', 'efatura.exchange_rates.callback'],
@@ -96,6 +97,12 @@ it('normalizes the currency and economy codes and accepts CVE restated as CPV', 
 
     expect($config->worldBankEconomies)->toBe(['EUR' => 'EMU', 'CVE' => 'CPV'])
         ->and($config->fixedRates)->toBe(['USD' => '100']);
+});
+
+it('accepts a fixed rate of exactly 32 characters', function (): void {
+    $rate = '1.' . str_repeat('5', 30);
+
+    expect(exchangeRatesConfig(['fixed' => ['rates' => ['EUR' => $rate]]])->fixedRates)->toBe(['EUR' => $rate]);
 });
 
 it('loads the section on its own from the host repository', function (): void {

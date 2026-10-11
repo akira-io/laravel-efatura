@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 
 final readonly class ExchangeRateQuote
 {
-    private const int MAX_RATE_LENGTH = 32;
+    public const int MAX_RATE_LENGTH = 32;
 
     public string $sourceCurrency;
 

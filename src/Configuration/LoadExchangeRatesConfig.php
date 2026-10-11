@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\Efatura\Configuration;
 
 use Akira\Efatura\Concerns\ReadsConfigurationValues;
+use Akira\Efatura\Currency\ExchangeRateQuote;
 use Akira\Efatura\Enums\ExchangeRateSource;
 use Akira\Efatura\Enums\ExchangeRateType;
 use Akira\Efatura\Enums\WorldBankObservationYear;
@@ -137,7 +138,9 @@ final readonly class LoadExchangeRatesConfig
             return preg_match($pattern, $value) === 1;
         }
 
-        return DecimalFormatter::isPlainDecimal($value) && BigDecimal::of($value)->isPositive();
+        return Str::length($value) <= ExchangeRateQuote::MAX_RATE_LENGTH
+            && DecimalFormatter::isPlainDecimal($value)
+            && BigDecimal::of($value)->isPositive();
     }
 
     /**
