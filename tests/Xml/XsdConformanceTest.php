@@ -53,7 +53,7 @@ it('validates cancellation and unused number events', function (array $payload):
     expect(fn () => resolve(SchemaValidator::class)->validate($xml))->not->toThrow(SchemaValidationException::class);
 })->with([
     'one iud'            => [['iuds' => [E::iud()]]],
-    'several iuds'       => [['iuds' => [E::iud(), IdentifierFixtures::NODE_IUD]]],
+    'several iuds'       => [['iuds' => [E::iud(), IdentifierFixtures::REFERENCE_IUD]]],
     'range with year'    => [['eventTypeCode' => 'UDN', 'numberRange' => [...E::numberRange(1, 10), 'year' => 2026]]],
     'range without year' => [['eventTypeCode' => 'UDN', 'numberRange' => E::numberRange(1, 10)]],
 ]);

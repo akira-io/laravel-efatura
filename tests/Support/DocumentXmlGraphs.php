@@ -88,7 +88,7 @@ final class DocumentXmlGraphs
 
     private static function reference(): ReferenceData
     {
-        return ReferenceData::from(['fiscalDocument' => ['value' => IdentifierFixtures::NODE_IUD], 'paymentAmount' => '115']);
+        return ReferenceData::from(['fiscalDocument' => ['value' => IdentifierFixtures::REFERENCE_IUD], 'paymentAmount' => '115']);
     }
 
     private static function delivery(): DeliveryData

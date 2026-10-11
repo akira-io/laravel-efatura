@@ -9,7 +9,7 @@ use Akira\Efatura\Tests\Support\IdentifierFixtures as I;
 it('lays the IUD segments end to end after the country code', function (IudSegment $segment, int $offset, int $length, string $value): void {
     expect($segment->offset())->toBe($offset)
         ->and($segment->length())->toBe($length)
-        ->and($segment->of(I::NODE_IUD))->toBe($value);
+        ->and($segment->of(I::REFERENCE_IUD))->toBe($value);
 })->with([
     'repository'      => [IudSegment::Repository, 2, 1, '3'],
     'issue date'      => [IudSegment::IssueDate, 3, 6, '260208'],
@@ -21,7 +21,7 @@ it('lays the IUD segments end to end after the country code', function (IudSegme
 ]);
 
 it('leaves only the check digit after the last IUD segment', function (): void {
-    expect(IudSegment::RandomCode->offset() + IudSegment::RandomCode->length())->toBe(strlen(I::NODE_IUD) - 1);
+    expect(IudSegment::RandomCode->offset() + IudSegment::RandomCode->length())->toBe(strlen(I::REFERENCE_IUD) - 1);
 });
 
 it('lays the event id segments end to end after the country code', function (EventIdSegment $segment, int $offset, int $length, string $value): void {

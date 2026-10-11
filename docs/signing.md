@@ -150,8 +150,8 @@ p.57) and the examples have none.
 
 - The enveloped example has only `enveloped-signature` on the data reference
   and gives `SignedProperties` the exclusive C14N URI without its `#`, which is
-  not a valid algorithm URI. The other examples and node-efatura use inclusive
-  C14N on `SignedProperties`; the package does the same, and keeps
+  not a valid algorithm URI. The other examples use inclusive C14N on
+  `SignedProperties`; the package does the same, and keeps
   `enveloped-signature` alone on the data reference in the enveloped profile.
 - `99 Event.xml` points its data reference at an IUD instead of the event `Id`;
   the package always references the `Id` of the signed root.
@@ -160,16 +160,17 @@ p.57) and the examples have none.
   examples.
 - Only one example has `SignatureProductionPlace`; the package omits it.
 
-### Differences from node-efatura
+### Signature values the package fixes
 
-- node-efatura writes `X509IssuerName` in Node's order separated by newlines;
-  the package writes RFC 4514.
-- node-efatura writes `SigningTime` in UTC with milliseconds; the package uses
-  Cabo Verde time without an offset, as the examples do.
-- node-efatura adds inclusive C14N after `enveloped-signature` on the data
-  reference; a correct verifier treats both the same.
-- node-efatura signs only in the enveloped profile, reads no PKCS#12 or
-  passphrase, and does not check the certificate.
+- `X509IssuerName` is written in RFC 4514 order, comma separated.
+- `SigningTime` is Cabo Verde time without an offset and without fractional
+  seconds, as in the examples.
+- The data reference carries `enveloped-signature` alone in the enveloped
+  profile; a verifier that also applies inclusive C14N there obtains the same
+  digest.
+- Both the enveloped and the detached profile are signed, from a PEM pair or a
+  PKCS#12 bundle with an optional passphrase, and the certificate is checked
+  before signing.
 
 ### Schema validation of signed XML
 

@@ -56,7 +56,7 @@ The page is read with the `efatura.http.bcv` client profile: its timeouts and TL
 options, no redirects, at most 256 KiB of body, and read retries. The address is
 `efatura.http.bcv.base_url` when set, otherwise the official statistics page
 `https://www.bcv.cv/pt/PoliticaMonetaria/EstatisticasCambiais/Paginas/Estatisticas_Cambiais.aspx?_expType=PDF`
-(the address the Node package reads, asked for as `text/html`). The configured
+(asked for as `text/html`). The configured
 address is checked like every base URL (HTTPS, no credentials, no fragment), except
 that it may carry a query string, so the official address can be set explicitly;
 it must also be on `www.bcv.cv` without a port (`exchange_rate.source_required`
@@ -218,8 +218,8 @@ the source currency is the second argument.
 
 The source document is never modified.
 
-This differs from the Node package, which converts every line amount on its own
-(`priceExtension`, `netTotal` and `taxTotal` included). This package's totals
+Line amounts that derive from others (`priceExtension`, `netTotal` and
+`taxTotal`) are recomputed rather than converted on their own. The totals
 verification checks each line against itself, so converting derived values
 independently would refuse documents whose extension is not the converted price
 times the quantity: 10 000 units of 0.001 EUR at 110.265 give a price of 0.11027

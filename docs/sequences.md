@@ -39,7 +39,7 @@ and the table `efatura.database.sequences_table`:
 The write comes first, so the database serializes concurrent reservations of
 the same scope on the row (or, in SQLite, on the file). No `SELECT ... FOR
 UPDATE` is used: it does not lock a row that does not exist yet, and it is a
-no-op in SQLite, which is how node-efatura handed out duplicates (#12). The same
+no-op in SQLite, where it would hand out the same number twice. The same
 statements run on SQLite, MySQL and PostgreSQL.
 
 The counter is an unsigned big integer. A reservation that would go past

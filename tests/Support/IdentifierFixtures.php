@@ -8,7 +8,7 @@ use Akira\Efatura\Support\Luhn;
 
 final class IdentifierFixtures
 {
-    public const string NODE_IUD = 'CV3260208100200300001230100000000112345678909';
+    public const string REFERENCE_IUD = 'CV3260208100200300001230100000000112345678909';
 
     public const string OFFICIAL_EVENT_ID = 'CV1210805181011123456789';
 

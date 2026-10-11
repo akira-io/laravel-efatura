@@ -10,9 +10,9 @@ use Akira\Efatura\Tests\Support\IdentifierFixtures as I;
 use Illuminate\Support\Facades\Validator;
 
 it('accepts a received identifier with its check digit', function (): void {
-    $event = EventData::from(E::payload(['iuds' => [E::iud(), I::NODE_IUD]]));
+    $event = EventData::from(E::payload(['iuds' => [E::iud(), I::REFERENCE_IUD]]));
 
-    expect($event->iuds)->toBe([E::iud(), I::NODE_IUD]);
+    expect($event->iuds)->toBe([E::iud(), I::REFERENCE_IUD]);
 });
 
 it('rejects a cancelled identifier with a wrong check digit', function (): void {
@@ -22,7 +22,7 @@ it('rejects a cancelled identifier with a wrong check digit', function (): void 
 });
 
 it('rejects a referenced identifier with a wrong check digit', function (): void {
-    $payload = ['fiscalDocument' => ['value' => substr(I::NODE_IUD, 0, 44) . '0']];
+    $payload = ['fiscalDocument' => ['value' => substr(I::REFERENCE_IUD, 0, 44) . '0']];
 
     expect(fn (): ReferenceData => ReferenceData::from($payload))
         ->toFailValidationOn('fiscalDocument.value', 'The fiscal document.value must be an official IUD with a valid check digit.');

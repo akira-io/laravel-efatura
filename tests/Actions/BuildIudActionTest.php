@@ -17,8 +17,8 @@ use Random\Engine\Mt19937;
 use Random\Engine\Secure;
 use Random\Randomizer;
 
-it('builds the node-efatura reference identifier', function (): void {
-    expect(resolve(BuildIudAction::class)->handle(IudData::from(I::iudPayload())))->toBe(I::NODE_IUD);
+it('builds the 45 character identifier of Manual section 6.2 table 1 (p.17-18)', function (): void {
+    expect(resolve(BuildIudAction::class)->handle(IudData::from(I::iudPayload())))->toBe(I::REFERENCE_IUD);
 });
 
 it('builds an identifier the parser reads back for every document type and repository', function (DocumentType $type, Environment $repository): void {

@@ -10,14 +10,14 @@ it('computes the check digit of the official vectors', function (string $iudWith
 })->with([
     'manual example'             => ['CV320121412345678900001011234567891234567890', 8],
     'official enveloped invoice' => ['CV120052012345678900011234567890111234567890', 4],
-    'node-efatura test vector'   => ['CV326020810020030000123010000000011234567890', 9],
+    'manual 6.2 layout vector'   => ['CV326020810020030000123010000000011234567890', 9],
 ]);
 
 it('accepts the official identifiers with their check digit', function (string $iud): void {
     expect(Luhn::passes(substr($iud, 2)))->toBeTrue();
 })->with([
     'official enveloped invoice' => ['CV1200520123456789000112345678901112345678904'],
-    'node-efatura test vector'   => ['CV3260208100200300001230100000000112345678909'],
+    'manual 6.2 layout vector'   => ['CV3260208100200300001230100000000112345678909'],
 ]);
 
 it('rejects every wrong check digit', function (int $checkDigit): void {

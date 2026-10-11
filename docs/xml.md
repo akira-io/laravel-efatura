@@ -29,8 +29,7 @@ verified on every received IUD: an event's `iuds` and
 `BuildEventIdAction` and `ParseEventIdAction` do the same for the 24-character
 event identifier: `CV`, the repository code, the issue instant as `ymdHis` in
 Cabo Verde time and a NIF. `EventIdData::$taxId` is neutral; the event XML
-expects the transmitter's NIF there, as node-efatura does, until the Manual says
-otherwise.
+expects the transmitter's NIF there until the Manual says otherwise.
 
 ## Writing the XML
 
@@ -85,7 +84,7 @@ the Off mode, because the published XSD requires it. In an UDN event, `Year` is
 written only when `numberRange.year` is given; the XSD leaves it optional.
 
 An event's `EmitterTaxId` is the NIF of the DFE emitter, never the
-transmitter's, as node-efatura settled in #72.
+transmitter's.
 
 A DTE has no `Totals`. FDC and UDN share one serializer: FDC lists one or more
 `IUD`, UDN the number range.
@@ -143,11 +142,10 @@ examples. `5 CreditNote.xml` and `8 ReturnNote.xml` carry a 46-digit
 2.15 accepts it. The suite validates both examples with the signature removed,
 and accepts the full examples only when they pass or fail on that element alone.
 
-## Deliberate differences from node-efatura
+## Rules the package applies on top of the XSD
 
-- The series is never derived from the LED or the configuration (node #74).
-- `IssueTime` is written in the Off mode too (node #69 omits it); the XSD
-  requires it.
+- The series is never derived from the LED or the configuration.
+- `IssueTime` is written in the Off mode too; the XSD requires it.
 - The document number is read from the header and compared with the IUD rather
   than read from the IUD.
 - Received IUDs must carry a valid check digit.
