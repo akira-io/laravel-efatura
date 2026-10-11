@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Actions\ConvertDocumentCurrencyAction;
+use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Contracts\ExchangeRateProvider;
 use Akira\Efatura\Currency\CallbackExchangeRateProvider;
 use Akira\Efatura\Currency\ExchangeRateQuote;
@@ -13,6 +14,8 @@ use Akira\Efatura\Data\ElectronicInvoiceData;
 use Akira\Efatura\Data\ReceiptInvoiceData;
 use Akira\Efatura\Data\TransportDocumentData;
 use Akira\Efatura\Enums\ExchangeRateFailure;
+use Akira\Efatura\Exceptions\ConfigurationException;
+use Akira\Efatura\Tests\Support\ConfigFixtures;
 use Akira\Efatura\Tests\Support\CurrencyFixtures as C;
 use Akira\Efatura\Tests\Support\DocumentFixtures as F;
 use Akira\Efatura\Tests\Support\DocumentPayloads as P;
@@ -215,4 +218,13 @@ it('reports a converted document the fiscal rules refuse as an invalid invoice',
     expect($exception->failure)->toBe(ExchangeRateFailure::InvoiceInvalid)
         ->and($exception->getPrevious())->toBeInstanceOf(ValidationException::class)
         ->and($exception->getPrevious()->errors())->toHaveKey('lines.0.taxes.1.taxAmount');
+});
+
+it('builds the exchange rate provider only when it needs a quote', function (): void {
+    app()->instance(EfaturaConfig::class, ConfigFixtures::load(['exchange_rates' => ['provider' => 'callback', 'callback' => stdClass::class]]));
+    $action = resolve(ConvertDocumentCurrencyAction::class);
+
+    expect($action->handle(ElectronicInvoiceData::from(F::payload()), 'CVE')->toPayload()['totals']['payableAlternativeAmounts'])->toBe([])
+        ->and($action->handle(ElectronicInvoiceData::from(eurInvoice()), 'EUR', eurQuote())->toPayload()['totals']['payableAmount'])->toBe('126.80000')
+        ->and(fn (): DocumentData => $action->handle(ElectronicInvoiceData::from(eurInvoice()), 'EUR'))->toThrow(ConfigurationException::class);
 });

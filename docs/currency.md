@@ -164,7 +164,9 @@ the source currency is the second argument.
 3. A document that already has a `PayableAlternativeAmount` fails with
    `exchange_rate.alternatives_conflict`, before any rate is asked for.
 4. The quote is the one given, or the provider's answer for the issue instant. It
-   must answer that request.
+   must answer that request. The provider bound to the contract is built only
+   here, when a quote is needed: a CVE source or a given quote never builds it, so
+   a misconfigured provider does not stop those conversions.
 5. Only the independent inputs are converted from the source currency, by
    multiplying by the rate. The unit `price` of each line is rounded half up to
    five decimals, the most the Manual allows for an amount, so that a sub-cent
