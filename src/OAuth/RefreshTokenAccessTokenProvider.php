@@ -32,6 +32,8 @@ use const JSON_THROW_ON_ERROR;
 
 final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvider
 {
+    private const int LOCK_MARGIN_SECONDS = 10;
+
     private const int EXPIRY_MARGIN_SECONDS = 60;
 
     private const string B64_TOKEN = '/\A[A-Za-z0-9\-._~+\/]+=*\z/';
@@ -86,7 +88,7 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
         $seconds = $this->config->http->platform->timeoutSeconds + $this->config->http->platform->connectTimeoutSeconds;
 
         try {
-            $token = $store->lock($this->lockKey($emitterTaxId), $seconds)->block($seconds, $refresh);
+            $token = $store->lock($this->lockKey($emitterTaxId), $seconds + self::LOCK_MARGIN_SECONDS)->block($seconds, $refresh);
         } catch (LockTimeoutException) {
             throw OAuthException::tokenUnavailable($emitterTaxId);
         }

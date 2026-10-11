@@ -168,7 +168,10 @@ key hashed from client, NIF and scopes, for `expires_in` minus 60 seconds.
 
 A taxpayer has one refresh token whatever the scopes, so a store that supports
 locks serializes every renewal of the same client and NIF; the refresh token and
-the cache are read again inside the lock. A rotated refresh token is handed to
+the cache are read again inside the lock. A renewal waits for the lock as long as
+the platform `timeout_seconds` plus `connect_timeout_seconds`, and the lock lives
+10 seconds longer than that, so it never expires under a renewal still waiting
+for the issuer. A rotated refresh token is handed to
 `replace()` as soon as it is read, before the rest of the grant is checked. The
 access and refresh tokens must follow the `b64token` syntax of RFC 6750. Without a
 repository, the platform driver fails with `transport.missing_credentials` on
