@@ -36,9 +36,9 @@ final readonly class SelfBillingResponseParser
         $decoded    = self::decode($body) ?? throw $unexpected;
 
         return match ($decoded['succeeded'] ?? null) {
-            true    => $this->authorization($request, $repository, $decoded['payload'] ?? null) ?? throw $unexpected,
-            false   => throw TransportException::rejected(self::messages($decoded['messages'] ?? null) ?? throw $unexpected, $status),
-            default => throw $unexpected,
+            true, 'true'   => $this->authorization($request, $repository, $decoded['payload'] ?? null) ?? throw $unexpected,
+            false, 'false' => throw TransportException::rejected(self::messages($decoded['messages'] ?? null) ?? throw $unexpected, $status),
+            default        => throw $unexpected,
         };
     }
 
@@ -63,11 +63,11 @@ final readonly class SelfBillingResponseParser
         }
 
         $id      = $payload['authorizationId'] ?? null;
-        $expires = $payload['authorizationCodeExpirationSeconds'] ?? null;
+        $expires = self::integer($payload['authorizationCodeExpirationSeconds'] ?? null);
         $iud     = $payload['iud'] ?? null;
         $series  = $payload['serie'] ?? null;
-        $led     = $payload['ledCode'] ?? null;
-        $number  = $payload['documentNumber'] ?? null;
+        $led     = self::integer($payload['ledCode'] ?? null);
+        $number  = self::integer($payload['documentNumber'] ?? null);
         if (! \is_string($id) || ! \is_int($expires) || ! \is_string($iud) || ! \is_string($series) || ! \is_int($led) || ! \is_int($number)) {
             return null;
         }
@@ -77,6 +77,15 @@ final readonly class SelfBillingResponseParser
         return $identified && Str::isUuid($id) && $expires > 0 && FiscalRules::isSeries($series)
             ? new SelfBillingAuthorization($id, $expires, $iud, $series, $led, $number)
             : null;
+    }
+
+    private static function integer(mixed $value): ?int
+    {
+        if (\is_string($value) && preg_match('/\A[0-9]{1,18}\z/', $value) === 1) {
+            return (int) $value;
+        }
+
+        return \is_int($value) ? $value : null;
     }
 
     private function identifies(string $iud, SelfBillingAuthorizationRequestData $request, Environment $repository, int $led, int $number): bool

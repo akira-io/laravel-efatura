@@ -11,7 +11,9 @@ use Akira\Efatura\Packaging\PackagedArchive;
 use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Xml\SafeXmlParser;
 use Carbon\CarbonImmutable;
+use DOMComment;
 use DOMElement;
+use DOMProcessingInstruction;
 use DOMText;
 use Illuminate\Support\Str;
 use Psr\Clock\ClockInterface;
@@ -70,9 +72,9 @@ final readonly class SubmissionResponseParser
     {
         $fields    = self::fields($response, self::RESPONSE_FIELDS);
         $succeeded = match ($response->getAttribute('Succeeded')) {
-            'true'  => true,
-            'false' => false,
-            default => null,
+            'true', '1'  => true,
+            'false', '0' => false,
+            default      => null,
         };
         $entryName = self::text($fields['EntryName'] ?? null);
         if ($fields === null || $succeeded === null || $entryName === null) {
@@ -152,6 +154,10 @@ final readonly class SubmissionResponseParser
     {
         $children = [];
         foreach ($parent->childNodes as $node) {
+            if ($node instanceof DOMComment || $node instanceof DOMProcessingInstruction) {
+                continue;
+            }
+
             if ($node instanceof DOMText && Str::trim($node->wholeText, " \n\r\t") === '') {
                 continue;
             }

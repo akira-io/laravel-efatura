@@ -63,12 +63,13 @@ is `transport.response_too_large`. Nothing is shared between two emitters.
 
 The PE answers a submission with `<Responses>` holding one
 `<Response Succeeded="true|false">` per entry (figure 13, p.69). The package reads
-exactly that shape: `Succeeded` is `true` or `false`, every entry of the archive has
+exactly that shape: `Succeeded` is `true`, `false`, `1` or `0`, every entry of the archive has
 exactly one `Response` whose `EntryName` matches it, a success carries an
 `AuthorizationCode`, and a failure carries at least one `Message` with `Source`,
 `Type` and `Code`. Any other body, including HTML from a proxy, JSON, a
 `DOCTYPE`, malformed or non UTF-8 XML, is `transport.unexpected_response`; it
-never becomes a success.
+never becomes a success. Comments and processing instructions between elements
+are ignored.
 
 `SubmissionResult` holds the `kind`, the HTTP `status`, one `EntryResult` per
 entry in archive order (`entryName`, `identifier`, `succeeded`,
@@ -80,7 +81,9 @@ the result of one IUD or event ID. `RemoteMessage` keeps `Source`, `Type`,
 ## Failures
 
 The Manual defines no HTTP status codes, so this table is package policy. A
-readable `<Responses>` body wins over its status.
+readable `<Responses>` body wins over its status, and the status of an error answer
+wins over a body too large to read (a 413 with a large body is still
+`transport.payload_too_large`).
 
 | Answer | `TransportException::$failure` | Retryable |
 | --- | --- | --- |
@@ -190,7 +193,9 @@ fiscal request leaves, so the issuance events report it as never processed.
 `succeeded` true and a `payload` (figure 16) becomes a `SelfBillingAuthorization`;
 its `iud` must be a valid IUD of the configured repository naming the seller, the
 document type, the `ledCode` and the `documentNumber` of the payload, otherwise
-the answer is `transport.unexpected_response`. An answer with `succeeded` false
+the answer is `transport.unexpected_response`. Figure 16 gives no types, so
+`succeeded` may also be the text `true` or `false`, and the expiration, `ledCode`
+and `documentNumber` may be digits in a string. An answer with `succeeded` false
 throws `transport.rejected` with the platform `messages` in
 `TransportException::$messages` (each read from `source`, `type`, `dateTime`,
 `code`, `description` and `location`, first letter in either case). The middleware

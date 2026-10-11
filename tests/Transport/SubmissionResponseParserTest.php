@@ -103,6 +103,12 @@ it('never turns a hostile or incomplete body into a result', function (Closure $
     'other root'              => [fn (string $accepted): string => str_replace('Responses>', 'Results>', $accepted), [T::FIRST_IUD]],
     'succeeded yes'           => [fn (string $accepted): string => str_replace('Succeeded="true"', 'Succeeded="yes"', $accepted), [T::FIRST_IUD]],
     'succeeded missing'       => [fn (string $accepted): string => str_replace(' Succeeded="true"', '', $accepted), [T::FIRST_IUD]],
+    'rejection without flag'  => [fn (string $accepted): string => str_replace(' Succeeded="false"', '', T::response('rejected')), [T::FIRST_IUD]],
+    'succeeded as two'        => [fn (string $accepted): string => str_replace('Succeeded="true"', 'Succeeded="2"', $accepted), [T::FIRST_IUD]],
+    'failure with a code'     => [fn (string $accepted): string => str_replace('<EntryName>', '<AuthorizationCode>X</AuthorizationCode><EntryName>', T::response('rejected')), [T::FIRST_IUD]],
+    'message without source'  => [fn (string $accepted): string => str_replace('<Source>XSD</Source>', '', T::response('rejected')), [T::FIRST_IUD]],
+    'message without type'    => [fn (string $accepted): string => str_replace('<Type>WARNING</Type>', '', T::response('rejected')), [T::FIRST_IUD]],
+    'prefixed root'           => [fn (string $accepted): string => str_replace(['<Responses>', '</Responses>'], ['<h:Responses xmlns:h="urn:hostile-marker">', '</h:Responses>'], $accepted), [T::FIRST_IUD]],
     'entry name missing'      => [fn (string $accepted): string => preg_replace('#<EntryName>.*</EntryName>#', '', $accepted), [T::FIRST_IUD]],
     'entry not in the zip'    => [fn (string $accepted): string => str_replace(T::FIRST_IUD, T::SECOND_IUD, $accepted), [T::FIRST_IUD]],
     'entry without response'  => [fn (string $accepted): string => $accepted, [T::FIRST_IUD, T::SECOND_IUD]],
@@ -116,9 +122,16 @@ it('never turns a hostile or incomplete body into a result', function (Closure $
     'unknown response field'  => [fn (string $accepted): string => str_replace('<AuthorizationCode>', '<Status>ok</Status><AuthorizationCode>', $accepted), [T::FIRST_IUD]],
     'repeated field'          => [fn (string $accepted): string => str_replace('<AuthorizationCode>', '<AuthorizationCode>X</AuthorizationCode><AuthorizationCode>', $accepted), [T::FIRST_IUD]],
     'nested field value'      => [fn (string $accepted): string => str_replace('AUTH-0001', '<b>hostile-marker</b>', $accepted), [T::FIRST_IUD]],
-    'comment among responses' => [fn (string $accepted): string => str_replace('<Response ', '<!-- hostile-marker --><Response ', $accepted), [T::FIRST_IUD]],
     'no responses'            => [fn (string $accepted): string => '<Responses/>', [T::FIRST_IUD]],
 ]);
+
+it('reads the success flag as 1 or 0 and skips comments and processing instructions', function (): void {
+    $accepted = str_replace(['Succeeded="true"', '<Response '], ['Succeeded="1"', '<!-- relayed --><?audit id="7"?><Response '], T::response('accepted'));
+    $rejected = str_replace(['Succeeded="false"', '<Message>'], ['Succeeded="0"', '<!-- first --><Message>'], T::response('rejected'));
+
+    expect($this->parser->parse(T::archive(), 200, $accepted)->outcome())->toBe(SubmissionOutcome::Accepted)
+        ->and($this->parser->parse(T::archive(), 200, $rejected)->entry(T::FIRST_IUD)->messages)->toHaveCount(2);
+});
 
 it('refuses a body above the response limit without reading it', function (): void {
     $body = str_repeat(' ', Fiscal::MAX_RESPONSE_BYTES + 1);

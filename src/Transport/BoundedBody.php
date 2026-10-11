@@ -36,4 +36,15 @@ final readonly class BoundedBody
 
         return $body;
     }
+
+    public function answer(#[SensitiveParameter] Response $response, PackagedArchive|string|null $subject): string
+    {
+        try {
+            return $this->read($response, $subject);
+        } catch (TransportException $transportException) {
+            throw_if($response->successful(), $transportException);
+
+            throw TransportException::because(SubmissionStatus::failure($response->status()), $subject, $response->status());
+        }
+    }
 }

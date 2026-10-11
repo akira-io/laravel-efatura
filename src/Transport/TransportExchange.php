@@ -54,7 +54,7 @@ final readonly class TransportExchange
 
     public function submission(PackagedArchive $archive, #[SensitiveParameter] Response $response): SubmissionResult
     {
-        $body = $this->body->read($response, $archive);
+        $body = $this->body->answer($response, $archive);
 
         try {
             return $this->parser->parse($archive, $response->status(), $body);

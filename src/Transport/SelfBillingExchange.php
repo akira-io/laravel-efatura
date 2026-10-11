@@ -55,7 +55,7 @@ final readonly class SelfBillingExchange
         #[SensitiveParameter]
         Response $response,
     ): SelfBillingAuthorization {
-        $body = $this->body->read($response, null);
+        $body = $this->body->answer($response, null);
 
         try {
             return $this->parser->parse($request, $repository, $response->status(), $body);
