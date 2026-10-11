@@ -340,4 +340,32 @@ return [
             'ca_bundle_path'           => null,
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Diagnostics Routes
+    |--------------------------------------------------------------------------
+    |
+    | Optional JSON routes for diagnostics only: GET {prefix}/readiness runs
+    | the readiness checks (200 when ready, 503 when not) and POST
+    | {prefix}/validate checks an uploaded signed XML against the XSD and
+    | its signature. Nothing is submitted, built or rendered over HTTP.
+    | Disabled by default. Enabling them requires a non-empty middleware
+    | list, which the application uses to authenticate and authorize the
+    | caller; an empty list fails configuration loading. The prefix is a
+    | URI path without parameters; the name is the route name prefix and
+    | ends with a dot. Uploads are limited to max_upload_kilobytes, at most
+    | 5120 (5 MiB). remote_readiness makes the readiness route reach the
+    | configured endpoint as well, which is off by default so an HTTP
+    | request never triggers outbound traffic.
+    |
+    */
+    'routes' => [
+        'enabled'              => env('EFATURA_ROUTES_ENABLED', false),
+        'prefix'               => 'efatura',
+        'name'                 => 'efatura.',
+        'middleware'           => [],
+        'max_upload_kilobytes' => 5120,
+        'remote_readiness'     => false,
+    ],
 ];
