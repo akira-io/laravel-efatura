@@ -23,6 +23,13 @@ requires `laravel/framework`, because it uses foundation classes such as
 `FormRequest` and the application helpers, and Guzzle, whose cURL handler the
 transport drives directly.
 
+Guzzle is required as `^7.15.2 || ^8.2`. Every Guzzle API the package calls
+(`Handler\CurlHandler`, the promises and `Psr7\Utils`) exists in older 7.x
+releases, but the published security advisories cover every Guzzle release
+below 7.15.2 (`roave/security-advisories` refuses them), and 7.15.2 is the
+lowest release the test suite runs on with `--prefer-lowest`. On the 8 line,
+8.2 is the lowest release the suite has run on; Laravel 13 accepts both lines.
+
 ## The install command
 
 ```sh

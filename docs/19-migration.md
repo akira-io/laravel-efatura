@@ -7,11 +7,16 @@ release was being built are not listed.
 
 ## Runtime
 
-The package needs PHP 8.5 and Laravel 13, and adds `psr/clock`,
-`illuminate/database` and `illuminate/http` (with Guzzle, already present in a
-Laravel application) to its dependencies. Run `composer update akira/efatura`.
+The package needs PHP 8.5 and Laravel 13. It now requires `laravel/framework`
+`^13.0` instead of the single `illuminate/*` components the first release
+listed, `guzzlehttp/guzzle` `^7.15.2 || ^8.2` (see
+[installation](01-installation.md#composer)), `psr/clock`, and the `curl`
+extension. Run `composer update akira/efatura`.
 `php artisan efatura:install` skips a config file that already exists, so merge
 the new keys by hand as described under [configuration](#configuration).
+
+The production branch is `main`; the `1.x` branch is retired, so depend on a
+tagged release rather than `dev-1.x`. Contributors run the suite with Pest 5.
 
 Document numbers are now reserved in a database table. Publish its migration
 and run it, after setting `efatura.database.connection` and
@@ -412,11 +417,11 @@ The guides are numbered in reading order. A link to an old path moves to:
 | `docs/currency.md` | `docs/12-currency.md` |
 | `docs/dfa.md` | `docs/13-dfa.md` |
 | `docs/storage.md` | `docs/14-storage.md` |
-| `docs/http.md` | `docs/16-http.md` |
 | `docs/migration.md` | `docs/19-migration.md` |
 
-Installation, configuration, console commands, troubleshooting and the Manual v11
-compliance matrix are new guides (`01`, `02`, `15`, `17` and `18`). The console
+Installation, configuration, console commands, diagnostics routes,
+troubleshooting and the Manual v11 compliance matrix are new guides (`01`, `02`,
+`15`, `16`, `17` and `18`). The console
 sections of the readiness and signing guides moved to
 [console commands](15-console.md).
 

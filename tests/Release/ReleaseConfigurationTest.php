@@ -66,5 +66,12 @@ it('opens the changelog with the header git-cliff writes', function (): void {
     preg_match('/^header = """(.*?)"""/ms', $cliff, $header);
 
     expect($header)->toHaveCount(2)
-        ->and((string) file_get_contents($this->root . '/CHANGELOG.md'))->toStartWith($header[1]);
+        ->and((string) file_get_contents($this->root . '/CHANGELOG.md'))->toBe($header[1] . "## [Unreleased]\n");
+});
+
+it('keeps the release notes of the next version in the migration guide, where git-cliff cannot overwrite them', function (): void {
+    expect((string) file_get_contents($this->root . '/docs/19-migration.md'))
+        ->toContain('The package needs PHP 8.5 and Laravel 13')
+        ->toContain('Pest 5')
+        ->toContain('The production branch is `main`');
 });
