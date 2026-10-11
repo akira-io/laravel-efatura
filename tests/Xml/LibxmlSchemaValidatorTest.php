@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Contracts\DocumentSchemaValidator;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\SignatureProfile;
@@ -10,6 +11,7 @@ use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Tests\Support\DocumentXmlGraphs as X;
 use Akira\Efatura\Tests\Support\SchemaFixtures;
 use Akira\Efatura\Xml\LibxmlSchemaValidator;
+use Akira\Efatura\Xml\SafeXmlParser;
 use Akira\Efatura\Xml\SchemaViolation;
 
 beforeEach(function (): void {
@@ -186,3 +188,24 @@ it('refuses to validate when the bundled entry schema is missing', function (): 
     expect(fn () => $this->schemas->validator()->validate(X::fixture(DocumentType::Invoice)))
         ->toThrow(OfficialArtifactException::class, 'artifacts.missing_or_unreadable');
 });
+
+it('validates a document already parsed exactly as its source', function (string $search, string $replace): void {
+    $xml       = str_replace($search, $replace, X::fixture(DocumentType::Invoice));
+    $validator = resolve(LibxmlSchemaValidator::class);
+    $outcome   = static function (Closure $validate): ?string {
+        try {
+            $validate();
+        } catch (SchemaValidationException $exception) {
+            return $exception->errorCode . ':' . count($exception->violations);
+        }
+
+        return null;
+    };
+
+    expect($validator)->toBeInstanceOf(DocumentSchemaValidator::class)
+        ->and($outcome(fn () => $validator->validateDocument(new SafeXmlParser()->parse($xml))))
+        ->toBe($outcome(fn () => $validator->validate($xml)));
+})->with([
+    'a valid document' => ['<LedCode>', '<LedCode>'],
+    'an invalid one'   => ['<LedCode>', '<Note>x</Note><LedCode>'],
+]);

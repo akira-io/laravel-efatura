@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Actions;
 
+use Akira\Efatura\Contracts\DocumentSchemaValidator;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\EfaturaException;
@@ -19,20 +20,23 @@ final readonly class ValidateXmlDocumentAction
     public function handle(string $xml, ?SignatureProfile $profile = null): XmlValidation
     {
         try {
-            $root = $this->parser->parse($xml)->documentElement?->localName;
+            $document = $this->parser->parse($xml);
         } catch (SchemaValidationException $schemaValidationException) {
             return XmlValidation::refused($schemaValidationException);
         }
 
+        $root = $document->documentElement?->localName;
         $profile ??= $root === Fiscal::DETACHED_SIGNATURE_ROOT ? SignatureProfile::InternallyDetached : SignatureProfile::Enveloped;
 
         try {
-            $this->schemas->validate($xml, $profile);
+            $this->schemas instanceof DocumentSchemaValidator
+                ? $this->schemas->validateDocument($document, $profile)
+                : $this->schemas->validate($xml, $profile);
             $failure = null;
         } catch (EfaturaException $efaturaException) {
             $failure = $efaturaException;
         }
 
-        return XmlValidation::checked($profile, $failure, $this->signatures->handle($xml));
+        return XmlValidation::checked($profile, $failure, $this->signatures->handle($document));
     }
 }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Actions\ValidateXmlDocumentAction;
+use Akira\Efatura\Contracts\DocumentSchemaValidator;
 use Akira\Efatura\Contracts\SchemaValidator;
 use Akira\Efatura\Enums\SignatureFailure;
 use Akira\Efatura\Enums\SignatureProfile;
@@ -64,6 +65,29 @@ it('keeps only the code of a package exception raised by the schema validator', 
     expect($validation->valid())->toBeFalse()
         ->and($validation->toArray()['schema'])->toBe(['valid' => false, 'code' => 'configuration.invalid_type', 'violations' => []])
         ->and(json_encode($validation->toArray(), JSON_THROW_ON_ERROR))->not->toContain('passphrase');
+});
+
+it('hands the schema validator the document it already parsed when the validator accepts one', function (): void {
+    $validator = new class implements DocumentSchemaValidator
+    {
+        public ?DOMDocument $document = null;
+
+        public function validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped): void
+        {
+            throw new RuntimeException('The parsed document was not used.');
+        }
+
+        public function validateDocument(DOMDocument $document, SignatureProfile $profile = SignatureProfile::Enveloped): void
+        {
+            $this->document = $document;
+        }
+    };
+    app()->instance(SchemaValidator::class, $validator);
+
+    $validation = validateXmlDocument(S::sign(S::unsigned())->xml);
+
+    expect($validation->valid())->toBeTrue()
+        ->and($validator->document?->documentElement?->localName)->toBe('Dfe');
 });
 
 it('presents the result as plain values', function (): void {

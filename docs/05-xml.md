@@ -94,7 +94,10 @@ A DTE has no `Totals`. FDC and UDN share one serializer: FDC lists one or more
 `Contracts\SchemaValidator::validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped)`
 validates a document or event against the bundled XSD of the given signature
 profile (`Enveloped` or `InternallyDetached`). The container binds it to
-`Xml\LibxmlSchemaValidator`, which:
+`Xml\LibxmlSchemaValidator`, which also implements
+`Contracts\DocumentSchemaValidator::validateDocument(DOMDocument $document, ...)`
+for a document the hardened parser already read, so a caller that parsed the XML
+once does not parse it again. It:
 
 - refuses any document type declaration with `xml.doctype_forbidden`, before
   parsing when it can see it and after parsing in other encodings, so external
