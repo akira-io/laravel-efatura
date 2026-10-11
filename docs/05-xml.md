@@ -150,8 +150,9 @@ an invoice in the Online, Offline and Off modes, a specimen in each repository,
 FDC with one and several IUDs, UDN with and without `Year`, and the official
 examples. `5 CreditNote.xml` and `8 ReturnNote.xml` carry a 46-digit
 `ds:X509SerialNumber`; libxml 2.9 rejects it as an `xs:integer` while libxml
-2.15 accepts it. The suite validates both examples with the signature removed,
-and accepts the full examples only when they pass or fail on that element alone.
+2.15 accepts it. The validator drops that one violation when the value is a
+decimal integer (see [schema validation of signed XML](07-signing.md#schema-validation-of-signed-xml)),
+so the suite validates both examples whole and with the signature removed.
 
 ## Rules the package applies on top of the XSD
 

@@ -60,8 +60,9 @@ final readonly class LibxmlSchemaValidator implements DocumentSchemaValidator
                 throw new OfficialArtifactException('artifacts.invalid_schema', 'validate');
             }
 
-            if (! $valid) {
-                throw SchemaValidationException::schemaInvalid($this->violations($pending));
+            $violations = SerialNumberTolerance::significant(\array_slice(libxml_get_errors(), $pending));
+            if (! $valid && $violations !== []) {
+                throw SchemaValidationException::schemaInvalid(array_map(SchemaViolation::fromLibxml(...), $violations));
             }
 
             self::assertRoot($document, $profile);
@@ -96,13 +97,5 @@ final readonly class LibxmlSchemaValidator implements DocumentSchemaValidator
 
             throw SchemaValidationException::schemaInvalid([new SchemaViolation($root?->getLineNo() ?? 0, 0, LIBXML_ERR_ERROR, $message)]);
         }
-    }
-
-    /**
-     * @return list<SchemaViolation>
-     */
-    private function violations(int $pending): array
-    {
-        return array_map(SchemaViolation::fromLibxml(...), \array_slice(libxml_get_errors(), $pending));
     }
 }

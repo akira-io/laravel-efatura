@@ -76,13 +76,6 @@ it('validates the official examples with a 46 digit signature serial number once
     expect(fn () => resolve(SchemaValidator::class)->validate(S::withoutSignature(S::official($example))))->not->toThrow(SchemaValidationException::class);
 })->with(['5 CreditNote.xml', '8 ReturnNote.xml']);
 
-it('fails those official examples at most on the signature serial number, depending on the libxml version', function (string $example): void {
-    try {
-        resolve(SchemaValidator::class)->validate(S::official($example));
-        $messages = [];
-    } catch (SchemaValidationException $schemaValidationException) {
-        $messages = array_column($schemaValidationException->violations, 'message');
-    }
-
-    expect($messages)->toBeIn([[], ["Element \x27{http://www.w3.org/2000/09/xmldsig#}X509SerialNumber\x27: \x27…\x27"]]);
+it('validates those official examples whole, whatever the libxml version reports on their serial number', function (string $example): void {
+    expect(fn () => resolve(SchemaValidator::class)->validate(S::official($example)))->not->toThrow(SchemaValidationException::class);
 })->with(['5 CreditNote.xml', '8 ReturnNote.xml']);

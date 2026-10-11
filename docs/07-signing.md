@@ -176,11 +176,13 @@ p.57) and the examples have none.
 
 Preparation validates the unsigned XML against the XSD (§9.4, p.64) and then
 signs it; it does not validate the signed XML again. `ds:X509SerialNumber` is an
-`xs:integer`, and libxml 2.9 refuses values above 64 bits, while ICP-CV serial
-numbers can have up to 20 bytes. The signature has a fixed, tested structure,
-and the tests validate signed documents against the XSD with short serial
-numbers. To validate a signed document yourself on libxml 2.9, expect that
-failure on that element alone (see [schema validation](05-xml.md#schema-validation)).
+`xs:integer`, and libxml before 2.11 refuses values above 64 bits, while ICP-CV
+serial numbers can have up to 20 bytes. `LibxmlSchemaValidator` therefore drops
+the one violation libxml reports as "`'<digits>' is not a valid value of the
+atomic type 'xs:integer'`" on `ds:X509SerialNumber` when the value is a decimal
+integer (`Xml\SerialNumberTolerance`). The rule does not depend on the libxml
+version: a newer libxml never reports it, and any other violation, on that
+element or elsewhere, still fails the validation.
 
 ## Verifying a signature
 

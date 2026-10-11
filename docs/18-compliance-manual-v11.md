@@ -123,7 +123,7 @@ follows.
 | §9.2, p.64 | Signature namespace declared on `Signature`, without prefixes | `Signing\XadesBesXmlSigner` | `tests/Signing/OfficialSignatureShapeTest.php` | Partial: the package writes `ds:` and `xades:` prefixes, as figure 14 and every official example do |
 | §9.3, p.64 | No comments, no non-significant zeros, no extra spaces or indentation | `Xml\XmlValue`, `Xml\XmlWriter` | `tests/Xml/XmlValueTest.php`, `tests/Xml/XmlWriterTest.php` | Supported |
 | §9.4, p.64 | Validate against the official XSD before submitting | `Xml\LibxmlSchemaValidator`, `Actions\PrepareDocumentAction` | `tests/Xml/LibxmlSchemaValidatorTest.php`, `tests/Xml/XsdConformanceTest.php`, `tests/Actions/PrepareDocumentActionTest.php` | Supported |
-| §9.4, p.64 | Official examples pass the bundled XSD | `Xml\LibxmlSchemaValidator` | `tests/Xml/XsdConformanceTest.php` | Supported (two examples fail on libxml 2.9 only on a 46-digit serial number) |
+| §9.4, p.64 | Official examples pass the bundled XSD | `Xml\LibxmlSchemaValidator` | `tests/Xml/XsdConformanceTest.php` | Supported (the 46-digit serial number of two examples, refused as `xs:integer` by libxml before 2.11, is tolerated by `Xml\SerialNumberTolerance`) |
 
 ## Signature (XMLDSig and XAdES-BES)
 

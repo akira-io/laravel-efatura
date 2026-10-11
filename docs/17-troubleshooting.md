@@ -119,7 +119,7 @@ validation. See [XML](05-xml.md).
 
 | Code | Meaning | Fix |
 | --- | --- | --- |
-| `xml.schema_invalid` | The document does not follow the XSD of the profile, or its root is not one the profile accepts; the violations carry the line and message | Correct the data the violations point at, then prepare again |
+| `xml.schema_invalid` | The document does not follow the XSD of the profile, or its root is not one the profile accepts; the violations carry the line and message. A long decimal `ds:X509SerialNumber`, which libxml before 2.11 refuses as `xs:integer`, is not reported | Correct the data the violations point at, then prepare again |
 | `xml.malformed` | The XML is not well formed | Check the file was not truncated or re-encoded |
 | `xml.doctype_forbidden` | The document holds a document type declaration | Remove the `DOCTYPE`; it is never accepted |
 | `xml.too_complex` | The document holds more than 100 000 elements, or an element with more than 16 namespace declarations on itself and its ancestors | Check the file is a single e-Fatura document; no real document comes near either limit |

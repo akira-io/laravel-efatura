@@ -111,6 +111,9 @@ certificate chain was not verified against ICP-CV. With `--json` it prints:
 }
 ```
 
+On libxml before 2.11 the long `ds:X509SerialNumber` of an ICP-CV certificate
+is not reported as a violation (see
+[schema validation of signed XML](07-signing.md#schema-validation-of-signed-xml)).
 `schema.code` is the package code of the failure (`xml.schema_invalid`,
 `xml.malformed`, `xml.doctype_forbidden`...), and each violation has its `line`,
 `column` and redacted `message`. Only the first 100 violations are listed
