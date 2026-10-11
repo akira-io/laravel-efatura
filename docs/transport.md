@@ -96,6 +96,13 @@ wins over a body too large to read (a 413 with a large body is still
 | 429 | `transport.rate_limited` | yes |
 | 3xx, 5xx, a connection broken or silent after the request left, any failure without a cURL error number, an unreadable body after a submission | `transport.outcome_unknown` | no: reconcile first |
 | Body of a successful status that is not figure 13 | `transport.unexpected_response` | no: reconcile first |
+| Body above 5 MiB on a successful status | `transport.response_too_large` | no: reconcile first |
+| A lookup answered outside 2xx, except 404 (not found), 401 and 403 (`transport.unauthorized`), 413 and 429 as above | `transport.http_error` (a read processes nothing) | no |
+| A lookup answered 2xx without the DFE of that IUD (including 206) | `transport.unexpected_response` | no |
+| A self-billing answer with `succeeded` false | `transport.rejected`, with the platform `messages` | no |
+| An archive of another repository than `efatura.environment`, before any request | `transport.repository_mismatch` | no |
+| An archive of more than one emitter on the platform driver, before any request | `transport.mixed_emitters` | no |
+| No middleware key, no OAuth client, no token provider, no `efatura.emitter.tax_id` for a self-billing request, before any request | `transport.missing_credentials` (the configuration key in `field`) | no |
 
 The exception message is the error code. `context` holds only `status`, `kind`,
 `identifiers` (comma separated) and `bytes`; the body, the headers and the
@@ -236,11 +243,24 @@ output. The package writes no logs.
 The requests go through the container `Illuminate\Http\Client\Factory`, which is
 what `Http::fake()` replaces and what dispatches `RequestSending` and
 `ResponseReceived`. Laravel Telescope, Nightwatch or any listener of those events
-can record the request headers. Hide `authorization` and
-`cv-ef-mw-core-transmitter-key` there: add both to the hidden request headers of
-Telescope (`Telescope::hideRequestHeaders()`) and to the redaction of Nightwatch,
-and check that the outgoing request watcher of each tool honours them. Fiscal documents and self-billing
-requests carry personal data: treat recorded bodies the same way.
+can record the whole exchange, secrets included, and reads the whole response
+body (at most the 5 MiB and one byte the handler keeps). Hide exactly these keys
+there:
+
+| Where | Keys |
+| --- | --- |
+| Request headers | `authorization`, `cv-ef-mw-core-transmitter-key` |
+| Request parameters (the form posted to the token endpoint) | `client_secret`, `refresh_token` |
+| Response parameters (the token grant) | `access_token`, `refresh_token`, `id_token` |
+
+In Telescope that is `Telescope::hideRequestHeaders()`, `hideRequestParameters()`
+and `hideResponseParameters()`; in Nightwatch, its redaction of outgoing requests.
+Check that the outgoing request watcher of each tool honours them. Better still,
+keep the fiscal hosts out of those watchers altogether: the middleware base URL
+(`https://localhost:3443`), `services.efatura.cv` and the issuer host
+(`iam.efatura.cv`), for example with a `Telescope::filter()` that drops client
+request entries for them. Fiscal documents and self-billing requests carry
+personal data: treat recorded bodies the same way.
 
 ---
 
