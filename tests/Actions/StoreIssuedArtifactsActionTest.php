@@ -6,6 +6,7 @@ use Akira\Efatura\Actions\StoreIssuedArtifactsAction;
 use Akira\Efatura\Contracts\ArtifactStore;
 use Akira\Efatura\Dfa\RenderedDfa;
 use Akira\Efatura\Enums\ArtifactKind;
+use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Enums\PackageKind;
 use Akira\Efatura\Exceptions\StorageException;
 use Akira\Efatura\Issuance\IssuedDocument;
@@ -66,7 +67,7 @@ it('refuses a document the platform did not authorize and writes nothing', funct
 });
 
 it('adds the DFA when one is given', function (): void {
-    $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(D::issued(), new RenderedDfa('%PDF-1.7 dfa', D::iud() . '.pdf'));
+    $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(D::issued(), new RenderedDfa('%PDF-1.7 dfa', D::iud() . '.pdf', D::iud(), EmissionMode::Online));
 
     expect($artifacts)->toHaveCount(4)
         ->and($artifacts[3]->kind)->toBe(ArtifactKind::Dfa)
@@ -133,7 +134,7 @@ it('never writes a configured secret into a stored artifact or its path', functi
     ];
     config()->set($secrets);
 
-    $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(issueWithMessages(), new RenderedDfa('%PDF-1.7 dfa', D::iud() . '.pdf'));
+    $artifacts = resolve(StoreIssuedArtifactsAction::class)->handle(issueWithMessages(), new RenderedDfa('%PDF-1.7 dfa', D::iud() . '.pdf', D::iud(), EmissionMode::Online));
     $written   = collect(Storage::disk('archive')->allFiles())
         ->flatMap(fn (string $path): array => [$path, (string) Storage::disk('archive')->get($path)])
         ->merge(collect($artifacts)->map(fn (StoredArtifact $stored): string => json_encode(get_object_vars($stored), JSON_THROW_ON_ERROR)))

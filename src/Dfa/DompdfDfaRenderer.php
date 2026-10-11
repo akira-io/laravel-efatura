@@ -43,6 +43,6 @@ final readonly class DompdfDfaRenderer implements DfaRenderer
         $dompdf->render();
         $canvas->get_cpdf()->fileIdentifier = md5($html);
 
-        return new RenderedDfa((string) $dompdf->output(), $data->filename());
+        return new RenderedDfa((string) $dompdf->output(), $data->filename(), $data->iud, $data->mode);
     }
 }

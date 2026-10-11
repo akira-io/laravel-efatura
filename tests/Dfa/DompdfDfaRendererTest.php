@@ -8,10 +8,11 @@ use Akira\Efatura\Dfa\DfaView;
 use Akira\Efatura\Dfa\DompdfDfaRenderer;
 use Akira\Efatura\Dfa\LibraryRequirement;
 use Akira\Efatura\Dfa\RenderedDfa;
+use Akira\Efatura\Enums\EmissionMode;
 use Akira\Efatura\Exceptions\DfaException;
 use Akira\Efatura\Tests\Support\DfaFixtures as D;
 
-it('renders each DFA model as an A4 PDF named after the IUD', function (Closure $source): void {
+it('renders each DFA model as an A4 PDF named after the IUD', function (Closure $source, EmissionMode $model): void {
     $renderer = resolve(DfaRenderer::class);
     $rendered = $renderer->render(resolve(BuildDfaDataAction::class)->handle($source()));
 
@@ -21,11 +22,13 @@ it('renders each DFA model as an A4 PDF named after the IUD', function (Closure 
         ->toContain('/CreationDate (D:20261002130000Z)')
         ->toContain('/ModDate (D:20261002130000Z)')
         ->and($rendered->filename)->toBe(D::iud() . '.pdf')
+        ->and($rendered->iud)->toBe(D::iud())
+        ->and($rendered->model)->toBe($model)
         ->and($rendered->contentType)->toBe('application/pdf');
 })->with([
-    'online'  => [fn (): object => D::issued()],
-    'offline' => [fn (): object => D::prepared(D::offline())],
-    'off'     => [fn (): object => D::prepared(D::off())],
+    'online'  => [fn (): object => D::issued(), EmissionMode::Online],
+    'offline' => [fn (): object => D::prepared(D::offline()), EmissionMode::Offline],
+    'off'     => [fn (): object => D::prepared(D::off()), EmissionMode::Off],
 ]);
 
 it('prints the same PDF, byte for byte, when the same document is reprinted', function (): void {

@@ -140,8 +140,9 @@ the values come from the document and its parties. The view receives `$dfa`
 | `Contracts\DfaRenderer` | `Dfa\DompdfDfaRenderer` | `render(DfaData): RenderedDfa` |
 | `Contracts\QrCodeRenderer` | `Dfa\BaconQrCodeRenderer` | `render(string $payload): string` (SVG) |
 
-`RenderedDfa` holds `bytes`, `contentType` (`application/pdf`) and `filename`
-(`{IUD}.pdf`). Bind another implementation in the container to replace either.
+`RenderedDfa` holds `bytes`, `contentType` (`application/pdf`), `filename`
+(`{IUD}.pdf`), the `iud` it was rendered for and its `model` (an
+`EmissionMode`: `Online`, `Offline` or `Off`), copied from the `DfaData`. Bind another implementation in the container to replace either.
 
 The dompdf renderer disables remote resources, embedded PHP and JavaScript, and
 accepts only `data:` URIs, which is how the QR code is embedded.
