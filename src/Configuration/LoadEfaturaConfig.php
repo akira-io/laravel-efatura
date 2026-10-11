@@ -112,6 +112,10 @@ final readonly class LoadEfaturaConfig
             throw new ConfigurationException('configuration.invalid_length', 'efatura.transmitter.middleware_key');
         }
 
+        if ($key !== null && preg_match('/\A[\x21-\x7E]+\z/', $key) !== 1) {
+            throw new ConfigurationException('configuration.invalid_format', 'efatura.transmitter.middleware_key');
+        }
+
         return $key;
     }
 

@@ -23,7 +23,7 @@ repository and dispatch the Laravel events.
 
 | Driver | Class | Base URL (`efatura.http.<driver>.base_url`) | Credentials |
 | --- | --- | --- | --- |
-| `middleware` (default) | `Transport\MiddlewareTransport` | `https://localhost:3443/v1` | `cv-ef-mw-core-transmitter-key` header with `efatura.transmitter.middleware_key` (64 characters, §11.4.1, p.77) |
+| `middleware` (default) | `Transport\MiddlewareTransport` | `https://localhost:3443/v1` | `cv-ef-mw-core-transmitter-key` header with `efatura.transmitter.middleware_key` (64 printable ASCII characters, §11.4.1, p.77) |
 | `platform` | `Transport\PlatformTransport` | `https://services.efatura.cv/v1` | `Authorization: Bearer` from `Contracts\AccessTokenProvider` |
 
 The middleware keeps the OAuth credentials of the transmitter and of each emitter
