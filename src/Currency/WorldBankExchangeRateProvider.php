@@ -8,6 +8,7 @@ use Akira\Efatura\Configuration\HttpClientConfig;
 use Akira\Efatura\Contracts\ExchangeRateProvider;
 use Akira\Efatura\Enums\ExchangeRateFailure;
 use Akira\Efatura\Enums\ExchangeRateType;
+use Akira\Efatura\Enums\WorldBankObservationYear;
 use Akira\Efatura\Exceptions\ExchangeRateException;
 use Akira\Efatura\Money\DecimalFormatter;
 use Akira\Efatura\Support\Fiscal;
@@ -34,8 +35,13 @@ final readonly class WorldBankExchangeRateProvider implements ExchangeRateProvid
     /**
      * @param array<string, string> $economies
      */
-    public function __construct(private ExchangeRateClient $client, private ClockInterface $clock, private HttpClientConfig $profile, array $economies = [])
-    {
+    public function __construct(
+        private ExchangeRateClient $client,
+        private ClockInterface $clock,
+        private HttpClientConfig $profile,
+        array $economies = [],
+        private WorldBankObservationYear $observationYear = WorldBankObservationYear::Previous,
+    ) {
         $this->economies = [...self::economies($economies), Fiscal::CURRENCY => self::CAPE_VERDE_ECONOMY];
     }
 
@@ -51,10 +57,17 @@ final readonly class WorldBankExchangeRateProvider implements ExchangeRateProvid
             }
         }
 
-        $year     = Fiscal::local($request->effectiveAt)->year;
+        $year     = $this->observationYear->year(Fiscal::local($request->effectiveAt)->year);
         $source   = $this->observation('source', $request->sourceCurrency, $year);
         $target   = $this->observation('target', $request->targetCurrency, $year);
-        $evidence = ['source' => 'World Bank', 'indicator' => self::INDICATOR, 'observation_period' => (string) $year, ...$source, ...$target];
+        $evidence = [
+            'source'             => 'World Bank',
+            'indicator'          => self::INDICATOR,
+            'observation_period' => (string) $year,
+            'observation_year'   => $this->observationYear->value,
+            ...$source,
+            ...$target,
+        ];
 
         return new ExchangeRateQuote(
             $request->sourceCurrency,

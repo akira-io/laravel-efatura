@@ -186,7 +186,10 @@ return [
     | with __invoke resolved from the container). BCV rate_type is buy or
     | sell; a publication of an earlier Cabo Verde day is accepted only when
     | max_publication_age_days is positive. World Bank economies map a
-    | currency to an economy code (EUR => EMU); CVE is always CPV. Fixed
+    | currency to an economy code (EUR => EMU); CVE is always CPV. The World
+    | Bank observation_year is previous (the year before the request, the
+    | latest annual average usually published) or request (the request's
+    | own year, often not published yet). Fixed
     | rates map a currency to a positive decimal string. Quotes are cached
     | for cache.exchange_rates_ttl_seconds.
     |
@@ -198,7 +201,8 @@ return [
             'max_publication_age_days' => env('EFATURA_BCV_MAX_PUBLICATION_AGE_DAYS', 0),
         ],
         'world_bank' => [
-            'economies' => [],
+            'economies'        => [],
+            'observation_year' => env('EFATURA_WORLD_BANK_OBSERVATION_YEAR', 'previous'),
         ],
         'fixed' => [
             'rates'     => [],

@@ -85,12 +85,18 @@ A publication after the requested day fails with `exchange_rate.date_invalid`.
 
 ### World Bank
 
-The observation of the Cabo Verde year of the request is read for each non-USD
-leg from `https://api.worldbank.org/v2/country/{economy}/indicator/PA.NUS.FCRF`.
+The year observed is set by `world_bank.observation_year`: `previous` (the
+default) reads the year before the Cabo Verde year of the request, the latest
+annual average the World Bank usually has; `request` reads the request's own year,
+which is often not published until well into the next year. That observation is read
+for each non-USD leg from `https://api.worldbank.org/v2/country/{economy}/indicator/PA.NUS.FCRF`.
 The rate is `target per USD / source per USD`. CVE is always the economy `CPV`;
 every other currency needs an entry in `world_bank.economies` (for example
 `EUR => EMU`). A missing or null observation, or one of another year, fails with
 `exchange_rate.date_unavailable`; the provider never falls back to another year.
+The quote's `effectiveAt` is the first day of the year observed, and its evidence
+records that year (`observation_period`) and the rule that chose it
+(`observation_year`).
 
 The address is fixed to `https://api.worldbank.org`: the `efatura.http.world_bank`
 client profile carries only timeouts, retries and TLS options, and a `base_url`
@@ -113,7 +119,10 @@ ignored. Fixed and callback rates are not cached.
         'rate_type'                => env('EFATURA_BCV_RATE_TYPE', 'buy'),
         'max_publication_age_days' => env('EFATURA_BCV_MAX_PUBLICATION_AGE_DAYS', 0),
     ],
-    'world_bank' => ['economies' => []],
+    'world_bank' => [
+        'economies'        => [],
+        'observation_year' => env('EFATURA_WORLD_BANK_OBSERVATION_YEAR', 'previous'),
+    ],
     'fixed'      => ['rates' => [], 'rate_type' => 'custom', 'name' => 'Fixed rate'],
     'callback'   => null,
 ],
@@ -125,6 +134,7 @@ ignored. Fixed and callback rates are not cached.
 | `bcv.rate_type` | `buy` or `sell` | `configuration.invalid_rate_type` |
 | `bcv.max_publication_age_days` | A nonnegative integer | `configuration.invalid_integer` |
 | `world_bank.economies` | A map of codes of the official currency catalog (any letter case, normalized to upper case) to two or three letter or digit economy codes; `CVE` may only be restated as `CPV` | `configuration.invalid_type` |
+| `world_bank.observation_year` | `previous` or `request`, in any letter case | `configuration.invalid_observation_year` |
 | `fixed.rates` | A map of codes of the official currency catalog (any letter case, normalized to upper case) to positive decimal strings or integers | `configuration.invalid_type` |
 | `fixed.rate_type` | Any `ExchangeRateType` value | `configuration.invalid_rate_type` |
 | `fixed.name` | A nonempty string | `configuration.empty_string` |

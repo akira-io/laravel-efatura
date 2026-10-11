@@ -7,6 +7,7 @@ use Akira\Efatura\Currency\ExchangeRateRequest;
 use Akira\Efatura\Currency\WorldBankExchangeRateProvider;
 use Akira\Efatura\Enums\ExchangeRateFailure;
 use Akira\Efatura\Enums\ExchangeRateType;
+use Akira\Efatura\Enums\WorldBankObservationYear;
 use Akira\Efatura\Tests\Support\CurrencyFixtures as C;
 use Carbon\CarbonImmutable;
 use GuzzleHttp\Exception\ConnectException;
@@ -32,7 +33,7 @@ function worldBankServes(?string $cpv = null, ?string $emu = null): void
 
 function worldBankRequest(string $source = 'USD', string $target = 'CVE', ?ExchangeRateType $type = null): ExchangeRateRequest
 {
-    return new ExchangeRateRequest($source, CarbonImmutable::parse('2025-07-21T00:00:00Z'), $type, $target);
+    return new ExchangeRateRequest($source, CarbonImmutable::parse('2026-07-21T00:00:00Z'), $type, $target);
 }
 
 it('returns the CVE per USD annual average with its provenance', function (): void {
@@ -50,6 +51,7 @@ it('returns the CVE per USD annual average with its provenance', function (): vo
             'source'             => 'World Bank',
             'indicator'          => 'PA.NUS.FCRF',
             'observation_period' => '2025',
+            'observation_year'   => 'previous',
             'source_currency'    => 'USD',
             'source_value'       => '1',
             'target_currency'    => 'CVE',
@@ -86,9 +88,27 @@ it('answers USD to USD without asking the World Bank', function (): void {
 it('reads the observation of the Cabo Verde year at the UTC year boundary', function (): void {
     worldBankServes();
 
-    $request = new ExchangeRateRequest('USD', CarbonImmutable::parse('2026-01-01T00:30:00Z'));
+    $request = new ExchangeRateRequest('USD', CarbonImmutable::parse('2027-01-01T00:30:00Z'));
 
     expect(C::worldBank()->rate($request)->evidence['observation_period'])->toBe('2025');
+});
+
+it('reads the year of the request itself when configured to', function (): void {
+    worldBankServes();
+
+    $quote = C::worldBank(['observationYear' => WorldBankObservationYear::Request])->rate(new ExchangeRateRequest('USD', CarbonImmutable::parse('2025-07-21T12:00:00Z')));
+
+    expect($quote->evidence)->toMatchArray(['observation_period' => '2025', 'observation_year' => 'request'])
+        ->and($quote->effectiveAt->toDateString())->toBe('2025-01-01');
+    Http::assertSent(fn (Request $request): bool => $request->url() === WORLD_BANK_CPV);
+});
+
+it('reports the current year as not published by default only when asked for it', function (): void {
+    worldBankServes();
+
+    expect(C::failure(fn (): ExchangeRateQuote => C::worldBank(['observationYear' => WorldBankObservationYear::Request])->rate(worldBankRequest())))
+        ->toBe(ExchangeRateFailure::DateUnavailable)
+        ->and((string) C::worldBank()->rate(worldBankRequest())->rate)->toBe('101.74950');
 });
 
 it('refuses another rate type or an unmapped currency before any request', function (ExchangeRateRequest $request, ExchangeRateFailure $failure): void {

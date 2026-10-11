@@ -6,6 +6,7 @@ namespace Akira\Efatura\Configuration;
 
 use Akira\Efatura\Enums\ExchangeRateSource;
 use Akira\Efatura\Enums\ExchangeRateType;
+use Akira\Efatura\Enums\WorldBankObservationYear;
 
 final readonly class ExchangeRatesConfig
 {
@@ -23,5 +24,6 @@ final readonly class ExchangeRatesConfig
         public ExchangeRateType $fixedRateType = ExchangeRateType::Custom,
         public string $fixedName = 'Fixed rate',
         public ?string $callback = null,
+        public WorldBankObservationYear $worldBankObservationYear = WorldBankObservationYear::Previous,
     ) {}
 }

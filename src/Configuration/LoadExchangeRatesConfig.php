@@ -7,6 +7,7 @@ namespace Akira\Efatura\Configuration;
 use Akira\Efatura\Concerns\ReadsConfigurationValues;
 use Akira\Efatura\Enums\ExchangeRateSource;
 use Akira\Efatura\Enums\ExchangeRateType;
+use Akira\Efatura\Enums\WorldBankObservationYear;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\Money\DecimalFormatter;
@@ -44,6 +45,7 @@ final readonly class LoadExchangeRatesConfig
             $this->rateType('.fixed.rate_type', $defaults->fixedRateType, ExchangeRateType::cases()),
             $this->requiredString(self::PATH . '.fixed.name', $defaults->fixedName),
             $this->callback($provider),
+            $this->observationYear($defaults->worldBankObservationYear),
         );
     }
 
@@ -62,6 +64,15 @@ final readonly class LoadExchangeRatesConfig
         $provider = \is_string($value) ? ExchangeRateSource::tryFrom(Str::lower(Str::trim($value))) : null;
 
         return $provider ?? throw new ConfigurationException('configuration.invalid_exchange_rate_provider', self::PATH . '.provider');
+    }
+
+    private function observationYear(WorldBankObservationYear $default): WorldBankObservationYear
+    {
+        $path  = self::PATH . '.world_bank.observation_year';
+        $value = $this->repository->get($path) ?? $default;
+        $year  = \is_string($value) ? WorldBankObservationYear::tryFrom(Str::lower(Str::trim($value))) : $value;
+
+        return $year instanceof WorldBankObservationYear ? $year : throw new ConfigurationException('configuration.invalid_observation_year', $path);
     }
 
     /**

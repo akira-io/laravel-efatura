@@ -81,10 +81,13 @@ it('reads the World Bank with the configured economies', function (): void {
         'https://api.worldbank.org/v2/country/EMU/*' => Http::response(C::fixture('world-bank-emu.json')),
     ]);
 
-    $quote = exchangeRatesUsing(['provider' => 'world_bank', 'world_bank' => ['economies' => ['EUR' => 'EMU']]])
+    $previous = exchangeRatesUsing(['provider' => 'world_bank', 'world_bank' => ['economies' => ['EUR' => 'EMU']]])->rate(C::request(null));
+    $request  = exchangeRatesUsing(['provider' => 'world_bank', 'world_bank' => ['economies' => ['EUR' => 'EMU'], 'observation_year' => 'request']])
         ->rate(C::request(null, effectiveAt: '2025-07-21T12:00:00Z'));
 
-    expect((string) $quote->rate)->toBe('110.19006');
+    expect((string) $previous->rate)->toBe('110.19006')
+        ->and($previous->evidence['observation_year'])->toBe('previous')
+        ->and($request->evidence['observation_year'])->toBe('request');
 });
 
 it('refuses a callback class that cannot be called', function (): void {

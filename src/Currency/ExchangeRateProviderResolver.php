@@ -38,7 +38,7 @@ final readonly class ExchangeRateProviderResolver
             )),
             ExchangeRateSource::WorldBank => $this->cached(
                 ExchangeRateSource::WorldBank,
-                new WorldBankExchangeRateProvider($this->client, $this->clock, $this->config->http->worldBank, $rates->worldBankEconomies),
+                new WorldBankExchangeRateProvider($this->client, $this->clock, $this->config->http->worldBank, $rates->worldBankEconomies, $rates->worldBankObservationYear),
             ),
             ExchangeRateSource::Fixed    => new FixedExchangeRateProvider($this->clock, $rates->fixedRates, $rates->fixedName, $rates->fixedRateType),
             ExchangeRateSource::Callback => new CallbackExchangeRateProvider($this->callback($rates->callback)),

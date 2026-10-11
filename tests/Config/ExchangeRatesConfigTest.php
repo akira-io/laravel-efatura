@@ -6,6 +6,7 @@ use Akira\Efatura\Configuration\ExchangeRatesConfig;
 use Akira\Efatura\Configuration\LoadExchangeRatesConfig;
 use Akira\Efatura\Enums\ExchangeRateSource;
 use Akira\Efatura\Enums\ExchangeRateType;
+use Akira\Efatura\Enums\WorldBankObservationYear;
 use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Tests\Support\ConfigFixtures;
 use Akira\Efatura\Tests\Support\TreasuryExchangeRates;
@@ -23,6 +24,7 @@ it('selects the BCV buy rate of the same day by default', function (): void {
         ->and($config->bcvRateType)->toBe(ExchangeRateType::Buy)
         ->and($config->bcvMaxPublicationAgeDays)->toBe(0)
         ->and($config->worldBankEconomies)->toBe([])
+        ->and($config->worldBankObservationYear)->toBe(WorldBankObservationYear::Previous)
         ->and($config->fixedRates)->toBe([])
         ->and($config->fixedRateType)->toBe(ExchangeRateType::Custom)
         ->and($config->fixedName)->toBe('Fixed rate')
@@ -33,7 +35,7 @@ it('reads every option of the exchange rate section', function (): void {
     $config = exchangeRatesConfig([
         'provider'   => ' Fixed ',
         'bcv'        => ['rate_type' => 'SELL', 'max_publication_age_days' => '3'],
-        'world_bank' => ['economies' => ['EUR' => 'EMU']],
+        'world_bank' => ['economies' => ['EUR' => 'EMU'], 'observation_year' => ' Request '],
         'fixed'      => ['rates' => ['EUR' => '110.265', 'USD' => 100], 'rate_type' => 'reference', 'name' => 'Treasury rate'],
         'callback'   => TreasuryExchangeRates::class,
     ]);
@@ -42,6 +44,7 @@ it('reads every option of the exchange rate section', function (): void {
         ->and($config->bcvRateType)->toBe(ExchangeRateType::Sell)
         ->and($config->bcvMaxPublicationAgeDays)->toBe(3)
         ->and($config->worldBankEconomies)->toBe(['EUR' => 'EMU'])
+        ->and($config->worldBankObservationYear)->toBe(WorldBankObservationYear::Request)
         ->and($config->fixedRates)->toBe(['EUR' => '110.265', 'USD' => '100'])
         ->and($config->fixedRateType)->toBe(ExchangeRateType::Reference)
         ->and($config->fixedName)->toBe('Treasury rate')
@@ -61,26 +64,28 @@ it('refuses an exchange rate section it cannot use', function (array $section, s
             ->and($exception->field)->toBe($field);
     });
 })->with([
-    'an unknown provider'        => [['provider' => 'ecb'], 'configuration.invalid_exchange_rate_provider', 'efatura.exchange_rates.provider'],
-    'a numeric provider'         => [['provider' => 1], 'configuration.invalid_exchange_rate_provider', 'efatura.exchange_rates.provider'],
-    'a BCV reference rate'       => [['bcv' => ['rate_type' => 'reference']], 'configuration.invalid_rate_type', 'efatura.exchange_rates.bcv.rate_type'],
-    'an unknown fixed rate'      => [['fixed' => ['rate_type' => 'average']], 'configuration.invalid_rate_type', 'efatura.exchange_rates.fixed.rate_type'],
-    'a negative age'             => [['bcv' => ['max_publication_age_days' => -1]], 'configuration.invalid_integer', 'efatura.exchange_rates.bcv.max_publication_age_days'],
-    'a list of economies'        => [['world_bank' => ['economies' => ['EMU']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
-    'an economy path'            => [['world_bank' => ['economies' => ['EUR' => '../x']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
-    'economies not a map'        => [['world_bank' => ['economies' => 'EUR:EMU']], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
-    'a zero fixed rate'          => [['fixed' => ['rates' => ['EUR' => '0']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
-    'a float fixed rate'         => [['fixed' => ['rates' => ['EUR' => 110.265]]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
-    'a fixed rate without code'  => [['fixed' => ['rates' => ['110.265']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
-    'an empty fixed name'        => [['fixed' => ['name' => ' ']], 'configuration.empty_string', 'efatura.exchange_rates.fixed.name'],
-    'an unknown callback class'  => [['callback' => 'App\Missing'], 'configuration.invalid_type', 'efatura.exchange_rates.callback'],
-    'a callback provider alone'  => [['provider' => 'callback'], 'configuration.invalid_type', 'efatura.exchange_rates.callback'],
-    'a scalar bcv section'       => [['bcv' => 'buy'], 'configuration.invalid_type', 'efatura.exchange_rates.bcv'],
-    'a four letter fixed code'   => [['fixed' => ['rates' => ['EURO' => '110.265']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
-    'an unofficial fixed code'   => [['fixed' => ['rates' => ['AAA' => '110.265']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
-    'an unofficial economy code' => [['world_bank' => ['economies' => ['AAA' => 'EMU']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
-    'a four letter economy'      => [['world_bank' => ['economies' => ['EUR' => 'EMUS']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
-    'CVE outside Cabo Verde'     => [['world_bank' => ['economies' => ['CVE' => 'USA']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
+    'an unknown provider'         => [['provider' => 'ecb'], 'configuration.invalid_exchange_rate_provider', 'efatura.exchange_rates.provider'],
+    'a numeric provider'          => [['provider' => 1], 'configuration.invalid_exchange_rate_provider', 'efatura.exchange_rates.provider'],
+    'a BCV reference rate'        => [['bcv' => ['rate_type' => 'reference']], 'configuration.invalid_rate_type', 'efatura.exchange_rates.bcv.rate_type'],
+    'an unknown fixed rate'       => [['fixed' => ['rate_type' => 'average']], 'configuration.invalid_rate_type', 'efatura.exchange_rates.fixed.rate_type'],
+    'a negative age'              => [['bcv' => ['max_publication_age_days' => -1]], 'configuration.invalid_integer', 'efatura.exchange_rates.bcv.max_publication_age_days'],
+    'a list of economies'         => [['world_bank' => ['economies' => ['EMU']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
+    'an economy path'             => [['world_bank' => ['economies' => ['EUR' => '../x']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
+    'economies not a map'         => [['world_bank' => ['economies' => 'EUR:EMU']], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
+    'a zero fixed rate'           => [['fixed' => ['rates' => ['EUR' => '0']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
+    'a float fixed rate'          => [['fixed' => ['rates' => ['EUR' => 110.265]]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
+    'a fixed rate without code'   => [['fixed' => ['rates' => ['110.265']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
+    'an empty fixed name'         => [['fixed' => ['name' => ' ']], 'configuration.empty_string', 'efatura.exchange_rates.fixed.name'],
+    'an unknown callback class'   => [['callback' => 'App\Missing'], 'configuration.invalid_type', 'efatura.exchange_rates.callback'],
+    'a callback provider alone'   => [['provider' => 'callback'], 'configuration.invalid_type', 'efatura.exchange_rates.callback'],
+    'a scalar bcv section'        => [['bcv' => 'buy'], 'configuration.invalid_type', 'efatura.exchange_rates.bcv'],
+    'a four letter fixed code'    => [['fixed' => ['rates' => ['EURO' => '110.265']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
+    'an unofficial fixed code'    => [['fixed' => ['rates' => ['AAA' => '110.265']]], 'configuration.invalid_type', 'efatura.exchange_rates.fixed.rates'],
+    'an unofficial economy code'  => [['world_bank' => ['economies' => ['AAA' => 'EMU']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
+    'a four letter economy'       => [['world_bank' => ['economies' => ['EUR' => 'EMUS']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
+    'an unknown observation year' => [['world_bank' => ['observation_year' => 'current']], 'configuration.invalid_observation_year', 'efatura.exchange_rates.world_bank.observation_year'],
+    'a numeric observation year'  => [['world_bank' => ['observation_year' => 2025]], 'configuration.invalid_observation_year', 'efatura.exchange_rates.world_bank.observation_year'],
+    'CVE outside Cabo Verde'      => [['world_bank' => ['economies' => ['CVE' => 'USA']]], 'configuration.invalid_type', 'efatura.exchange_rates.world_bank.economies'],
 ]);
 
 it('normalizes the currency and economy codes and accepts CVE restated as CPV', function (): void {
