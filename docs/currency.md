@@ -132,11 +132,14 @@ the source currency is the second argument.
 4. The quote is the one given, or the provider's answer for the issue instant. It
    must answer that request.
 5. Only the independent inputs are converted from the source currency, by
-   multiplying by the rate and rounding half up to two decimals: the unit `price`
-   of each line, amount line discounts, absolute `taxAmount` values, an amount
-   global discount, the amount to pay, reference `paymentAmount` values and their
-   taxes, and payment `paymentAmount` values. Quantities, percentages and
-   percentage discounts do not change.
+   multiplying by the rate. The unit `price` of each line is rounded half up to
+   five decimals, the most the Manual allows for an amount, so that a sub-cent
+   price times a large quantity keeps its value (10 000 units of 0.001 EUR at
+   110.265 give 0.11027 CVE each and an extension of 1102.70, not 0.00). Amount
+   line discounts, absolute `taxAmount` values, an amount global discount, the
+   amount to pay, reference `paymentAmount` values and their taxes, and payment
+   `paymentAmount` values are rounded half up to two decimals. Quantities,
+   percentages and percentage discounts do not change.
 6. Every derived line value is recomputed from the converted inputs with the
    formulas and rounding of the totals verification:
    - `priceExtension` is the converted price times the quantity, rounded to two
@@ -173,11 +176,13 @@ The source document is never modified.
 This differs from the Node package, which converts every line amount on its own
 (`priceExtension`, `netTotal` and `taxTotal` included). This package's totals
 verification checks each line against itself, so converting derived values
-independently would refuse ordinary documents: a price of 1 EUR for two units at
-110.265 gives 110.27 times 2 = 220.54, while the extension converted on its own is
-220.53. Recomputing them keeps the converted document reconciled; the cost is
-that a converted extension can differ by a cent from the source extension
-converted on its own.
+independently would refuse documents whose extension is not the converted price
+times the quantity: 10 000 units of 0.001 EUR at 110.265 give a price of 0.11027
+(five decimals at most) and an extension of 1102.70, while the extension converted
+on its own is 1102.65. Recomputing them keeps the converted document reconciled;
+the cost is that a converted extension can differ from the source extension
+converted on its own by the price rounding times the quantity, a difference that
+ends in `PayableRoundingAmount`.
 
 The conversion still fails with `exchange_rate.invoice_invalid` when a converted
 input cannot be represented: an absolute tax amount or a payment amount that

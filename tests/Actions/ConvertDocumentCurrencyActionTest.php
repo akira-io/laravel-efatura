@@ -56,7 +56,7 @@ it('converts the lines at two decimals and keeps the residue in the payable roun
 
     expect($converted)->toBeInstanceOf(ElectronicInvoiceData::class)->not->toBe($source)
         ->and($source->toPayload())->toBe($before)
-        ->and($payload['lines'][0])->toMatchArray(['price' => '110.27000', 'priceExtension' => '110.27000', 'netTotal' => '110.27000'])
+        ->and($payload['lines'][0])->toMatchArray(['price' => '110.26500', 'priceExtension' => '110.27000', 'netTotal' => '110.27000'])
         ->and($payload['lines'][0]['taxes'][0])->toMatchArray(['taxPercentage' => '15', 'taxTotal' => '16.54000'])
         ->and($payload['totals'])->toMatchArray([
             'priceExtensionTotalAmount' => '110.27000',

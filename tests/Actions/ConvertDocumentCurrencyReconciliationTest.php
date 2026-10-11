@@ -30,27 +30,44 @@ function reconciledToCve(array $payload, string $rate, string $currency = 'EUR')
     return resolve(ConvertDocumentCurrencyAction::class)->handle(ElectronicInvoiceData::from($payload), $currency, $quote);
 }
 
-it('converts the unit price and recomputes the extension of two units', function (): void {
+function keepsTheNetTotal(array $source, array $converted, string $rate): bool
+{
+    $perLine   = BigDecimal::of($rate)->multipliedBy('0.01')->plus('0.02');
+    $tolerance = collect($source['lines'])->reduce(
+        static fn (BigDecimal $carry, array $line): BigDecimal => $carry->plus($perLine)->plus(BigDecimal::of($line['quantity']['value'])->multipliedBy('0.00001')),
+        BigDecimal::of('0.01'),
+    );
+    $drift = BigDecimal::of($source['totals']['netTotalAmount'])->multipliedBy($rate)->minus($converted['totals']['netTotalAmount'])->abs();
+
+    return $drift->isLessThanOrEqualTo($tolerance);
+}
+
+it('converts the unit price at five decimals and recomputes the extension of two units', function (): void {
     $payload = reconciledToCve(ForeignDocuments::invoice([['quantity' => '2', 'price' => '1', 'tax' => '15']]), '110.265')->toPayload();
 
-    expect($payload['lines'][0])->toMatchArray(['price' => '110.27000', 'priceExtension' => '220.54000', 'netTotal' => '220.54000'])
+    expect($payload['lines'][0])->toMatchArray(['price' => '110.26500', 'priceExtension' => '220.53000', 'netTotal' => '220.53000'])
         ->and($payload['lines'][0]['taxes'][0])->toMatchArray(['taxPercentage' => '15', 'taxTotal' => '33.08000'])
         ->and($payload['totals'])->toMatchArray([
-            'priceExtensionTotalAmount' => '220.54000',
-            'netTotalAmount'            => '220.54000',
+            'priceExtensionTotalAmount' => '220.53000',
+            'netTotalAmount'            => '220.53000',
             'taxTotalAmount'            => '33.08000',
             'payableAmount'             => '253.61000',
-            'payableRoundingAmount'     => '-0.01000',
+            'payableRoundingAmount'     => null,
         ]);
 });
 
-it('reconciles awkward rates, quantities, taxes and discounts', function (array $lines, ?array $discount, string $rate): void {
+it('reconciles awkward rates, quantities, taxes and discounts', function (array $lines, ?array $discount, string $rate, ?string $net = null, string $currency = 'EUR'): void {
     $source    = ForeignDocuments::invoice($lines, $discount);
-    $converted = reconciledToCve($source, $rate)->toPayload();
+    $converted = reconciledToCve($source, $rate, $currency)->toPayload();
     $payable   = BigDecimal::of($source['totals']['payableAmount'])->multipliedBy($rate);
 
-    expect($payable->minus($converted['totals']['payableAmount'])->abs()->isLessThanOrEqualTo('0.005'))->toBeTrue();
+    expect($payable->minus($converted['totals']['payableAmount'])->abs()->isLessThanOrEqualTo('0.005'))->toBeTrue()
+        ->and(keepsTheNetTotal($source, $converted, $rate))->toBeTrue()
+        ->and($converted['totals']['netTotalAmount'])->toBe($net ?? $converted['totals']['netTotalAmount']);
 })->with([
+    'ten thousand sub-cent units'           => [[['quantity' => '10000', 'price' => '0.001', 'tax' => '15']], null, '110.265', '1102.70000'],
+    'a thousand yen'                        => [[['price' => '1000', 'tax' => '15']], null, '0.59727', '597.27000', 'JPY'],
+    'many sub-cent units at a small rate'   => [[['quantity' => '10000', 'price' => '0.00523', 'tax' => '15']], null, '0.59727', '31.20000'],
     'a third of a unit at a tiny rate'      => [[['quantity' => '0.333', 'price' => '7.77', 'tax' => '2.375']], null, '0.00917'],
     'many units at a large rate'            => [[['quantity' => '100', 'price' => '0.99', 'tax' => '23']], null, '1234.56789'],
     'a percentage line discount'            => [[['quantity' => '3', 'price' => '33.33', 'discount' => ['value' => '33.333', 'valueType' => 'P'], 'tax' => '8.5']], null, '3.33333'],
@@ -71,7 +88,8 @@ it('reconciles a few hundred generated documents', function (): void {
         $residual        = BigDecimal::of($alternative['value'])->multipliedBy($alternative['exchangeRate'])->minus($totals['payableAmount'])->abs();
 
         expect(BigDecimal::of($alternative['value'])->isEqualTo($source['totals']['payableAmount']))->toBeTrue('document ' . $index)
-            ->and($residual->isLessThanOrEqualTo('0.005'))->toBeTrue('document ' . $index);
+            ->and($residual->isLessThanOrEqualTo('0.005'))->toBeTrue('document ' . $index)
+            ->and(keepsTheNetTotal($source, ['totals' => $totals], $rate))->toBeTrue('document ' . $index);
     }
 });
 

@@ -11,6 +11,7 @@ use Akira\Efatura\Enums\DiscountValueType;
 use Akira\Efatura\Enums\LineType;
 use Akira\Efatura\Enums\TaxType;
 use Akira\Efatura\Money\DecimalFormatter;
+use Akira\Efatura\Support\Fiscal;
 use Brick\Math\BigDecimal;
 use Brick\Money\Money;
 
@@ -87,7 +88,7 @@ final readonly class CveLines
      */
     private function prices(LineItemData $line): array
     {
-        $price          = $this->money($line->price);
+        $price          = $this->unitPrice($line->price);
         $priceExtension = $this->round($price->multipliedBy($line->quantity->value));
         $discount       = $this->convertedDiscount($line->discount);
 
@@ -190,6 +191,11 @@ final readonly class CveLines
         }
 
         return $discount->value instanceof Money ? $discount->value->getAmount() : $base->multipliedBy($discount->value)->dividedByExact(self::HUNDRED);
+    }
+
+    private function unitPrice(?Money $price): BigDecimal
+    {
+        return ($price?->getAmount() ?? BigDecimal::zero())->multipliedBy($this->rate)->toScale(Fiscal::AMOUNT_SCALE, DecimalFormatter::fiscalRounding());
     }
 
     private function money(?Money $amount): BigDecimal

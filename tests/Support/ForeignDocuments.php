@@ -90,8 +90,9 @@ final class ForeignDocuments
 
         for ($index = 0; $index < $count; $index++) {
             $type     = $index === 0 ? 'N' : ['N', 'N', 'D', 'I'][$random->getInt(0, 3)];
-            $price    = (string) BigDecimal::ofUnscaledValue($type === 'D' ? $random->getInt(1, 100) : $random->getInt(10_000, 99_999), 2);
+            $price    = (string) self::price($random, $type, $index);
             $quantity = $type === 'D' ? '1' : self::QUANTITIES[$random->getInt(0, \count(self::QUANTITIES) - 1)];
+            $quantity = BigDecimal::of($price)->getScale() > 2 && $random->getInt(0, 1) === 0 ? '10000' : $quantity;
             $line     = ['type' => $type, 'quantity' => $quantity, 'price' => $price, 'tax' => $type === 'D' ? '0.5' : self::PERCENTAGES[$random->getInt(0, \count(self::PERCENTAGES) - 1)]];
             $extended = self::round(BigDecimal::of($price)->multipliedBy($quantity));
 
@@ -117,6 +118,15 @@ final class ForeignDocuments
         }
 
         return [self::invoice($lines, $global), $rate];
+    }
+
+    private static function price(Randomizer $random, string $type, int $index): BigDecimal
+    {
+        if ($type === 'D') {
+            return BigDecimal::ofUnscaledValue($random->getInt(1, 100), 2);
+        }
+
+        return $index > 0 && $random->getInt(0, 2) === 0 ? BigDecimal::ofUnscaledValue($random->getInt(1, 999), 5) : BigDecimal::ofUnscaledValue($random->getInt(10_000, 99_999), 2);
     }
 
     private static function net(string $type, BigDecimal $base, ?string $allocation, ?array $discount): BigDecimal
