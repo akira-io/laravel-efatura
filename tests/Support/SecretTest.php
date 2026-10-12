@@ -16,7 +16,7 @@ it('keeps the value out of every dump', function (): void {
 
     ob_start();
     var_dump($secret);
-    $dumped = (string) ob_get_clean();
+    $dumped = ob_get_clean() ?: '';
 
     expect(var_export($secret, true))->not->toContain('synthetic-secret')
         ->and(print_r($secret, true))->not->toContain('synthetic-secret')

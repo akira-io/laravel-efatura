@@ -35,13 +35,13 @@ dataset('exporters', [
         ob_start();
         var_dump($value);
 
-        return (string) ob_get_clean();
+        return ob_get_clean() ?: '';
     }],
     'var_dump of the array cast' => [static function (object $value): string {
         ob_start();
         var_dump((array) $value);
 
-        return (string) ob_get_clean();
+        return ob_get_clean() ?: '';
     }],
     'json_encode' => [static fn (object $value): string => (string) json_encode($value)],
 ]);
