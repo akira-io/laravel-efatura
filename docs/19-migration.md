@@ -172,6 +172,16 @@ failed the schema after a number was reserved; they now fail at `email` or
 still separates two words, as in `billing_team@example.cv`. Symbols such as `+`
 are accepted.
 
+A TVE, DTE or NLE no longer accepts `header.selfBilling`, and a DTE or NLE no
+longer accepts a non-empty `references` list. REF-R (Manual 11, p.39) limits
+references to RCE, NCE, NDE, DVE, FTE and FRE, and the official field map limits
+`SelfBilling` to FTE, FRE, RCE, NCE, NDE and DVE. The XSD accepts both, so such a
+document used to validate, take a number, be signed and then be refused by the
+platform. It now fails at `header.selfBilling` or `references` with
+`validation.document_field_forbidden`. Drop the self-billing authorization from
+those documents and move references to a document type that carries them; an
+empty `references` list is still accepted, and the constructors are unchanged.
+
 ## Document types and environments
 
 | Before | After |
