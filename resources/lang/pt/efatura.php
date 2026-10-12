@@ -72,7 +72,7 @@ return [
             'schema_valid'          => 'Esquema (:profile): válido.',
             'schema_invalid'        => 'Esquema (:profile): inválido (:code).',
             'violation'             => 'Linha :line, coluna :column: :message',
-            'violations_hidden'     => 'Não são mostradas mais :count violações.',
+            'violations_hidden'     => 'Mais :count violações não são mostradas.',
             'signature_valid'       => 'Assinatura: válida.',
             'signature_invalid'     => 'Assinatura: inválida.',
             'signature_skipped'     => 'Assinatura: não verificada, porque a validação do esquema falhou.',

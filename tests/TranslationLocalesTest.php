@@ -72,3 +72,9 @@ it('calls the iud check digit a digito verificador in portuguese', function (): 
         ->toBe('O campo :attribute tem de ser um IUD oficial com dígito verificador válido.')
         ->and(collect(packagedTranslations('pt'))->filter(fn (string $line): bool => str_contains($line, 'dígito de controlo'))->all())->toBe([]);
 });
+
+it('leads the hidden violations message with the count in portuguese', function (): void {
+    app()->setLocale('pt');
+
+    expect(trans('efatura::efatura.console.validate.violations_hidden', ['count' => 50]))->toBe('Mais 50 violações não são mostradas.');
+});
