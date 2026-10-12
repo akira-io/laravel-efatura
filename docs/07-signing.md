@@ -191,7 +191,10 @@ checks a signed `Dfe` or `Event` the way this package writes it. It parses the
 XML with the hardened parser, so XML that is not well formed fails with
 `xml.malformed` and a document type declaration (the vector of an XXE attempt)
 with `xml.doctype_forbidden`, both as `SchemaValidationException`. It never
-signs, stores or sends anything.
+signs, stores or sends anything. A `DOMDocument` built in memory may hold what no
+serialization can reproduce, such as a comment containing `--`; when an element
+the check canonicalizes cannot be read back, `handle()` throws a
+`SignatureException` with `signature.canonicalization_failed`.
 
 It accepts exactly what the signer emits and nothing else:
 

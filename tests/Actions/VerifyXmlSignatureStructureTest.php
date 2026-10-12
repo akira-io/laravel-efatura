@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Akira\Efatura\Actions\VerifyXmlSignatureAction;
 use Akira\Efatura\Enums\SignatureFailure;
 use Akira\Efatura\Enums\SignatureProfile;
+use Akira\Efatura\Exceptions\SignatureException;
 use Akira\Efatura\Signing\SignatureDigests;
 use Akira\Efatura\Signing\SignatureVerification;
 use Akira\Efatura\Support\Fiscal;
@@ -170,6 +171,14 @@ it('verifies a document the caller already parsed without reading it again', fun
 
     expect(resolve(VerifyXmlSignatureAction::class)->handle($document))->toEqual(verifyStructure($signed))
         ->and($document->saveXML())->toBe(S::document($signed)->saveXML());
+});
+
+it('refuses a parsed document whose signed info cannot be serialized again', function (): void {
+    $document = S::document(S::sign(S::unsigned())->xml);
+    $document->getElementsByTagNameNS(Fiscal::XMLDSIG_NAMESPACE, 'SignedInfo')->item(0)?->appendChild($document->createComment('x--y'));
+
+    expect(fn (): SignatureVerification => resolve(VerifyXmlSignatureAction::class)->handle($document))
+        ->toThrow(SignatureException::class, 'signature.canonicalization_failed');
 });
 
 it('reports a certificate carrying trailing der as unreadable instead of failing', function (string $suffix): void {

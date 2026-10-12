@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Signing;
 
+use Akira\Efatura\Exceptions\SignatureException;
 use Brick\Math\BigInteger;
 use DOMDocument;
 use DOMElement;
@@ -38,10 +39,13 @@ final class SignatureDigests
         }
 
         $standalone = new DOMDocument;
-        $standalone->loadXML(
+        $parsed     = $standalone->loadXML(
             '<?xml version="1.0" encoding="UTF-8"?>' . $tag . $inherits . substr((string) $node->ownerDocument->saveXML($node), \strlen($tag)),
             LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING,
         );
+        if (! $parsed) {
+            throw new SignatureException('signature.canonicalization_failed');
+        }
 
         return (string) $standalone->C14N(false, false);
     }

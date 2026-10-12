@@ -73,7 +73,8 @@ the configuration key, never the file path. See [Signing](07-signing.md).
 | `certificate.usage_invalid` | Its `keyUsage` allows neither `digitalSignature` nor `nonRepudiation` | Use a signing certificate |
 | `certificate.untrusted` | `efatura.certificates.ca_bundle_path` is set and the bundle does not trust the certificate, or the bundle holds no certificate, a damaged one or another kind of PEM block | Put the ICP-CV CA certificates (and only certificates) in that PEM file |
 
-`SignatureException` is raised while signing:
+`SignatureException` is raised while signing, and by the verifier for a parsed
+document it cannot canonicalize:
 
 | Code | Meaning | Fix |
 | --- | --- | --- |
@@ -81,6 +82,7 @@ the configuration key, never the file path. See [Signing](07-signing.md).
 | `signature.missing_id` | The root `Id` is not a valid IUD (for `Dfe`) or event ID (for `Event`) | Build the document through the package actions, which write the `Id` |
 | `signature.already_signed` | The document already holds a `ds:Signature` | Sign the unsigned XML once |
 | `signature.failed` | OpenSSL could not sign, or the result did not verify | Run `php artisan efatura:doctor` to check the certificate and key |
+| `signature.canonicalization_failed` | A `DOMDocument` built in memory holds a node no serialization can reproduce | Pass the signed XML as a string |
 
 The following codes are not thrown: they appear in the `failures` of a signature
 verification, in `php artisan efatura:validate` and in the validate route.

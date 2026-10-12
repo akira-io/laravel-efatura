@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Akira\Efatura\Enums\SignatureProfile;
+use Akira\Efatura\Exceptions\SignatureException;
 use Akira\Efatura\Signing\SignatureCertificate;
 use Akira\Efatura\Signing\SignatureDigests;
 use Akira\Efatura\Tests\Support\CertificateFixtures as C;
@@ -43,6 +44,16 @@ it('canonicalizes a whole document natively', function (): void {
     $document->loadXML('<?pi x?><r b="2" a="1"/>');
 
     expect(SignatureDigests::canonical($document))->toBe("<?pi x?>\n<r a=\"1\" b=\"2\"></r>");
+});
+
+it('refuses to canonicalize an element its own serialization cannot reproduce', function (): void {
+    $document = new DOMDocument;
+    $document->loadXML('<r><a/></r>');
+
+    $element = $document->getElementsByTagName('a')->item(0) ?? new DOMElement('missing');
+    $element->appendChild($document->createComment('x--y'));
+
+    expect(fn (): string => SignatureDigests::canonical($element))->toThrow(SignatureException::class, 'signature.canonicalization_failed');
 });
 
 it('reads a hexadecimal serial number as a decimal one', function (string $hex, string $decimal): void {
