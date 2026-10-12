@@ -7,7 +7,10 @@ use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\OAuthConfig;
 use Akira\Efatura\Configuration\TransmitterConfig;
 use Akira\Efatura\Exceptions\DefinitionException;
+use Akira\Efatura\Support\Secret;
 use Akira\Efatura\Tests\Support\ConfigFixtures;
+use Symfony\Component\VarDumper\Cloner\VarCloner;
+use Symfony\Component\VarDumper\Dumper\CliDumper;
 
 dataset('secret-bearing configurations', [
     'transmitter' => [
@@ -43,7 +46,10 @@ dataset('exporters', [
 
         return ob_get_clean() ?: '';
     }],
-    'json_encode' => [static fn (object $value): string => (string) json_encode($value)],
+    'print_r of the array cast'    => [static fn (object $value): string => print_r((array) $value, true)],
+    'var_export of the array cast' => [static fn (object $value): string => var_export((array) $value, true)],
+    'json_encode'                  => [static fn (object $value): string => (string) json_encode($value)],
+    'symfony var-dumper'           => [static fn (object $value): string => (string) new CliDumper()->dump(new VarCloner()->cloneVar($value), true)],
 ]);
 
 it('keeps every secret out of exported output', function (Closure $configuration, array $secrets, Closure $export): void {
@@ -55,6 +61,18 @@ it('keeps every secret out of exported output', function (Closure $configuration
         expect($output)->not->toContain($secret);
     }
 })->with('secret-bearing configurations')->with('exporters');
+
+it('keeps the value of a secret out of exported output', function (Closure $export): void {
+    $output = $export(new Secret('synthetic-secret-value'));
+
+    expect($output)->not->toBeEmpty();
+    expect($output)->not->toContain('synthetic-secret-value');
+})->with('exporters');
+
+it('refuses to clone a secret', function (): void {
+    expect(fn (): Secret => clone new Secret('synthetic-secret-value'))
+        ->toThrow(DefinitionException::class, 'A secret cannot be serialized.');
+});
 
 it('refuses to serialize a configuration that holds a secret', function (Closure $configuration): void {
     expect(fn (): string => serialize($configuration()))
@@ -102,3 +120,10 @@ it('keeps the secrets out of the public properties', function (string $class, st
     [OAuthConfig::class, 'clientSecret'],
     [CertificateConfig::class, 'passphrase'],
 ]);
+
+it('refuses to reveal a secret that was never constructed', function (): void {
+    $secret = new ReflectionClass(Secret::class)->newInstanceWithoutConstructor();
+
+    expect(fn (): string => $secret->reveal())
+        ->toThrow(DefinitionException::class, 'A secret cannot be serialized.');
+});

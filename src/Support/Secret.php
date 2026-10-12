@@ -5,18 +5,24 @@ declare(strict_types=1);
 namespace Akira\Efatura\Support;
 
 use Akira\Efatura\Exceptions\DefinitionException;
-use Closure;
 use JsonSerializable;
 use SensitiveParameter;
+use WeakMap;
 
-final readonly class Secret implements JsonSerializable
+final class Secret implements JsonSerializable
 {
-    /** @var Closure(): string */
-    private Closure $reveal;
+    /** @var WeakMap<self, string>|null */
+    private static ?WeakMap $values = null;
 
     public function __construct(#[SensitiveParameter] string $value)
     {
-        $this->reveal = static fn (): string => $value;
+        self::$values ??= new WeakMap;
+        self::$values[$this] = $value;
+    }
+
+    public function __clone(): void
+    {
+        throw DefinitionException::secretSerialization();
     }
 
     /**
@@ -50,7 +56,7 @@ final readonly class Secret implements JsonSerializable
 
     public function reveal(): string
     {
-        return ($this->reveal)();
+        return self::$values[$this] ?? throw DefinitionException::secretSerialization();
     }
 
     public function jsonSerialize(): string
