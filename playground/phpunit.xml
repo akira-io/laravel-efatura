@@ -5,9 +5,6 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="Unit">
-            <directory>tests/Unit</directory>
-        </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
@@ -29,6 +26,28 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <env name="PLAYGROUND_TRANSPORT" value="fake" force="true"/>
+        <env name="EFATURA_ENVIRONMENT" value="test" force="true"/>
+        <env name="EFATURA_DRIVER" value="middleware" force="true"/>
+        <env name="EFATURA_EMITTER_TAX_ID" value="100200300" force="true"/>
+        <env name="EFATURA_EMITTER_NAME" value="Playground Emitter" force="true"/>
+        <env name="EFATURA_EMITTER_LED" value="1" force="true"/>
+        <env name="EFATURA_EMITTER_COUNTRY_CODE" value="CV" force="true"/>
+        <env name="EFATURA_EMITTER_ADDRESS_DETAIL" value="Praia office" force="true"/>
+        <env name="EFATURA_EMITTER_ADDRESS_CODE" value="CV111111111011110101" force="true"/>
+        <env name="EFATURA_EMITTER_EMAIL" value="emitter@example.cv" force="true"/>
+        <env name="EFATURA_EMITTER_TELEPHONE" value="2600000" force="true"/>
+        <env name="EFATURA_TRANSMITTER_TAX_ID" value="100200300" force="true"/>
+        <env name="EFATURA_TRANSMITTER_KEY" value="playground-test-middleware-key-not-a-secret-00000000000000000000" force="true"/>
+        <env name="EFATURA_SOFTWARE_CODE" value="PLAYGROUND" force="true"/>
+        <env name="EFATURA_SOFTWARE_NAME" value="e-Fatura Playground" force="true"/>
+        <env name="EFATURA_SOFTWARE_VERSION" value="1.0" force="true"/>
+        <env name="EFATURA_CERTIFICATES_DISK" value="certificates" force="true"/>
+        <env name="EFATURA_CERTIFICATE_PATH" value="playground.crt" force="true"/>
+        <env name="EFATURA_PRIVATE_KEY_PATH" value="playground.key" force="true"/>
+        <env name="EFATURA_MIDDLEWARE_BASE_URL" value="https://localhost:3443/v1" force="true"/>
+        <env name="EFATURA_EXCHANGE_RATE_PROVIDER" value="fixed" force="true"/>
+        <env name="EFATURA_HTTP_RETRIES" value="0" force="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

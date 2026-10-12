@@ -1,16 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
+use Akira\Efatura\Contracts\Transport;
+use Akira\Efatura\Testing\FakeTransport;
+use App\Enums\PlaygroundTransport;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Psr\Clock\ClockInterface;
 
-class AppServiceProvider extends ServiceProvider
+final class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        if (PlaygroundTransport::configured() === PlaygroundTransport::Fake) {
+            $this->app->singleton(Transport::class, fn (Application $app): Transport => new FakeTransport($app->make(ClockInterface::class)));
+        }
     }
 
-    public function boot(): void
-    {
-    }
+    public function boot(): void {}
 }

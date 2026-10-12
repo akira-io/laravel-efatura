@@ -38,6 +38,14 @@ return [
             'report' => false,
         ],
 
+        'certificates' => [
+            'driver' => 'local',
+            'root' => storage_path('app/certificates'),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

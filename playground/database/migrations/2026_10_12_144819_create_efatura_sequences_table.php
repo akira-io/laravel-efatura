@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+use Akira\Efatura\Exceptions\DefinitionException;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function getConnection(): ?string
+    {
+        return config('efatura.database.connection');
+    }
+
+    public function up(): void
+    {
+        Schema::create($this->table(), function (Blueprint $table): void {
+            $table->char('emitter_tax_id', 9);
+            $table->unsignedSmallInteger('fiscal_year');
+            $table->unsignedInteger('led_code');
+            $table->unsignedSmallInteger('document_type_code');
+            $table->unsignedBigInteger('current_number')->default(0);
+            $table->timestamps();
+            $table->primary(['emitter_tax_id', 'fiscal_year', 'led_code', 'document_type_code']);
+        });
+    }
+
+    public function down(): void
+    {
+        if (Schema::hasTable($this->table()) && DB::table($this->table())->exists()) {
+            throw DefinitionException::sequencesInUse($this->table());
+        }
+
+        Schema::dropIfExists($this->table());
+    }
+
+    private function table(): string
+    {
+        return config('efatura.database.sequences_table') ?? 'efatura_sequences';
+    }
+};
