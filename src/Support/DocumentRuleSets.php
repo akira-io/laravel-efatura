@@ -7,6 +7,7 @@ namespace Akira\Efatura\Support;
 use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\IssueReason;
 use Akira\Efatura\Enums\LineType;
+use Akira\Efatura\Rules\ForeignDocumentField;
 use Akira\Efatura\Rules\InKeyedSet;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -46,6 +47,17 @@ final class DocumentRuleSets
             'payments.paymentTerms'           => ['prohibited'],
             'payments.payeeFinancialAccounts' => ['prohibited'],
         ];
+    }
+
+    /**
+     * @return array<string, list<ForeignDocumentField>>
+     */
+    public static function typedSections(ValidationContext $context, DocumentType $type): array
+    {
+        return collect(['header.selfBilling' => $type->isSelfBillable(), 'references' => $type->acceptsReferences()])
+            ->reject(static fn (bool $accepted, string $field): bool => $accepted || \in_array(ValidationPayload::value($context, $field), [null, []], true))
+            ->map(static fn (): array => [new ForeignDocumentField])
+            ->all();
     }
 
     /**

@@ -54,6 +54,7 @@ final class TransportDocumentData extends DocumentData
         $providerIsReceiver = ValidationPayload::string($context, 'transportServiceProvider.reference') === PartyReference::Receiver->value;
         $rules              = [
             ...DocumentRuleSets::lines($context, self::documentType()),
+            ...DocumentRuleSets::typedSections($context, self::documentType()),
             'receiver' => [Rule::requiredIf(! $undetermined || $providerIsReceiver), Rule::prohibitedIf($undetermined)],
         ];
 

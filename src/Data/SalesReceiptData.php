@@ -47,6 +47,7 @@ final class SalesReceiptData extends DocumentData implements HasTotals
 
         return [
             ...DocumentRuleSets::lines($context, self::documentType()),
+            ...DocumentRuleSets::typedSections($context, self::documentType()),
             ...DocumentRuleSets::settledPayments($context),
             'receiver' => [Rule::requiredIf($identifiedAmount?->isGreaterThanOrEqualTo(Fiscal::SALES_RECEIPT_IDENTIFIED_RECEIVER_AMOUNT) ?? false)],
         ];
