@@ -33,7 +33,9 @@ optional features, and the operational guides.
 Runnable example: [quick start](examples/quick-start.php), the same code as in
 the root [README](../README.md). Runtime configuration source:
 [config/efatura.php](../config/efatura.php). Service provider:
-[src/EfaturaServiceProvider.php](../src/EfaturaServiceProvider.php).
+[src/EfaturaServiceProvider.php](../src/EfaturaServiceProvider.php). To try the
+document flows in a browser, run the [playground](../playground/README.md)
+application.
 
 ## Validation Scope
 

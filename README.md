@@ -137,6 +137,23 @@ dispatches Laravel events on the way. An ambiguous answer throws
 - Configuration source: [config/efatura.php](config/efatura.php)
 - API reference: [source API](https://github.com/akira-io/laravel-efatura/tree/main/src)
 
+## Playground
+
+[playground/](playground/README.md) holds a small Laravel 13 application that
+requires this package from the working tree through a Composer path
+repository. Its pages build, sign, render, convert, check and issue a sample
+invoice against a fake transport and a self-signed test certificate:
+
+```sh
+cd playground
+composer install
+composer setup
+php artisan serve
+```
+
+The playground is not part of the Composer archive, and the package test
+suite does not run it.
+
 ## Testing
 
 ```sh
