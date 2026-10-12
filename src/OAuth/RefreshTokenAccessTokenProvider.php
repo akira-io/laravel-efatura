@@ -218,7 +218,7 @@ final readonly class RefreshTokenAccessTokenProvider implements AccessTokenProvi
 
         return [
             $oauth->clientId ?? throw self::missing($emitterTaxId, 'client_id'),
-            $oauth->clientSecret ?? throw self::missing($emitterTaxId, 'client_secret'),
+            $oauth->clientSecret() ?? throw self::missing($emitterTaxId, 'client_secret'),
         ];
     }
 

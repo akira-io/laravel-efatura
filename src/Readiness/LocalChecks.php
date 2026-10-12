@@ -129,11 +129,11 @@ final readonly class LocalChecks
     private function driverSettings(EfaturaConfig $config): array
     {
         return match ($config->driver) {
-            TransportDriver::Middleware => ['efatura.transmitter.middleware_key' => $config->transmitter->middlewareKey === null ? null : 'present'],
+            TransportDriver::Middleware => ['efatura.transmitter.middleware_key' => $config->transmitter->middlewareKey() === null ? null : 'present'],
             TransportDriver::Platform   => [
                 'efatura.emitter.tax_id'                  => $config->emitter?->taxId,
                 'efatura.transmitter.oauth.client_id'     => $config->transmitter->oauth->clientId,
-                'efatura.transmitter.oauth.client_secret' => $config->transmitter->oauth->clientSecret === null ? null : 'present',
+                'efatura.transmitter.oauth.client_secret' => $config->transmitter->oauth->clientSecret() === null ? null : 'present',
             ],
         };
     }

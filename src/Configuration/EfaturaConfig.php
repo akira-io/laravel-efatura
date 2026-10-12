@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Configuration;
 
+use Akira\Efatura\Concerns\RefusesSerialization;
 use Akira\Efatura\Enums\TransportDriver;
 
 final readonly class EfaturaConfig
 {
+    use RefusesSerialization;
+
     public function __construct(
         public ?EmitterConfig $emitter,
         public TransmitterConfig $transmitter,

@@ -32,7 +32,7 @@ it('reads the oauth issuer of the platform with the official default', function 
 it('accepts a middleware key of exactly the official length', function (): void {
     $key = str_repeat('a1', Fiscal::TRANSMITTER_KEY_LENGTH / 2);
 
-    expect(ConfigFixtures::load(['transmitter' => ['middleware_key' => $key]])->transmitter->middlewareKey)->toBe($key);
+    expect(ConfigFixtures::load(['transmitter' => ['middleware_key' => $key]])->transmitter->middlewareKey())->toBe($key);
 });
 
 it('rejects transport settings with a stable error that never repeats the value', function (string $field, mixed $value, string $errorCode): void {
