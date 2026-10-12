@@ -97,6 +97,21 @@ it('derives the line pricing and tax policy of every document type', function (D
     'NLE' => [DocumentType::RegistrationNote, true, true],
 ]);
 
+it('limits self billing and references to the document types the manual names', function (DocumentType $type, bool $allowed): void {
+    expect($type->isSelfBillable())->toBe($allowed)
+        ->and($type->acceptsReferences())->toBe($allowed);
+})->with([
+    'FTE' => [DocumentType::Invoice, true],
+    'FRE' => [DocumentType::InvoiceReceipt, true],
+    'TVE' => [DocumentType::SalesReceipt, false],
+    'RCE' => [DocumentType::Receipt, true],
+    'NCE' => [DocumentType::CreditNote, true],
+    'NDE' => [DocumentType::DebitNote, true],
+    'DTE' => [DocumentType::Transport, false],
+    'DVE' => [DocumentType::ReturnNote, true],
+    'NLE' => [DocumentType::RegistrationNote, false],
+]);
+
 it('requires line taxes on the documents whose policy demands them', function (string $class, array $payload): void {
     $payload['lines'] = [F::linePayload(['taxes' => []])];
 

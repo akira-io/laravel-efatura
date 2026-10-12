@@ -129,11 +129,11 @@ it('rejects a malformed transmitter identity', function (): void {
         });
 });
 
-it('requires a real buyer when self billing a sales receipt', function (): void {
+it('refuses self billing on a sales receipt before asking for its buyer', function (): void {
     $payload = P::selfBilled(F::payload(['receiver' => null, 'payments' => F::payments()]));
 
     expect(fn (): SalesReceiptData => SalesReceiptData::from($payload))
-        ->toFailValidationOn('receiver', 'The receiver field is required.');
+        ->toFailValidationOn('header.selfBilling', 'This field does not belong to this fiscal document type.');
 });
 
 it('resolves a transport provider reference to the supplied receiver', function (): void {

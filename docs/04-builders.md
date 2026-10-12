@@ -91,6 +91,11 @@ configured [transport](09-transport.md#self-billing) and returns a
 `series` (`AUTOFATURA`), `ledCode` and `documentNumber`. The platform reserves
 that number; the package reserves nothing.
 
+Only those six types carry `selfBilling`: a TVE, DTE or NLE built with a
+self-billed header fails at `header.selfBilling`. Likewise `reference()` on a DTE
+or NLE fails at `references`, since REF-R (Manual v11, p.39) gives neither type
+references.
+
 The seller receives the authorization code by SMS or email. Build the document
 with the authorization values as received: `header(...)` with `serie` set to
 `series`, `ledCode`, `documentNumber`, and `selfBilling` holding the

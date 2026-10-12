@@ -43,6 +43,7 @@ final class RegistrationNoteData extends DocumentData implements HasTotals
     {
         return [
             ...DocumentRuleSets::lines($context, self::documentType()),
+            ...DocumentRuleSets::typedSections($context, self::documentType()),
             ...DocumentRuleSets::settledPayments($context),
         ];
     }
