@@ -77,13 +77,11 @@ receipts have no lines or totals, and transport documents have no totals.
 An emitter needs a complete Cabo Verde address, with an official
 `addressCode`, and contacts. A NIF is `[1-9][0-9]{8}` in Cabo Verde.
 
-A return note (DVE, `ReturnNoteData`) requires a `receiver`, as RP-R (Manual
-11, p.37) does for every document except the TVE. `ReturnNoteData::$receiver`
-is a `PartyData` instead of `?PartyData`, and the constructor takes it third,
-after `emitter`, as `CreditNoteData` does. A payload without a receiver now
-fails validation with "The receiver field is required." at `receiver`; add the
-buyer to every DVE, and move a positional constructor argument (named arguments
-and `from()` payloads only need the receiver).
+A DVE now requires a receiver. `ReturnNoteData`, new in this release, takes a
+`PartyData $receiver`, third after `emitter` as in `CreditNoteData`, because RP-R
+(Manual 11, p.37) requires one on every document except the TVE. A payload
+without it fails validation with "The receiver field is required." at
+`receiver`; add the buyer to every DVE.
 
 ### Lines and taxes
 
