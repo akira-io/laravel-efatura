@@ -186,15 +186,16 @@ element or elsewhere, still fails the validation.
 
 ## Verifying a signature
 
-`Actions\VerifyXmlSignatureAction::handle(string $xml): SignatureVerification`
-checks a signed `Dfe` or `Event` the way this package writes it. It parses the
-XML with the hardened parser, so XML that is not well formed fails with
-`xml.malformed` and a document type declaration (the vector of an XXE attempt)
-with `xml.doctype_forbidden`, both as `SchemaValidationException`. It never
-signs, stores or sends anything. A `DOMDocument` built in memory may hold what no
-serialization can reproduce, such as a comment containing `--`; when an element
-the check canonicalizes cannot be read back, `handle()` throws a
-`SignatureException` with `signature.canonicalization_failed`.
+`Actions\VerifyXmlSignatureAction::handle(DOMDocument|string $xml): SignatureVerification`
+checks a signed `Dfe` or `Event` the way this package writes it. It reads a
+`DOMDocument` as given and parses a string with the hardened parser, so XML that
+is not well formed fails with `xml.malformed` and a document type declaration
+(the vector of an XXE attempt) with `xml.doctype_forbidden`, both as
+`SchemaValidationException`. It never signs, stores or sends anything. A
+`DOMDocument` built in memory may hold what no serialization can reproduce, such
+as a comment containing `--`; when an element the check canonicalizes cannot be
+read back, `handle()` throws a `SignatureException` with
+`signature.canonicalization_failed`.
 
 It accepts exactly what the signer emits and nothing else:
 
@@ -219,9 +220,10 @@ It accepts exactly what the signer emits and nothing else:
   C14N in the enveloped profile, and no transform or inclusive C14N alone in the
   detached profile; for `SignedProperties`, no transform or inclusive C14N alone.
 
-`DigestValue`, the `CertDigest` value and the base64 of `SignatureValue` and
-`X509Certificate` may carry leading, trailing or line-wrapping whitespace, as
-other signers write certificates wrapped at 64 or 76 columns.
+`DigestValue` and the `CertDigest` value may carry leading or trailing
+whitespace, which is trimmed; whitespace inside them fails the comparison. The
+base64 of `SignatureValue` and `X509Certificate` may also be wrapped across
+lines, as other signers write certificates wrapped at 64 or 76 columns.
 
 Each reference digest is recomputed, the `SignatureValue` is verified against
 the RSA key of the `X509Certificate` in `KeyInfo`, and the `CertDigest` of the
