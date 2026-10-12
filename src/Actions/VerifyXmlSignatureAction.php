@@ -141,10 +141,9 @@ final readonly class VerifyXmlSignatureAction
      */
     private static function dataTransforms(SignatureProfile $profile): array
     {
-        return match ($profile) {
-            SignatureProfile::Enveloped          => [[Fiscal::ENVELOPED_SIGNATURE_TRANSFORM], [Fiscal::ENVELOPED_SIGNATURE_TRANSFORM, Fiscal::C14N_ALGORITHM]],
-            SignatureProfile::InternallyDetached => self::PROPERTIES_TRANSFORMS,
-        };
+        return $profile === SignatureProfile::Enveloped
+            ? [[Fiscal::ENVELOPED_SIGNATURE_TRANSFORM], [Fiscal::ENVELOPED_SIGNATURE_TRANSFORM, Fiscal::C14N_ALGORITHM]]
+            : self::PROPERTIES_TRANSFORMS;
     }
 
     /**
