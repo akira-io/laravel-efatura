@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Contracts\AccessTokenProvider;
 use Akira\Efatura\Enums\OAuthScope;
 use Akira\Efatura\Enums\TransportFailure;
@@ -23,6 +24,7 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 
 function oauthCacheKey(array $scopes): string
 {
@@ -241,12 +243,15 @@ it('keeps the stored refresh token when the rotated one is outside the bearer sy
 });
 
 it('serializes renewals per emitter whatever the scopes, and lets other emitters through', function (): void {
-    CarbonImmutable::setTestNow();
+    Sleep::fake(syncWithCarbon: true);
     O::configure($this->refreshTokens, $this->secret, ['http' => ['timeout_seconds' => 1, 'connect_timeout_seconds' => 1]]);
     $this->refreshTokens->replace('200300400', 'other-refresh');
     $this->nested = [];
     Http::fake([O::DISCOVERY_URL => O::discovery(), O::TOKEN_URL => function (Request $request): PromiseInterface {
         if ($request['refresh_token'] === $this->refreshToken) {
+            $locks              = Cache::store(resolve(EfaturaConfig::class)->cache->store)->getStore()->locks;
+            $this->lockLifetime = CarbonImmutable::now()->diffInSeconds(collect($locks)->first()['expiresAt']);
+
             foreach (['same emitter' => O::EMITTER, 'other emitter' => '200300400'] as $label => $emitter) {
                 try {
                     $this->nested[$label] = tokenProvider()->token($emitter, [OAuthScope::EventCreate])->value;
@@ -260,5 +265,8 @@ it('serializes renewals per emitter whatever the scopes, and lets other emitters
     }]);
 
     expect(tokenProvider()->token(O::EMITTER, $this->scopes)->value)->toBe('granted-' . $this->refreshToken)
-        ->and($this->nested)->toBe(['same emitter' => 'oauth.token_unavailable', 'other emitter' => 'granted-other-refresh']);
+        ->and($this->nested)->toBe(['same emitter' => 'oauth.token_unavailable', 'other emitter' => 'granted-other-refresh'])
+        ->and($this->lockLifetime)->toBe(12.0);
+    Sleep::assertSleptTimes(7);
+    Sleep::assertSequence(array_fill(0, 7, Sleep::for(250)->milliseconds()));
 });

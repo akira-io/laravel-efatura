@@ -6,7 +6,6 @@ namespace Akira\Efatura\Signing;
 
 use Akira\Efatura\Exceptions\DefinitionException;
 use Akira\Efatura\Support\Fiscal;
-use Brick\Math\BigInteger;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use JsonSerializable;
@@ -58,7 +57,7 @@ final readonly class SigningCredentials implements JsonSerializable
 
     public function certificateDigest(): string
     {
-        return base64_encode(hash('sha256', $this->certificateDer, true));
+        return SignatureDigests::of($this->certificateDer);
     }
 
     public static function fromCertificate(OpenSSLCertificate $certificate, #[SensitiveParameter] OpenSSLAsymmetricKey $privateKey): self
@@ -72,7 +71,7 @@ final readonly class SigningCredentials implements JsonSerializable
             $privateKey,
             $der,
             DistinguishedName::issuerOf($der),
-            BigInteger::fromBase(\is_string($info['serialNumberHex'] ?? null) ? $info['serialNumberHex'] : '0', 16)->toBase(10),
+            SignatureDigests::serialNumber(\is_string($info['serialNumberHex'] ?? null) ? $info['serialNumberHex'] : '0'),
             self::moment($info['validFrom_time_t'] ?? null),
             self::moment($info['validTo_time_t'] ?? null),
         );

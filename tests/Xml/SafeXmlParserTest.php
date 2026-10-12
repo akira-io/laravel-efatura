@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Akira\Efatura\Exceptions\SchemaValidationException;
 use Akira\Efatura\Xml\SafeXmlParser;
+use Akira\Efatura\Xml\XmlComplexity;
 
 afterEach(function (): void {
     libxml_clear_errors();
@@ -51,4 +52,43 @@ it('leaves no error behind when the caller had none', function (): void {
     expect(fn (): DOMDocument => new SafeXmlParser()->parse('<Dfe>'))->toThrow(SchemaValidationException::class, 'xml.malformed')
         ->and(libxml_get_errors())->toBe([])
         ->and(libxml_use_internal_errors())->toBeFalse();
+});
+
+function namespaceDeclarations(int $count, string $prefix = 'n'): string
+{
+    return implode('', array_map(static fn (int $index): string => ' xmlns:' . $prefix . $index . '="urn:' . $index . '"', range(1, $count)));
+}
+
+it('refuses a document over the element or namespace limits before building it', function (string $xml): void {
+    expect(fn (): DOMDocument => new SafeXmlParser()->parse($xml))->toThrow(function (SchemaValidationException $exception): void {
+        expect($exception->errorCode)->toBe('xml.too_complex')
+            ->and($exception->violations)->toBe([]);
+    });
+})->with([
+    'too many elements'                   => fn (): string => '<Dfe>' . str_repeat('<a/>', XmlComplexity::MAX_ELEMENTS) . '</Dfe>',
+    'too many namespaces on an element'   => fn (): string => '<Dfe' . namespaceDeclarations(XmlComplexity::MAX_NAMESPACES_IN_SCOPE + 1) . '/>',
+    'namespaces piling up over ancestors' => fn (): string => '<Dfe' . namespaceDeclarations(XmlComplexity::MAX_NAMESPACES_IN_SCOPE)
+        . '><a xmlns="urn:a"/></Dfe>',
+    'redeclared on every level' => fn (): string => str_repeat('<a xmlns="urn:a">', XmlComplexity::MAX_NAMESPACES_IN_SCOPE + 1)
+        . str_repeat('</a>', XmlComplexity::MAX_NAMESPACES_IN_SCOPE + 1),
+]);
+
+it('accepts a document exactly at both limits and counts siblings apart', function (): void {
+    $siblings = str_repeat('<b xmlns="urn:b"/>', 10);
+    $xml      = '<Dfe' . namespaceDeclarations(XmlComplexity::MAX_NAMESPACES_IN_SCOPE - 1) . '>' . $siblings
+        . str_repeat('<a/>', XmlComplexity::MAX_ELEMENTS - 11) . '</Dfe>';
+
+    expect(new SafeXmlParser()->parse($xml)->getElementsByTagName('a')->length)->toBe(XmlComplexity::MAX_ELEMENTS - 11)
+        ->and(libxml_get_errors())->toBe([]);
+});
+
+it('reports malformed xml once even though the limits read it first', function (): void {
+    expect(fn (): DOMDocument => new SafeXmlParser()->parse('<Dfe><a></Dfe>'))->toThrow(function (SchemaValidationException $exception): void {
+        $reference = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $reference->loadXML('<Dfe><a></Dfe>');
+
+        expect($exception->errorCode)->toBe('xml.malformed')
+            ->and($exception->violations)->toHaveCount(count(libxml_get_errors()));
+    });
 });

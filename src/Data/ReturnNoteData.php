@@ -28,6 +28,7 @@ final class ReturnNoteData extends DocumentData implements HasTotals
     public function __construct(
         public readonly DocumentHeaderData $header,
         public readonly PartyData $emitter,
+        public readonly PartyData $receiver,
         #[DataCollectionOf(LineItemData::class), ListType, Min(1), Max(Fiscal::MAX_LINES)]
         public readonly array $lines,
         public readonly TotalsData $totals,
@@ -35,7 +36,6 @@ final class ReturnNoteData extends DocumentData implements HasTotals
         public readonly IssueReason $issueReason,
         #[DataCollectionOf(ReferenceData::class), ListType, Max(Fiscal::MAX_REFERENCES)]
         public readonly array $references,
-        public readonly ?PartyData $receiver = null,
         public readonly ?string $issueReasonDescription = null,
         public readonly ?EmissionContextData $emission = null,
         public readonly ?DocumentFooterData $footer = null,

@@ -43,3 +43,52 @@ it('serializes to the check, status, code, field, context and requirement of eac
     expect(json_encode(new ReadinessReport([ReadinessResult::skipped(ReadinessCheck::Clock, false)])))
         ->toBe('{"results":[{"check":"clock","status":"skipped","code":"readiness.skipped","field":null,"context":[],"required":false}]}');
 });
+
+it('presents the readiness and each check as plain values', function (): void {
+    $report = new ReadinessReport([
+        ReadinessResult::passed(ReadinessCheck::Configuration, 'readiness.configured', ['driver' => 'middleware']),
+        ReadinessResult::warning(ReadinessCheck::Certificate, 'readiness.certificate_expiring', 'efatura.certificates.certificate_path', ['days_left' => 3]),
+        ReadinessResult::skipped(ReadinessCheck::Endpoint, false),
+    ]);
+
+    expect($report->toArray())->toBe([
+        'ready'  => true,
+        'checks' => [
+            ['check' => 'configuration', 'status' => 'passed', 'code' => 'readiness.configured', 'field' => null, 'required' => true, 'context' => ['driver' => 'middleware']],
+            [
+                'check'    => 'certificate',
+                'status'   => 'warning',
+                'code'     => 'readiness.certificate_expiring',
+                'field'    => 'efatura.certificates.certificate_path',
+                'required' => true,
+                'context'  => ['days_left' => 3],
+            ],
+            ['check' => 'endpoint', 'status' => 'skipped', 'code' => 'readiness.skipped', 'field' => null, 'required' => false, 'context' => []],
+        ],
+    ]);
+});
+
+it('presents only the context values the package documents', function (): void {
+    $result = ReadinessResult::failed(ReadinessCheck::Clock, 'readiness.clock_skew', null, [
+        'skew_seconds' => 4000,
+        'status'       => 200,
+        'environment'  => 'test',
+        'passphrase'   => 'leaked-passphrase',
+        'token'        => 'leaked-token',
+    ]);
+
+    expect(new ReadinessReport([$result])->toArray()['checks'][0]['context'])->toBe(['skew_seconds' => 4000, 'status' => 200, 'environment' => 'test'])
+        ->and(new ReadinessReport([$result])->toArray()['ready'])->toBeFalse();
+});
+
+it('writes an empty context as a json object for the console and the readiness route', function (): void {
+    $report = new ReadinessReport([
+        ReadinessResult::skipped(ReadinessCheck::Clock, false),
+        ReadinessResult::passed(ReadinessCheck::Configuration, 'readiness.configured', ['driver' => 'middleware']),
+    ]);
+
+    expect(json_encode($report->toJsonDocument(), JSON_THROW_ON_ERROR))->toBe(
+        '{"ready":true,"checks":[{"check":"clock","status":"skipped","code":"readiness.skipped","field":null,"required":false,"context":{}},'
+        . '{"check":"configuration","status":"passed","code":"readiness.configured","field":null,"required":true,"context":{"driver":"middleware"}}]}',
+    );
+});

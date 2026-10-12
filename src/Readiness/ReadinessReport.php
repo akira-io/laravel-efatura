@@ -7,8 +7,14 @@ namespace Akira\Efatura\Readiness;
 use Akira\Efatura\Enums\ReadinessCheck;
 use Akira\Efatura\Enums\ReadinessStatus;
 
+/**
+ * @phpstan-type PresentedCheck array{check: string, status: string, code: string, field: ?string, required: bool, context: array<string, scalar|null>}
+ * @phpstan-type JsonCheck array{check: string, status: string, code: string, field: ?string, required: bool, context: object}
+ */
 final readonly class ReadinessReport
 {
+    private const array PRESENTED_CONTEXT = ['days_left' => true, 'driver' => true, 'environment' => true, 'skew_seconds' => true, 'status' => true];
+
     /**
      * @param list<ReadinessResult> $results
      */
@@ -33,5 +39,36 @@ final readonly class ReadinessReport
     public function warnings(): array
     {
         return array_values(array_filter($this->results, static fn (ReadinessResult $result): bool => $result->status === ReadinessStatus::Warning));
+    }
+
+    /**
+     * @return array{ready: bool, checks: list<PresentedCheck>}
+     */
+    public function toArray(): array
+    {
+        return [
+            'ready'  => $this->ready(),
+            'checks' => array_map(static fn (ReadinessResult $result): array => [
+                'check'    => $result->check->value,
+                'status'   => $result->status->value,
+                'code'     => $result->code,
+                'field'    => $result->field,
+                'required' => $result->required,
+                'context'  => array_intersect_key($result->context, self::PRESENTED_CONTEXT),
+            ], $this->results),
+        ];
+    }
+
+    /**
+     * @return array{ready: bool, checks: list<JsonCheck>}
+     */
+    public function toJsonDocument(): array
+    {
+        $document = $this->toArray();
+
+        return [
+            'ready'  => $document['ready'],
+            'checks' => array_map(static fn (array $check): array => [...$check, 'context' => (object) $check['context']], $document['checks']),
+        ];
     }
 }

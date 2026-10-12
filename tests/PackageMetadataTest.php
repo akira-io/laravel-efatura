@@ -6,23 +6,23 @@ use Akira\Efatura\Tests\Support\ComposerMetadata;
 use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 
-it('declares the runtime platform and imported Laravel components', function (): void {
+it('declares the runtime platform and the Laravel framework its foundation classes ship in', function (): void {
     $requirements = ComposerMetadata::read()['require'];
 
     expect($requirements)->toMatchArray([
-        'php'                   => '^8.5',
-        'ext-curl'              => '*',
-        'ext-dom'               => '*',
-        'ext-libxml'            => '*',
-        'ext-openssl'           => '*',
-        'ext-zip'               => '*',
-        'illuminate/config'     => '^13.0',
-        'illuminate/console'    => '^13.0',
-        'illuminate/contracts'  => '^13.0',
-        'illuminate/database'   => '^13.0',
-        'illuminate/filesystem' => '^13.0',
-        'illuminate/support'    => '^13.0',
-        'illuminate/validation' => '^13.0',
+        'php'               => '^8.5',
+        'ext-curl'          => '*',
+        'ext-dom'           => '*',
+        'ext-libxml'        => '*',
+        'ext-openssl'       => '*',
+        'ext-zip'           => '*',
+        'laravel/framework' => '^13.0',
+    ])->and(array_filter(array_keys($requirements), fn (string $package): bool => str_starts_with($package, 'illuminate/')))->toBe([]);
+});
+
+it('declares the HTTP client its transport drives through the cURL handler', function (): void {
+    expect(ComposerMetadata::read()['require'])->toMatchArray([
+        'guzzlehttp/guzzle' => '^7.15.2 || ^8.2',
     ]);
 });
 
@@ -87,6 +87,8 @@ it('ships runtime resources and leaves development files out of dist archives', 
     ['config/efatura.php', 'unspecified'],
     ['database/migrations/create_efatura_sequences_table.php.stub', 'unspecified'],
     ['resources/lang/en/efatura.php', 'unspecified'],
+    ['resources/lang/pt/efatura.php', 'unspecified'],
+    ['routes/efatura.php', 'unspecified'],
     ['resources/catalogs/units.json', 'unspecified'],
     ['resources/official-artifacts.json', 'unspecified'],
     ['resources/views/dfa/document.blade.php', 'unspecified'],

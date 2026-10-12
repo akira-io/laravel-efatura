@@ -12,7 +12,7 @@ use Akira\Efatura\Tests\Support\IdentifierFixtures;
 use Carbon\CarbonImmutable;
 
 dataset('events', fn (): array => [
-    'FDC' => ['FDC', E::payload(['iuds' => [E::iud(), IdentifierFixtures::NODE_IUD]])],
+    'FDC' => ['FDC', E::payload(['iuds' => [E::iud(), IdentifierFixtures::REFERENCE_IUD]])],
     'UDN' => ['UDN', E::payload(['eventTypeCode' => 'UDN', 'numberRange' => [...E::numberRange(1, 10), 'year' => 2026]])],
 ]);
 

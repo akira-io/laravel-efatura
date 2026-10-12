@@ -8,8 +8,8 @@ use Akira\Efatura\Enums\DocumentType;
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Tests\Support\IdentifierFixtures as I;
 
-it('reads every component of the node-efatura reference identifier', function (): void {
-    $iud = resolve(ParseIudAction::class)->handle(I::NODE_IUD);
+it('reads every component of the Manual section 6.2 identifier layout (p.17-18)', function (): void {
+    $iud = resolve(ParseIudAction::class)->handle(I::REFERENCE_IUD);
 
     expect($iud)->toBeInstanceOf(IudData::class)
         ->and($iud->repository)->toBe(Environment::Test)
@@ -25,14 +25,14 @@ it('rejects identifiers that are not official IUDs', function (string $iud): voi
     expect(fn (): IudData => resolve(ParseIudAction::class)->handle($iud))
         ->toFailValidationOn('iud', 'The iud must be an official IUD with a valid check digit.');
 })->with(fn (): array => [
-    'forty four characters'     => [substr(I::NODE_IUD, 0, 44)],
-    'forty six characters'      => [I::NODE_IUD . '0'],
-    'letter in the middle'      => [substr_replace(I::NODE_IUD, 'A', 20, 1)],
-    'lower case country'        => ['cv' . substr(I::NODE_IUD, 2)],
+    'forty four characters'     => [substr(I::REFERENCE_IUD, 0, 44)],
+    'forty six characters'      => [I::REFERENCE_IUD . '0'],
+    'letter in the middle'      => [substr_replace(I::REFERENCE_IUD, 'A', 20, 1)],
+    'lower case country'        => ['cv' . substr(I::REFERENCE_IUD, 2)],
     'month thirteen'            => [I::withCheckDigit('CV326130810020030000123010000000011234567890')],
     'day thirty two'            => [I::withCheckDigit('CV326023210020030000123010000000011234567890')],
-    'swapped check digit'       => [substr(I::NODE_IUD, 0, 44) . '8'],
-    'altered document number'   => [substr_replace(I::NODE_IUD, '1', 30, 1)],
+    'swapped check digit'       => [substr(I::REFERENCE_IUD, 0, 44) . '8'],
+    'altered document number'   => [substr_replace(I::REFERENCE_IUD, '1', 30, 1)],
     'date before 2021'          => [I::withCheckDigit('CV320123110020030000123010000000011234567890')],
     'thirtieth of February'     => [I::withCheckDigit('CV326023010020030000123010000000011234567890')],
     'repository zero'           => [I::withCheckDigit('CV026020810020030000123010000000011234567890')],

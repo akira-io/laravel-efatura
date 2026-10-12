@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Efatura\Xml;
 
-use Akira\Efatura\Contracts\SchemaValidator;
+use Akira\Efatura\Contracts\DocumentSchemaValidator;
 use Akira\Efatura\Enums\SignatureProfile;
 use Akira\Efatura\Exceptions\OfficialArtifactException;
 use Akira\Efatura\Exceptions\SchemaValidationException;
@@ -17,13 +17,18 @@ use LibXMLError;
 use const LIBXML_ERR_ERROR;
 use const LIBXML_NONET;
 
-final readonly class LibxmlSchemaValidator implements SchemaValidator
+final readonly class LibxmlSchemaValidator implements DocumentSchemaValidator
 {
     private const array SCHEMA_PARSER_ERROR_CODES = [[1700, 1800], [3000, 3099]];
 
     public function __construct(private OfficialArtifacts $artifacts, private SafeXmlParser $parser = new SafeXmlParser) {}
 
     public function validate(string $xml, SignatureProfile $profile = SignatureProfile::Enveloped): void
+    {
+        $this->validateDocument($this->parser->parse($xml), $profile);
+    }
+
+    public function validateDocument(DOMDocument $document, SignatureProfile $profile = SignatureProfile::Enveloped): void
     {
         $schema         = $this->artifacts->xsdEntry($profile->value);
         $internalErrors = libxml_use_internal_errors(true);
@@ -42,8 +47,7 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
         });
 
         try {
-            $document = $this->parser->parse($xml);
-            $valid    = @$document->schemaValidate($schema, LIBXML_NONET);
+            $valid = @$document->schemaValidate($schema, LIBXML_NONET);
             if ($refusal?->errorCode === 'artifacts.unknown_or_unsafe_path') {
                 throw SchemaValidationException::externalResource();
             }
@@ -56,8 +60,9 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
                 throw new OfficialArtifactException('artifacts.invalid_schema', 'validate');
             }
 
-            if (! $valid) {
-                throw SchemaValidationException::schemaInvalid($this->violations($pending));
+            $violations = SerialNumberTolerance::significant(\array_slice(libxml_get_errors(), $pending));
+            if (! $valid && $violations !== []) {
+                throw SchemaValidationException::schemaInvalid(array_map(SchemaViolation::fromLibxml(...), $violations));
             }
 
             self::assertRoot($document, $profile);
@@ -92,13 +97,5 @@ final readonly class LibxmlSchemaValidator implements SchemaValidator
 
             throw SchemaValidationException::schemaInvalid([new SchemaViolation($root?->getLineNo() ?? 0, 0, LIBXML_ERR_ERROR, $message)]);
         }
-    }
-
-    /**
-     * @return list<SchemaViolation>
-     */
-    private function violations(int $pending): array
-    {
-        return array_map(SchemaViolation::fromLibxml(...), \array_slice(libxml_get_errors(), $pending));
     }
 }

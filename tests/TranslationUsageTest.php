@@ -15,3 +15,10 @@ it('references every packaged translation key from the source', function (string
 
     expect(Str::contains($source, ['efatura::efatura.' . $key, var_export($leaf, true)]))->toBeTrue();
 })->with(fn (): array => array_keys(Arr::dot(require __DIR__ . '/../resources/lang/en/efatura.php')));
+
+it('keeps every string of the console commands under the console group', function (string $locale): void {
+    $translations = require __DIR__ . '/../resources/lang/' . $locale . '/efatura.php';
+
+    expect(array_keys($translations))->toBe(['validation', 'console'])
+        ->and(array_keys($translations['console']))->toBe(['install', 'doctor', 'validate']);
+})->with(['en', 'pt']);

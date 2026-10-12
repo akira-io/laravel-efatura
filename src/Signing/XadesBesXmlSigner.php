@@ -35,7 +35,7 @@ final readonly class XadesBesXmlSigner implements XmlSigner
         [$document, $signed] = $profile === SignatureProfile::Enveloped ? [$source, $root] : self::detached($root);
         $document->encoding  = 'UTF-8';
 
-        $dataDigest = self::digest($signed);
+        $dataDigest = SignatureDigests::node($signed);
         $signature  = new DOMElement('ds:Signature', namespace: Fiscal::XMLDSIG_NAMESPACE);
         $profile === SignatureProfile::Enveloped ? $root->appendChild($signature) : $signed->parentNode?->insertBefore($signature, $signed);
         $signature->setAttribute('Id', Fiscal::SIGNATURE_ID);
@@ -53,7 +53,7 @@ final readonly class XadesBesXmlSigner implements XmlSigner
 
         $signingTime      = Fiscal::local(CarbonImmutable::instance($this->clock->now()));
         $signedProperties = $this->properties->append(self::ds($signature, 'Object'), $credentials, $signingTime);
-        $propertiesDigest->appendChild($document->createTextNode(self::digest($signedProperties)));
+        $propertiesDigest->appendChild($document->createTextNode(SignatureDigests::node($signedProperties)));
         $signatureValue->appendChild($document->createTextNode(self::signatureOf($signedInfo, $credentials)));
 
         return new SignedXml(
@@ -121,7 +121,7 @@ final readonly class XadesBesXmlSigner implements XmlSigner
 
     private static function signatureOf(DOMElement $signedInfo, #[SensitiveParameter] SigningCredentials $credentials): string
     {
-        $canonical = (string) $signedInfo->C14N(false, false);
+        $canonical = SignatureDigests::canonical($signedInfo);
         OpenSslErrors::drain();
 
         try {
@@ -137,11 +137,6 @@ final readonly class XadesBesXmlSigner implements XmlSigner
         }
 
         return base64_encode($signature);
-    }
-
-    private static function digest(DOMNode $node): string
-    {
-        return base64_encode(hash('sha256', (string) $node->C14N(false, false), true));
     }
 
     /**

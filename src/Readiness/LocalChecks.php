@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Akira\Efatura\Readiness;
 
 use Akira\Efatura\Configuration\EfaturaConfig;
+use Akira\Efatura\Configuration\LoadRoutesConfig;
 use Akira\Efatura\Contracts\CertificateLoader;
 use Akira\Efatura\Contracts\RefreshTokenRepository;
 use Akira\Efatura\Enums\Environment;
 use Akira\Efatura\Enums\ReadinessCheck;
 use Akira\Efatura\Enums\TransportDriver;
 use Akira\Efatura\Enums\TransportFailure;
+use Akira\Efatura\Exceptions\ConfigurationException;
 use Akira\Efatura\Support\Fiscal;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Container\Container;
@@ -25,6 +27,7 @@ final readonly class LocalChecks
     private const string CA_BUNDLE = 'efatura.certificates.ca_bundle_path';
 
     public function __construct(
+        private LoadRoutesConfig $routes,
         private CertificateLoader $certificates,
         private ConnectionResolverInterface $connections,
         private Container $container,
@@ -51,6 +54,20 @@ final readonly class LocalChecks
         $credentials = $config->driver === TransportDriver::Platform ? $this->refreshToken((string) $config->emitter?->taxId) : null;
 
         return [$credentials ?? ReadinessResult::passed(ReadinessCheck::Configuration, 'readiness.configured', ['driver' => $config->driver->value])];
+    }
+
+    /**
+     * @return list<ReadinessResult>
+     */
+    public function routes(): array
+    {
+        try {
+            $this->routes->inspect();
+        } catch (ConfigurationException $configurationException) {
+            return [ReadinessResult::warning(ReadinessCheck::Configuration, $configurationException->errorCode, $configurationException->field)];
+        }
+
+        return [];
     }
 
     /**

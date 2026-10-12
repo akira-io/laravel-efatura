@@ -6,11 +6,15 @@ namespace Akira\Efatura;
 
 use Akira\Efatura\Actions\BuildIudAction;
 use Akira\Efatura\Actions\ConvertDocumentCurrencyAction;
+use Akira\Efatura\Commands\DoctorCommand;
 use Akira\Efatura\Commands\InstallCommand;
+use Akira\Efatura\Commands\ValidateCommand;
 use Akira\Efatura\Configuration\CacheConfig;
 use Akira\Efatura\Configuration\DatabaseConfig;
 use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Configuration\LoadEfaturaConfig;
+use Akira\Efatura\Configuration\LoadRoutesConfig;
+use Akira\Efatura\Configuration\RoutesConfig;
 use Akira\Efatura\Configuration\StorageConfig;
 use Akira\Efatura\Contracts\AccessTokenProvider;
 use Akira\Efatura\Contracts\ArtifactStore;
@@ -29,6 +33,7 @@ use Akira\Efatura\Currency\ExchangeRateProviderResolver;
 use Akira\Efatura\Dfa\BaconQrCodeRenderer;
 use Akira\Efatura\Dfa\DompdfDfaRenderer;
 use Akira\Efatura\Dfa\DompdfOptions;
+use Akira\Efatura\Http\Middleware\EnsureDiagnosticsRoutesEnabled;
 use Akira\Efatura\Money\CatalogCurrency;
 use Akira\Efatura\OAuth\RefreshTokenAccessTokenProvider;
 use Akira\Efatura\Packaging\ZipArchivePackager;
@@ -41,6 +46,8 @@ use Akira\Efatura\Support\Fiscal;
 use Akira\Efatura\Transport\TransportResolver;
 use Akira\Efatura\Xml\LibxmlSchemaValidator;
 use Carbon\FactoryImmutable;
+use Illuminate\Contracts\Foundation\CachesRoutes;
+use Illuminate\Contracts\Routing\Registrar;
 use Illuminate\Foundation\Application;
 use Override;
 use Psr\Clock\ClockInterface;
@@ -58,6 +65,11 @@ final class EfaturaServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(function (Application $app): EfaturaConfig {
             $loader = $app->make(LoadEfaturaConfig::class);
+
+            return $loader();
+        });
+        $this->app->singleton(function (Application $app): RoutesConfig {
+            $loader = $app->make(LoadRoutesConfig::class);
 
             return $loader();
         });
@@ -96,6 +108,8 @@ final class EfaturaServiceProvider extends PackageServiceProvider
         if ($this->app->bound(RefreshTokenRepository::class)) {
             $this->app->bindIf(AccessTokenProvider::class, RefreshTokenAccessTokenProvider::class);
         }
+
+        $this->registerDiagnosticsRoutes($this->app->make(RoutesConfig::class));
     }
 
     public function configurePackage(Package $package): void
@@ -106,6 +120,18 @@ final class EfaturaServiceProvider extends PackageServiceProvider
             ->hasTranslations()
             ->hasViews()
             ->hasMigration(InstallCommand::SEQUENCE_MIGRATION)
-            ->hasCommand(InstallCommand::class);
+            ->hasCommands([InstallCommand::class, DoctorCommand::class, ValidateCommand::class]);
+    }
+
+    private function registerDiagnosticsRoutes(RoutesConfig $routes): void
+    {
+        if (! $routes->enabled || ($this->app instanceof CachesRoutes && $this->app->routesAreCached())) {
+            return;
+        }
+
+        $this->app->make(Registrar::class)->group(
+            ['prefix' => $routes->prefix, 'as' => $routes->name, 'middleware' => [EnsureDiagnosticsRoutesEnabled::class, ...$routes->middleware]],
+            __DIR__ . '/../routes/efatura.php',
+        );
     }
 }

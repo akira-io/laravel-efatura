@@ -23,7 +23,11 @@ final readonly class SafeXmlParser
         $pending        = \count(libxml_get_errors());
 
         try {
-            return self::load($xml, $pending);
+            if ($xml !== '' && XmlComplexity::exceeded($xml)) {
+                throw SchemaValidationException::tooComplex();
+            }
+
+            return self::load($xml, \count(libxml_get_errors()));
         } finally {
             if ($pending === 0) {
                 libxml_clear_errors();
@@ -33,11 +37,11 @@ final readonly class SafeXmlParser
         }
     }
 
-    private static function load(string $xml, int $pending): DOMDocument
+    private static function load(string $xml, int $offset): DOMDocument
     {
         $document = new DOMDocument;
         if ($xml === '' || ! $document->loadXML($xml, LIBXML_NONET)) {
-            $violations = array_map(SchemaViolation::fromLibxml(...), \array_slice(libxml_get_errors(), $pending));
+            $violations = array_map(SchemaViolation::fromLibxml(...), \array_slice(libxml_get_errors(), $offset));
 
             throw self::declaresDocumentType($xml) ? SchemaValidationException::doctypeForbidden() : SchemaValidationException::malformed($violations);
         }

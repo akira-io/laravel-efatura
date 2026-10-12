@@ -34,6 +34,7 @@ final readonly class CheckReadinessAction
 
         return new ReadinessReport([
             ...$this->attempt(ReadinessCheck::Configuration, fn (): array => $this->local->configuration($config)),
+            ...$this->local->routes(),
             ...$this->attempt(ReadinessCheck::Certificate, fn (): array => $this->local->certificate($config)),
             ...$this->attempt(ReadinessCheck::Sequences, fn (): array => $this->local->sequences($config)),
             ...$this->attempt(ReadinessCheck::Environment, fn (): array => $this->local->environment($config)),

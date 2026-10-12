@@ -37,6 +37,11 @@ final class SchemaValidationException extends EfaturaException
         return new self('xml.doctype_forbidden');
     }
 
+    public static function tooComplex(): self
+    {
+        return new self('xml.too_complex');
+    }
+
     public static function externalResource(): self
     {
         return new self('xml.external_resource');
