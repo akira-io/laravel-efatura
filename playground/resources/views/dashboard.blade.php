@@ -2,7 +2,7 @@
 
 @section('content')
     <section>
-        <p>Every page runs the local <code>akira/efatura</code> code through its public actions. Nothing leaves this machine unless you switch the transport and configure real credentials.</p>
+        <p>Every page runs the local <code>akira/efatura</code> code through its public actions. Nothing leaves this machine unless you run the remote doctor checks or switch the transport and configure real credentials.</p>
         <dl>
             <dt>Repository</dt><dd>{{ config('efatura.environment') }}</dd>
             <dt>Transport</dt><dd>{{ \App\Enums\PlaygroundTransport::configured()->label() }}</dd>

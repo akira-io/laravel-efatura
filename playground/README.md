@@ -101,6 +101,13 @@ comes from the package configuration and its environment variables (see
    application (see [transport](../docs/09-transport.md)).
 5. Run `/doctor` with the remote checks before issuing.
 
+Every page that numbers a document (`/document`, `/sign`, `/issue` and the
+OFFLINE and OFF DFA models) takes the next number from the sequence store,
+even when nothing is submitted. In homologation this leaves gaps in the
+series, so use a series reserved for the playground. The OFF model always
+uses the IUC `<year>/1`; replace it with the IUC the platform assigned before
+submitting a contingency document.
+
 Keep real credentials out of Git: `.env` is ignored, and so is
 `storage/app/certificates`.
 
