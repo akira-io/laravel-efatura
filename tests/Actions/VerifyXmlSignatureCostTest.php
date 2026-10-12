@@ -24,19 +24,23 @@ function signedWithLines(int $lines): string
 }
 
 /**
- * @return array{float, bool}
+ * @param  list<string>             $documents
+ * @return list<array{float, bool}>
  */
-function fastestVerification(string $xml): array
+function fastestVerifications(array $documents, int $runs = 7): array
 {
-    $timings = [];
-    foreach (range(1, 5) as $ignored) {
-        gc_collect_cycles();
-        $started   = hrtime(true);
-        $valid     = resolve(VerifyXmlSignatureAction::class)->handle($xml)->valid;
-        $timings[] = (hrtime(true) - $started) / 1e9;
+    $fastest = array_fill(0, count($documents), INF);
+    $valid   = array_fill(0, count($documents), true);
+    foreach (range(1, $runs) as $ignored) {
+        foreach ($documents as $index => $xml) {
+            gc_collect_cycles();
+            $started         = hrtime(true);
+            $valid[$index]   = $valid[$index] && resolve(VerifyXmlSignatureAction::class)->handle($xml)->valid;
+            $fastest[$index] = min($fastest[$index], (hrtime(true) - $started) / 1e9);
+        }
     }
 
-    return [min($timings), $valid];
+    return array_map(static fn (float $time, bool $isValid): array => [$time, $isValid], $fastest, $valid);
 }
 
 it('digests the enveloped content exactly as the node-set of the enveloped transform', function (string $xml): void {
@@ -50,14 +54,13 @@ it('digests the enveloped content exactly as the node-set of the enveloped trans
     ->mapWithKeys(static fn (string $path): array => [basename(dirname($path)) . '/' . basename($path) => [(string) file_get_contents($path)]])
     ->all());
 
-it('verifies a signed document of 1000 lines in time linear in its size', function (): void {
-    [$small, $smallValid] = fastestVerification(signedWithLines(250));
-    [$large, $largeValid] = fastestVerification(signedWithLines(1000));
+it('verifies a signed document of 2000 lines in time linear in its size', function (): void {
+    [[$small, $smallValid], [$large, $largeValid]] = fastestVerifications([signedWithLines(250), signedWithLines(2000)]);
 
     expect($smallValid)->toBeTrue()
         ->and($largeValid)->toBeTrue()
         ->and($large)->toBeLessThan(5.0)
-        ->and($large / max($small, 0.02))->toBeLessThan(8.0);
+        ->and($large / $small)->toBeLessThan(24.0);
 });
 
 it('verifies a document crafted to make canonicalization quadratic quickly', function (): void {
