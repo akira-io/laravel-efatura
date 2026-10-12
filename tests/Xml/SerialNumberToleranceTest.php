@@ -35,6 +35,8 @@ it('keeps every other violation', function (LibXMLError $error): void {
     'a serial number that is not decimal' => fn (): LibXMLError => serialNumberError('1A2B'),
     'an empty serial number'              => fn (): LibXMLError => serialNumberError(''),
     'a decimal fraction'                  => fn (): LibXMLError => serialNumberError('12.5'),
+    'text after the integer'              => fn (): LibXMLError => serialNumberError('730750818665451459101842416358141509827966271487 forged'),
+    'text after the message'              => fn (): LibXMLError => libxmlError(serialNumberError(str_repeat('9', 40))->message . 'Element forged.'),
     'another element with digits'         => fn (): LibXMLError => libxmlError(
         "Element \x27{urn:cv:efatura:xsd:v1.0}DocumentNumber\x27: \x27123456789012345678901234\x27 is not a valid value of the atomic type \x27xs:integer\x27.",
     ),
