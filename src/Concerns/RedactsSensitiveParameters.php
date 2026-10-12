@@ -32,14 +32,13 @@ trait RedactsSensitiveParameters
     private function redactedProperties(): array
     {
         $properties = get_object_vars($this);
+        $redacted   = [];
 
         foreach (new ReflectionMethod($this, '__construct')->getParameters() as $parameter) {
-            if ($this->isRedacted($parameter, $properties)) {
-                $properties[$parameter->getName()] = '[redacted]';
-            }
+            $redacted[$parameter->getName()] = $this->isRedacted($parameter, $properties) ? '[redacted]' : $properties[$parameter->getName()];
         }
 
-        return $properties;
+        return $redacted;
     }
 
     /**

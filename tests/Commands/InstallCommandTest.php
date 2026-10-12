@@ -171,8 +171,8 @@ it('resolves the manager without identities from the freshly installed environme
         ->and($config)->toBe(resolve(EfaturaConfig::class))
         ->and($config->emitter)->toBeNull()
         ->and($config->transmitter->taxId)->toBeNull()
-        ->and($config->transmitter->middlewareKey)->toBeNull()
-        ->and($config->transmitter->oauth->clientSecret)->toBeNull()
+        ->and($config->transmitter->middlewareKey())->toBeNull()
+        ->and($config->transmitter->oauth->clientSecret())->toBeNull()
         ->and($config->environment->repositoryCode())->toBe(3)
         ->and($config->http->middleware->baseUrl)->toBe('https://localhost:3443/v1');
 });

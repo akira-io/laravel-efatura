@@ -43,7 +43,7 @@ final readonly class MiddlewareTransport implements Transport
      */
     private function credentials(PackagedArchive|string|null $subject): array
     {
-        $key = $this->config->transmitter->middlewareKey
+        $key = $this->config->transmitter->middlewareKey()
             ?? throw TransportException::because(TransportFailure::MissingCredentials, $subject, field: 'efatura.transmitter.middleware_key');
 
         return [Fiscal::TRANSMITTER_KEY_HEADER => $key];

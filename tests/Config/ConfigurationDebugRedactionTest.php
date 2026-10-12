@@ -36,13 +36,6 @@ it('redacts configured secrets from debug output', function (Closure $dump): voi
         ->and($output)->toContain('client');
 })->with('debug outputs');
 
-it('keeps the secrets readable as properties', function (): void {
-    $transmitter = new TransmitterConfig('100200300', 'Transmitter', 'synthetic-middleware-key', new OAuthConfig('client', 'synthetic-client-secret'));
-
-    expect($transmitter->middlewareKey)->toBe('synthetic-middleware-key')
-        ->and($transmitter->oauth->clientSecret)->toBe('synthetic-client-secret');
-});
-
 it('reports absent secrets as null in debug output', function (): void {
     expect(new CertificateConfig('disk', null, null, null)->__debugInfo())->toBe([
         'disk'            => 'disk',

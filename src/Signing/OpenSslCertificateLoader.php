@@ -108,7 +108,7 @@ final readonly class OpenSslCertificateLoader implements CertificateLoader
         }
 
         $keyPem     = $this->read($disk, $config->privateKeyPath, self::PRIVATE_KEY);
-        $privateKey = openssl_pkey_get_private($keyPem, $config->passphrase ?? '');
+        $privateKey = openssl_pkey_get_private($keyPem, $config->passphrase() ?? '');
         if ($privateKey === false) {
             throw Str::contains($keyPem, 'ENCRYPTED')
                 ? new CertificateException('certificate.passphrase_invalid', self::PASSPHRASE)
@@ -127,7 +127,7 @@ final readonly class OpenSslCertificateLoader implements CertificateLoader
             throw new CertificateException('certificate.invalid', self::PRIVATE_KEY);
         }
 
-        if (! openssl_pkcs12_read($contents, $bundle, $config->passphrase ?? '')) {
+        if (! openssl_pkcs12_read($contents, $bundle, $config->passphrase() ?? '')) {
             $errorCode = OpenSslErrors::pkcs12Failure(OpenSslErrors::drain());
 
             throw new CertificateException($errorCode, $errorCode === 'certificate.passphrase_invalid' ? self::PASSPHRASE : self::CERTIFICATE);

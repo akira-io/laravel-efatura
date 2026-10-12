@@ -94,6 +94,16 @@ final class DefinitionException extends EfaturaException
         return new self('definition.token_serialization', 'An access token is a secret and cannot be serialized.');
     }
 
+    public static function secretSerialization(): self
+    {
+        return new self('definition.secret_serialization', 'A secret cannot be serialized.');
+    }
+
+    public static function configurationSerialization(): self
+    {
+        return new self('definition.configuration_serialization', 'Configuration holds secrets and cannot be serialized.');
+    }
+
     public static function selfBillingNotQueued(): self
     {
         return new self(

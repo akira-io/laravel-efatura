@@ -15,14 +15,14 @@ it('resolves minimal host defaults without optional identities or secrets', func
         ->and($config->environment->repositoryCode())->toBe(3)
         ->and($config->emitter)->toBeNull()
         ->and($config->transmitter->taxId)->toBeNull()
-        ->and($config->transmitter->middlewareKey)->toBeNull()
+        ->and($config->transmitter->middlewareKey())->toBeNull()
         ->and($config->transmitter->oauth->clientId)->toBeNull()
-        ->and($config->transmitter->oauth->clientSecret)->toBeNull()
+        ->and($config->transmitter->oauth->clientSecret())->toBeNull()
         ->and($config->software->code)->toBeNull()
         ->and($config->certificates->disk)->toBe('host-disk')
         ->and($config->certificates->certificatePath)->toBeNull()
         ->and($config->certificates->privateKeyPath)->toBeNull()
-        ->and($config->certificates->passphrase)->toBeNull()
+        ->and($config->certificates->passphrase())->toBeNull()
         ->and($config->certificates->caBundlePath)->toBeNull()
         ->and($config->storage->disk)->toBe('host-disk')
         ->and($config->storage->path)->toBe('efatura')
@@ -60,8 +60,8 @@ it('boots with the published configuration and no operation credentials', functi
     $config = (new LoadEfaturaConfig(resolve('config')))();
 
     expect($config->emitter)->toBeNull()
-        ->and($config->transmitter->middlewareKey)->toBeNull()
-        ->and($config->transmitter->oauth->clientSecret)->toBeNull()
+        ->and($config->transmitter->middlewareKey())->toBeNull()
+        ->and($config->transmitter->oauth->clientSecret())->toBeNull()
         ->and($config->certificates->privateKeyPath)->toBeNull()
         ->and($config->environment->repositoryCode())->toBe(3);
 });
@@ -124,16 +124,16 @@ it('normalizes configured identities infrastructure and client overrides', funct
         ->and($config->emitter->contacts->mobile)->toBe('9900000')
         ->and($config->transmitter->name)->toBe('Transmission party')
         ->and($config->transmitter->taxId)->toBe($config->emitter->taxId)
-        ->and($config->transmitter->middlewareKey)->toBe(str_repeat('k', 64))
+        ->and($config->transmitter->middlewareKey())->toBe(str_repeat('k', 64))
         ->and($config->transmitter->oauth->clientId)->toBe('test-client')
-        ->and($config->transmitter->oauth->clientSecret)->toBe(' test-secret ')
+        ->and($config->transmitter->oauth->clientSecret())->toBe(' test-secret ')
         ->and($config->software->code)->toBe('SW-1')
         ->and($config->software->name)->toBe('Fiscal software')
         ->and($config->software->version)->toBe('1.0')
         ->and($config->certificates->disk)->toBe('secret-disk')
         ->and($config->certificates->certificatePath)->toBe('certs/public.pem')
         ->and($config->certificates->privateKeyPath)->toBe('certs/private.pem')
-        ->and($config->certificates->passphrase)->toBe(' test-passphrase ')
+        ->and($config->certificates->passphrase())->toBe(' test-passphrase ')
         ->and($config->certificates->caBundlePath)->toBe('certs/icp-cv.pem')
         ->and($config->storage->disk)->toBe('fiscal-disk')
         ->and($config->storage->path)->toBe('tenant/fiscal')
@@ -170,7 +170,7 @@ it('trims ASCII edge whitespace while preserving non-breaking spaces and secrets
 
     expect($config->software->name)->toBe($nonBreaking)
         ->and($config->software->code)->toBe('code')
-        ->and($config->transmitter->oauth->clientSecret)->toBe("\u{00A0}secret\u{00A0}");
+        ->and($config->transmitter->oauth->clientSecret())->toBe("\u{00A0}secret\u{00A0}");
 });
 
 it('inherits the queue name of an explicitly selected queue connection', function (): void {
