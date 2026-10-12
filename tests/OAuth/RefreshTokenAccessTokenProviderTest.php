@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Configuration\EfaturaConfig;
 use Akira\Efatura\Contracts\AccessTokenProvider;
 use Akira\Efatura\Enums\OAuthScope;
 use Akira\Efatura\Enums\TransportFailure;
@@ -248,7 +249,7 @@ it('serializes renewals per emitter whatever the scopes, and lets other emitters
     $this->nested = [];
     Http::fake([O::DISCOVERY_URL => O::discovery(), O::TOKEN_URL => function (Request $request): PromiseInterface {
         if ($request['refresh_token'] === $this->refreshToken) {
-            $locks              = Cache::store(config('efatura.cache.store'))->getStore()->locks;
+            $locks              = Cache::store(resolve(EfaturaConfig::class)->cache->store)->getStore()->locks;
             $this->lockLifetime = CarbonImmutable::now()->diffInSeconds(collect($locks)->first()['expiresAt']);
 
             foreach (['same emitter' => O::EMITTER, 'other emitter' => '200300400'] as $label => $emitter) {
