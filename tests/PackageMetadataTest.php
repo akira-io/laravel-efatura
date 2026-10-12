@@ -77,6 +77,14 @@ it('accepts the official DFA acronym in package tooling', function (): void {
     expect($peck['ignore']['words'])->toContain('dfa');
 });
 
+it('keeps the playground application out of the package tooling', function (): void {
+    $files = new Filesystem;
+
+    expect($files->json(__DIR__ . '/../peck.json', JSON_THROW_ON_ERROR)['ignore']['paths'])->toContain('playground')
+        ->and($files->json(__DIR__ . '/../pint.json', JSON_THROW_ON_ERROR)['exclude'] ?? [])->toContain('playground')
+        ->and(ComposerMetadata::read())->not->toHaveKey('repositories');
+});
+
 it('ships runtime resources and leaves development files out of dist archives', function (string $path, string $exported): void {
     $attribute = new Process(['git', 'check-attr', 'export-ignore', '--', $path], __DIR__ . '/..');
     $attribute->mustRun();
@@ -104,4 +112,5 @@ it('ships runtime resources and leaves development files out of dist archives', 
     ['commitlint.config.js', 'set'],
     ['cliff.toml', 'set'],
     ['peck.json', 'set'],
+    ['playground', 'set'],
 ]);

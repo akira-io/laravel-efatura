@@ -1,5 +1,8 @@
 {
     "preset": "laravel",
+    "exclude": [
+        "playground"
+    ],
     "rules": {
         "align_multiline_comment": true,
         "array_indentation": true,

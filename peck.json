@@ -56,7 +56,8 @@
         "paths": [
             "resources/catalogs/source",
             "resources/xsd",
-            "tests/Fixtures/xml"
+            "tests/Fixtures/xml",
+            "playground"
         ]
     }
 }
