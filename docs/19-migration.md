@@ -262,9 +262,11 @@ arguments, so existing positional calls keep working. `CertificateConfig` gains
 `exchangeRates` (an `ExchangeRatesConfig`) and `dfa` (a `DfaConfig` with
 `baseUrl` and `cachePath`), each as an optional trailing constructor argument; the JSON form of `OAuthConfig` now
 includes `issuerUrl`. `CertificateConfig`,
-`OAuthConfig` and `TransmitterConfig` redact their secrets from `dump()`,
-`var_dump()` and `print_r()` output, and implement `JsonSerializable` with the
-same redaction, so `json_encode()` and Monolog's normalizer write `[redacted]`.
+`OAuthConfig` and `TransmitterConfig` redact their secrets from `var_dump()`,
+`print_r()` and Symfony VarDumper output (`dump()`, `dd()`, and the dumps
+Telescope and Ray take through it), the `(array)` cast included, and implement
+`JsonSerializable` with the same redaction, so `json_encode()` and Monolog's
+normalizer write `[redacted]`.
 
 The secrets are no longer public properties. Each is kept in an
 `Akira\Efatura\Support\Secret` that `var_export()` prints without its value,
@@ -283,7 +285,12 @@ a `Secret` `definition.secret_serialization`, so none of them reaches a queue
 payload or a cache. `php artisan config:cache` is unaffected: it caches the
 config array, and the package builds these objects from it when the
 application boots. Resolve `EfaturaConfig` from the container where it is used
-instead of passing it to a job.
+instead of passing it to a job. A `Secret` cannot be cloned either.
+
+Do not compare configurations that hold secrets with `==`: the value of a
+`Secret` is not one of its properties, so two configurations that differ only
+in a secret compare equal. Compare the accessors instead, for example
+`$a->middlewareKey() === $b->middlewareKey()`.
 
 Merge the new keys from the published [config](../config/efatura.php) into an
 application config file that was published before, then set the address code

@@ -241,8 +241,10 @@ drivers use `Http::fake()`; the package test suite calls
 
 The middleware key, client secret, refresh token, access token and
 `Authorization` header never appear in exception messages, `context`, `previous`,
-events, the token cache in clear, `var_dump()`, `print_r()`, `var_export()` or
-`json_encode()` output, and the configuration that holds them refuses
+events, the token cache in clear, `var_dump()`, `print_r()`, `var_export()`,
+`json_encode()` or Symfony VarDumper output (`dump()`, `dd()`, and the dumps
+Telescope and Ray take through it), the `(array)` cast of a configuration or of
+its `Secret` included, and the configuration that holds them refuses
 `serialize()` (`definition.configuration_serialization`). The package writes no
 logs.
 
