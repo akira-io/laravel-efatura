@@ -91,6 +91,16 @@ it('refuses a signature whose xmldsig or xades structure is not exactly the one 
     }],
 ]);
 
+it('refuses an empty transforms list on a detached reference', function (): void {
+    $edited = E::edit(S::sign(S::unsigned(), SignatureProfile::InternallyDetached)->xml, function (DOMDocument $document, DOMXPath $xpath): void {
+        $transforms = $document->createElementNS(Fiscal::XMLDSIG_NAMESPACE, 'ds:Transforms');
+        E::element($xpath, '//ds:Reference[1]')->insertBefore($transforms, E::element($xpath, '//ds:Reference[1]/ds:DigestMethod'));
+    }, resign: true);
+
+    expect(verifyStructure($edited)->failures)->toBe([SignatureFailure::StructureUnexpected])
+        ->and(verifyStructure($edited)->profile)->toBe(SignatureProfile::InternallyDetached);
+});
+
 it('allows each reference only the transforms of its own target', function (SignatureProfile $profile, Closure $edit): void {
     $edited = E::edit(S::sign(S::unsigned(), $profile)->xml, $edit, resign: true);
 
