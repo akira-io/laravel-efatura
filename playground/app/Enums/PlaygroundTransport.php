@@ -13,4 +13,12 @@ enum PlaygroundTransport: string
     {
         return self::from(config()->string('playground.transport'));
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Fake => 'Fake transport (no network, every document is authorized)',
+            self::Configured => 'Configured driver (efatura.driver: '.config()->string('efatura.driver').')',
+        };
+    }
 }

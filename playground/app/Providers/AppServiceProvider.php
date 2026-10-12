@@ -7,7 +7,9 @@ namespace App\Providers;
 use Akira\Efatura\Contracts\Transport;
 use Akira\Efatura\Testing\FakeTransport;
 use App\Enums\PlaygroundTransport;
+use App\View\Composers\SampleInvoiceFormComposer;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Psr\Clock\ClockInterface;
 
@@ -20,5 +22,8 @@ final class AppServiceProvider extends ServiceProvider
         }
     }
 
-    public function boot(): void {}
+    public function boot(): void
+    {
+        View::composer('partials.invoice-form', SampleInvoiceFormComposer::class);
+    }
 }

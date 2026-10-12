@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Akira\Efatura\Exceptions\EfaturaException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,10 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-    })
+    ->withMiddleware(function (Middleware $middleware): void {})
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
-        );
+        $exceptions->render(fn (EfaturaException $exception, Request $request) => back()
+            ->withInput()
+            ->withErrors(['efatura' => class_basename($exception).': '.$exception->errorCode.($exception->field === null ? '' : ' ('.$exception->field.')')]));
     })->create();
